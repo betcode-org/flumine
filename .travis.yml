@@ -1,0 +1,18 @@
+language: python
+
+sudo: false
+
+python:
+  - "3.4"
+  - "3.5"
+
+install:
+  - pip install -r requirements.txt
+  - travis_retry python setup.py install
+  - pip install coveralls
+
+script:
+    coverage run --source=flumine setup.py test
+
+after_success:
+  coveralls
