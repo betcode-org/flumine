@@ -1,3 +1,5 @@
+from flumine.flumine import Flumine
+from flumine.strategies import BaseStrategy
 
 
 __title__ = 'flumine'
