@@ -12,9 +12,11 @@ class Flumine:
         self._check_login()
         self._create_socket()
 
-        self._socket.subscribe_to_markets(unique_id=2,
-                                          market_filter=market_filter,
-                                          market_data_filter=market_data_filter)
+        self._socket.subscribe_to_markets(
+                unique_id=2,
+                market_filter=market_filter,
+                market_data_filter=market_data_filter
+        )
         self._socket.start(async=True)
 
     def stop(self):
