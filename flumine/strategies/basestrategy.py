@@ -5,7 +5,7 @@ class BaseStrategy:
     name = 'BASE_STRATEGY'
 
     def __call__(self, market_book):
-        """Checks if market using market book
+        """Checks market using market book
         parameters function then passes
         market_book to be processed
 

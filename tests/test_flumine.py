@@ -29,8 +29,8 @@ class FlumineTest(unittest.TestCase):
         mock_create_socket.assert_called_with()
         mock_socket.subscribe_to_markets.assert_called_with(
                 unique_id=2,
-                market_filter=market_filter,
-                market_data_filter=market_data_filter
+                market_filter=market_filter.serialise,
+                market_data_filter=market_data_filter.serialise
         )
         mock_socket.start.assert_called_with(async=True)
 
@@ -53,6 +53,14 @@ class FlumineTest(unittest.TestCase):
                 description='Flumine Socket',
                 unique_id=1
         )
+
+    def test_stream_status(self):
+        self.flumine._socket = mock.Mock()
+        socket_str = mock.Mock()
+        socket_str.return_value = '123'
+        self.flumine._socket.__str__ = socket_str
+
+        assert self.flumine.stream_status() == '123'
 
     def test_str(self):
         assert str(self.flumine) == '<Flumine>'

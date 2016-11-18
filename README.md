@@ -17,19 +17,16 @@ The framework can be used as follows:
 
 >>> trading = betfairlightweight.APIClient('username', 'password', app_key='app_key')
 
->>> market_filter = {
-        'eventTypeIds': ['7'],
-        'countryCodes': ['GB'],
-        'marketTypes': ['WIN']
-    }
->>> market_data_filter = {
-        'fields': ['EX_BEST_OFFERS', 'EX_MARKET_DEF'],
-        'ladderLevels': 1
-    }
-
->>> flumine = Flumine(trading, [])
+>>> flumine = Flumine(trading, strategies=[])
 >>> flumine.start(
-        market_filter=market_filter,
-        market_data_filter=market_data_filter
+            market_filter=MarketFilter(
+                    event_type_ids=[7],
+                    country_codes=['GB']
+            ),
+            market_data_filter=MarketDataFilter(
+                    fields=['EX_BEST_OFFERS', 'EX_MARKET_DEF'],
+                    ladder_levels=1
+            )
     )
+
 ```

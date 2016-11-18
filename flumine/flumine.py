@@ -11,11 +11,10 @@ class Flumine:
     def start(self, market_filter, market_data_filter):
         self._check_login()
         self._create_socket()
-
         self._socket.subscribe_to_markets(
                 unique_id=2,
-                market_filter=market_filter,
-                market_data_filter=market_data_filter
+                market_filter=market_filter.serialise,
+                market_data_filter=market_data_filter.serialise,
         )
         self._socket.start(async=True)
 
@@ -31,6 +30,9 @@ class Flumine:
                 unique_id=1,
                 description='Flumine Socket'
         )
+
+    def stream_status(self):
+        return str(self._socket)
 
     def __str__(self):
         return '<Flumine>'

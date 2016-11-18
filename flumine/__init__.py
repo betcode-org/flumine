@@ -1,5 +1,6 @@
 from flumine.flumine import Flumine
 from flumine.strategies import BaseStrategy
+from flumine.marketfilters.basefilter import MarketFilter, MarketDataFilter
 
 
 __title__ = 'flumine'
