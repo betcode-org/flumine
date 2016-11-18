@@ -19,11 +19,11 @@ The framework can be used as follows:
 
 >>> flumine = Flumine(trading, strategies=[])
 >>> flumine.start(
-            market_filter=MarketFilter(
+            market_filter=Flumine.MarketFilter(
                     event_type_ids=[7],
                     country_codes=['GB']
             ),
-            market_data_filter=MarketDataFilter(
+            market_data_filter=Flumine.MarketDataFilter(
                     fields=['EX_BEST_OFFERS', 'EX_MARKET_DEF'],
                     ladder_levels=1
             )

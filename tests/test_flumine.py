@@ -14,6 +14,8 @@ class FlumineTest(unittest.TestCase):
     def test_init(self):
         assert self.flumine.trading == self.trading
         assert self.flumine.strategies == self.strategies
+        assert self.flumine._socket is None
+        assert self.flumine._running is False
 
     @mock.patch('flumine.flumine.Flumine._create_socket')
     @mock.patch('flumine.flumine.Flumine._check_login')
@@ -33,12 +35,14 @@ class FlumineTest(unittest.TestCase):
                 market_data_filter=market_data_filter.serialise
         )
         mock_socket.start.assert_called_with(async=True)
+        assert self.flumine._running is True
 
     def test_stop(self):
         self.flumine._socket = mock.Mock()
         self.flumine.stop()
 
         self.flumine._socket.stop.assert_called_with()
+        assert self.flumine._running is False
 
     def test_check_login(self):
         self.trading.session_expired.return_value = True
@@ -63,4 +67,4 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine.stream_status() == '123'
 
     def test_str(self):
-        assert str(self.flumine) == '<Flumine>'
+        assert str(self.flumine) == '<Flumine [not running]>'
