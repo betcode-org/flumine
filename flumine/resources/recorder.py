@@ -88,8 +88,9 @@ class RacingRecorder(BaseRecorder):
         ]
         with open(file_directory, 'a') as f:
             for runner in market_book.runners:
-                csv_writer = csv.DictWriter(f, delimiter=',', fieldnames=fieldnames)
-                csv_writer.writerow(self.serialise_market_book(market_book, runner))
+                if runner.status == 'ACTIVE':
+                    csv_writer = csv.DictWriter(f, delimiter=',', fieldnames=fieldnames)
+                    csv_writer.writerow(self.serialise_market_book(market_book, runner))
 
     @staticmethod
     def serialise_market_book(market_book, runner):

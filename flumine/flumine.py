@@ -58,7 +58,7 @@ class Flumine:
         """Handles output from queue which
         is filled by the listener.
         """
-        while self._running:
+        while True:
             events = self._queue.get()
             for event in events:
                 self.recorder(event)
