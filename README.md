@@ -12,21 +12,23 @@ IN DEVELOPMENT.
 The framework can be used as follows:
 
 ```python
+>>> import flumine
 >>> import betfairlightweight
->>> from flumine import Flumine
 
 >>> trading = betfairlightweight.APIClient('username', 'password', app_key='app_key')
 
->>> flumine = Flumine(trading, strategies=[])
->>> flumine.start(
-            market_filter=Flumine.MarketFilter(
-                    event_type_ids=[7],
-                    country_codes=['GB']
-            ),
-            market_data_filter=Flumine.MarketDataFilter(
-                    fields=['EX_BEST_OFFERS', 'EX_MARKET_DEF'],
-                    ladder_levels=1
-            )
+>>> flumine = flumine.Flumine(
+            trading=trading,
+            recorder=flumine.RacingRecorder(in_play=False)
     )
+>>> flumine.start()
+
+>>> flumine
+<Flumine [running]>
+
+>>> flumine.stop()
+
+>>> flumine
+<Flumine [not running]>
 
 ```

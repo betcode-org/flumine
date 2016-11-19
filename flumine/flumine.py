@@ -1,6 +1,6 @@
 import queue
 import threading
-from betfairlightweight import StreamListener
+from betfairlightweight import StreamListener, BetfairError
 
 
 class Flumine:
@@ -15,12 +15,19 @@ class Flumine:
         self._listener = StreamListener(self._queue)
 
     def handler(self):
+        """Handles output from queue which
+        is filled by the listener.
+        """
         while self._running:
             events = self._queue.get()
             for event in events:
                 self.recorder(event)
 
     def start(self):
+        """Checks trading is logged in, creates socket,
+        subscribes to markets, sets running to True and
+        starts handler/run threads.
+        """
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
@@ -30,17 +37,33 @@ class Flumine:
         )
         self._running = True
         threading.Thread(target=self.handler, daemon=True).start()
-        self._socket.start(async=True)
+        threading.Thread(target=self._run, daemon=True).start()
 
     def stop(self):
+        """Stops socket, sets running to false
+        and socket to None
+        """
         self._socket.stop()
         self._running = False
+        self._socket = None
+
+    def _run(self):
+        """ Runs socket and catches any errors
+        """
+        try:
+            self._socket.start(async=False)
+        except BetfairError as e:
+            print('flumine error', e)
 
     def _check_login(self):
+        """Login if session expired
+        """
         if self.trading.session_expired:
             self.trading.login()
 
     def _create_socket(self):
+        """Creates stream
+        """
         self._socket = self.trading.streaming.create_stream(
                 unique_id=1,
                 description='Flumine Socket',
@@ -48,7 +71,12 @@ class Flumine:
         )
 
     def stream_status(self):
-        return str(self._socket)
+        """Checks sockets status
+        """
+        return str(self._socket) if self._socket else 'Socket not created'
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
         return '<Flumine [%s]>' % ('running' if self._running else 'not running')
