@@ -1,8 +1,12 @@
 
 
-class BaseStrategy:
+class BaseRecorder:
 
-    name = 'BASE_STRATEGY'
+    name = 'BASE_RECORDER'
+
+    def __init__(self, market_filter, market_data_filter):
+        self._market_filter = market_filter
+        self._market_data_filter = market_data_filter
 
     def __call__(self, market_book):
         """Checks market using market book
@@ -29,6 +33,14 @@ class BaseStrategy:
         :param market_book: Market Book object
         """
         raise NotImplementedError
+
+    @property
+    def market_filter(self):
+        return self._market_filter.serialise
+
+    @property
+    def market_data_filter(self):
+        return self._market_data_filter.serialise
 
     def __str__(self):
         return '<%s>' % self.name

@@ -11,7 +11,7 @@ TEST_REQUIRES = [
 setup(
         name='flumine',
         version=__version__,
-        packages=['flumine', 'flumine.strategies'],
+        packages=['flumine', 'flumine.resources'],
         package_dir={'flumine': 'flumine'},
         install_requires=INSTALL_REQUIRES,
         requires=['betfairlightweight'],

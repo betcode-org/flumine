@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.marketfilters.basefilter import MarketDataFilter, MarketFilter
+from flumine.resources.marketfilters import MarketDataFilter, MarketFilter
 
 
 class MarketFilterTest(unittest.TestCase):
