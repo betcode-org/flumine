@@ -2,6 +2,8 @@ import queue
 import threading
 from betfairlightweight import StreamListener, BetfairError
 
+from .exceptions import RunError
+
 
 class Flumine:
 
@@ -14,20 +16,16 @@ class Flumine:
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
 
-    def handler(self):
-        """Handles output from queue which
-        is filled by the listener.
-        """
-        while self._running:
-            events = self._queue.get()
-            for event in events:
-                self.recorder(event)
+        self._handler_thread = threading.Thread(target=self._handler, daemon=True)
+        self._handler_thread.start()
 
     def start(self):
         """Checks trading is logged in, creates socket,
         subscribes to markets, sets running to True and
         starts handler/run threads.
         """
+        if self._running:
+            raise RunError()
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
@@ -36,16 +34,25 @@ class Flumine:
                 market_data_filter=self.recorder.market_data_filter,
         )
         self._running = True
-        threading.Thread(target=self.handler, daemon=True).start()
         threading.Thread(target=self._run, daemon=True).start()
 
     def stop(self):
         """Stops socket, sets running to false
         and socket to None
         """
-        self._socket.stop()
+        if self._socket:
+            self._socket.stop()
         self._running = False
         self._socket = None
+
+    def _handler(self):
+        """Handles output from queue which
+        is filled by the listener.
+        """
+        while self._running:
+            events = self._queue.get()
+            for event in events:
+                self.recorder(event)
 
     def _run(self):
         """ Runs socket and catches any errors
@@ -53,6 +60,7 @@ class Flumine:
         try:
             self._socket.start(async=False)
         except BetfairError as e:
+            self.stop()
             print('flumine error', e)
 
     def _check_login(self):

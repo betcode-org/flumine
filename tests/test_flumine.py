@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.flumine import Flumine
+from flumine.exceptions import RunError
 from betfairlightweight import BetfairError
 
 
@@ -20,16 +21,22 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine._socket is None
         assert self.flumine._running is False
         assert self.flumine._listener is not None
+        assert self.flumine._handler_thread is not None
 
     def test_handler(self):
-        self.flumine.handler()
+        self.flumine._handler()
 
     @mock.patch('flumine.flumine.Flumine._run')
     @mock.patch('flumine.flumine.Flumine._create_socket')
     @mock.patch('flumine.flumine.Flumine._check_login')
     def test_start(self, mock_check_login, mock_create_socket, mock_run):
         mock_socket = mock.Mock()
+        handler_thread = mock.Mock()
+        run_thread = mock.Mock()
+
         self.flumine._socket = mock_socket
+        self.flumine._handler_thread = handler_thread
+        self.flumine._run_thread = run_thread
 
         self.flumine.start()
 
@@ -40,9 +47,13 @@ class FlumineTest(unittest.TestCase):
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter
         )
-        # mock_socket.start.assert_called_with(async=True)
         assert self.flumine._running is True
         mock_run.assert_called_with()
+
+    def test_start_running(self):
+        self.flumine._running = True
+        with self.assertRaises(RunError):
+            self.flumine.start()
 
     def test_stop(self):
         self.flumine._socket = mock.Mock()
