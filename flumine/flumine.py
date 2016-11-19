@@ -19,7 +19,6 @@ class Flumine:
             events = self._queue.get()
             for event in events:
                 self.recorder(event)
-        print('end handler')
 
     def start(self):
         self._check_login()
