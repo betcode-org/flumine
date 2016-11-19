@@ -13,12 +13,9 @@ The framework can be used as follows:
 
 ```python
 >>> import flumine
->>> import betfairlightweight
-
->>> trading = betfairlightweight.APIClient('username', 'password', app_key='app_key')
 
 >>> flumine = flumine.Flumine(
-            trading=trading,
+            trading=('username', 'password'),
             recorder=flumine.RacingRecorder(in_play=False)
     )
 >>> flumine.start()

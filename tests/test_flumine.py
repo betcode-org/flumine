@@ -62,6 +62,17 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine._running is False
         assert self.flumine._socket is None
 
+    @mock.patch('flumine.flumine.APIClient')
+    def test_create_client(self, mock_api_client):
+        trading = mock.Mock()
+        client = self.flumine._create_client(trading)
+
+        assert client == trading
+
+        trading = ('1', '2')
+        client = self.flumine._create_client(trading)
+        assert client == mock_api_client()
+
     def test_run(self):
         socket = mock.Mock()
         self.flumine._socket = socket

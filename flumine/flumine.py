@@ -1,6 +1,6 @@
 import queue
 import threading
-from betfairlightweight import StreamListener, BetfairError
+from betfairlightweight import APIClient, StreamListener, BetfairError
 
 from .exceptions import RunError
 
@@ -8,15 +8,15 @@ from .exceptions import RunError
 class Flumine:
 
     def __init__(self, trading, recorder):
-        self.trading = trading
+        self.trading = self._create_client(trading)
         self.recorder = recorder
 
         self._running = False
         self._socket = None
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
-
         self._handler_thread = threading.Thread(target=self._handler, daemon=True)
+
         self._handler_thread.start()
 
     def start(self):
@@ -44,6 +44,15 @@ class Flumine:
             self._socket.stop()
         self._running = False
         self._socket = None
+
+    @staticmethod
+    def _create_client(trading):
+        """Returns APIClient if tuple provided
+        """
+        if isinstance(trading, tuple):
+            return APIClient(username=trading[0], password=trading[1])
+        else:
+            return trading
 
     def _handler(self):
         """Handles output from queue which
