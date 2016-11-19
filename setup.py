@@ -14,7 +14,6 @@ setup(
         packages=['flumine', 'flumine.resources'],
         package_dir={'flumine': 'flumine'},
         install_requires=INSTALL_REQUIRES,
-        requires=['betfairlightweight>=0.8.4'],
         url='https://github.com/liampauling/flumine',
         license='MIT',
         author='liampauling',
