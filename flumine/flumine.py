@@ -15,7 +15,7 @@ class Flumine:
         self._socket = None
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
-        self._handler_thread = threading.Thread(target=self._handler, daemon=True)
+        self._handler_thread = threading.Thread(target=self._handler, daemon=False)
 
         self._handler_thread.start()
 
