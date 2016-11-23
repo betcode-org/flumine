@@ -59,10 +59,15 @@ class FlumineTest(unittest.TestCase):
 
     def test_stop(self):
         self.flumine._socket = mock.Mock()
+        self.flumine._running = True
         self.flumine.stop()
 
         assert self.flumine._running is False
         assert self.flumine._socket is None
+
+    def test_stop_error(self):
+        with self.assertRaises(RunError):
+            self.flumine.stop()
 
     @mock.patch('flumine.flumine.APIClient')
     def test_create_client(self, mock_api_client):
@@ -78,6 +83,7 @@ class FlumineTest(unittest.TestCase):
     def test_run(self):
         socket = mock.Mock()
         self.flumine._socket = socket
+        self.flumine._running = True
         self.flumine._run()
 
         socket.start.assert_called_with(async=False)

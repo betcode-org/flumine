@@ -23,7 +23,7 @@ class Flumine:
         starts handler/run threads.
         """
         if self._running:
-            raise RunError()
+            raise RunError('Flumine is already running')
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
@@ -39,10 +39,17 @@ class Flumine:
         """Stops socket, sets running to false
         and socket to None
         """
+        if not self._running:
+            raise RunError('Flumine is not running')
         if self._socket:
             self._socket.stop()
         self._running = False
         self._socket = None
+
+    def stream_status(self):
+        """Checks sockets status
+        """
+        return str(self._socket) if self._socket else 'Socket not created'
 
     @staticmethod
     def _create_client(trading):
@@ -90,13 +97,7 @@ class Flumine:
                 listener=self._listener
         )
 
-    def stream_status(self):
-        """Checks sockets status
-        """
-        return str(self._socket) if self._socket else 'Socket not created'
-
-    def __repr__(self):
-        return str(self)
-
     def __str__(self):
         return '<Flumine [%s]>' % ('running' if self._running else 'not running')
+
+    __repr__ = __str__
