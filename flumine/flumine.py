@@ -1,4 +1,5 @@
 import queue
+import time
 import threading
 from betfairlightweight import APIClient, StreamListener, BetfairError
 
@@ -15,9 +16,6 @@ class Flumine:
         self._socket = None
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
-        self._handler_thread = threading.Thread(target=self._handler, daemon=False)
-
-        self._handler_thread.start()
 
     def start(self):
         """Checks trading is logged in, creates socket,
@@ -35,6 +33,7 @@ class Flumine:
         )
         self._running = True
         threading.Thread(target=self._run, daemon=True).start()
+        threading.Thread(target=self._handler, daemon=False).start()
 
     def stop(self):
         """Stops socket, sets running to false
@@ -58,8 +57,12 @@ class Flumine:
         """Handles output from queue which
         is filled by the listener.
         """
-        while True:
-            events = self._queue.get()
+        while self._running:
+            try:
+                events = self._queue.get(block=False)
+            except queue.Empty:
+                time.sleep(0.01)
+                continue
             for event in events:
                 self.recorder(event)
 
