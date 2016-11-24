@@ -1,5 +1,4 @@
 import queue
-import time
 import threading
 from betfairlightweight import APIClient, StreamListener, BetfairError
 
@@ -66,9 +65,8 @@ class Flumine:
         """
         while self._running:
             try:
-                events = self._queue.get(block=False)
+                events = self._queue.get(timeout=0.01)
             except queue.Empty:
-                time.sleep(0.01)
                 continue
             for event in events:
                 self.recorder(event)
