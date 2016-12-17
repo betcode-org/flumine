@@ -16,9 +16,8 @@ class BaseRecorder:
     _market_data_filter = MarketDataFilter()
 
     def __call__(self, market_book):
-        """Checks market using market book
-        parameters function then passes
-        market_book to be processed
+        """Checks market using market book parameters
+        function then passes market_book to be processed.
 
         :param market_book: Market Book object
         """
@@ -54,8 +53,8 @@ class BaseRecorder:
 
 
 class RacingRecorder(BaseRecorder):
-    """Horse Racing data recorder, records
-    data to racing_data_yyyy-mm-dd.csv
+    """Horse Racing data recorder, records data
+    to racing_data_yyyy-mm-dd.csv
     """
 
     name = 'RACING_RECORDER'

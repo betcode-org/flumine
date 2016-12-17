@@ -55,7 +55,7 @@ class Flumine:
         """Returns APIClient if tuple provided
         """
         if isinstance(trading, tuple):
-            return APIClient(username=trading[0], password=trading[1])
+            return APIClient(username=trading[0])
         else:
             return trading
 
