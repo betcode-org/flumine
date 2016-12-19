@@ -19,5 +19,11 @@ setup(
         author='liampauling',
         author_email='',
         description='Betfair data record framework utilising streaming',
+        classifiers=[
+                'License :: OSI Approved :: MIT License',
+                'Operating System :: OS Independent',
+                'Programming Language :: Python :: 3.4',
+                'Programming Language :: Python :: 3.5',
+        ],
         test_suite='tests'
 )

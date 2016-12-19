@@ -12,8 +12,10 @@ class BaseRecorder:
     """
 
     name = 'BASE_RECORDER'
-    _market_filter = MarketFilter()
-    _market_data_filter = MarketDataFilter()
+
+    def __init__(self, market_filter=None, market_data_filter=None):
+        self._market_filter = market_filter or MarketFilter()
+        self._market_data_filter = market_data_filter or MarketDataFilter()
 
     def __call__(self, market_book):
         """Checks market using market book parameters
@@ -52,33 +54,24 @@ class BaseRecorder:
         return '<%s>' % self.name
 
 
-class RacingRecorder(BaseRecorder):
-    """Horse Racing data recorder, records data
-    to racing_data_yyyy-mm-dd.csv
+class DataRecorder(BaseRecorder):
+    """Data recorder, records data to
+    data_yyyy-mm-dd.csv
     """
 
-    name = 'RACING_RECORDER'
+    name = 'DATA_RECORDER'
 
-    def __init__(self, in_play=False, directory=''):
+    def __init__(self, market_filter, market_data_filter, in_play=False, directory=''):
+        super(DataRecorder, self).__init__(market_filter, market_data_filter)
         self.in_play = in_play
         self.directory = directory
-
-        self._market_filter = MarketFilter(
-                event_type_ids=['7'],
-                country_codes=['GB', 'IE'],
-                market_types=['WIN'],
-        )
-        self._market_data_filter = MarketDataFilter(
-                fields=['EX_BEST_OFFERS', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF'],
-                ladder_levels=1
-        )
 
     def market_book_parameters(self, market_book):
         if market_book.status != 'CLOSED' and market_book.status != 'SUSPENDED' and market_book.inplay == self.in_play:
             return True
 
     def process_market_book(self, market_book):
-        filename = 'racing_data_%s.csv' % datetime.date.today()
+        filename = 'data_%s.csv' % datetime.date.today()
         file_directory = os.path.join(self.directory, filename)
 
         fieldnames = [

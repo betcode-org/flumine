@@ -1,5 +1,5 @@
 from flumine.flumine import Flumine
-from flumine.resources import RacingRecorder, MarketFilter, MarketDataFilter
+from flumine.resources import DataRecorder, MarketFilter, MarketDataFilter
 
 
 __title__ = 'flumine'
