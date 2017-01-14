@@ -42,6 +42,11 @@ class BaseRecorder:
         """
         raise NotImplementedError
 
+    def on_market_closed(self, market_book):
+        """Function run when market is closed.
+        """
+        pass
+
     @property
     def market_filter(self):
         return self._market_filter.serialise
@@ -114,3 +119,6 @@ class MarketBookRecorder(DataRecorder):
         with open(file_directory, 'a') as outfile:
             writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
             writer.writerow([market_book.json()])
+
+    def on_market_closed(self, market_book):
+        self.process_market_book(market_book)

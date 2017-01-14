@@ -69,7 +69,10 @@ class Flumine:
             except queue.Empty:
                 continue
             for event in events:
-                self.recorder(event)
+                if event.status == 'CLOSED':
+                    self.recorder.on_market_closed(event)
+                else:
+                    self.recorder(event)
 
     def _run(self):
         """ Runs socket and catches any errors

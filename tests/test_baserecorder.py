@@ -34,6 +34,9 @@ class BaseRecorderTest(unittest.TestCase):
             mock_market_book = mock.Mock()
             self.base_recorder.process_market_book(mock_market_book)
 
+    def test_on_market_closed(self):
+        self.base_recorder.on_market_closed(None)
+
     def test_market_filter(self):
         assert self.base_recorder.market_filter == self.base_recorder._market_filter.serialise
 
