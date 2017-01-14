@@ -25,6 +25,8 @@ class BaseRecorder:
         """
         if self.market_book_parameters(market_book):
             self.process_market_book(market_book)
+        elif market_book.status == 'CLOSED':
+            self.on_market_closed(market_book)
 
     def market_book_parameters(self, market_book):
         """Logic used to decide if market_book should

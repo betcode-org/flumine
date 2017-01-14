@@ -20,10 +20,20 @@ class BaseRecorderTest(unittest.TestCase):
     @mock.patch('flumine.resources.recorder.BaseRecorder.market_book_parameters')
     def test_call(self, mock_market_book_parameters, mock_process_market_book):
         mock_market_book = mock.Mock()
+        mock_market_book.status = 'OPEN'
         self.base_recorder(mock_market_book)
 
         mock_market_book_parameters.assert_called_with(mock_market_book)
         mock_process_market_book.assert_called_with(mock_market_book)
+
+    @mock.patch('flumine.resources.recorder.BaseRecorder.market_book_parameters', return_value=False)
+    @mock.patch('flumine.resources.recorder.BaseRecorder.on_market_closed')
+    def test_call(self, on_market_closed, mock_market_book_parameters):
+        mock_market_book = mock.Mock()
+        mock_market_book.status = 'CLOSED'
+        self.base_recorder(mock_market_book)
+
+        on_market_closed.assert_called_with(mock_market_book)
 
     def test_market_book_parameters(self):
         mock_market_book = mock.Mock()
