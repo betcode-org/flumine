@@ -30,6 +30,11 @@ class MarketFilter:
 
 
 class MarketDataFilter:
+    """
+    fields: EX_BEST_OFFERS_DISP, EX_BEST_OFFERS, EX_ALL_OFFERS, EX_TRADED,
+            EX_TRADED_VOL, EX_LTP, EX_MARKET_DEF, SP_TRADED, SP_PROJECTED
+    ladder_levels: 1->10
+    """
 
     def __init__(self, fields=None, ladder_levels=None):
         self.fields = fields or []

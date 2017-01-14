@@ -98,3 +98,19 @@ class DataRecorder(BaseRecorder):
             'last_price_traded': runner.last_price_traded,
             'selection_matched': runner.total_matched,
         }
+
+
+class MarketBookRecorder(DataRecorder):
+    """MarketBook recorder, records market_book
+    to market_id.csv
+    """
+
+    name = 'MARKET_BOOK_RECORDER'
+
+    def process_market_book(self, market_book):
+        filename = '%s.csv' % market_book.market_id
+        file_directory = os.path.join(self.directory, filename)
+
+        with open(file_directory, 'a') as outfile:
+            writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
+            writer.writerow([market_book.json()])
