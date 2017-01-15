@@ -2,8 +2,7 @@ import csv
 import os
 import datetime
 from betfairlightweight.utils import price_check
-
-from .marketfilters import MarketFilter, MarketDataFilter
+from betfairlightweight import StreamingMarketFilter, StreamingMarketDataFilter
 
 
 class BaseRecorder:
@@ -14,8 +13,8 @@ class BaseRecorder:
     name = 'BASE_RECORDER'
 
     def __init__(self, market_filter=None, market_data_filter=None):
-        self._market_filter = market_filter or MarketFilter()
-        self._market_data_filter = market_data_filter or MarketDataFilter()
+        self._market_filter = market_filter or StreamingMarketFilter()
+        self._market_data_filter = market_data_filter or StreamingMarketDataFilter()
 
     def __call__(self, market_book):
         """Checks market using market book parameters
