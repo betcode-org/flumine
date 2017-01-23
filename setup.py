@@ -3,15 +3,19 @@ from flumine.__init__ import __version__
 
 
 INSTALL_REQUIRES = [
-    'betfairlightweight>=0.8.4'
+    'betfairlightweight>=0.9.5'
 ]
+
 TEST_REQUIRES = [
 ]
 
 setup(
         name='flumine',
         version=__version__,
-        packages=['flumine', 'flumine.resources'],
+        packages=[
+                'flumine',
+                'flumine.resources'
+        ],
         package_dir={'flumine': 'flumine'},
         install_requires=INSTALL_REQUIRES,
         url='https://github.com/liampauling/flumine',

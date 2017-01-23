@@ -67,14 +67,25 @@ class DataRecorder(BaseRecorder):
 
     name = 'DATA_RECORDER'
 
-    def __init__(self, market_filter, market_data_filter, in_play=False, directory=''):
+    def __init__(self, market_filter, market_data_filter, in_play=False, directory='', seconds_to_start=None):
         super(DataRecorder, self).__init__(market_filter, market_data_filter)
         self.in_play = in_play
         self.directory = directory
+        self.seconds_to_start = seconds_to_start
 
     def market_book_parameters(self, market_book):
         if market_book.status != 'CLOSED' and market_book.status != 'SUSPENDED' and market_book.inplay == self.in_play:
-            return True
+            if self.seconds_to_start:
+                seconds_to_start = (
+                    market_book.market_definition.market_time - datetime.datetime.utcnow()
+                ).total_seconds()
+
+                if seconds_to_start < 0:
+                    return False
+                elif seconds_to_start < self.seconds_to_start:
+                    return True
+            else:
+                return True
 
     def process_market_book(self, market_book):
         filename = 'data_%s.csv' % datetime.date.today()

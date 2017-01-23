@@ -26,7 +26,7 @@ class Flumine:
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
-                unique_id=2,
+                unique_id=123,
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
         )
