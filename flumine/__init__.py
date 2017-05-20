@@ -1,7 +1,7 @@
 from flumine.flumine import Flumine
-from flumine.resources import RacingRecorder, MarketFilter, MarketDataFilter
+from flumine.resources import BaseRecorder
 
 
 __title__ = 'flumine'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 __author__ = 'Liam Pauling'

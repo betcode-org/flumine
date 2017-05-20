@@ -1,4 +1,5 @@
 import queue
+import logging
 import threading
 from betfairlightweight import APIClient, StreamListener, BetfairError
 
@@ -22,11 +23,11 @@ class Flumine:
         starts handler/run threads.
         """
         if self._running:
-            raise RunError('Flumine is already running')
+            raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
-                unique_id=2,
+                unique_id=1000,
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
         )
@@ -55,7 +56,7 @@ class Flumine:
         """Returns APIClient if tuple provided
         """
         if isinstance(trading, tuple):
-            return APIClient(username=trading[0], password=trading[1])
+            return APIClient(username=trading[0])
         else:
             return trading
 
@@ -77,8 +78,8 @@ class Flumine:
         try:
             self._socket.start(async=False)
         except BetfairError as e:
+            logging.info('Betfair error: %s' % e)
             self.stop()
-            print('flumine error', e)
 
     def _check_login(self):
         """Login if session expired

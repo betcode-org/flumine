@@ -16,7 +16,7 @@ The framework can be used as follows:
 
 >>> flumine = flumine.Flumine(
             trading=('username', 'password'),
-            recorder=flumine.RacingRecorder(in_play=False)
+            recorder=flumine.DataRecorder(in_play=False)
     )
 >>> flumine.start()
 
