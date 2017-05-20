@@ -7,6 +7,12 @@ Betfair data record framework utilising streaming, requires [betfairlightweight]
 
 IN DEVELOPMENT.
 
+# installation
+
+```
+$ pip install flumine
+```
+
 # setup
 
 The framework can be used as follows:
