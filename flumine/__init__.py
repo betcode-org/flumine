@@ -1,5 +1,5 @@
 from flumine.flumine import Flumine
-from flumine.resources import DataRecorder
+from flumine.resources import BaseRecorder
 
 
 __title__ = 'flumine'

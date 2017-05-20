@@ -1,5 +1,6 @@
 import csv
 import os
+import json
 import datetime
 from betfairlightweight.filters import (
     streaming_market_filter,
@@ -87,7 +88,27 @@ class DataRecorder(BaseRecorder):
 
         with open(file_directory, 'a') as outfile:
             writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([market_book.json()])
+            writer.writerow(
+                [market_book.json()]
+            )
 
     def on_market_closed(self, market_book):
         self.process_market_book(market_book)  # last market book will contain results
+
+
+class StreamRecorder(DataRecorder):
+    """Data recorder, records stream data
+    to market_id.csv
+    """
+
+    name = 'STREAM_RECORDER'
+
+    def process_market_book(self, market_book):
+        filename = '%s.csv' % market_book.market_id
+        file_directory = os.path.join(self.directory, filename)
+
+        with open(file_directory, 'a') as outfile:
+            writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(
+                [json.dumps(market_book.streaming_update)]
+            )

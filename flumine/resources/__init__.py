@@ -1,1 +1,5 @@
-from .recorder import BaseRecorder, DataRecorder
+from .recorder import (
+    BaseRecorder,
+    DataRecorder,
+    StreamRecorder,
+)
