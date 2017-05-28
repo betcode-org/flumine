@@ -9,7 +9,7 @@ INSTALL_REQUIRES = [
 TEST_REQUIRES = [
 ]
 
-with open('betfairlightweight/__init__.py', 'r') as f:
+with open('flumine/__init__.py', 'r') as f:
     version = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
         f.read(),
