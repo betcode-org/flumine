@@ -1,17 +1,24 @@
+import re
 from setuptools import setup
-from flumine.__init__ import __version__
 
 
 INSTALL_REQUIRES = [
-    'betfairlightweight>=1.1'
+    'betfairlightweight>=1.2'
 ]
 
 TEST_REQUIRES = [
 ]
 
+with open('betfairlightweight/__init__.py', 'r') as f:
+    version = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+        f.read(),
+        re.MULTILINE
+    ).group(1)
+
 setup(
         name='flumine',
-        version=__version__,
+        version=version,
         packages=[
                 'flumine',
                 'flumine.resources'

@@ -1,1 +1,1 @@
-betfairlightweight>=0.9.5
+betfairlightweight>=1.2
