@@ -44,7 +44,6 @@ class FlumineTest(unittest.TestCase):
         mock_check_login.assert_called_with()
         mock_create_socket.assert_called_with()
         mock_socket.subscribe_to_markets.assert_called_with(
-                unique_id=1000,
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter
         )
@@ -102,7 +101,7 @@ class FlumineTest(unittest.TestCase):
 
         self.flumine.trading.streaming.create_stream.assert_called_with(
                 description='Flumine Socket',
-                unique_id=1,
+                unique_id=1000,
                 listener=self.listener
         )
 
