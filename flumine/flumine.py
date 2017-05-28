@@ -27,7 +27,6 @@ class Flumine:
         self._check_login()
         self._create_socket()
         self._socket.subscribe_to_markets(
-                unique_id=1000,
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
         )
@@ -91,7 +90,7 @@ class Flumine:
         """Creates stream
         """
         self._socket = self.trading.streaming.create_stream(
-                unique_id=1,
+                unique_id=1000,
                 description='Flumine Socket',
                 listener=self._listener
         )
