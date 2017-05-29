@@ -2,7 +2,6 @@ from api import (
     app,
     api,
 )
-
 from api.resources import (
     Settings,
     StreamList,

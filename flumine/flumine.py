@@ -9,6 +9,9 @@ from betfairlightweight import (
 
 from .exceptions import RunError
 
+logger = logging.getLogger('betfairlightweight')
+logger.setLevel(logging.INFO)
+
 
 class Flumine:
 
@@ -27,6 +30,7 @@ class Flumine:
         subscribes to markets, sets running to True and
         starts handler/run threads.
         """
+        logging.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
@@ -75,7 +79,7 @@ class Flumine:
             except queue.Empty:
                 continue
             for event in events:
-                self.recorder(event)
+                self.recorder(event)  # todo add error handling to kill
 
     def _run(self):
         """ Runs socket and catches any errors

@@ -10,7 +10,7 @@ from flumine.resources import recorder
 
 # recorder data
 RECORDERS = {
-    obj.NAME: {'name': name} for name, obj in inspect.getmembers(recorder) if inspect.isclass(obj)
+    obj.NAME: {'name': name, 'obj': obj} for name, obj in inspect.getmembers(recorder) if inspect.isclass(obj)
 }
 
 
