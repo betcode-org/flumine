@@ -14,7 +14,7 @@ IN DEVELOPMENT.
 - storage engine (s3 / google cloud etc.)
 - logging control class
 - docker
-- cli
+- cli (e.g. flumine create app, creates run.py and flumine_settings.json)
 
 ## setup
 
@@ -39,13 +39,11 @@ $ python run.py
         "locale": null,
         "cert_files": null
     },
-
     "streaming": {  // default settings
         "heartbeat_ms": null,
         "conflate_ms": null,
         "segmentation_enabled": true
     },
-
     "storage": {  // storage engine used to store recorded data
         "engine": "localhost",
         "directory": "/"
@@ -177,9 +175,7 @@ $ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/j
     },
     "recorder": "BASE_RECORDER",
     "running": false,
-    "start": "/api/stream/aea9ee72/start",
     "status": "not running",
-    "stop": "/api/stream/aea9ee72/stop",
     "unique_id": 1000
 }
 ```
