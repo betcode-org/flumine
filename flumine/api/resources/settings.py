@@ -1,6 +1,6 @@
 from flask_restful import Resource
 
-from api import config
+from .. import config
 
 
 class Settings(Resource):

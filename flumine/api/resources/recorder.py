@@ -4,7 +4,7 @@ from flask_restful import (
 )
 import inspect
 
-from flumine.resources import recorder
+from ...resources import recorder
 
 
 # recorder data
@@ -21,7 +21,9 @@ def abort_if_recorder_doesnt_exist(recorder_name):
 class RecorderList(Resource):
 
     def get(self):
-        return RECORDERS
+        return {
+            obj.NAME: {'name': name} for name, obj in inspect.getmembers(recorder) if inspect.isclass(obj)
+        }
 
 
 class Recorder(Resource):

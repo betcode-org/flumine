@@ -23,7 +23,8 @@ setup(
         version=version,
         packages=[
                 'flumine',
-                'flumine.resources'
+                'flumine.resources',
+                'flumine.api'
         ],
         package_dir={
                 'flumine': 'flumine'
@@ -33,7 +34,7 @@ setup(
         license='MIT',
         author='liampauling',
         author_email='',
-        description='Betfair data record framework utilising streaming',
+        description='Betfair data record framework utilising betfair streaming and flask',
         classifiers=[
                 'License :: OSI Approved :: MIT License',
                 'Operating System :: OS Independent',

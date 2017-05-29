@@ -1,6 +1,6 @@
-from flumine.flumine import Flumine
-from flumine import resources
-from flumine.exceptions import FlumineException
+from .flumine import Flumine
+from . import resources
+from .exceptions import FlumineException
 
 
 __title__ = 'flumine'

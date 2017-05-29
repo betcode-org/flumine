@@ -1,21 +1,19 @@
 import json
+from flask import request
 from flask_restful import (
     Resource,
     abort,
     reqparse,
     output_json,
 )
-from flask import url_for, request
 
-from .. import app
-from ..utils import create_short_uuid
-from .. import config
-from flumine import (
+from ... import (
     Flumine,
     FlumineException,
 )
 from .recorder import RECORDERS
-
+from .. import config
+from ..utils import create_short_uuid
 
 # stream data
 STREAMS = {}
@@ -106,12 +104,6 @@ class StreamList(Resource):
         return create_stream_info(new_id), 201
 
 
-stream_start_parser = reqparse.RequestParser()
-stream_start_parser.add_argument('conflate_msg', type=int, help="Conflation ms to be used")
-stream_start_parser.add_argument('heartbeat_ms', type=int, help="Heartbeat ms to be used")
-stream_start_parser.add_argument('segmentation_enabled', type=bool, help="Segmentation enabled or not")
-
-
 class Stream(Resource):
 
     def get(self, stream_id):
@@ -134,13 +126,12 @@ class Stream(Resource):
                 'time_created': flumine._listener.stream.time_created.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if flumine._listener.stream else None,
                 'time_updated': flumine._listener.stream.time_updated.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if flumine._listener.stream else None,
             },
-            'start': url_for('start', stream_id=stream_id),
-            'stop': url_for('stop', stream_id=stream_id),
         }, 200
 
-    @staticmethod
-    @app.route('/api/stream/<stream_id>/start', methods=['get'])
-    def start(stream_id):
+
+class StreamStart(Resource):
+
+    def get(self, stream_id):
         abort_if_stream_doesnt_exist(stream_id)
         streaming_settings = config.SETTINGS['streaming']
         try:
@@ -160,9 +151,10 @@ class Stream(Resource):
             'error_code': error_code,
         }, 200, headers=HEADERS)
 
-    @staticmethod
-    @app.route('/api/stream/<stream_id>/stop', methods=['get'])
-    def stop(stream_id):
+
+class StreamStop(Resource):
+
+    def get(self, stream_id):
         abort_if_stream_doesnt_exist(stream_id)
         try:
             response = STREAMS[stream_id]['flumine'].stop()

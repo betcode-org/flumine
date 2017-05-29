@@ -44,8 +44,7 @@ class BaseRecorder:
 
         :param market_book: Market Book object
         """
-        print(market_book)
-        # raise NotImplementedError
+        raise NotImplementedError
 
     def on_market_closed(self, market_book):
         """Function run when market is closed.

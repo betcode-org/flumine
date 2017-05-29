@@ -21,6 +21,52 @@ $ python run.py
 
 ## use
 
+View settings:
+```bash
+$ curl http://localhost:8080/api/settings -H "Content-Type: application/json"
+{
+    "betfairlightweight": {
+        "app_key": null,
+        "cert_files": null,
+        "certs": null,
+        "locale": null,
+        "password": null,
+        "username": "username"
+    },
+    "storage": {
+        "directory": "/",
+        "engine": "localhost"
+    },
+    "streaming": {
+        "conflate_ms": null,
+        "heartbeat_ms": null,
+        "segmentation_enabled": true
+    }
+}
+```
+
+View recorders:
+```bash
+$ curl http://localhost:8080/api/recorder -H "Content-Type: application/json"
+{
+    "BASE_RECORDER": {
+        "name": "BaseRecorder"
+    },
+    "DATA_RECORDER": {
+        "name": "DataRecorder"
+    },
+    "STREAM_RECORDER": {
+        "name": "StreamRecorder"
+    }
+}
+```
+
+View storage engine:
+```bash
+$ curl http://localhost:8080/api/storage -H "Content-Type: application/json"
+todo
+```
+
 Create stream:
 ```bash
 $ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"

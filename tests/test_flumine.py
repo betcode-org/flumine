@@ -47,7 +47,10 @@ class FlumineTest(unittest.TestCase):
         mock_create_socket.assert_called_with()
         mock_socket.subscribe_to_markets.assert_called_with(
                 market_filter=self.recorder.market_filter,
-                market_data_filter=self.recorder.market_data_filter
+                market_data_filter=self.recorder.market_data_filter,
+                conflate_ms=None,
+                heartbeat_ms=None,
+                segmentation_enabled=None,
         )
         assert self.flumine._running is True
         mock_run.assert_called_with()
