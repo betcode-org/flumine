@@ -7,6 +7,15 @@ Betfair data record framework utilising streaming and flask to create a simple r
 
 IN DEVELOPMENT.
 
+## roadmap
+
+- fully functional rest api
+- interactive frontend (similiar to portainer.io)
+- storage engine (s3 / google cloud etc.)
+- logging control class
+- docker
+- cli
+
 ## setup
 
 The framework can be used as follows:
@@ -19,9 +28,34 @@ The framework can be used as follows:
 $ python run.py
 ```
 
+## settings
+```json
+{
+    "betfairlightweight": {  # passed to APIClient
+        "username": "",
+        "password": null,
+        "app_key": null,
+        "certs": null,
+        "locale": null,
+        "cert_files": null
+    },
+
+    "streaming": {  # default settings
+        "heartbeat_ms": null,
+        "conflate_ms": null,
+        "segmentation_enabled": true
+    },
+
+    "storage": {  # storage engine used to store recorded data
+        "engine": "localhost",
+        "directory": "/"
+    }
+}
+```
+
 ## use
 
-View settings:
+### View settings:
 ```bash
 $ curl http://localhost:8080/api/settings -H "Content-Type: application/json"
 {
@@ -45,7 +79,7 @@ $ curl http://localhost:8080/api/settings -H "Content-Type: application/json"
 }
 ```
 
-View recorders:
+### View recorders:
 ```bash
 $ curl http://localhost:8080/api/recorder -H "Content-Type: application/json"
 {
@@ -61,13 +95,13 @@ $ curl http://localhost:8080/api/recorder -H "Content-Type: application/json"
 }
 ```
 
-View storage engine:
+### View storage engine:
 ```bash
 $ curl http://localhost:8080/api/storage -H "Content-Type: application/json"
 todo
 ```
 
-Create stream:
+### Create stream:
 ```bash
 $ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"
 {
@@ -91,7 +125,7 @@ $ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["
 }
 ```
 
-View all streams:
+### View all streams:
 ```bash
 $ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
 {
@@ -117,7 +151,7 @@ $ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
 }
 ```
 
-View stream detail:
+### View stream detail:
 ```bash
 $ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/json"
 {
@@ -150,7 +184,7 @@ $ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/j
 }
 ```
 
-Start/stop stream:
+### Start/stop stream:
 ```bash
 $ curl http://localhost:8080/api/stream/aea9ee72/start?conflate_ms=2000 -H "Content-Type: application/json"
 {
@@ -159,12 +193,3 @@ $ curl http://localhost:8080/api/stream/aea9ee72/start?conflate_ms=2000 -H "Cont
     "success": true
 }
 ```
-
-## roadmap
-
-- fully functional rest api
-- interactive frontend (similiar to portainer.io)
-- storage engine (s3 / google cloud etc.)
-- logging control class
-- docker
-- cli
