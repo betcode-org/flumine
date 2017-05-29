@@ -3,35 +3,110 @@
 [![Build Status](https://travis-ci.org/liampauling/flumine.svg?branch=master)](https://travis-ci.org/liampauling/flumine) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine)
 
 
-Betfair data record framework utilising streaming, requires [betfairlightweight](https://github.com/liampauling/betfairlightweight).
+Betfair data record framework utilising streaming and flask to create a simple rest API, requires [betfairlightweight](https://github.com/liampauling/betfairlightweight).
 
 IN DEVELOPMENT.
-
-# installation
-
-```
-$ pip install flumine
-```
 
 # setup
 
 The framework can be used as follows:
 
-```python
->>> import flumine
+- Clone library
+- Navigate to flumine and update flumine_settings.json with username/password etc.
 
->>> flumine = flumine.Flumine(
-            trading=('username', 'password'),
-            recorder=flumine.DataRecorder(in_play=False)
-    )
->>> flumine.start()
+```bash
+python run.py
+```
 
->>> flumine
-<Flumine [running]>
+Create stream:
+```bash
+curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"
+{
+    "description": null,
+    "market_data_filter": null,
+    "market_filter": {
+        "countryCodes": [
+            "IE"
+        ],
+        "eventTypeIds": [
+            "7"
+        ],
+        "market_types": [
+            "WIN"
+        ]
+    },
+    "recorder": "BASE_RECORDER",
+    "running": false,
+    "status": "not running",
+    "unique_id": 2000
+}
+```
 
->>> flumine.stop()
+View all streams:
+```bash
+curl http://localhost:8080/api/stream -H "Content-Type: application/json"
+{
+    "aea9ee72": {
+        "description": null,
+        "market_data_filter": null,
+        "market_filter": {
+            "countryCodes": [
+                "IE"
+            ],
+            "eventTypeIds": [
+                "7"
+            ],
+            "market_types": [
+                "WIN"
+            ]
+        },
+        "recorder": "BASE_RECORDER",
+        "running": false,
+        "status": "not running",
+        "unique_id": 1000
+    }
+}
+```
 
->>> flumine
-<Flumine [not running]>
+View all stream detail:
+```bash
+curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/json"
+{
+    "description": null,
+    "listener": {
+        "market_count": null,
+        "stream_type": null,
+        "time_created": null,
+        "time_updated": null,
+        "updates_processed": null
+    },
+    "market_data_filter": null,
+    "market_filter": {
+        "countryCodes": [
+            "IE"
+        ],
+        "eventTypeIds": [
+            "7"
+        ],
+        "market_types": [
+            "WIN"
+        ]
+    },
+    "recorder": "BASE_RECORDER",
+    "running": false,
+    "start": "/api/stream/aea9ee72/start",
+    "status": "not running",
+    "stop": "/api/stream/aea9ee72/stop",
+    "unique_id": 1000
+}
+```
 
+Start/stop stream:
+```bash
+curl http://localhost:8080/api/stream/aea9ee72/start -H "Content-Type: application/json"
+{
+    "error": null,
+    "error_code": null,
+    "success": true
+}
 ```
