@@ -7,16 +7,19 @@ Betfair data record framework utilising streaming and flask to create a simple r
 
 IN DEVELOPMENT.
 
-# setup
+## setup
 
 The framework can be used as follows:
 
-- Clone library
-- Navigate to flumine and update flumine_settings.json with username/password etc.
+- clone library
+- navigate to flumine
+- update flumine_settings.json with username/password etc.
 
 ```bash
 python run.py
 ```
+
+## use
 
 Create stream:
 ```bash
@@ -38,7 +41,7 @@ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"
     "recorder": "BASE_RECORDER",
     "running": false,
     "status": "not running",
-    "unique_id": 2000
+    "unique_id": 1000
 }
 ```
 
@@ -68,7 +71,7 @@ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
 }
 ```
 
-View all stream detail:
+View stream detail:
 ```bash
 curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/json"
 {
@@ -110,3 +113,11 @@ curl http://localhost:8080/api/stream/aea9ee72/start -H "Content-Type: applicati
     "success": true
 }
 ```
+
+## roadmap
+
+- fully functional rest api
+- interactive frontend (similiar to portainer.io)
+- storage engine (s3 / google cloud etc.)
+- logging control class
+- docker
