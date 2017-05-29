@@ -38,6 +38,7 @@ class Flumine:
         self._running = True
         threading.Thread(target=self._run, daemon=True).start()
         threading.Thread(target=self._handler, daemon=False).start()
+        return True
 
     def stop(self):
         """Stops socket, sets running to false
@@ -49,6 +50,7 @@ class Flumine:
             self._socket.stop()
         self._running = False
         self._socket = None
+        return True
 
     def stream_status(self):
         """Checks sockets status

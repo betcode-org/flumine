@@ -4,10 +4,17 @@ from flask_restful import (
     abort,
     reqparse,
 )
+from flask import jsonify
+from api import app
+from betfairlightweight.filters import streaming_market_filter
 
 from api.utils import create_short_uuid
 from api import config
-from flumine import Flumine
+from flumine import (
+    Flumine,
+    resources,
+    FlumineException,
+)
 
 
 # load settings
@@ -32,10 +39,27 @@ stream_list_parser.add_argument(
 stream_list_parser.add_argument('description', type=str, help="Stream description")
 
 
+def create_stream_list():
+    output = {}
+    for stream in STREAMS:
+        flumine = FLUMINES[stream]
+        stream_values = STREAMS[stream]
+        output[stream] = {
+            'status': flumine.status,
+            'running': flumine.running,
+            'description': stream_values['description'],
+            'recorder': stream_values['recorder'],
+            'market_filter': stream_values['market_filter'],
+            'market_data_filter': stream_values['market_data_filter'],
+            'unique_id': flumine.unique_id,
+        }
+    return output
+
+
 class StreamList(Resource):
 
     def get(self):
-        return STREAMS
+        return create_stream_list()
 
     def post(self):
         args = stream_list_parser.parse_args()
@@ -50,7 +74,13 @@ class StreamList(Resource):
         # create new flumine instance
         flumine = Flumine(
             settings=config.SETTINGS,
-            recorder=args['recorder'],
+            recorder=resources.BaseRecorder(
+                market_filter=streaming_market_filter(
+                    event_type_ids=['7'],
+                    country_codes=['IE'],
+                    market_types=['WIN'],
+                )
+            ),
             unique_id=unique_id,
         )
 
@@ -71,4 +101,51 @@ class Stream(Resource):
 
     def get(self, stream_id):
         abort_if_stream_doesnt_exist(stream_id)
-        return STREAMS[stream_id]
+        flumine = FLUMINES[stream_id]
+        stream = STREAMS[stream_id]
+
+        return jsonify({
+            'status': flumine.status,
+            'running': flumine.running,
+            'description': stream['description'],
+            'recorder': stream['recorder'],
+            'market_filter': stream['market_filter'],
+            'market_data_filter': stream['market_data_filter'],
+            'unique_id': flumine.unique_id,
+
+            'listener': {
+
+            }
+        })
+
+    @app.route('/api/stream/<stream_id>/start', methods=['get'])
+    def start(stream_id):
+        abort_if_stream_doesnt_exist(stream_id)
+        try:
+            response = FLUMINES[stream_id].start()
+            error, error_code = None, None
+        except FlumineException as e:
+            response = False
+            error = str(e)
+            error_code = e.__class__.__name__
+        return jsonify({
+            'success': response,
+            'error': error,
+            'error_code': error_code,
+        })
+
+    @app.route('/api/stream/<stream_id>/stop', methods=['get'])
+    def stop(stream_id):
+        abort_if_stream_doesnt_exist(stream_id)
+        try:
+            response = FLUMINES[stream_id].stop()
+            error, error_code = None, None
+        except FlumineException as e:
+            response = False
+            error = str(e)
+            error_code = e.__class__.__name__
+        return jsonify({
+            'success': response,
+            'error': error,
+            'error_code': error_code,
+        })

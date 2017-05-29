@@ -1,9 +1,6 @@
 from flumine.flumine import Flumine
-from flumine.resources import (
-    BaseRecorder,
-    DataRecorder,
-    StreamRecorder,
-)
+from flumine import resources
+from flumine.exceptions import FlumineException
 
 
 __title__ = 'flumine'
