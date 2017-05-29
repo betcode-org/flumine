@@ -1,15 +1,19 @@
 import queue
 import logging
 import threading
-from betfairlightweight import APIClient, StreamListener, BetfairError
+from betfairlightweight import (
+    APIClient,
+    StreamListener,
+    BetfairError,
+)
 
 from .exceptions import RunError
 
 
 class Flumine:
 
-    def __init__(self, trading, recorder):
-        self.trading = self._create_client(trading)
+    def __init__(self, settings, recorder=None):
+        self.trading = self._create_client(settings)
         self.recorder = recorder
 
         self._running = False
@@ -51,13 +55,12 @@ class Flumine:
         return str(self._socket) if self._socket else 'Socket not created'
 
     @staticmethod
-    def _create_client(trading):
-        """Returns APIClient if tuple provided
+    def _create_client(settings):
+        """Returns APIClient based on settings
         """
-        if isinstance(trading, tuple):
-            return APIClient(username=trading[0])
-        else:
-            return trading
+        return APIClient(
+            **settings.get('betfairlightweight')
+        )
 
     def _handler(self):
         """Handles output from queue which

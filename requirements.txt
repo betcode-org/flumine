@@ -1,1 +1,3 @@
 betfairlightweight>=1.2
+flask
+flask_restful

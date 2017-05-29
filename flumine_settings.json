@@ -1,0 +1,21 @@
+{
+    "betfairlightweight": {
+        "username": "",
+        "password": null,
+        "app_key": null,
+        "certs": null,
+        "locale": null,
+        "cert_files": null
+    },
+
+    "streaming": {
+        "heartbeat_ms": null,
+        "conflate_ms": null,
+        "segmentation_enabled": true
+    },
+
+    "storage": {
+        "engine": "localhost",
+        "directory": "/"
+    }
+}
