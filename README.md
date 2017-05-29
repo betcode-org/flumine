@@ -31,7 +31,7 @@ $ python run.py
 ## settings
 ```json
 {
-    "betfairlightweight": {  # passed to APIClient
+    "betfairlightweight": {  // passed to APIClient
         "username": "",
         "password": null,
         "app_key": null,
@@ -40,13 +40,13 @@ $ python run.py
         "cert_files": null
     },
 
-    "streaming": {  # default settings
+    "streaming": {  // default settings
         "heartbeat_ms": null,
         "conflate_ms": null,
         "segmentation_enabled": true
     },
 
-    "storage": {  # storage engine used to store recorded data
+    "storage": {  // storage engine used to store recorded data
         "engine": "localhost",
         "directory": "/"
     }
