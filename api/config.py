@@ -1,4 +1,2 @@
 
 SETTINGS = None
-
-trading = None

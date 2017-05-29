@@ -12,9 +12,10 @@ from .exceptions import RunError
 
 class Flumine:
 
-    def __init__(self, settings, recorder=None):
+    def __init__(self, settings, recorder, unique_id=1e3):
         self.trading = self._create_client(settings)
         self.recorder = recorder
+        self.unique_id = unique_id
 
         self._running = False
         self._socket = None
@@ -30,7 +31,7 @@ class Flumine:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
         self._create_socket()
-        self._socket.subscribe_to_markets(
+        self.unique_id = self._socket.subscribe_to_markets(
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
         )
@@ -93,12 +94,20 @@ class Flumine:
         """Creates stream
         """
         self._socket = self.trading.streaming.create_stream(
-                unique_id=1000,
+                unique_id=self.unique_id,
                 description='Flumine Socket',
                 listener=self._listener
         )
 
+    @property
+    def running(self):
+        return True if self._running else False
+
+    @property
+    def status(self):
+        return 'running' if self._running else 'not running'
+
     def __str__(self):
-        return '<Flumine [%s]>' % ('running' if self._running else 'not running')
+        return '<Flumine [%s]>' % self.status
 
     __repr__ = __str__

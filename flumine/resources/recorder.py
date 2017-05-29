@@ -13,7 +13,7 @@ class BaseRecorder:
     markets.
     """
 
-    name = 'BASE_RECORDER'
+    NAME = 'BASE_RECORDER'
 
     def __init__(self, market_filter=None, market_data_filter=None):
         self.market_filter = market_filter or streaming_market_filter()
@@ -52,7 +52,7 @@ class BaseRecorder:
         pass
 
     def __str__(self):
-        return '<%s>' % self.name
+        return '<%s>' % self.NAME
 
 
 class DataRecorder(BaseRecorder):
@@ -60,7 +60,7 @@ class DataRecorder(BaseRecorder):
     market_id.csv
     """
 
-    name = 'DATA_RECORDER'
+    NAME = 'DATA_RECORDER'
 
     def __init__(self, market_filter, market_data_filter, in_play=None, directory='', seconds_to_start=None):
         super(DataRecorder, self).__init__(market_filter, market_data_filter)
@@ -102,7 +102,7 @@ class StreamRecorder(DataRecorder):
     to market_id.csv
     """
 
-    name = 'STREAM_RECORDER'
+    NAME = 'STREAM_RECORDER'
 
     def process_market_book(self, market_book):
         filename = '%s.csv' % market_book.market_id
