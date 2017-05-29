@@ -29,7 +29,7 @@ $ python run.py
 ```
 
 ## settings
-```json
+```javascript
 {
     "betfairlightweight": {  // passed to APIClient
         "username": "",
