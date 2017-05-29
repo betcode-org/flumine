@@ -32,7 +32,7 @@ $ python run.py
 ```javascript
 {
     "betfairlightweight": {  // passed to APIClient
-        "username": "",
+        "username": "username",  // required
         "password": null,
         "app_key": null,
         "certs": null,
