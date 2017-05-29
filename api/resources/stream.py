@@ -5,7 +5,7 @@ from flask_restful import (
     reqparse,
     output_json,
 )
-from flask import url_for
+from flask import url_for, request
 
 from .. import app
 from ..utils import create_short_uuid
@@ -106,6 +106,12 @@ class StreamList(Resource):
         return create_stream_info(new_id), 201
 
 
+stream_start_parser = reqparse.RequestParser()
+stream_start_parser.add_argument('conflate_msg', type=int, help="Conflation ms to be used")
+stream_start_parser.add_argument('heartbeat_ms', type=int, help="Heartbeat ms to be used")
+stream_start_parser.add_argument('segmentation_enabled', type=bool, help="Segmentation enabled or not")
+
+
 class Stream(Resource):
 
     def get(self, stream_id):
@@ -136,8 +142,13 @@ class Stream(Resource):
     @app.route('/api/stream/<stream_id>/start', methods=['get'])
     def start(stream_id):
         abort_if_stream_doesnt_exist(stream_id)
+        streaming_settings = config.SETTINGS['streaming']
         try:
-            response = STREAMS[stream_id]['flumine'].start()
+            response = STREAMS[stream_id]['flumine'].start(
+                heartbeat_ms=request.args.get('heartbeat_ms', streaming_settings['heartbeat_ms']),
+                conflate_ms=request.args.get('conflate_ms', streaming_settings['conflate_ms']),
+                segmentation_enabled=request.args.get('segmentation_enabled', streaming_settings['segmentation_enabled'])
+            )
             error, error_code = None, None
         except FlumineException as e:
             response = False

@@ -25,7 +25,7 @@ class Flumine:
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
 
-    def start(self):
+    def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None):
         """Checks trading is logged in, creates socket,
         subscribes to markets, sets running to True and
         starts handler/run threads.
@@ -38,6 +38,9 @@ class Flumine:
         self.unique_id = self._socket.subscribe_to_markets(
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
+                conflate_ms=conflate_ms,
+                heartbeat_ms=heartbeat_ms,
+                segmentation_enabled=segmentation_enabled,
         )
         self._running = True
         threading.Thread(target=self._run, daemon=True).start()

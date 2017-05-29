@@ -3,7 +3,9 @@ from setuptools import setup
 
 
 INSTALL_REQUIRES = [
-    'betfairlightweight>=1.2'
+    'betfairlightweight>=1.2',
+    'flask',
+    'flask_restful',
 ]
 
 TEST_REQUIRES = [

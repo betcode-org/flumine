@@ -16,14 +16,14 @@ The framework can be used as follows:
 - update flumine_settings.json with username/password etc.
 
 ```bash
-python run.py
+$ python run.py
 ```
 
 ## use
 
 Create stream:
 ```bash
-curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"
+$ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"
 {
     "description": null,
     "market_data_filter": null,
@@ -47,7 +47,7 @@ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"
 
 View all streams:
 ```bash
-curl http://localhost:8080/api/stream -H "Content-Type: application/json"
+$ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
 {
     "aea9ee72": {
         "description": null,
@@ -73,7 +73,7 @@ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
 
 View stream detail:
 ```bash
-curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/json"
+$ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/json"
 {
     "description": null,
     "listener": {
@@ -106,7 +106,7 @@ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/jso
 
 Start/stop stream:
 ```bash
-curl http://localhost:8080/api/stream/aea9ee72/start -H "Content-Type: application/json"
+$ curl http://localhost:8080/api/stream/aea9ee72/start?conflate_ms=2000 -H "Content-Type: application/json"
 {
     "error": null,
     "error_code": null,
@@ -121,3 +121,4 @@ curl http://localhost:8080/api/stream/aea9ee72/start -H "Content-Type: applicati
 - storage engine (s3 / google cloud etc.)
 - logging control class
 - docker
+- cli
