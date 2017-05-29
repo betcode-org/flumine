@@ -1,38 +1,51 @@
 import queue
 import logging
 import threading
-from betfairlightweight import APIClient, StreamListener, BetfairError
+from betfairlightweight import (
+    APIClient,
+    StreamListener,
+    BetfairError,
+)
 
 from .exceptions import RunError
+
+logger = logging.getLogger('betfairlightweight')
+logger.setLevel(logging.INFO)
 
 
 class Flumine:
 
-    def __init__(self, trading, recorder):
-        self.trading = self._create_client(trading)
+    def __init__(self, settings, recorder, unique_id=1e3):
+        self.trading = self._create_client(settings)
         self.recorder = recorder
+        self.unique_id = unique_id
 
         self._running = False
         self._socket = None
         self._queue = queue.Queue()
         self._listener = StreamListener(self._queue)
 
-    def start(self):
+    def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None):
         """Checks trading is logged in, creates socket,
         subscribes to markets, sets running to True and
         starts handler/run threads.
         """
+        logging.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
         self._create_socket()
-        self._socket.subscribe_to_markets(
+        self.unique_id = self._socket.subscribe_to_markets(
                 market_filter=self.recorder.market_filter,
                 market_data_filter=self.recorder.market_data_filter,
+                conflate_ms=conflate_ms,
+                heartbeat_ms=heartbeat_ms,
+                segmentation_enabled=segmentation_enabled,
         )
         self._running = True
         threading.Thread(target=self._run, daemon=True).start()
         threading.Thread(target=self._handler, daemon=False).start()
+        return True
 
     def stop(self):
         """Stops socket, sets running to false
@@ -44,6 +57,7 @@ class Flumine:
             self._socket.stop()
         self._running = False
         self._socket = None
+        return True
 
     def stream_status(self):
         """Checks sockets status
@@ -51,13 +65,12 @@ class Flumine:
         return str(self._socket) if self._socket else 'Socket not created'
 
     @staticmethod
-    def _create_client(trading):
-        """Returns APIClient if tuple provided
+    def _create_client(settings):
+        """Returns APIClient based on settings
         """
-        if isinstance(trading, tuple):
-            return APIClient(username=trading[0])
-        else:
-            return trading
+        return APIClient(
+            **settings.get('betfairlightweight')
+        )
 
     def _handler(self):
         """Handles output from queue which
@@ -69,7 +82,7 @@ class Flumine:
             except queue.Empty:
                 continue
             for event in events:
-                self.recorder(event)
+                self.recorder(event)  # todo add error handling to kill
 
     def _run(self):
         """ Runs socket and catches any errors
@@ -90,12 +103,20 @@ class Flumine:
         """Creates stream
         """
         self._socket = self.trading.streaming.create_stream(
-                unique_id=1000,
+                unique_id=self.unique_id,
                 description='Flumine Socket',
                 listener=self._listener
         )
 
+    @property
+    def running(self):
+        return True if self._running else False
+
+    @property
+    def status(self):
+        return 'running' if self._running else 'not running'
+
     def __str__(self):
-        return '<Flumine [%s]>' % ('running' if self._running else 'not running')
+        return '<Flumine [%s]>' % self.status
 
     __repr__ = __str__

@@ -12,7 +12,7 @@ class BaseRecorderTest(unittest.TestCase):
         self.base_recorder = BaseRecorder(self.mock_market_filter, self.mock_market_data_filter)
 
     def test_init(self):
-        assert self.base_recorder.name == 'BASE_RECORDER'
+        assert self.base_recorder.NAME == 'BASE_RECORDER'
         assert self.base_recorder.market_filter == self.mock_market_filter
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
 
@@ -63,7 +63,7 @@ class DataRecorderTest(unittest.TestCase):
         )
 
     def test_init(self):
-        assert self.data_recorder.name == 'DATA_RECORDER'
+        assert self.data_recorder.NAME == 'DATA_RECORDER'
         assert self.data_recorder.market_filter == self.mock_market_filter
         assert self.data_recorder.market_data_filter == self.mock_market_data_filter
         assert self.data_recorder.in_play == self.in_play
@@ -89,7 +89,7 @@ class StreamRecorderTest(unittest.TestCase):
         )
 
     def test_init(self):
-        assert self.data_recorder.name == 'STREAM_RECORDER'
+        assert self.data_recorder.NAME == 'STREAM_RECORDER'
         assert self.data_recorder.market_filter == self.mock_market_filter
         assert self.data_recorder.market_data_filter == self.mock_market_data_filter
         assert self.data_recorder.in_play == self.in_play
