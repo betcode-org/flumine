@@ -23,7 +23,7 @@ class Flumine:
         self._running = False
         self._socket = None
         self._queue = queue.Queue()
-        self._listener = StreamListener(self._queue)
+        self.listener = StreamListener(self._queue)
 
     def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None):
         """Checks trading is logged in, creates socket,
@@ -105,7 +105,7 @@ class Flumine:
         self._socket = self.trading.streaming.create_stream(
                 unique_id=self.unique_id,
                 description='Flumine Socket',
-                listener=self._listener
+                listener=self.listener
         )
 
     @property

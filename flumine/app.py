@@ -69,6 +69,7 @@ def recorders():
         {obj.NAME: {'name': name} for name, obj in inspect.getmembers(recorder) if inspect.isclass(obj)}
     )
 
+
 @app.route("/api/storage")
 def storage():
     return jsonify(storage_engine.extra)
@@ -117,7 +118,13 @@ def post_stream():
 
 @app.route("/api/stream/<stream_id>")
 def get_stream(stream_id):
-    stream = STREAMS[stream_id]
+    try:
+        stream = STREAMS[stream_id]
+    except KeyError:
+        return jsonify({
+            'error': 'Stream id %s not found' % stream_id,
+            'error_code': 'NOT_FOUND'
+        }), 404
     flumine = stream['flumine']
     return jsonify({
         'status': flumine.status,
@@ -128,49 +135,76 @@ def get_stream(stream_id):
         'market_data_filter': stream['market_data_filter'],
         'unique_id': flumine.unique_id,
         'listener': {
-            'stream_type': flumine._listener.stream_type,
-            'market_count': len(flumine._listener.stream._caches) if flumine._listener.stream else None,
-            'updates_processed': flumine._listener.stream._updates_processed if flumine._listener.stream else None,
-            'time_created': flumine._listener.stream.time_created.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine._listener.stream else None,
-            'time_updated': flumine._listener.stream.time_updated.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine._listener.stream else None,
+            'stream_type': flumine.listener.stream_type,
+            'market_count': len(flumine.listener.stream._caches) if flumine.listener.stream else None,
+            'updates_processed': flumine.listener.stream._updates_processed if flumine.listener.stream else None,
+            'time_created': flumine.listener.stream.time_created.strftime(
+                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream else None,
+            'time_updated': flumine.listener.stream.time_updated.strftime(
+                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream else None,
         },
     })
 
 
 @app.route("/api/stream/<stream_id>/start")
 def stream_start(stream_id):
+    try:
+        stream = STREAMS[stream_id]
+    except KeyError:
+        return jsonify({
+            'error': 'Stream id %s not found' % stream_id,
+            'error_code': 'NOT_FOUND'
+        }), 404
     streaming_settings = SETTINGS['streaming']
     try:
-        response = STREAMS[stream_id]['flumine'].start(
+        stream['flumine'].start(
             heartbeat_ms=request.args.get('heartbeat_ms', streaming_settings['heartbeat_ms']),
             conflate_ms=request.args.get('conflate_ms', streaming_settings['conflate_ms']),
             segmentation_enabled=request.args.get('segmentation_enabled', streaming_settings['segmentation_enabled'])
         )
-        error, error_code = None, None
+        return jsonify({'success': True}), 200
     except FlumineException as e:
-        response = False
-        error = str(e)
-        error_code = e.__class__.__name__
-    return jsonify({
-        'success': response,
-        'error': error,
-        'error_code': error_code,
-    })
+        return jsonify({
+            'error': str(e),
+            'error_code': e.__class__.__name__
+        }), 500
 
 
 @app.route("/api/stream/<stream_id>/stop")
 def stream_stop(stream_id):
     try:
-        response = STREAMS[stream_id]['flumine'].stop()
-        error, error_code = None, None
+        stream = STREAMS[stream_id]
+    except KeyError:
+        return jsonify({
+            'error': 'Stream id %s not found' % stream_id,
+            'error_code': 'NOT_FOUND'
+        }), 404
+    try:
+        stream['flumine'].stop()
+        return jsonify({'success': True}), 200
     except FlumineException as e:
-        response = False
-        error = str(e)
-        error_code = e.__class__.__name__
-    return jsonify({
-        'success': response,
-        'error': error,
-        'error_code': error_code,
-    })
+        return jsonify({
+            'error': str(e),
+            'error_code': e.__class__.__name__
+        }), 500
+
+
+@app.route("/api/stream/<stream_id>", methods=['DELETE'])
+def delete_stream(stream_id):
+    try:
+        stream = STREAMS[stream_id]
+    except KeyError:
+        return jsonify({
+            'error': 'Stream id %s not found' % stream_id,
+            'error_code': 'NOT_FOUND'
+        }), 404
+    flumine = stream['flumine']
+    running = flumine.running
+    if running:
+        return jsonify({
+            'error': 'Stream is still running, call <stream_id>/stop first',
+            'error_code': 'NOT_ALLOWED'
+        }), 405
+    else:
+        del STREAMS[stream_id]
+        return jsonify({'success': True}), 200
