@@ -5,6 +5,7 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     'betfairlightweight>=1.2',
     'flask',
+    'boto3',
 ]
 
 TEST_REQUIRES = [

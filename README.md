@@ -45,34 +45,53 @@ $ python run.py
         "segmentation_enabled": true
     },
     "storage": {  // storage engine used to store recorded data
-        "engine": "localhost",
-        "directory": "/"
+        "engine": "S3",  // engine type, can be S3 or LOCAL
+        "settings": {
+            "directory": "flumine-test",  // bucket name in this case
+            "access_key": null,  // optional
+            "secret_key": null  // optional
+        }
     }
 }
 ```
 
 ## use
 
+### Top level:
+```bash
+$ curl http://localhost:8080/api -H "Content-Type: application/json"
+{
+  "recorders": "/api/recorder",
+  "settings": "/api/settings",
+  "storage": "/api/storage",
+  "streams": "/api/stream"
+}
+```
+
 ### View settings:
 ```bash
 $ curl http://localhost:8080/api/settings -H "Content-Type: application/json"
 {
     "betfairlightweight": {
+        "username": "username",
+        "password": null,
         "app_key": null,
-        "cert_files": null,
         "certs": null,
         "locale": null,
-        "password": null,
-        "username": "username"
-    },
-    "storage": {
-        "directory": "/",
-        "engine": "localhost"
+        "cert_files": null
     },
     "streaming": {
-        "conflate_ms": null,
         "heartbeat_ms": null,
+        "conflate_ms": null,
         "segmentation_enabled": true
+    },
+    "storage": {
+        "engine": "S3",
+        "settings": {
+            "directory": "flumine-test",
+            "access_key": null,
+            "secret_key": null
+        }
     }
 }
 ```
@@ -96,12 +115,17 @@ $ curl http://localhost:8080/api/recorder -H "Content-Type: application/json"
 ### View storage engine:
 ```bash
 $ curl http://localhost:8080/api/storage -H "Content-Type: application/json"
-todo
+{
+  "directory": "flumine-test",
+  "markets_loaded": [],
+  "markets_loaded_count": 0,
+  "name": "S3"
+}
 ```
 
 ### Create stream:
 ```bash
-$ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "BASE_RECORDER"}' -X POST -v -H "Content-Type: application/json"
+$ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["7"], "countryCodes":["IE"], "market_types":["WIN"]}, "recorder": "STREAM_RECORDER"}' -X POST -v -H "Content-Type: application/json"
 {
     "description": null,
     "market_data_filter": null,
@@ -116,9 +140,8 @@ $ curl http://localhost:8080/api/stream -d '{"market_filter": {"eventTypeIds":["
             "WIN"
         ]
     },
-    "recorder": "BASE_RECORDER",
+    "recorder": "STREAM_RECORDER",
     "running": false,
-    "status": "not running",
     "unique_id": 1000
 }
 ```
@@ -143,7 +166,6 @@ $ curl http://localhost:8080/api/stream -H "Content-Type: application/json"
         },
         "recorder": "BASE_RECORDER",
         "running": false,
-        "status": "not running",
         "unique_id": 1000
     }
 }

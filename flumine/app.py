@@ -2,7 +2,8 @@ import json
 from flask import (
     Flask,
     request,
-    jsonify
+    jsonify,
+    url_for,
 )
 import inspect
 
@@ -22,9 +23,12 @@ with open('flumine_settings.json') as data_file:
 # storage engine
 engine_settings = SETTINGS['storage']
 ENGINES = {
-    obj.NAME: {'name': name, 'obj': obj} for name, obj in inspect.getmembers(storageengine) if inspect.isclass(obj)
+    obj.NAME: {'name': name, 'obj': obj} for name, obj in inspect.getmembers(storageengine) if inspect.isclass(obj) and
+    name not in ['S3Transfer', 'TransferConfig', 'BotoCoreError']
 }
-storage_engine = ENGINES[engine_settings['engine']]['obj'](engine_settings['directory'])
+storage_engine = ENGINES[engine_settings['engine']]['obj'](
+    **engine_settings['settings']
+)
 
 # recorder data
 RECORDERS = {
@@ -56,6 +60,16 @@ def create_stream_info(stream_id):
 @app.route("/")
 def hello():
     return "Hello World!"
+
+
+@app.route("/api")
+def api():
+    return jsonify(
+        settings=url_for('.settings'),
+        recorders=url_for('.recorders'),
+        storage=url_for('.storage'),
+        streams=url_for('.streams'),
+    )
 
 
 @app.route("/api/settings")

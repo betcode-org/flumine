@@ -4,17 +4,20 @@ from unittest import mock
 from flumine.storage.storageengine import (
     BaseEngine,
     Local,
+    S3,
 )
 
 
 class BaseEngineTest(unittest.TestCase):
 
     def setUp(self):
-        self.engine = BaseEngine()
+        self.directory = mock.Mock()
+        self.engine = BaseEngine(self.directory)
 
     def test_init(self):
         assert self.engine.NAME is None
         assert self.engine.markets_loaded == []
+        assert self.engine.directory == self.directory
 
     @mock.patch('flumine.storage.storageengine.BaseEngine.clean_up')
     @mock.patch('flumine.storage.storageengine.BaseEngine.load')
@@ -56,6 +59,7 @@ class BaseEngineTest(unittest.TestCase):
             'name': self.engine.NAME,
             'markets_loaded': self.engine.markets_loaded,
             'markets_loaded_count': self.engine.markets_loaded_count,
+            'directory': self.directory,
         }
 
 
@@ -78,3 +82,9 @@ class LocalTest(unittest.TestCase):
         self.engine.directory = '/sefiodeg'
         with self.assertRaises(OSError):
             self.engine.validate_settings()
+
+
+class S3Test(unittest.TestCase):
+
+    def setUp(self):
+        self.engine = S3('/fdsgjriget')

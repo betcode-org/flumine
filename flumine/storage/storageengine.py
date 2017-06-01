@@ -2,14 +2,22 @@ import os
 import shutil
 import zipfile
 import logging
+import boto3
+from boto3.s3.transfer import (
+    S3Transfer,
+    TransferConfig,
+)
+from botocore.exceptions import BotoCoreError
 
 
 class BaseEngine:
 
     NAME = None
 
-    def __init__(self):
+    def __init__(self, directory):
+        self.directory = directory
         self.markets_loaded = []
+        self.validate_settings()
 
     def __call__(self, market_id):
         file_dir = os.path.join('/tmp', '%s' % market_id)
@@ -37,7 +45,7 @@ class BaseEngine:
         """Validates settings e.g. directory
         provided, raises OSError
         """
-        raise NotImplementedError
+        pass
 
     @staticmethod
     def clean_up(file_dir, zip_file_dir):
@@ -66,6 +74,7 @@ class BaseEngine:
             'name': self.NAME,
             'markets_loaded': self.markets_loaded,
             'markets_loaded_count': self.markets_loaded_count,
+            'directory': self.directory,
         }
 
 
@@ -73,14 +82,38 @@ class Local(BaseEngine):
 
     NAME = 'LOCAL'
 
-    def __init__(self, directory):
-        super(Local, self).__init__()
-        self.directory = directory
-        self.validate_settings()
-
     def validate_settings(self):
         if not os.path.isdir(self.directory):
             raise OSError('File dir %s does not exist' % self.directory)
 
     def load(self, zip_file_dir):
         shutil.copy(zip_file_dir, self.directory)
+
+
+class S3(BaseEngine):
+
+    NAME = 'S3'
+
+    def __init__(self, directory, access_key=None, secret_key=None):
+        self.s3 = boto3.client(
+            's3',
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+        )
+        transfer_config = TransferConfig(use_threads=False)
+        self.transfer = S3Transfer(self.s3, config=transfer_config)
+        super(S3, self).__init__(directory)
+
+    def validate_settings(self):
+        # error raised if bucket not present
+        self.s3.head_bucket(Bucket=self.directory)
+
+    def load(self, zip_file_dir):
+        try:
+            self.transfer.upload_file(
+                filename=zip_file_dir,
+                bucket=self.directory,
+                key=os.path.basename(zip_file_dir),
+            )
+        except (BotoCoreError, Exception) as e:
+            pass  # todo
