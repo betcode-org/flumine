@@ -7,12 +7,14 @@ from flumine.resources.recorder import BaseRecorder, DataRecorder, StreamRecorde
 class BaseRecorderTest(unittest.TestCase):
 
     def setUp(self):
+        self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
-        self.base_recorder = BaseRecorder(self.mock_market_filter, self.mock_market_data_filter)
+        self.base_recorder = BaseRecorder(self.storage, self.mock_market_filter, self.mock_market_data_filter)
 
     def test_init(self):
         assert self.base_recorder.NAME == 'BASE_RECORDER'
+        assert self.base_recorder.storage_engine == self.storage
         assert self.base_recorder.market_filter == self.mock_market_filter
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
 
@@ -54,20 +56,20 @@ class BaseRecorderTest(unittest.TestCase):
 class DataRecorderTest(unittest.TestCase):
 
     def setUp(self):
+        self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
         self.in_play = True
-        self.directory = ''
         self.data_recorder = DataRecorder(
-            self.mock_market_filter, self.mock_market_data_filter, self.in_play, self.directory
+            self.storage, self.mock_market_filter, self.mock_market_data_filter, self.in_play
         )
 
     def test_init(self):
         assert self.data_recorder.NAME == 'DATA_RECORDER'
+        assert self.data_recorder.storage_engine == self.storage
         assert self.data_recorder.market_filter == self.mock_market_filter
         assert self.data_recorder.market_data_filter == self.mock_market_data_filter
         assert self.data_recorder.in_play == self.in_play
-        assert self.data_recorder.directory == self.directory
 
     def test_market_parameters(self):
         market_book = mock.Mock()
@@ -80,20 +82,20 @@ class DataRecorderTest(unittest.TestCase):
 class StreamRecorderTest(unittest.TestCase):
 
     def setUp(self):
+        self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
         self.in_play = True
-        self.directory = ''
         self.data_recorder = StreamRecorder(
-            self.mock_market_filter, self.mock_market_data_filter, self.in_play, self.directory
+            self.storage, self.mock_market_filter, self.mock_market_data_filter, self.in_play
         )
 
     def test_init(self):
         assert self.data_recorder.NAME == 'STREAM_RECORDER'
+        assert self.data_recorder.storage_engine == self.storage
         assert self.data_recorder.market_filter == self.mock_market_filter
         assert self.data_recorder.market_data_filter == self.mock_market_data_filter
         assert self.data_recorder.in_play == self.in_play
-        assert self.data_recorder.directory == self.directory
 
     def test_market_parameters(self):
         market_book = mock.Mock()

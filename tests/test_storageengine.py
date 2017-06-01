@@ -15,7 +15,6 @@ class BaseEngineTest(unittest.TestCase):
     def test_init(self):
         assert self.engine.NAME is None
         assert self.engine.markets_loaded == []
-        assert self.engine.markets_loaded_count == 0
 
     @mock.patch('flumine.storage.storageengine.BaseEngine.clean_up')
     @mock.patch('flumine.storage.storageengine.BaseEngine.load')
@@ -48,6 +47,16 @@ class BaseEngineTest(unittest.TestCase):
         self.engine.clean_up('/tmp/hello', '/tmp/world')
 
         assert mock_os.remove.call_count == 2
+
+    def test_markets_loaded_count(self):
+        assert self.engine.markets_loaded_count == 0
+
+    def test_extra(self):
+        assert self.engine.extra == {
+            'name': self.engine.NAME,
+            'markets_loaded': self.engine.markets_loaded,
+            'markets_loaded_count': self.engine.markets_loaded_count,
+        }
 
 
 class LocalTest(unittest.TestCase):

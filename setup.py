@@ -5,7 +5,6 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     'betfairlightweight>=1.2',
     'flask',
-    'flask_restful',
 ]
 
 TEST_REQUIRES = [
@@ -24,7 +23,7 @@ setup(
         packages=[
                 'flumine',
                 'flumine.resources',
-                'flumine.api'
+                'flumine.storage'
         ],
         package_dir={
                 'flumine': 'flumine'

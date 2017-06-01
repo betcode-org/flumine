@@ -1,6 +1,6 @@
 {
     "betfairlightweight": {
-        "username": "username",
+        "username": "LiamPauling1",
         "password": null,
         "app_key": null,
         "certs": null,
@@ -13,7 +13,7 @@
         "segmentation_enabled": true
     },
     "storage": {
-        "engine": "localhost",
-        "directory": "/"
+        "engine": "LOCAL",
+        "directory": "/Users/liampauling/Desktop/"
     }
 }

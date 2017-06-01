@@ -10,14 +10,13 @@ class BaseEngine:
 
     def __init__(self):
         self.markets_loaded = []
-        self.markets_loaded_count = 0
 
     def __call__(self, market_id):
-        file_dir = os.path.join('/tmp', '%s.csv' % market_id)
+        file_dir = os.path.join('/tmp', '%s' % market_id)
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logging.error('File: %s.csv does not exist in /tmp' % market_id)
+            logging.error('File: %s does not exist in /tmp' % market_id)
             return
 
         # zip file
@@ -28,7 +27,6 @@ class BaseEngine:
         self.clean_up(file_dir, zip_file_dir)
 
         self.markets_loaded.append(market_id)
-        self.markets_loaded_count += 1
 
     def load(self, zip_file_dir):
         """Loads zip_file_dir to expected dir
@@ -43,20 +41,32 @@ class BaseEngine:
 
     @staticmethod
     def clean_up(file_dir, zip_file_dir):
-        """remove csv and zip from /tmp
+        """remove txt file and zip from /tmp
         """
         os.remove(file_dir)
         os.remove(zip_file_dir)
 
     @staticmethod
     def zip_file(file_dir, market_id):
-        """zips csv into filename.zip
+        """zips txt file into filename.zip
         """
         zip_file_directory = os.path.join('/tmp', '%s.zip' % market_id)
         zf = zipfile.ZipFile(zip_file_directory, mode='w')
         zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         zf.close()
         return zip_file_directory
+
+    @property
+    def markets_loaded_count(self):
+        return len(self.markets_loaded)
+
+    @property
+    def extra(self):
+        return {
+            'name': self.NAME,
+            'markets_loaded': self.markets_loaded,
+            'markets_loaded_count': self.markets_loaded_count,
+        }
 
 
 class Local(BaseEngine):

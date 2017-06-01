@@ -15,7 +15,8 @@ class BaseRecorder:
 
     NAME = 'BASE_RECORDER'
 
-    def __init__(self, market_filter=None, market_data_filter=None):
+    def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
+        self.storage_engine = storage_engine
         self.market_filter = market_filter or streaming_market_filter()
         self.market_data_filter = market_data_filter or streaming_market_data_filter()
 
@@ -57,15 +58,14 @@ class BaseRecorder:
 
 class DataRecorder(BaseRecorder):
     """Data recorder, records data to
-    market_id.csv
+    market_id
     """
 
     NAME = 'DATA_RECORDER'
 
-    def __init__(self, market_filter, market_data_filter, in_play=None, directory='', seconds_to_start=None):
-        super(DataRecorder, self).__init__(market_filter, market_data_filter)
+    def __init__(self, storage_engine, market_filter, market_data_filter, in_play=None, seconds_to_start=None):
+        super(DataRecorder, self).__init__(storage_engine, market_filter, market_data_filter)
         self.in_play = in_play
-        self.directory = directory
         self.seconds_to_start = seconds_to_start
 
     def market_book_parameters(self, market_book):
@@ -84,8 +84,8 @@ class DataRecorder(BaseRecorder):
                     return True
 
     def process_market_book(self, market_book):
-        filename = '%s.csv' % market_book.market_id
-        file_directory = os.path.join(self.directory, filename)
+        filename = '%s' % market_book.market_id
+        file_directory = os.path.join('/tmp', filename)
 
         with open(file_directory, 'a') as outfile:
             writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
@@ -99,17 +99,23 @@ class DataRecorder(BaseRecorder):
 
 class StreamRecorder(DataRecorder):
     """Data recorder, records stream data
-    to market_id.csv
+    to market_id
     """
 
     NAME = 'STREAM_RECORDER'
 
     def process_market_book(self, market_book):
-        filename = '%s.csv' % market_book.market_id
-        file_directory = os.path.join(self.directory, filename)
+        filename = '%s' % market_book.market_id
+        file_directory = os.path.join('/tmp', filename)
 
         with open(file_directory, 'a') as outfile:
             writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
             writer.writerow(
                 [json.dumps(market_book.streaming_update)]
             )
+
+        if market_book.status == 'CLOSED':
+            self.on_market_closed(market_book)
+
+    def on_market_closed(self, market_book):
+        self.storage_engine(market_book.market_id)
