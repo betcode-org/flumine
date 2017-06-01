@@ -197,7 +197,6 @@ $ curl http://localhost:8080/api/stream/aea9ee72 -H "Content-Type: application/j
     },
     "recorder": "BASE_RECORDER",
     "running": false,
-    "status": "not running",
     "unique_id": 1000
 }
 ```

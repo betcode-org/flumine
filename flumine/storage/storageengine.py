@@ -20,7 +20,13 @@ class BaseEngine:
         self.validate_settings()
 
     def __call__(self, market_id):
+        logging.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
         file_dir = os.path.join('/tmp', '%s' % market_id)
+
+        # check that market has not already been loaded
+        if market_id in self.markets_loaded:
+            logging.error('File: /tmp/%s has already been loaded' % market_id)
+            return
 
         # check that file actually exists
         if not os.path.isfile(file_dir):

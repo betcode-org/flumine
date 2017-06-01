@@ -1,7 +1,6 @@
-import csv
 import os
 import json
-import datetime
+import logging
 from betfairlightweight.filters import (
     streaming_market_filter,
     streaming_market_data_filter,
@@ -28,8 +27,6 @@ class BaseRecorder:
         """
         if self.market_book_parameters(market_book):
             self.process_market_book(market_book)
-        elif market_book.status == 'CLOSED':
-            self.on_market_closed(market_book)
 
     def market_book_parameters(self, market_book):
         """Logic used to decide if market_book should
@@ -50,54 +47,15 @@ class BaseRecorder:
     def on_market_closed(self, market_book):
         """Function run when market is closed.
         """
-        pass
+        market_id = market_book.get('id')
+        logging.info('Closing market %s' % market_id)
+        self.storage_engine(market_id)
 
     def __str__(self):
         return '<%s>' % self.NAME
 
 
-class DataRecorder(BaseRecorder):
-    """Data recorder, records data to
-    market_id
-    """
-
-    NAME = 'DATA_RECORDER'
-
-    def __init__(self, storage_engine, market_filter, market_data_filter, in_play=None, seconds_to_start=None):
-        super(DataRecorder, self).__init__(storage_engine, market_filter, market_data_filter)
-        self.in_play = in_play
-        self.seconds_to_start = seconds_to_start
-
-    def market_book_parameters(self, market_book):
-        if market_book.status not in ['CLOSED', 'SUSPENDED']:
-            if self.in_play is None or market_book.inplay == self.in_play:
-                if self.seconds_to_start:
-                    seconds_to_start = (
-                        market_book.market_definition.market_time - datetime.datetime.utcnow()
-                    ).total_seconds()
-
-                    if seconds_to_start < 0:
-                        return False
-                    elif seconds_to_start < self.seconds_to_start:
-                        return True
-                else:
-                    return True
-
-    def process_market_book(self, market_book):
-        filename = '%s' % market_book.market_id
-        file_directory = os.path.join('/tmp', filename)
-
-        with open(file_directory, 'a') as outfile:
-            writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(
-                [market_book.json()]
-            )
-
-    def on_market_closed(self, market_book):
-        self.process_market_book(market_book)  # last market book will contain results
-
-
-class StreamRecorder(DataRecorder):
+class StreamRecorder(BaseRecorder):
     """Data recorder, records stream data
     to market_id
     """
@@ -105,17 +63,14 @@ class StreamRecorder(DataRecorder):
     NAME = 'STREAM_RECORDER'
 
     def process_market_book(self, market_book):
-        filename = '%s' % market_book.market_id
-        file_directory = os.path.join('/tmp', filename)
+        for market in market_book.get('mc'):
+            filename = '%s' % market.get('id')
+            file_directory = os.path.join('/tmp', filename)
 
-        with open(file_directory, 'a') as outfile:
-            writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(
-                [json.dumps(market_book.streaming_update)]
-            )
+            with open(file_directory, 'a') as outfile:
+                outfile.write(
+                    json.dumps(market_book) + '\n'
+                )
 
-        if market_book.status == 'CLOSED':
-            self.on_market_closed(market_book)
-
-    def on_market_closed(self, market_book):
-        self.storage_engine(market_book.market_id)
+            if 'marketDefinition' in market and market['marketDefinition']['status'] == 'CLOSED':
+                self.on_market_closed(market)

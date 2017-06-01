@@ -141,7 +141,6 @@ def get_stream(stream_id):
         }), 404
     flumine = stream['flumine']
     return jsonify({
-        'status': flumine.status,
         'running': flumine.running,
         'description': stream['description'],
         'recorder': stream['recorder'],
