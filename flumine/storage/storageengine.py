@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import zipfile
 import logging
@@ -19,7 +20,7 @@ class BaseEngine:
         self.markets_loaded = []
         self.validate_settings()
 
-    def __call__(self, market_id):
+    def __call__(self, market_id, market_definition):
         logging.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
         file_dir = os.path.join('/tmp', '%s' % market_id)
 
@@ -36,13 +37,13 @@ class BaseEngine:
         # zip file
         zip_file_dir = self.zip_file(file_dir, market_id)
         # core load code
-        self.load(zip_file_dir)
+        self.load(zip_file_dir, market_definition)
         # clean up
         self.clean_up(file_dir, zip_file_dir)
 
         self.markets_loaded.append(market_id)
 
-    def load(self, zip_file_dir):
+    def load(self, zip_file_dir, market_definition):
         """Loads zip_file_dir to expected dir
         """
         raise NotImplementedError
@@ -52,6 +53,14 @@ class BaseEngine:
         provided, raises OSError
         """
         pass
+
+    @staticmethod
+    def create_metadata(market_definition):
+        try:
+            del market_definition['runners']
+        except KeyError:
+            pass
+        return dict([a, str(x)] for a, x in market_definition.items())
 
     @staticmethod
     def clean_up(file_dir, zip_file_dir):
@@ -92,7 +101,7 @@ class Local(BaseEngine):
         if not os.path.isdir(self.directory):
             raise OSError('File dir %s does not exist' % self.directory)
 
-    def load(self, zip_file_dir):
+    def load(self, zip_file_dir, market_definition):
         shutil.copy(zip_file_dir, self.directory)
 
 
@@ -114,12 +123,15 @@ class S3(BaseEngine):
         # error raised if bucket not present
         self.s3.head_bucket(Bucket=self.directory)
 
-    def load(self, zip_file_dir):
+    def load(self, zip_file_dir, market_definition):
         try:
             self.transfer.upload_file(
                 filename=zip_file_dir,
                 bucket=self.directory,
                 key=os.path.basename(zip_file_dir),
+                extra_args={
+                    'Metadata': self.create_metadata(market_definition)
+                }
             )
         except (BotoCoreError, Exception) as e:
-            pass  # todo
+            print(e)

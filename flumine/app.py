@@ -149,12 +149,12 @@ def get_stream(stream_id):
         'unique_id': flumine.unique_id,
         'listener': {
             'stream_type': flumine.listener.stream_type,
-            'market_count': len(flumine.listener.stream._caches) if flumine.listener.stream else None,
-            'updates_processed': flumine.listener.stream._updates_processed if flumine.listener.stream else None,
+            'market_count': len(flumine.listener.stream) if flumine.listener.stream is not None else None,
+            'updates_processed': flumine.listener.stream._updates_processed if flumine.listener.stream is not None else 0,
             'time_created': flumine.listener.stream.time_created.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream else None,
+                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream is not None else None,
             'time_updated': flumine.listener.stream.time_updated.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream else None,
+                '%Y-%m-%dT%H:%M:%S.%fZ') if flumine.listener.stream is not None else None,
         },
     })
 

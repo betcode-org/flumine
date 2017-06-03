@@ -27,6 +27,16 @@ class FlumineListener(StreamListener):
 class FlumineStream(BaseStream):
 
     def _process(self, market_books, publish_time):
+        for market_book in market_books:
+            market_id = market_book.get('id')
+            if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
+                if market_id in self._caches:
+                    # removes closed market from cache
+                    del self._caches[market_id]
+            elif self._caches.get(market_id) is None:
+                # adds empty object to cache to track live market count
+                self._caches[market_id] = object()
+
         self.output_queue({
             "op": "mcm",
             "clk": None,

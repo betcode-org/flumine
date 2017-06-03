@@ -9,7 +9,7 @@ from .listener import FlumineListener
 from .exceptions import RunError
 
 logger = logging.getLogger('betfairlightweight')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Flumine:

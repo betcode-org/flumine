@@ -48,8 +48,9 @@ class BaseRecorder:
         """Function run when market is closed.
         """
         market_id = market_book.get('id')
+        market_definition = market_book.get('marketDefinition')
         logging.info('Closing market %s' % market_id)
-        self.storage_engine(market_id)
+        self.storage_engine(market_id, market_definition)
 
     def __str__(self):
         return '<%s>' % self.NAME
@@ -57,7 +58,7 @@ class BaseRecorder:
 
 class StreamRecorder(BaseRecorder):
     """Data recorder, records stream data
-    to market_id
+    to /tmp/market_id
     """
 
     NAME = 'STREAM_RECORDER'
