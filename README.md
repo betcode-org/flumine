@@ -13,7 +13,6 @@ IN DEVELOPMENT.
 - interactive frontend (similiar to portainer.io)
 - storage engine (s3 / google cloud etc.)
 - logging control class
-- docker
 - cli (e.g. flumine create app, creates run.py and flumine_settings.json)
 
 ## setup
