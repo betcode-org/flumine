@@ -15,24 +15,23 @@ class FlumineTest(unittest.TestCase):
         Flumine._create_client = self.mock_client
         self.flumine = Flumine(self.settings, self.recorder)
         self.listener = mock.Mock()
-        self.flumine._listener = self.listener
+        self.flumine.listener = self.listener
 
     def test_init(self):
         assert self.flumine.trading == self.mock_client()
         assert self.flumine.recorder == self.recorder
         assert self.flumine._socket is None
         assert self.flumine._running is False
-        assert self.flumine._listener is not None
+        assert self.flumine.listener is not None
 
     def test_handler(self):
         # self.flumine._handler()
         pass
 
-    @mock.patch('flumine.flumine.Flumine._handler')
     @mock.patch('flumine.flumine.Flumine._run')
     @mock.patch('flumine.flumine.Flumine._create_socket')
     @mock.patch('flumine.flumine.Flumine._check_login')
-    def test_start(self, mock_check_login, mock_create_socket, mock_run, mock_handler):
+    def test_start(self, mock_check_login, mock_create_socket, mock_run):
         mock_socket = mock.Mock()
         handler_thread = mock.Mock()
         run_thread = mock.Mock()
@@ -54,7 +53,6 @@ class FlumineTest(unittest.TestCase):
         )
         assert self.flumine._running is True
         mock_run.assert_called_with()
-        mock_handler.assert_called_with()
 
     def test_start_running(self):
         self.flumine._running = True
