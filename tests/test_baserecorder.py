@@ -23,10 +23,10 @@ class BaseRecorderTest(unittest.TestCase):
     def test_call(self, mock_market_book_parameters, mock_process_market_book):
         mock_market_book = mock.Mock()
         mock_market_book.status = 'OPEN'
-        self.base_recorder(mock_market_book)
+        self.base_recorder(mock_market_book, 0)
 
         mock_market_book_parameters.assert_called_with(mock_market_book)
-        mock_process_market_book.assert_called_with(mock_market_book)
+        mock_process_market_book.assert_called_with(mock_market_book, 0)
 
     def test_market_book_parameters(self):
         mock_market_book = mock.Mock()
@@ -35,7 +35,7 @@ class BaseRecorderTest(unittest.TestCase):
     def test_process_market_book(self):
         with self.assertRaises(NotImplementedError):
             mock_market_book = mock.Mock()
-            self.base_recorder.process_market_book(mock_market_book)
+            self.base_recorder.process_market_book(mock_market_book, 0)
 
     # def test_on_market_closed(self):
     #     self.base_recorder.on_market_closed(None)
