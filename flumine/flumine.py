@@ -21,7 +21,7 @@ class Flumine:
 
         self._running = False
         self._socket = None
-        self.listener = FlumineListener(recorder)
+        self.listener = FlumineListener(recorder)  # output queue hack
 
     def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None):
         """Checks trading is logged in, creates socket,

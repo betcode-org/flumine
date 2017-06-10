@@ -37,12 +37,7 @@ class FlumineStream(BaseStream):
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
 
-        self.output_queue({
-            "op": "mcm",
-            "clk": None,
-            "pt": 0000000000,
-            "mc": market_books
-        })
+        self.output_queue(market_books, publish_time)
         self._updates_processed += len(market_books)
 
     def __str__(self):
