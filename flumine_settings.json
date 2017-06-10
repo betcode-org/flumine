@@ -13,7 +13,11 @@
         "segmentation_enabled": true
     },
     "storage": {
-        "engine": "localhost",
-        "directory": "/"
+        "engine": "S3",
+        "settings": {
+            "directory": "flumine-test",
+            "access_key": null,
+            "secret_key": null
+        }
     }
 }
