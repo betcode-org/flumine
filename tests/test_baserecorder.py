@@ -10,13 +10,14 @@ class BaseRecorderTest(unittest.TestCase):
         self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
-        self.base_recorder = BaseRecorder(self.storage, self.mock_market_filter, self.mock_market_data_filter)
+        self.base_recorder = BaseRecorder(self.storage, self.mock_market_filter, self.mock_market_data_filter, '')
 
     def test_init(self):
         assert self.base_recorder.NAME == 'BASE_RECORDER'
         assert self.base_recorder.storage_engine == self.storage
         assert self.base_recorder.market_filter == self.mock_market_filter
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
+        assert self.base_recorder.stream_id == ''
 
     @mock.patch('flumine.resources.recorder.BaseRecorder.process_market_book')
     @mock.patch('flumine.resources.recorder.BaseRecorder.market_book_parameters')

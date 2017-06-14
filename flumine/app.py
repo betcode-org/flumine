@@ -115,6 +115,7 @@ def post_stream():
             storage_engine=storage_engine,
             market_filter=args.get('market_filter'),
             market_data_filter=args.get('market_data_filter'),
+            stream_id=new_id,
         ),
         unique_id=unique_id,
     )

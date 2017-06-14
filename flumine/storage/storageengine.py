@@ -20,22 +20,22 @@ class BaseEngine:
         self.markets_loaded = []
         self.validate_settings()
 
-    def __call__(self, market_id, market_definition):
+    def __call__(self, market_id, market_definition, stream_id):
         logging.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
-        file_dir = os.path.join('/tmp', '%s' % market_id)
+        file_dir = os.path.join('/tmp', stream_id, market_id)
 
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
-            logging.error('File: /tmp/%s has already been loaded' % market_id)
+            logging.error('File: /tmp/%s/%s has already been loaded' % (stream_id, market_id))
             return
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logging.error('File: %s does not exist in /tmp' % market_id)
+            logging.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
             return
 
         # zip file
-        zip_file_dir = self.zip_file(file_dir, market_id)
+        zip_file_dir = self.zip_file(file_dir, market_id, stream_id)
         # core load code
         self.load(zip_file_dir, market_definition)
         # clean up
@@ -70,10 +70,10 @@ class BaseEngine:
         os.remove(zip_file_dir)
 
     @staticmethod
-    def zip_file(file_dir, market_id):
+    def zip_file(file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
-        zip_file_directory = os.path.join('/tmp', '%s.zip' % market_id)
+        zip_file_directory = os.path.join('/tmp', stream_id, '%s.zip' % market_id)
         zf = zipfile.ZipFile(zip_file_directory, mode='w')
         zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         zf.close()
