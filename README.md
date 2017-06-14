@@ -102,9 +102,6 @@ $ curl http://localhost:8080/api/recorder -H "Content-Type: application/json"
     "BASE_RECORDER": {
         "name": "BaseRecorder"
     },
-    "DATA_RECORDER": {
-        "name": "DataRecorder"
-    },
     "STREAM_RECORDER": {
         "name": "StreamRecorder"
     }

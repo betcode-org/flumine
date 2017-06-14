@@ -57,10 +57,14 @@ def create_stream_info(stream_id):
     }
 
 
+# Frontend routes
+
 @app.route("/")
 def hello():
     return "Hello World!"
 
+
+# API routes
 
 @app.route("/api")
 def api():

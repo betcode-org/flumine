@@ -77,6 +77,9 @@ class Flumine:
         except BetfairError as e:
             logging.info('Betfair error: %s' % e)
             self.stop()
+        except Exception as e:
+            logging.info('Unknown error: %s' % e)
+            self.stop()
 
     def _check_login(self):
         """Login if session expired
