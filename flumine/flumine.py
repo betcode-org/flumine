@@ -14,7 +14,8 @@ logger.setLevel(logging.DEBUG)
 
 class Flumine:
 
-    def __init__(self, settings, recorder, unique_id=1e3):
+    def __init__(self, app, settings, recorder, unique_id=1e3):
+        self.app = app
         self.trading = self._create_client(settings)
         self.recorder = recorder
         self.unique_id = unique_id
@@ -28,7 +29,7 @@ class Flumine:
         subscribes to markets, sets running to True and
         starts handler/run threads.
         """
-        logging.info('Starting stream: %s' % self.unique_id)
+        self.app.logger.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
@@ -48,6 +49,7 @@ class Flumine:
         """Stops socket, sets running to false
         and socket to None
         """
+        self.app.logger.info('Stopping stream: %s' % self.unique_id)
         if not self._running:
             raise RunError('Flumine is not running')
         if self._socket:
@@ -75,10 +77,10 @@ class Flumine:
         try:
             self._socket.start(async=False)
         except BetfairError as e:
-            logging.info('Betfair error: %s' % e)
+            self.app.logger.info('Betfair error: %s' % e)
             self.stop()
         except Exception as e:
-            logging.info('Unknown error: %s' % e)
+            self.app.logger.info('Unknown error: %s' % e)
             self.stop()
 
     def _check_login(self):

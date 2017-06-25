@@ -114,6 +114,7 @@ def post_stream():
 
     # create new flumine instance
     flumine = Flumine(
+        app=app,
         settings=SETTINGS,
         recorder=stream_recorder['obj'](
             storage_engine=storage_engine,
