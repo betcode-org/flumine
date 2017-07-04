@@ -8,14 +8,10 @@ from betfairlightweight import (
 from .listener import FlumineListener
 from .exceptions import RunError
 
-logger = logging.getLogger('betfairlightweight')
-logger.setLevel(logging.DEBUG)
-
 
 class Flumine:
 
-    def __init__(self, app, settings, recorder, unique_id=1e3):
-        self.app = app
+    def __init__(self, settings, recorder, unique_id=1e3):
         self.trading = self._create_client(settings)
         self.recorder = recorder
         self.unique_id = unique_id
@@ -29,7 +25,7 @@ class Flumine:
         subscribes to markets, sets running to True and
         starts handler/run threads.
         """
-        self.app.logger.info('Starting stream: %s' % self.unique_id)
+        logging.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
@@ -43,20 +39,18 @@ class Flumine:
         )
         self._running = True
         threading.Thread(target=self._run, daemon=True).start()
-        return True
 
     def stop(self):
         """Stops socket, sets running to false
         and socket to None
         """
-        self.app.logger.info('Stopping stream: %s' % self.unique_id)
+        logging.info('Stopping stream: %s' % self.unique_id)
         if not self._running:
             raise RunError('Flumine is not running')
         if self._socket:
             self._socket.stop()
         self._running = False
         self._socket = None
-        return True
 
     def stream_status(self):
         """Checks sockets status
@@ -77,10 +71,10 @@ class Flumine:
         try:
             self._socket.start(async=False)
         except BetfairError as e:
-            self.app.logger.info('Betfair error: %s' % e)
+            logging.error('Betfair error: %s' % e)
             self.stop()
         except Exception as e:
-            self.app.logger.info('Unknown error: %s' % e)
+            logging.error('Unknown error: %s' % e)
             self.stop()
 
     def _check_login(self):
@@ -93,9 +87,9 @@ class Flumine:
         """Creates stream
         """
         self._socket = self.trading.streaming.create_stream(
-                unique_id=self.unique_id,
-                description='Flumine Socket',
-                listener=self.listener
+            unique_id=self.unique_id,
+            description='Flumine Socket',
+            listener=self.listener
         )
 
     @property

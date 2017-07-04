@@ -9,4 +9,4 @@ WORKDIR /flumine
 # install py libraries
 RUN pip install -r requirements.txt
 
-CMD ["python", "run.py"]
+CMD ["python", "main.py"]

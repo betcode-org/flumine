@@ -6,6 +6,8 @@ from betfairlightweight.filters import (
     streaming_market_data_filter,
 )
 
+from ..utils import create_short_uuid
+
 
 class BaseRecorder:
     """Base recorder which connects to all
@@ -14,11 +16,11 @@ class BaseRecorder:
 
     NAME = 'BASE_RECORDER'
 
-    def __init__(self, storage_engine, market_filter=None, market_data_filter=None, stream_id=''):
+    def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
         self.storage_engine = storage_engine
         self.market_filter = market_filter or streaming_market_filter()
         self.market_data_filter = market_data_filter or streaming_market_data_filter()
-        self.stream_id = stream_id
+        self.stream_id = create_short_uuid()
         self._setup()
 
     def __call__(self, market_book, publish_time):

@@ -124,11 +124,14 @@ class S3(BaseEngine):
         self.s3.head_bucket(Bucket=self.directory)
 
     def load(self, zip_file_dir, market_definition):
+        event_type_id = market_definition.get('eventTypeId')
         try:
             self.transfer.upload_file(
                 filename=zip_file_dir,
                 bucket=self.directory,
-                key=os.path.basename(zip_file_dir),
+                key=os.path.join(
+                    'marketdata', 'streaming', event_type_id, os.path.basename(zip_file_dir)
+                ),
                 extra_args={
                     'Metadata': self.create_metadata(market_definition)
                 }

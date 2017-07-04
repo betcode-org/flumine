@@ -15,7 +15,7 @@
     "storage": {
         "engine": "S3",
         "settings": {
-            "directory": "flumine-test",
+            "directory": "flumine",
             "access_key": null,
             "secret_key": null
         }
