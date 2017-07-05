@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import zipfile
 import logging
@@ -9,6 +8,8 @@ from boto3.s3.transfer import (
     TransferConfig,
 )
 from botocore.exceptions import BotoCoreError
+
+logger = logging.getLogger(__name__)
 
 
 class BaseEngine:
@@ -21,17 +22,17 @@ class BaseEngine:
         self.validate_settings()
 
     def __call__(self, market_id, market_definition, stream_id):
-        logging.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
+        logger.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
         file_dir = os.path.join('/tmp', stream_id, market_id)
 
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
-            logging.error('File: /tmp/%s/%s has already been loaded' % (stream_id, market_id))
+            logger.error('File: /tmp/%s/%s has already been loaded' % (stream_id, market_id))
             return
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logging.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
+            logger.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
             return
 
         # zip file
@@ -66,6 +67,7 @@ class BaseEngine:
     def clean_up(file_dir, zip_file_dir):
         """remove txt file and zip from /tmp
         """
+        logger.info('Removing txt and zip')
         os.remove(file_dir)
         os.remove(zip_file_dir)
 
@@ -136,5 +138,6 @@ class S3(BaseEngine):
                     'Metadata': self.create_metadata(market_definition)
                 }
             )
+            logger.info('%s successfully loaded to s3' % zip_file_dir)
         except (BotoCoreError, Exception) as e:
-            print(e)
+            logger.error('Error loading to s3: %s' % e)

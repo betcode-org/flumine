@@ -13,7 +13,7 @@ class FlumineTest(unittest.TestCase):
         self.recorder = mock.Mock()
         self.mock_client = mock.Mock()
         Flumine._create_client = self.mock_client
-        self.flumine = Flumine(self.settings, self.recorder)
+        self.flumine = Flumine(self.recorder, settings=self.settings)
         self.listener = mock.Mock()
         self.flumine.listener = self.listener
 
@@ -118,4 +118,4 @@ class FlumineTest(unittest.TestCase):
         assert str(self.flumine) == '<Flumine [not running]>'
 
     def test_repr(self):
-        assert repr(self.flumine) == '<Flumine [not running]>'
+        assert repr(self.flumine) == '<Flumine>'

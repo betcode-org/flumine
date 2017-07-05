@@ -11,40 +11,28 @@ from flumine import (
 def setup_logging():
     logger = logging.getLogger('betfairlightweight')
     logger.setLevel(logging.DEBUG)
-
-    custom_format = '%(asctime) %(levelname) %(message) %(filename) %(funcName) %(module) %(process) %(threadName)'
-    log_handler = logging.StreamHandler()
-
-    logger = logging.getLogger()
-    # formatter = jsonlogger.JsonFormatter(custom_format)
-    # formatter.converter = time.gmtime
-    # log_handler.setFormatter(formatter)
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s | %(levelname)s | %(message)s | %(filename)s | %(module)s',
+        level=logging.INFO
+    )
 
 
 def main():
-    market_filter = {"marketIds": ["1.132452335"]}
-    market_data_filter = None
+    setup_logging()
+    market_filter = {"marketIds": ["1.132465477"]}
     storage_engine = storageengine.S3('flumine')
 
     flumine = Flumine(
-        settings={'betfairlightweight': {'username': 'LiamPauling'}},
         recorder=StreamRecorder(
             storage_engine=storage_engine,
             market_filter=market_filter,
-            market_data_filter=market_data_filter,
         ),
     )
 
     try:
-        flumine.start()
+        flumine.start(async=False)
     except FlumineException:
         pass
-
-    import time
-    while True:
-        time.sleep(1)
 
 if __name__ == '__main__':
     main()
