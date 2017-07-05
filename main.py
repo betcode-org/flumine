@@ -12,7 +12,7 @@ from flumine import (
 
 def setup_logging():
     logger = logging.getLogger('betfairlightweight')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     logging.basicConfig(
         format='%(asctime)s | %(levelname)s | %(message)s | %(filename)s | %(module)s',
         level=logging.INFO
@@ -25,7 +25,7 @@ def main():
     try:
         market_filter = json.loads(sys.argv[1])
     except json.JSONDecodeError:
-        market_filter = {"marketIds": ["1.132465477"]}
+        market_filter = {"eventTypeIds": ["2"], "countryCodes": ["GB"], "marketTypes": ["MATCH_ODDS"]}
     storage_engine = storageengine.S3('flumine')
 
     flumine = Flumine(
