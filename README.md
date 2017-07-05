@@ -50,3 +50,11 @@ The framework can be used as follows:
 <Flumine [not running]>
 
 ```
+
+## docker
+
+Assuming your username is JohnSmith and your certs are in /certs.
+
+```
+$ docker run -d -e MARKET_FILTER='{"marketIds": ["1.132465477"]}' -e username='JohnSmith' -e JohnSmithpassword='beer' -e JohnSmith='sDFHU45Hhh' -v /certs:/certs flumine:PROD
+```

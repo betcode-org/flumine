@@ -1,2 +1,0 @@
-betfairlightweight>=1.2
-boto3

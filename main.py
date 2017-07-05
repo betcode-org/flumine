@@ -1,3 +1,5 @@
+import sys
+import json
 import logging
 
 from flumine.resources import StreamRecorder
@@ -19,7 +21,11 @@ def setup_logging():
 
 def main():
     setup_logging()
-    market_filter = {"marketIds": ["1.132465477"]}
+
+    try:
+        market_filter = json.loads(sys.argv[1])
+    except json.JSONDecodeError:
+        market_filter = {"marketIds": ["1.132465477"]}
     storage_engine = storageengine.S3('flumine')
 
     flumine = Flumine(
