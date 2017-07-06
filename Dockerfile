@@ -7,6 +7,6 @@ ADD . /flumine
 WORKDIR /flumine
 
 # install py libraries
-RUN pip install -r requirements.txt
+RUN pip install flumine
 
-CMD ["python", "run.py"]
+ENTRYPOINT ["python", "main.py"]

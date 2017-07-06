@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import zipfile
 import logging
@@ -9,6 +8,8 @@ from boto3.s3.transfer import (
     TransferConfig,
 )
 from botocore.exceptions import BotoCoreError
+
+logger = logging.getLogger(__name__)
 
 
 class BaseEngine:
@@ -20,22 +21,22 @@ class BaseEngine:
         self.markets_loaded = []
         self.validate_settings()
 
-    def __call__(self, market_id, market_definition):
-        logging.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
-        file_dir = os.path.join('/tmp', '%s' % market_id)
+    def __call__(self, market_id, market_definition, stream_id):
+        logger.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
+        file_dir = os.path.join('/tmp', stream_id, market_id)
 
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
-            logging.error('File: /tmp/%s has already been loaded' % market_id)
+            logger.error('File: /tmp/%s/%s has already been loaded' % (stream_id, market_id))
             return
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logging.error('File: %s does not exist in /tmp' % market_id)
+            logger.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
             return
 
         # zip file
-        zip_file_dir = self.zip_file(file_dir, market_id)
+        zip_file_dir = self.zip_file(file_dir, market_id, stream_id)
         # core load code
         self.load(zip_file_dir, market_definition)
         # clean up
@@ -66,14 +67,15 @@ class BaseEngine:
     def clean_up(file_dir, zip_file_dir):
         """remove txt file and zip from /tmp
         """
+        logger.info('Removing txt and zip')
         os.remove(file_dir)
         os.remove(zip_file_dir)
 
     @staticmethod
-    def zip_file(file_dir, market_id):
+    def zip_file(file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
-        zip_file_directory = os.path.join('/tmp', '%s.zip' % market_id)
+        zip_file_directory = os.path.join('/tmp', stream_id, '%s.zip' % market_id)
         zf = zipfile.ZipFile(zip_file_directory, mode='w')
         zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         zf.close()
@@ -124,14 +126,18 @@ class S3(BaseEngine):
         self.s3.head_bucket(Bucket=self.directory)
 
     def load(self, zip_file_dir, market_definition):
+        event_type_id = market_definition.get('eventTypeId')
         try:
             self.transfer.upload_file(
                 filename=zip_file_dir,
                 bucket=self.directory,
-                key=os.path.basename(zip_file_dir),
+                key=os.path.join(
+                    'marketdata', 'streaming', event_type_id, os.path.basename(zip_file_dir)
+                ),
                 extra_args={
                     'Metadata': self.create_metadata(market_definition)
                 }
             )
+            logger.info('%s successfully loaded to s3' % zip_file_dir)
         except (BotoCoreError, Exception) as e:
-            print(e)
+            logger.error('Error loading to s3: %s' % e)

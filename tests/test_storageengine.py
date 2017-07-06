@@ -23,7 +23,7 @@ class BaseEngineTest(unittest.TestCase):
     @mock.patch('flumine.storage.storageengine.BaseEngine.load')
     @mock.patch('flumine.storage.storageengine.BaseEngine.zip_file')
     def test_call(self, mock_zip_file, mock_load, mock_clean_up):
-        assert self.engine('1.123', None) is None
+        assert self.engine('1.123', None, '123') is None
 
     @mock.patch('flumine.storage.storageengine.os')
     @mock.patch('flumine.storage.storageengine.BaseEngine.clean_up')
@@ -33,9 +33,9 @@ class BaseEngineTest(unittest.TestCase):
         mock_os.os.path.isfile = True
         mock_join = mock.Mock()
         mock_os.path.join = mock_join
-        self.engine('1.123', None)
+        self.engine('1.123', None, '123')
 
-        mock_zip_file.assert_called_with(mock_join(), '1.123')
+        mock_zip_file.assert_called_with(mock_join(), '1.123', '123')
         mock_load.assert_called_with(123, None)
         mock_clean_up.assert_called_with(mock_join(), 123)
         assert self.engine.markets_loaded == ['1.123']

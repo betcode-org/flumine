@@ -6,10 +6,14 @@ from betfairlightweight.filters import (
     streaming_market_data_filter,
 )
 
+from ..utils import create_short_uuid
+
+logger = logging.getLogger(__name__)
+
 
 class BaseRecorder:
     """Base recorder which connects to all
-    markets.
+    markets by default.
     """
 
     NAME = 'BASE_RECORDER'
@@ -17,7 +21,14 @@ class BaseRecorder:
     def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
         self.storage_engine = storage_engine
         self.market_filter = market_filter or streaming_market_filter()
-        self.market_data_filter = market_data_filter or streaming_market_data_filter()
+        self.market_data_filter = market_data_filter or streaming_market_data_filter(
+            fields=[
+                'EX_ALL_OFFERS', 'EX_TRADED', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF', 'SP_TRADED', 'SP_PROJECTED'
+            ]
+        )
+        self.stream_id = create_short_uuid()
+        self._setup()
+        logger.info('Recorder created %s' % self.stream_id)
 
     def __call__(self, market_book, publish_time):
         """Checks market using market book parameters
@@ -51,8 +62,15 @@ class BaseRecorder:
         """
         market_id = market_book.get('id')
         market_definition = market_book.get('marketDefinition')
-        logging.info('Closing market %s' % market_id)
-        self.storage_engine(market_id, market_definition)
+        logger.info('Closing market %s' % market_id)
+        self.storage_engine(market_id, market_definition, self.stream_id)
+
+    def _setup(self):
+        """Create stream folder in /tmp  # todo
+        """
+        directory = os.path.join('/tmp', self.stream_id)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     def __str__(self):
         return '<%s>' % self.NAME
@@ -68,7 +86,7 @@ class StreamRecorder(BaseRecorder):
     def process_market_book(self, market_book, publish_time):
         for market in market_book:
             filename = '%s' % market.get('id')
-            file_directory = os.path.join('/tmp', filename)
+            file_directory = os.path.join('/tmp', self.stream_id, filename)
 
             with open(file_directory, 'a') as outfile:
                 outfile.write(
