@@ -1,3 +1,5 @@
+import logging
+
 from betfairlightweight.streaming.listener import StreamListener
 from betfairlightweight.streaming.stream import BaseStream
 
@@ -7,6 +9,8 @@ Custom listener that doesn't do any processing,
 helps reduce CPU. Hacks the output queue with a
 recorder to remove the need for a handler thread.
 """
+
+logger = logging.getLogger(__name__)
 
 
 class FlumineListener(StreamListener):
@@ -32,9 +36,11 @@ class FlumineStream(BaseStream):
             if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
                 if market_id in self._caches:
                     # removes closed market from cache
+                    logger.info('[MarketStream: %s] %s removed' % (self.unique_id, market_id))
                     del self._caches[market_id]
             elif self._caches.get(market_id) is None:
                 # adds empty object to cache to track live market count
+                logger.info('[MarketStream: %s] %s added' % (self.unique_id, market_id))
                 self._caches[market_id] = object()
 
         self.output_queue(market_books, publish_time)

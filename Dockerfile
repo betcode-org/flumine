@@ -9,4 +9,4 @@ WORKDIR /flumine
 # install py libraries
 RUN pip install flumine
 
-CMD python main.py $MARKET_FILTER
+ENTRYPOINT ["python", "main.py"]

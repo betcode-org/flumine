@@ -55,6 +55,8 @@ The framework can be used as follows:
 
 Assuming your username is JohnSmith and your certs are in /certs.
 
+(Not on docker cloud, yet)
+
 ```
-$ docker run -d -e MARKET_FILTER='{"marketIds": ["1.132465477"]}' -e username='JohnSmith' -e JohnSmithpassword='beer' -e JohnSmith='sDFHU45Hhh' -v /certs:/certs flumine:PROD
+$ docker run -d -e username='JohnSmith' -e JohnSmithpassword='beer' -e JohnSmith='morebeer' -v /certs:/certs --name FLUMINE flumine:PROD '{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
 ```

@@ -24,8 +24,9 @@ def main():
 
     try:
         market_filter = json.loads(sys.argv[1])
-    except json.JSONDecodeError:
-        market_filter = {"eventTypeIds": ["2"], "countryCodes": ["GB"], "marketTypes": ["MATCH_ODDS"]}
+    except (json.JSONDecodeError, IndexError):
+        logging.error('Market Filter arg must be provided in json format')
+        raise
     storage_engine = storageengine.S3('flumine')
 
     flumine = Flumine(
