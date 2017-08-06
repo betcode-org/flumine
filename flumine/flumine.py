@@ -1,6 +1,7 @@
 import os
 import logging
 import threading
+from retrying import retry
 from betfairlightweight import (
     APIClient,
     BetfairError,
@@ -33,18 +34,14 @@ class Flumine:
             raise RunError('Flumine is already running, call .stop() first')
         self._check_login()
         self._create_socket()
-        self.unique_id = self._socket.subscribe_to_markets(
-                market_filter=self.recorder.market_filter,
-                market_data_filter=self.recorder.market_data_filter,
-                conflate_ms=conflate_ms,
-                heartbeat_ms=heartbeat_ms,
-                segmentation_enabled=segmentation_enabled,
-        )
-        self._running = True
         if async:
-            threading.Thread(target=self._run, daemon=True).start()
+            threading.Thread(
+                target=self._run,
+                args=(conflate_ms, heartbeat_ms, segmentation_enabled),
+                daemon=True
+            ).start()
         else:
-            self._run()
+            self._run(conflate_ms, heartbeat_ms, segmentation_enabled)
 
     def stop(self):
         """Stops socket, sets running to false
@@ -78,17 +75,29 @@ class Flumine:
                 username=username
             )
 
-    def _run(self):
-        """ Runs socket and catches any errors
+    @retry(wait_fixed=2000)
+    def _run(self, conflate_ms, heartbeat_ms, segmentation_enabled):
+        """ Runs socket and catches any errors, will
+        attempt reconnect every 2s.
         """
+        self.unique_id = self._socket.subscribe_to_markets(
+            market_filter=self.recorder.market_filter,
+            market_data_filter=self.recorder.market_data_filter,
+            conflate_ms=conflate_ms,
+            heartbeat_ms=heartbeat_ms,
+            segmentation_enabled=segmentation_enabled,
+            initial_clk=self.listener.initial_clk,
+            clk=self.listener.clk,
+        )
+        self._running = True
         try:
             self._socket.start(async=False)
         except BetfairError as e:
             logger.error('Betfair error: %s' % e)
-            self.stop()
+            raise
         except Exception as e:
             logger.error('Unknown error: %s' % e)
-            self.stop()
+            raise
 
     def _check_login(self):
         """Login if session expired
