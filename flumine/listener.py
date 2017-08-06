@@ -16,14 +16,12 @@ logger = logging.getLogger(__name__)
 class FlumineListener(StreamListener):
 
     def __init__(self, recorder, max_latency=0.5):
-        super(FlumineListener, self).__init__(max_latency)
+        super(FlumineListener, self).__init__(recorder, max_latency)
         self.recorder = recorder
 
     def _add_stream(self, unique_id, stream_type):
         if stream_type == 'marketSubscription':
-            return FlumineStream(
-                unique_id, self.recorder, self.max_latency, self.lightweight
-            )
+            return FlumineStream(self)
         elif stream_type == 'orderSubscription':
             raise ValueError('Not expecting an order stream...')
 

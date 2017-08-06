@@ -5,6 +5,7 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     'betfairlightweight>=1.2',
     'boto3',
+    'retrying',
 ]
 
 TEST_REQUIRES = [
@@ -33,7 +34,7 @@ setup(
         license='MIT',
         author='liampauling',
         author_email='',
-        description='Betfair data record framework utilising betfair streaming and flask',
+        description='Betfair data record framework utilising betfair streaming',
         classifiers=[
                 'License :: OSI Approved :: MIT License',
                 'Operating System :: OS Independent',
