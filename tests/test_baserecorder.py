@@ -18,20 +18,24 @@ class BaseRecorderTest(unittest.TestCase):
         assert self.base_recorder.market_filter == self.mock_market_filter
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
         assert self.base_recorder.stream_id is not None
+        assert self.base_recorder.live_markets == []
 
     @mock.patch('flumine.resources.recorder.BaseRecorder.process_market_book')
-    @mock.patch('flumine.resources.recorder.BaseRecorder.market_book_parameters')
-    def test_call(self, mock_market_book_parameters, mock_process_market_book):
+    @mock.patch('flumine.resources.recorder.BaseRecorder.check_market_book')
+    def test_call(self, mock_check_market_book, mock_process_market_book):
         mock_market_book = mock.Mock()
         mock_market_book.status = 'OPEN'
-        self.base_recorder(mock_market_book, 0)
+        mock_market_book.__get__ = '1.123'
+        self.base_recorder.live_markets = [mock_market_book.get('id')]
+        self.base_recorder([mock_market_book], 0)
 
-        mock_market_book_parameters.assert_called_with(mock_market_book)
+        mock_check_market_book.assert_called_with(mock_market_book.get('id'), mock_market_book)
         mock_process_market_book.assert_called_with(mock_market_book, 0)
 
-    def test_market_book_parameters(self):
+    def test_check_market_book(self):
         mock_market_book = mock.Mock()
-        assert self.base_recorder.market_book_parameters(mock_market_book) is True
+        assert self.base_recorder.check_market_book('1.123', mock_market_book) is None
+        assert self.base_recorder.live_markets == ['1.123']
 
     def test_process_market_book(self):
         with self.assertRaises(NotImplementedError):
@@ -61,10 +65,3 @@ class StreamRecorderTest(unittest.TestCase):
         assert self.data_recorder.storage_engine == self.storage
         assert self.data_recorder.market_filter == self.mock_market_filter
         assert self.data_recorder.market_data_filter == self.mock_market_data_filter
-
-    def test_market_parameters(self):
-        market_book = mock.Mock()
-        market_book.status = 'OPEN'
-        market_book.inplay = True
-
-        assert self.data_recorder.market_book_parameters(market_book) is True

@@ -27,27 +27,32 @@ class BaseRecorder:
             ]
         )
         self.stream_id = create_short_uuid()
+        self.live_markets = []  # list of markets to be processed
         self._setup()
         logger.info('Recorder created %s' % self.stream_id)
 
-    def __call__(self, market_book, publish_time):
+    def __call__(self, market_books, publish_time):
         """Checks market using market book parameters
         function then passes market_book to be processed.
 
-        :param market_book: Market Book object
+        :param market_books: List of Market Book objects
         :param publish_time: Publish time of market book
         """
-        if self.market_book_parameters(market_book):
-            self.process_market_book(market_book, publish_time)
+        for market_book in market_books:
+            market_id = market_book.get('id')
+            self.check_market_book(market_id, market_book)
+            if market_id in self.live_markets:
+                self.process_market_book(market_book, publish_time)
 
-    def market_book_parameters(self, market_book):
+    def check_market_book(self, market_id, market_book):
         """Logic used to decide if market_book should
         be processed
 
+        :param market_id: Market id
         :param market_book: Market Book object
-        :return: True if market is to be processed
         """
-        return True
+        if market_id not in self.live_markets:
+            self.live_markets.append(market_id)
 
     def process_market_book(self, market_book, publish_time):
         """Function that processes market book
@@ -84,19 +89,18 @@ class StreamRecorder(BaseRecorder):
     NAME = 'STREAM_RECORDER'
 
     def process_market_book(self, market_book, publish_time):
-        for market in market_book:
-            filename = '%s' % market.get('id')
-            file_directory = os.path.join('/tmp', self.stream_id, filename)
+        filename = '%s' % market_book.get('id')
+        file_directory = os.path.join('/tmp', self.stream_id, filename)
 
-            with open(file_directory, 'a') as outfile:
-                outfile.write(
-                    json.dumps({
-                        "op": "mcm",
-                        "clk": None,
-                        "pt": publish_time,
-                        "mc": [market]
-                    }) + '\n'
-                )
+        with open(file_directory, 'a') as outfile:
+            outfile.write(
+                json.dumps({
+                    "op": "mcm",
+                    "clk": None,
+                    "pt": publish_time,
+                    "mc": [market_book]
+                }) + '\n'
+            )
 
-            if 'marketDefinition' in market and market['marketDefinition']['status'] == 'CLOSED':
-                self.on_market_closed(market)
+        if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
+            self.on_market_closed(market_book)
