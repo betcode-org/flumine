@@ -1,4 +1,5 @@
 import os
+import datetime
 import shutil
 import zipfile
 import logging
@@ -16,8 +17,9 @@ class BaseEngine:
 
     NAME = None
 
-    def __init__(self, directory):
+    def __init__(self, directory, market_expiration=3600):
         self.directory = directory
+        self.market_expiration = market_expiration
         self.markets_loaded = []
         self.validate_settings()
 
@@ -27,8 +29,7 @@ class BaseEngine:
 
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
-            logger.error('File: /tmp/%s/%s has already been loaded' % (stream_id, market_id))
-            return
+            logger.warning('File: /tmp/%s/%s has already been loaded, updating..' % (stream_id, market_id))
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
@@ -37,10 +38,12 @@ class BaseEngine:
 
         # zip file
         zip_file_dir = self.zip_file(file_dir, market_id, stream_id)
+
         # core load code
         self.load(zip_file_dir, market_definition)
+
         # clean up
-        self.clean_up(file_dir, zip_file_dir)
+        self.clean_up(stream_id)
 
         self.markets_loaded.append(market_id)
 
@@ -63,13 +66,28 @@ class BaseEngine:
             pass
         return dict([a, str(x)] for a, x in market_definition.items())
 
-    @staticmethod
-    def clean_up(file_dir, zip_file_dir):
-        """remove txt file and zip from /tmp
+    def clean_up(self, stream_id):
+        """If zip > 1hr old remove zip and txt
+        file
         """
-        logger.info('Removing txt and zip')
-        os.remove(file_dir)
-        os.remove(zip_file_dir)
+        directory = os.path.join('/tmp', stream_id)
+
+        for file in os.listdir(directory):
+            if file.endswith('.zip'):
+                file_stats = os.stat(
+                    os.path.join(directory, file)
+                )
+                last_modified = datetime.datetime.fromtimestamp(file_stats.st_mtime)
+                seconds_since = (datetime.datetime.now()-last_modified).total_seconds()
+
+                if seconds_since > self.market_expiration:
+                    logging.info('Removing: %s, age: %ss' % (file, seconds_since))
+
+                    txt_path = os.path.join(directory, file.split('.zip')[0])
+                    zip_path = os.path.join(directory, file)
+
+                    os.remove(txt_path)
+                    os.remove(zip_path)
 
     @staticmethod
     def zip_file(file_dir, market_id, stream_id):

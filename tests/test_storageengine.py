@@ -12,12 +12,13 @@ class BaseEngineTest(unittest.TestCase):
 
     def setUp(self):
         self.directory = mock.Mock()
-        self.engine = BaseEngine(self.directory)
+        self.engine = BaseEngine(self.directory, 600)
 
     def test_init(self):
         assert self.engine.NAME is None
         assert self.engine.markets_loaded == []
         assert self.engine.directory == self.directory
+        assert self.engine.market_expiration == 600
 
     @mock.patch('flumine.storage.storageengine.BaseEngine.clean_up')
     @mock.patch('flumine.storage.storageengine.BaseEngine.load')
@@ -37,7 +38,7 @@ class BaseEngineTest(unittest.TestCase):
 
         mock_zip_file.assert_called_with(mock_join(), '1.123', '123')
         mock_load.assert_called_with(123, None)
-        mock_clean_up.assert_called_with(mock_join(), 123)
+        mock_clean_up.assert_called_with('123')
         assert self.engine.markets_loaded == ['1.123']
         assert self.engine.markets_loaded_count == 1
 
@@ -49,11 +50,9 @@ class BaseEngineTest(unittest.TestCase):
         market_definition = {'venue': 'Menangle', 'status': 'CLOSED', 'inPlay': True, 'discountAllowed': True, 'marketTime': '2017-06-03T07:50:00.000Z', 'openDate': '2017-06-03T06:40:00.000Z', 'runners': [{'bsp': 4.908084055105574, 'sortPriority': 1, 'id': 8655916, 'adjustmentFactor': 20, 'status': 'LOSER'}, {'bsp': 4.391726124153355, 'sortPriority': 2, 'id': 9609057, 'adjustmentFactor': 17.857, 'status': 'LOSER'}, {'bsp': 131.7415596676758, 'sortPriority': 3, 'id': 8403465, 'adjustmentFactor': 1.515, 'status': 'LOSER'}, {'bsp': 19.528428843872973, 'sortPriority': 4, 'id': 11000138, 'adjustmentFactor': 8.333, 'status': 'LOSER'}, {'bsp': 160, 'sortPriority': 5, 'id': 7202563, 'adjustmentFactor': 1.515, 'status': 'LOSER'}, {'bsp': 10.443843781251928, 'sortPriority': 6, 'id': 8624362, 'adjustmentFactor': 6.25, 'status': 'WINNER'}, {'bsp': 17.5, 'sortPriority': 7, 'id': 11094377, 'adjustmentFactor': 9.091, 'status': 'LOSER'}, {'bsp': 3.45, 'sortPriority': 8, 'id': 9204498, 'adjustmentFactor': 23.256, 'status': 'LOSER'}, {'bsp': 298.536131312, 'sortPriority': 9, 'id': 5596213, 'adjustmentFactor': 1.01, 'status': 'LOSER'}, {'bsp': 147.42486815817654, 'sortPriority': 10, 'id': 6656290, 'adjustmentFactor': 1.515, 'status': 'LOSER'}, {'bsp': 21.827853476689782, 'sortPriority': 11, 'id': 7272186, 'adjustmentFactor': 4.762, 'status': 'LOSER'}, {'bsp': 32.93144628533861, 'sortPriority': 12, 'id': 10470128, 'adjustmentFactor': 4.895, 'status': 'LOSER'}], 'numberOfActiveRunners': 0, 'complete': True, 'persistenceEnabled': True, 'version': 1668900713, 'betDelay': 1, 'countryCode': 'AU', 'eventId': '28257726', 'settledTime': '2017-06-03T07:55:10.000Z', 'crossMatching': False, 'marketBaseRate': 8, 'timezone': 'Australia/Sydney', 'marketType': 'WIN', 'runnersVoidable': False, 'suspendTime': '2017-06-03T07:50:00.000Z', 'regulators': ['MR_INT'], 'bettingType': 'ODDS', 'bspMarket': True, 'numberOfWinners': 1, 'bspReconciled': True, 'turnInPlayEnabled': True, 'eventTypeId': '7'}
         self.engine.create_metadata(market_definition)
 
-    @mock.patch('flumine.storage.storageengine.os')
-    def test_clean_up(self, mock_os):
-        self.engine.clean_up('/tmp/hello', '/tmp/world')
-
-        assert mock_os.remove.call_count == 2
+    # def test_clean_up(self):
+    #     self.engine.directory = '/Users/liampauling/Desktop/fluminetests/FL_A'
+    #     self.engine.clean_up('1ff949c8')
 
     def test_markets_loaded_count(self):
         assert self.engine.markets_loaded_count == 0
