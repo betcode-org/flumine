@@ -80,6 +80,8 @@ class Flumine:
         """ Runs socket and catches any errors, will
         attempt reconnect every 2s.
         """
+        self._check_login()
+
         self.unique_id = self._socket.subscribe_to_markets(
             market_filter=self.recorder.market_filter,
             market_data_filter=self.recorder.market_data_filter,

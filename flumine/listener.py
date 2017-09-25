@@ -1,7 +1,8 @@
 import logging
-
 from betfairlightweight.streaming.listener import StreamListener
 from betfairlightweight.streaming.stream import BaseStream
+
+from .exceptions import ListenerError
 
 
 """
@@ -23,7 +24,7 @@ class FlumineListener(StreamListener):
         if stream_type == 'marketSubscription':
             return FlumineStream(self)
         elif stream_type == 'orderSubscription':
-            raise ValueError('Not expecting an order stream...')
+            raise ListenerError('Not expecting an order stream...')
 
 
 class FlumineStream(BaseStream):
@@ -34,11 +35,13 @@ class FlumineStream(BaseStream):
             if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
                 if market_id in self._caches:
                     # removes closed market from cache
-                    logger.info('[MarketStream: %s] %s removed' % (self.unique_id, market_id))
+                    logger.info('[MarketStream: %s] %s removed %s markets in cache' %
+                                (self.unique_id, market_id, len(self._caches)))
                     del self._caches[market_id]
             elif self._caches.get(market_id) is None:
                 # adds empty object to cache to track live market count
-                logger.info('[MarketStream: %s] %s added' % (self.unique_id, market_id))
+                logger.info('[MarketStream: %s] %s added %s markets in cache' %
+                            (self.unique_id, market_id, len(self._caches)))
                 self._caches[market_id] = object()
 
         self.output_queue(market_books, publish_time)

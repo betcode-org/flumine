@@ -24,10 +24,6 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine._running is False
         assert self.flumine.listener is not None
 
-    def test_handler(self):
-        # self.flumine._handler()
-        pass
-
     @mock.patch('flumine.flumine.Flumine._run')
     @mock.patch('flumine.flumine.Flumine._create_socket')
     @mock.patch('flumine.flumine.Flumine._check_login')
@@ -89,11 +85,13 @@ class FlumineTest(unittest.TestCase):
     #     socket.start.side_effect = BetfairError()
     #     self.flumine._run()
 
-    # def test_check_login(self):
-    #     self.mock_client.session_expired.return_value = True
-    #
-    #     self.flumine._check_login()
-    #     self.mock_client.login.assert_called_with()
+    def test_check_login(self):
+        mock_client = mock.Mock()
+        mock_client.session_expired = True
+        self.flumine.trading = mock_client
+
+        self.flumine._check_login()
+        mock_client.login.assert_called_with()
 
     def test_create_socket(self):
         self.flumine._create_socket()
@@ -113,6 +111,13 @@ class FlumineTest(unittest.TestCase):
         self.flumine._socket.__str__ = socket_str
 
         assert self.flumine.stream_status() == '123'
+
+    def test_running(self):
+        self.flumine._running = True
+        assert self.flumine.running is True
+
+        self.flumine._running = False
+        assert self.flumine.running is False
 
     def test_str(self):
         assert str(self.flumine) == '<Flumine [not running]>'
