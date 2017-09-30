@@ -25,9 +25,7 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine.listener is not None
 
     @mock.patch('flumine.flumine.Flumine._run')
-    @mock.patch('flumine.flumine.Flumine._create_socket')
-    @mock.patch('flumine.flumine.Flumine._check_login')
-    def test_start(self, mock_check_login, mock_create_socket, mock_run):
+    def test_start(self, mock_run):
         mock_socket = mock.Mock()
         handler_thread = mock.Mock()
         run_thread = mock.Mock()
@@ -37,9 +35,6 @@ class FlumineTest(unittest.TestCase):
         self.flumine._run_thread = run_thread
 
         self.flumine.start()
-
-        mock_check_login.assert_called_with()
-        mock_create_socket.assert_called_with()
 
         mock_run.assert_called_with(None, None, None)
 

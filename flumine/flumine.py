@@ -32,8 +32,6 @@ class Flumine:
         logger.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
-        self._check_login()
-        self._create_socket()
         if async:
             threading.Thread(
                 target=self._run,
@@ -82,6 +80,9 @@ class Flumine:
         """
         self._check_login()
 
+        self._create_socket()
+
+        logger.info('Subscribing to markets')
         self.unique_id = self._socket.subscribe_to_markets(
             market_filter=self.recorder.market_filter,
             market_data_filter=self.recorder.market_data_filter,
@@ -93,6 +94,7 @@ class Flumine:
         )
         self._running = True
         try:
+            logger.info('Starting socket..')
             self._socket.start(async=False)
         except BetfairError as e:
             logger.error('Betfair error: %s' % e)
@@ -110,6 +112,7 @@ class Flumine:
     def _create_socket(self):
         """Creates stream
         """
+        logger.info('Creating socket')
         self._socket = self.trading.streaming.create_stream(
             unique_id=self.unique_id,
             description='Flumine Socket',

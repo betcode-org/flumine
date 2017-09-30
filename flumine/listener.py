@@ -35,14 +35,14 @@ class FlumineStream(BaseStream):
             if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
                 if market_id in self._caches:
                     # removes closed market from cache
+                    del self._caches[market_id]
                     logger.info('[MarketStream: %s] %s removed %s markets in cache' %
                                 (self.unique_id, market_id, len(self._caches)))
-                    del self._caches[market_id]
             elif self._caches.get(market_id) is None:
                 # adds empty object to cache to track live market count
+                self._caches[market_id] = object()
                 logger.info('[MarketStream: %s] %s added %s markets in cache' %
                             (self.unique_id, market_id, len(self._caches)))
-                self._caches[market_id] = object()
 
         self.output_queue(market_books, publish_time)
         self._updates_processed += len(market_books)
