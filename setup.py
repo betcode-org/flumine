@@ -5,6 +5,7 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     'betfairlightweight>=1.2',
     'boto3',
+    'botocore',
     'retrying',
 ]
 
