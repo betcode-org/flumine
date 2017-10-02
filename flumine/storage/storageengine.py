@@ -81,7 +81,7 @@ class BaseEngine:
                 seconds_since = (datetime.datetime.now()-last_modified).total_seconds()
 
                 if seconds_since > self.market_expiration:
-                    logging.info('Removing: %s, age: %ss' % (file, seconds_since))
+                    logging.info('Removing: %s, age: %ss' % (file, round(seconds_since, 2)))
 
                     txt_path = os.path.join(directory, file.split('.zip')[0])
                     zip_path = os.path.join(directory, file)
@@ -94,9 +94,8 @@ class BaseEngine:
         """zips txt file into filename.zip
         """
         zip_file_directory = os.path.join('/tmp', stream_id, '%s.zip' % market_id)
-        zf = zipfile.ZipFile(zip_file_directory, mode='w')
-        zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
-        zf.close()
+        with zipfile.ZipFile(zip_file_directory, mode='w') as zf:
+            zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         return zip_file_directory
 
     @property
