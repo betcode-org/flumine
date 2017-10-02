@@ -26,7 +26,7 @@ class BaseRecorder:
                 'EX_ALL_OFFERS', 'EX_TRADED', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF', 'SP_TRADED', 'SP_PROJECTED'
             ]
         )
-        self.stream_id = create_short_uuid()
+        self.stream_id = create_short_uuid()  # used to differentiate markets /tmp/<stream_id>
         self.live_markets = []  # list of markets to be processed
         self._setup()
         logger.info('Recorder created %s' % self.stream_id)
@@ -63,7 +63,9 @@ class BaseRecorder:
         raise NotImplementedError
 
     def on_market_closed(self, market_book):
-        """Function run when market is closed.
+        """Function run when market is closed, this
+        may execute more than once if update received
+        after being closed.
         """
         market_id = market_book.get('id')
         market_definition = market_book.get('marketDefinition')
@@ -83,7 +85,8 @@ class BaseRecorder:
 
 class StreamRecorder(BaseRecorder):
     """Data recorder, records stream data
-    to /tmp/market_id
+    to /tmp/market_id, a single market per
+    file.
     """
 
     NAME = 'STREAM_RECORDER'
