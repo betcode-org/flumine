@@ -27,7 +27,7 @@ def main():
     try:
         market_filter = json.loads(sys.argv[1])
     except IndexError:
-        logging.warning('Market Filter not provided, defaulting to GB racing')
+        logging.warning('Market Filter not provided, defaulting to GB and IE racing')
         market_filter = {"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}
     except json.JSONDecodeError:
         logging.error('Market Filter arg must be provided in json format')

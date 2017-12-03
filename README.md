@@ -1,4 +1,4 @@
-# flumine
+# flūmine
 
 [![Build Status](https://travis-ci.org/liampauling/flumine.svg?branch=master)](https://travis-ci.org/liampauling/flumine) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine)
 
@@ -55,8 +55,13 @@ The framework can be used as follows:
 
 Assuming your username is JohnSmith and your certs are in /certs.
 
-(Not on docker cloud, yet)
+[liampauling/flumine](https://hub.docker.com/r/liampauling/flumine/)
 
 ```
-$ docker run -d -e username='JohnSmith' -e JohnSmithpassword='beer' -e JohnSmith='morebeer' -v /certs:/certs --name FLUMINE flumine:PROD '{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
+$ docker run -d
+    -e username='JohnSmith'
+    -e JohnSmithpassword='beer'
+    -e JohnSmith='morebeer'
+    -v /certs:/certs
+    liampauling/flumine:latest '{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
 ```
