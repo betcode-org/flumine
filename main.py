@@ -2,7 +2,7 @@ import sys
 import json
 import logging
 
-from flumine.resources import StreamRecorder
+from flumine.resources import MarketRecorder
 from flumine.storage import storageengine
 from flumine import (
     Flumine,
@@ -42,11 +42,11 @@ def main():
         logging.error('Market Data Filter arg must be provided in json format')
         market_data_filter = None
 
-    storage_engine = storageengine.S3('flumine')
-    # storage_engine = storageengine.Local('/fluminetests')
+    # storage_engine = storageengine.S3('flumine')
+    storage_engine = storageengine.Local('/tmp')
 
     flumine = Flumine(
-        recorder=StreamRecorder(
+        recorder=MarketRecorder(
             storage_engine=storage_engine,
             market_filter=market_filter,
             market_data_filter=market_data_filter,

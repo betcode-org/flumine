@@ -128,7 +128,7 @@ class S3(BaseEngine):
 
     NAME = 'S3'
 
-    def __init__(self, directory, access_key=None, secret_key=None):
+    def __init__(self, directory, access_key=None, secret_key=None, data_type='marketdata'):
         self.s3 = boto3.client(
             's3',
             aws_access_key_id=access_key,
@@ -136,6 +136,7 @@ class S3(BaseEngine):
         )
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
+        self.data_type = data_type
         super(S3, self).__init__(directory)
 
     def validate_settings(self):
@@ -143,16 +144,16 @@ class S3(BaseEngine):
         self.s3.head_bucket(Bucket=self.directory)
 
     def load(self, zip_file_dir, market_definition):
-        event_type_id = market_definition.get('eventTypeId')
+        event_type_id = market_definition.get('eventTypeId', 0)
         try:
             self.transfer.upload_file(
                 filename=zip_file_dir,
                 bucket=self.directory,
                 key=os.path.join(
-                    'marketdata', 'streaming', event_type_id, os.path.basename(zip_file_dir)
+                    self.data_type, 'streaming', event_type_id, os.path.basename(zip_file_dir)
                 ),
                 extra_args={
-                    'Metadata': self.create_metadata(market_definition)
+                    'Metadata': self.create_metadata(market_definition) if market_definition else None
                 }
             )
             logger.info('%s successfully loaded to s3' % zip_file_dir)

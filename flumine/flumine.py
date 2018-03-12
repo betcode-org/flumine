@@ -8,7 +8,10 @@ from betfairlightweight import (
 )
 
 from .listener import FlumineListener
-from .exceptions import RunError
+from .exceptions import (
+    RunError,
+    StreamError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,16 +85,23 @@ class Flumine:
 
         self._create_socket()
 
-        logger.info('Subscribing to markets')
-        self.unique_id = self._socket.subscribe_to_markets(
-            market_filter=self.recorder.market_filter,
-            market_data_filter=self.recorder.market_data_filter,
-            conflate_ms=conflate_ms,
-            heartbeat_ms=heartbeat_ms,
-            segmentation_enabled=segmentation_enabled,
-            initial_clk=self.listener.initial_clk,
-            clk=self.listener.clk,
-        )
+        if self.recorder.STREAM_TYPE == 'market':
+            logger.info('Subscribing to markets')
+            self.unique_id = self._socket.subscribe_to_markets(
+                market_filter=self.recorder.market_filter,
+                market_data_filter=self.recorder.market_data_filter,
+                conflate_ms=conflate_ms,
+                heartbeat_ms=heartbeat_ms,
+                segmentation_enabled=segmentation_enabled,
+                initial_clk=self.listener.initial_clk,
+                clk=self.listener.clk,
+            )
+        elif self.recorder.STREAM_TYPE == 'race':
+            logger.info('Subscribing to races')
+            self.unique_id = self._socket.subscribe_to_races()
+        else:
+            raise StreamError('%s is not a valid stream type' % self.recorder.STREAM_TYPE)
+
         self._running = True
         try:
             logger.info('Starting socket..')

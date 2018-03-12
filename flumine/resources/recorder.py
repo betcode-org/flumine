@@ -17,6 +17,8 @@ class BaseRecorder:
     """
 
     NAME = 'BASE_RECORDER'
+    STREAM_TYPE = None
+    MARKET_ID_LOOKUP = None
 
     def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
         self.storage_engine = storage_engine
@@ -31,18 +33,18 @@ class BaseRecorder:
         self._setup()
         logger.info('Recorder created %s' % self.stream_id)
 
-    def __call__(self, market_books, publish_time):
+    def __call__(self, updates, publish_time):
         """Checks market using market book parameters
         function then passes market_book to be processed.
 
-        :param market_books: List of Market Book objects
+        :param updates: List of updates
         :param publish_time: Publish time of market book
         """
-        for market_book in market_books:
-            market_id = market_book.get('id')
-            self.check_market_book(market_id, market_book)
+        for update in updates:
+            market_id = update.get(self.MARKET_ID_LOOKUP)
+            self.check_market_book(market_id, update)
             if market_id in self.live_markets:
-                self.process_market_book(market_book, publish_time)
+                self.process_update(update, publish_time)
 
     def check_market_book(self, market_id, market_book):
         """Logic used to decide if market_book should
@@ -54,21 +56,21 @@ class BaseRecorder:
         if market_id not in self.live_markets:
             self.live_markets.append(market_id)
 
-    def process_market_book(self, market_book, publish_time):
-        """Function that processes market book
+    def process_update(self, update, publish_time):
+        """Function that processes update
 
-        :param market_book: Market Book object
+        :param update: update object
         :param publish_time: Publish time of market book
         """
         raise NotImplementedError
 
-    def on_market_closed(self, market_book):
+    def on_market_closed(self, update):
         """Function run when market is closed, this
         may execute more than once if update received
         after being closed.
         """
-        market_id = market_book.get('id')
-        market_definition = market_book.get('marketDefinition')
+        market_id = update.get(self.MARKET_ID_LOOKUP)
+        market_definition = update.get('marketDefinition')
         logger.info('Closing market %s' % market_id)
         self.storage_engine(market_id, market_definition, self.stream_id)
 
@@ -83,16 +85,18 @@ class BaseRecorder:
         return '<%s>' % self.NAME
 
 
-class StreamRecorder(BaseRecorder):
+class MarketRecorder(BaseRecorder):
     """Data recorder, records stream data
     to /tmp/market_id, a single market per
     file.
     """
 
-    NAME = 'STREAM_RECORDER'
+    NAME = 'MARKET_RECORDER'
+    STREAM_TYPE = 'market'
+    MARKET_ID_LOOKUP = 'id'
 
-    def process_market_book(self, market_book, publish_time):
-        filename = '%s' % market_book.get('id')
+    def process_update(self, market_book, publish_time):
+        filename = '%s' % market_book.get(self.MARKET_ID_LOOKUP)
         file_directory = os.path.join('/tmp', self.stream_id, filename)
 
         with open(file_directory, 'a') as outfile:
@@ -107,3 +111,26 @@ class StreamRecorder(BaseRecorder):
 
         if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
             self.on_market_closed(market_book)
+
+
+class RaceRecorder(BaseRecorder):
+
+    NAME = 'RACE_RECORDER'
+    STREAM_TYPE = 'race'
+    MARKET_ID_LOOKUP = 'mid'
+
+    def process_update(self, update, publish_time):
+        filename = '%s' % update.get(self.MARKET_ID_LOOKUP)
+        file_directory = os.path.join('/tmp', self.stream_id, filename)
+
+        with open(file_directory, 'a') as outfile:
+            outfile.write(
+                json.dumps({
+                    "op": "rcm",
+                    "clk": None,
+                    "pt": publish_time,
+                    "rc": [update]
+                }) + '\n'
+            )
+
+        # todo close
