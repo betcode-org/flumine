@@ -126,7 +126,8 @@ class Flumine:
         self._socket = self.trading.streaming.create_stream(
             unique_id=self.unique_id,
             description='Flumine Socket',
-            listener=self.listener
+            listener=self.listener,
+            host=self.recorder.HOST,
         )
 
     @property

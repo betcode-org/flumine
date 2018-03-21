@@ -19,6 +19,7 @@ class BaseRecorder:
     NAME = 'BASE_RECORDER'
     STREAM_TYPE = None
     MARKET_ID_LOOKUP = None
+    HOST = None
 
     def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
         self.storage_engine = storage_engine
@@ -118,6 +119,7 @@ class RaceRecorder(BaseRecorder):
     NAME = 'RACE_RECORDER'
     STREAM_TYPE = 'race'
     MARKET_ID_LOOKUP = 'mid'
+    HOST = 'race'
 
     def process_update(self, update, publish_time):
         filename = '%s' % update.get(self.MARKET_ID_LOOKUP)

@@ -20,6 +20,7 @@ class BaseRecorderTest(unittest.TestCase):
         assert self.base_recorder.NAME == 'BASE_RECORDER'
         assert self.base_recorder.STREAM_TYPE is None
         assert self.base_recorder.MARKET_ID_LOOKUP is None
+        assert self.base_recorder.HOST is None
         assert self.base_recorder.storage_engine == self.storage
         assert self.base_recorder.market_filter == self.mock_market_filter
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
@@ -84,4 +85,5 @@ class RaceRecorderTest(unittest.TestCase):
         assert self.data_recorder.NAME == 'RACE_RECORDER'
         assert self.data_recorder.STREAM_TYPE == 'race'
         assert self.data_recorder.MARKET_ID_LOOKUP == 'mid'
+        assert self.data_recorder.HOST == 'race'
         assert self.data_recorder.storage_engine == self.storage

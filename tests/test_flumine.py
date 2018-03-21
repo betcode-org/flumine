@@ -92,9 +92,10 @@ class FlumineTest(unittest.TestCase):
         self.flumine._create_socket()
 
         self.flumine.trading.streaming.create_stream.assert_called_with(
-                description='Flumine Socket',
-                unique_id=1000,
-                listener=self.listener
+            description='Flumine Socket',
+            unique_id=1000,
+            listener=self.listener,
+            host=self.recorder.HOST,
         )
 
     def test_stream_status(self):
