@@ -135,4 +135,8 @@ class RaceRecorder(BaseRecorder):
                 }) + '\n'
             )
 
-        # todo close
+        # todo validate this is correct
+        if 'rpc' in update:
+            rpc = update['rpc']
+            if rpc['g'] == 'Finish' and rpc['prg'] == 0 and rpc['ord'] == [] and 'rrc' not in update:
+                self.on_market_closed(update)

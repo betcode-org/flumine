@@ -19,6 +19,7 @@ class BaseEngineTest(unittest.TestCase):
         assert self.engine.markets_loaded == []
         assert self.engine.directory == self.directory
         assert self.engine.market_expiration == 600
+        assert self.engine.force_update is True
 
     @mock.patch('flumine.storage.storageengine.BaseEngine.clean_up')
     @mock.patch('flumine.storage.storageengine.BaseEngine.load')

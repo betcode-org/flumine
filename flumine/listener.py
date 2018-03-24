@@ -31,6 +31,8 @@ class FlumineListener(StreamListener):
 
 class FlumineStream(BaseStream):
 
+    _lookup = 'mc'
+
     def _process(self, market_books, publish_time):
         for market_book in market_books:
             market_id = market_book.get('id')
@@ -57,6 +59,8 @@ class FlumineStream(BaseStream):
 
 
 class FlumineRaceStream(BaseStream):
+
+    _lookup = 'rc'
 
     def _process(self, race_updates, publish_time):
         for update in race_updates:

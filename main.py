@@ -1,6 +1,7 @@
 import sys
 import json
 import logging
+import betfairlightweight
 
 from flumine.resources import (
     MarketRecorder,
@@ -10,6 +11,7 @@ from flumine.storage import storageengine
 from flumine import (
     Flumine,
     FlumineException,
+    __version__,
 )
 
 
@@ -27,9 +29,12 @@ def main():
     logging.info(sys.argv)
     stream_type = sys.argv[1]
 
+    logging.info('betfairlightweight version: %s' % betfairlightweight.__version__)
+    logging.info('flumine version: %s' % __version__)
+
     if stream_type == 'race':
         logging.info('Creating "storageengine.s3"')
-        storage_engine = storageengine.S3('flumine', data_type='racedata')
+        storage_engine = storageengine.S3('flumine', data_type='racedata', force_update=False)
         logging.info('Creating "RaceRecorder"')
         recorder = RaceRecorder(storage_engine=storage_engine)
     elif stream_type == 'market':
@@ -73,7 +78,7 @@ if __name__ == '__main__':
     """
     sys.argv[1] == race or market
     if market:
-        sys.argv[2] == market_filter
-        sys.argv[3] == market_data_filter
+        sys.argv[2] == market_filter (optional)
+        sys.argv[3] == market_data_filter (optional)
     """
     main()

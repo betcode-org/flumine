@@ -44,13 +44,18 @@ class BaseRecorderTest(unittest.TestCase):
         assert self.base_recorder.check_market_book('1.123', mock_market_book) is None
         assert self.base_recorder.live_markets == ['1.123']
 
-    def test_process_market_book(self):
+    def test_process_updatek(self):
         with self.assertRaises(NotImplementedError):
             mock_market_book = mock.Mock()
             self.base_recorder.process_update(mock_market_book, 0)
 
-    # def test_on_market_closed(self):
-    #     self.base_recorder.on_market_closed(None)
+    def test_on_market_closed(self):
+        mock_update = mock.Mock()
+        self.base_recorder.on_market_closed(mock_update)
+
+        self.storage.assert_called_with(
+            mock_update.get(None), mock_update.get('marketDefinition'), self.base_recorder.stream_id
+        )
 
     def test_str(self):
         assert str(self.base_recorder) == '<BASE_RECORDER>'
