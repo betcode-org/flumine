@@ -1,0 +1,4 @@
+betfairlightweight==0.0.0b
+boto3
+botocore
+retrying
