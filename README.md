@@ -57,11 +57,15 @@ Assuming your username is JohnSmith and your certs are in /certs.
 
 [liampauling/flumine](https://hub.docker.com/r/liampauling/flumine/)
 
-```
+```bash
+$ docker volume create flumine_data
 $ docker run -d
     -e username='JohnSmith'
     -e JohnSmithpassword='beer'
     -e JohnSmith='morebeer'
+    -e STREAM_TYPE='market'
+    -e MARKET_FILTER='{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
     -v /certs:/certs
-    liampauling/flumine:latest '{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
+    -v flumine_data:/data
+    liampauling/flumine:latest
 ```

@@ -15,6 +15,9 @@ from .exceptions import (
 
 logger = logging.getLogger(__name__)
 
+# dir used to store all data
+FLUMINE_DATA = '/data'
+
 
 class Flumine:
 

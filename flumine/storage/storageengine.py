@@ -10,6 +10,8 @@ from boto3.s3.transfer import (
 )
 from botocore.exceptions import BotoCoreError
 
+from ..flumine import FLUMINE_DATA
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,17 +30,19 @@ class BaseEngine:
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
             if self.force_update:
-                logger.warning('File: /tmp/%s/%s has already been loaded, updating..' % (stream_id, market_id))
+                logger.warning('File: /%s/%s/%s has already been loaded, updating..' %
+                               (FLUMINE_DATA, stream_id, market_id))
             else:
-                logger.warning('File: /tmp/%s/%s has already been loaded, NOT updating..' % (stream_id, market_id))
+                logger.warning('File: /%s/%s/%s has already been loaded, NOT updating..' %
+                               (FLUMINE_DATA, stream_id, market_id))
                 return
 
         logger.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
-        file_dir = os.path.join('/tmp', stream_id, market_id)
+        file_dir = os.path.join(FLUMINE_DATA, stream_id, market_id)
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logger.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
+            logger.error('File: %s does not exist in /%s/%s/' % (FLUMINE_DATA, market_id, stream_id))
             return
 
         # zip file
@@ -75,7 +79,7 @@ class BaseEngine:
         """If zip > 1hr old remove zip and txt
         file
         """
-        directory = os.path.join('/tmp', stream_id)
+        directory = os.path.join(FLUMINE_DATA, stream_id)
 
         for file in os.listdir(directory):
             if file.endswith('.zip'):
@@ -98,7 +102,7 @@ class BaseEngine:
     def zip_file(file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
-        zip_file_directory = os.path.join('/tmp', stream_id, '%s.zip' % market_id)
+        zip_file_directory = os.path.join(FLUMINE_DATA, stream_id, '%s.zip' % market_id)
         with zipfile.ZipFile(zip_file_directory, mode='w') as zf:
             zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         return zip_file_directory

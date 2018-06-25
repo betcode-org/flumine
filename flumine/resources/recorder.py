@@ -7,6 +7,7 @@ from betfairlightweight.filters import (
 )
 
 from ..utils import create_short_uuid
+from ..flumine import FLUMINE_DATA
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class BaseRecorder:
                 'EX_ALL_OFFERS', 'EX_TRADED', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF', 'SP_TRADED', 'SP_PROJECTED'
             ]
         )
-        self.stream_id = create_short_uuid()  # used to differentiate markets /tmp/<stream_id>
+        self.stream_id = create_short_uuid()  # used to differentiate markets /FLUMINE_DATA/<stream_id>
         self.live_markets = []  # list of markets to be processed
         self._setup()
         logger.info('Recorder created %s' % self.stream_id)
@@ -76,9 +77,9 @@ class BaseRecorder:
         self.storage_engine(market_id, market_definition, self.stream_id)
 
     def _setup(self):
-        """Create stream folder in /tmp  # todo
+        """Create stream folder in /data
         """
-        directory = os.path.join('/tmp', self.stream_id)
+        directory = os.path.join(FLUMINE_DATA, self.stream_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -88,8 +89,8 @@ class BaseRecorder:
 
 class MarketRecorder(BaseRecorder):
     """Data recorder, records stream data
-    to /tmp/market_id, a single market per
-    file.
+    to /FLUMINE_DATA/stream_id/market_id,
+    a single market per file.
     """
 
     NAME = 'MARKET_RECORDER'
@@ -98,7 +99,7 @@ class MarketRecorder(BaseRecorder):
 
     def process_update(self, market_book, publish_time):
         filename = '%s' % market_book.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join('/tmp', self.stream_id, filename)
+        file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
 
         with open(file_directory, 'a') as outfile:
             outfile.write(
@@ -123,7 +124,7 @@ class RaceRecorder(BaseRecorder):
 
     def process_update(self, update, publish_time):
         filename = '%s' % update.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join('/tmp', self.stream_id, filename)
+        file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
 
         with open(file_directory, 'a') as outfile:
             outfile.write(

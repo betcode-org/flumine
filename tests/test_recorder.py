@@ -5,18 +5,21 @@ from flumine.resources.recorder import (
     BaseRecorder,
     MarketRecorder,
     RaceRecorder,
+    FLUMINE_DATA,
 )
 
 
 class BaseRecorderTest(unittest.TestCase):
 
-    def setUp(self):
+    @mock.patch('flumine.resources.recorder.os.makedirs')
+    def setUp(self, *args):
         self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
         self.base_recorder = BaseRecorder(self.storage, self.mock_market_filter, self.mock_market_data_filter)
 
     def test_init(self):
+        assert FLUMINE_DATA == '/data'
         assert self.base_recorder.NAME == 'BASE_RECORDER'
         assert self.base_recorder.STREAM_TYPE is None
         assert self.base_recorder.MARKET_ID_LOOKUP is None
@@ -63,7 +66,8 @@ class BaseRecorderTest(unittest.TestCase):
 
 class MarketRecorderTest(unittest.TestCase):
 
-    def setUp(self):
+    @mock.patch('flumine.resources.recorder.os.makedirs')
+    def setUp(self, *args):
         self.storage = mock.Mock()
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
@@ -82,7 +86,8 @@ class MarketRecorderTest(unittest.TestCase):
 
 class RaceRecorderTest(unittest.TestCase):
 
-    def setUp(self):
+    @mock.patch('flumine.resources.recorder.os.makedirs')
+    def setUp(self, *args):
         self.storage = mock.Mock()
         self.data_recorder = RaceRecorder(self.storage)
 
