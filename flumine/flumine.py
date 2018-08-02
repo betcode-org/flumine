@@ -12,6 +12,7 @@ from .exceptions import (
     RunError,
     StreamError,
 )
+from .utils import login_no_certs
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ FLUMINE_DATA = '/data'
 class Flumine:
 
     def __init__(self, recorder, settings=None, unique_id=1e3):
+        self._certificate_login = settings.pop('certificate_login', True) if settings else True
         self.trading = self._create_client(settings)
         self.recorder = recorder
         self.unique_id = unique_id
@@ -120,7 +122,10 @@ class Flumine:
         """Login if session expired
         """
         if self.trading.session_expired:
-            self.trading.login()
+            if self._certificate_login:
+                self.trading.login()
+            else:
+                login_no_certs(self.trading)
 
     def _create_socket(self):
         """Creates stream

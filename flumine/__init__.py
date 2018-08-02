@@ -6,7 +6,7 @@ from .exceptions import FlumineException
 
 
 __title__ = 'flumine'
-__version__ = '0.5.1b'
+__version__ = '0.5.2b'
 __author__ = 'Liam Pauling'
 
 
