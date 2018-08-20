@@ -86,7 +86,7 @@ class Flumine:
         """ Runs socket and catches any errors, will
         attempt reconnect every 2s.
         """
-        self._check_login()
+        self._check_login(force=True)
 
         self._create_socket()
 
@@ -118,10 +118,10 @@ class Flumine:
             logger.error('Unknown error: %s' % e)
             raise
 
-    def _check_login(self):
+    def _check_login(self, force=False):
         """Login if session expired
         """
-        if self.trading.session_expired:
+        if self.trading.session_expired or force:
             if self._certificate_login:
                 self.trading.login()
             else:

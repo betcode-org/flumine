@@ -88,6 +88,14 @@ class FlumineTest(unittest.TestCase):
         self.flumine._check_login()
         mock_client.login.assert_called_with()
 
+    def test_check_login_force(self):
+        mock_client = mock.Mock()
+        mock_client.session_expired = False
+        self.flumine.trading = mock_client
+
+        self.flumine._check_login(force=True)
+        mock_client.login.assert_called_with()
+
     def test_create_socket(self):
         self.flumine._create_socket()
 
