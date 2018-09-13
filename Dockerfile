@@ -7,6 +7,6 @@ ADD . /flumine
 WORKDIR /flumine
 
 # install py libraries
-RUN pip install flumine
+RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "main.py"]
+CMD python main.py $STREAM_TYPE $MARKET_FILTER $MARKET_DATA_FILTER

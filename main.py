@@ -1,12 +1,17 @@
 import sys
 import json
 import logging
+import betfairlightweight
 
-from flumine.resources import StreamRecorder
+from flumine.resources import (
+    MarketRecorder,
+    RaceRecorder,
+)
 from flumine.storage import storageengine
 from flumine import (
     Flumine,
     FlumineException,
+    __version__,
 )
 
 
@@ -21,43 +26,59 @@ def setup_logging():
 
 def main():
     setup_logging()
-
     logging.info(sys.argv)
+    stream_type = sys.argv[1]
 
-    try:
-        market_filter = json.loads(sys.argv[1])
-    except IndexError:
-        logging.warning('Market Filter not provided, defaulting to GB and IE racing')
-        market_filter = {"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}
-    except json.JSONDecodeError:
-        logging.error('Market Filter arg must be provided in json format')
-        raise
+    logging.info('betfairlightweight version: %s' % betfairlightweight.__version__)
+    logging.info('flumine version: %s' % __version__)
 
-    try:
-        market_data_filter = json.loads(sys.argv[2])
-    except IndexError:
-        logging.warning('Market Data Filter not provided, defaulting to None')
-        market_data_filter = None
-    except json.JSONDecodeError:
-        logging.error('Market Data Filter arg must be provided in json format')
-        market_data_filter = None
+    if stream_type == 'race':
+        logging.info('Creating "storageengine.s3"')
+        storage_engine = storageengine.S3('flumine', data_type='racedata', force_update=False)
+        logging.info('Creating "RaceRecorder"')
+        recorder = RaceRecorder(storage_engine=storage_engine)
+    elif stream_type == 'market':
+        try:
+            market_filter = json.loads(sys.argv[2])
+        except IndexError:
+            logging.warning('Market Filter not provided, defaulting to GB and IE WIN racing')
+            market_filter = {"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}
+        except json.JSONDecodeError:
+            logging.error('Market Filter arg must be provided in json format')
+            raise
 
-    storage_engine = storageengine.S3('flumine')
-    # storage_engine = storageengine.Local('/fluminetests')
+        try:
+            market_data_filter = json.loads(sys.argv[3])
+        except IndexError:
+            logging.warning('Market Data Filter not provided, defaulting to None')
+            market_data_filter = None
+        except json.JSONDecodeError:
+            logging.error('Market Data Filter arg must be provided in json format')
+            market_data_filter = None
 
-    flumine = Flumine(
-        recorder=StreamRecorder(
+        logging.info('Creating "storageengine.s3"')
+        storage_engine = storageengine.S3('flumine', data_type='marketdata')
+        logging.info('Creating "MarketRecorder"')
+        recorder = MarketRecorder(
             storage_engine=storage_engine,
             market_filter=market_filter,
             market_data_filter=market_data_filter,
-        ),
-    )
+        )
+    else:
+        raise ValueError('Invalid stream_type must be "race" or "market"')
 
+    flumine = Flumine(recorder=recorder)
     try:
         flumine.start(async=False)
-    except FlumineException:
-        pass
+    except FlumineException as e:
+        logging.critical('Major flumine error: %s' % e)
 
 
 if __name__ == '__main__':
+    """
+    sys.argv[1] == race or market
+    if market:
+        sys.argv[2] == market_filter (optional)
+        sys.argv[3] == market_data_filter (optional)
+    """
     main()

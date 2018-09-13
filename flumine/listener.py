@@ -25,9 +25,13 @@ class FlumineListener(StreamListener):
             return FlumineStream(self)
         elif stream_type == 'orderSubscription':
             raise ListenerError('Not expecting an order stream...')
+        elif stream_type == 'raceSubscription':
+            return FlumineRaceStream(self)
 
 
 class FlumineStream(BaseStream):
+
+    _lookup = 'mc'
 
     def _process(self, market_books, publish_time):
         for market_book in market_books:
@@ -52,3 +56,26 @@ class FlumineStream(BaseStream):
 
     def __repr__(self):
         return '<FlumineStream [%s]>' % len(self._caches)
+
+
+class FlumineRaceStream(BaseStream):
+
+    _lookup = 'rc'
+
+    def _process(self, race_updates, publish_time):
+        for update in race_updates:
+            market_id = update['mid']
+            if self._caches.get(market_id) is None:
+                # adds empty object to cache to track live market count
+                self._caches[market_id] = object()
+                logger.info('[RaceStream: %s] %s added, %s markets in cache' %
+                            (self.unique_id, market_id, len(self._caches)))
+
+        self.output_queue(race_updates, publish_time)
+        self._updates_processed += len(race_updates)
+
+    def __str__(self):
+        return 'FlumineRaceStream'
+
+    def __repr__(self):
+        return '<FlumineRaceStream [%s]>' % len(self._caches)

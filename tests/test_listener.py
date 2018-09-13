@@ -3,7 +3,8 @@ from unittest import mock
 
 from flumine.listener import (
     FlumineListener,
-    FlumineStream
+    FlumineStream,
+    FlumineRaceStream,
 )
 from flumine.exceptions import ListenerError
 
@@ -61,3 +62,27 @@ class StreamTest(unittest.TestCase):
 
     def test_repr(self):
         assert repr(self.stream) == '<FlumineStream [0]>'
+
+
+class RaceTest(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_listener = mock.Mock()
+        self.stream = FlumineRaceStream(self.mock_listener)
+
+    @mock.patch('flumine.listener.FlumineRaceStream.output_queue')
+    def test_process(self, mock_output_queue):
+        race = {'mid': 1}
+        race_updates = [race]
+
+        self.stream._process(race_updates, 1234)
+
+        mock_output_queue.assert_called_with(race_updates, 1234)
+        assert len(self.stream._caches) == 1
+        assert self.stream._updates_processed == 1
+
+    def test_str(self):
+        assert str(self.stream) == 'FlumineRaceStream'
+
+    def test_repr(self):
+        assert repr(self.stream) == '<FlumineRaceStream [0]>'

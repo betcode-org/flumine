@@ -8,14 +8,22 @@ from betfairlightweight import (
 )
 
 from .listener import FlumineListener
-from .exceptions import RunError
+from .exceptions import (
+    RunError,
+    StreamError,
+)
+from .utils import login_no_certs
 
 logger = logging.getLogger(__name__)
+
+# dir used to store all data
+FLUMINE_DATA = '/data'
 
 
 class Flumine:
 
     def __init__(self, recorder, settings=None, unique_id=1e3):
+        self._certificate_login = settings.pop('certificate_login', True) if settings else True
         self.trading = self._create_client(settings)
         self.recorder = recorder
         self.unique_id = unique_id
@@ -78,20 +86,27 @@ class Flumine:
         """ Runs socket and catches any errors, will
         attempt reconnect every 2s.
         """
-        self._check_login()
+        self._check_login(force=True)
 
         self._create_socket()
 
-        logger.info('Subscribing to markets')
-        self.unique_id = self._socket.subscribe_to_markets(
-            market_filter=self.recorder.market_filter,
-            market_data_filter=self.recorder.market_data_filter,
-            conflate_ms=conflate_ms,
-            heartbeat_ms=heartbeat_ms,
-            segmentation_enabled=segmentation_enabled,
-            initial_clk=self.listener.initial_clk,
-            clk=self.listener.clk,
-        )
+        if self.recorder.STREAM_TYPE == 'market':
+            logger.info('Subscribing to markets')
+            self.unique_id = self._socket.subscribe_to_markets(
+                market_filter=self.recorder.market_filter,
+                market_data_filter=self.recorder.market_data_filter,
+                conflate_ms=conflate_ms,
+                heartbeat_ms=heartbeat_ms,
+                segmentation_enabled=segmentation_enabled,
+                initial_clk=self.listener.initial_clk,
+                clk=self.listener.clk,
+            )
+        elif self.recorder.STREAM_TYPE == 'race':
+            logger.info('Subscribing to races')
+            self.unique_id = self._socket.subscribe_to_races()
+        else:
+            raise StreamError('%s is not a valid stream type' % self.recorder.STREAM_TYPE)
+
         self._running = True
         try:
             logger.info('Starting socket..')
@@ -103,11 +118,14 @@ class Flumine:
             logger.error('Unknown error: %s' % e)
             raise
 
-    def _check_login(self):
+    def _check_login(self, force=False):
         """Login if session expired
         """
-        if self.trading.session_expired:
-            self.trading.login()
+        if self.trading.session_expired or force:
+            if self._certificate_login:
+                self.trading.login()
+            else:
+                login_no_certs(self.trading)
 
     def _create_socket(self):
         """Creates stream
@@ -116,7 +134,8 @@ class Flumine:
         self._socket = self.trading.streaming.create_stream(
             unique_id=self.unique_id,
             description='Flumine Socket',
-            listener=self.listener
+            listener=self.listener,
+            host=self.recorder.HOST,
         )
 
     @property

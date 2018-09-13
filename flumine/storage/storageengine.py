@@ -10,6 +10,8 @@ from boto3.s3.transfer import (
 )
 from botocore.exceptions import BotoCoreError
 
+from ..flumine import FLUMINE_DATA
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,23 +19,30 @@ class BaseEngine:
 
     NAME = None
 
-    def __init__(self, directory, market_expiration=3600):
+    def __init__(self, directory, market_expiration=3600, force_update=True):
         self.directory = directory
         self.market_expiration = market_expiration
+        self.force_update = force_update
         self.markets_loaded = []
         self.validate_settings()
 
     def __call__(self, market_id, market_definition, stream_id):
-        logger.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
-        file_dir = os.path.join('/tmp', stream_id, market_id)
-
         # check that market has not already been loaded
         if market_id in self.markets_loaded:
-            logger.warning('File: /tmp/%s/%s has already been loaded, updating..' % (stream_id, market_id))
+            if self.force_update:
+                logger.warning('File: /%s/%s/%s has already been loaded, updating..' %
+                               (FLUMINE_DATA, stream_id, market_id))
+            else:
+                logger.warning('File: /%s/%s/%s has already been loaded, NOT updating..' %
+                               (FLUMINE_DATA, stream_id, market_id))
+                return
+
+        logger.info('Loading %s to %s:%s' % (market_id, self.NAME, self.directory))
+        file_dir = os.path.join(FLUMINE_DATA, stream_id, market_id)
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
-            logger.error('File: %s does not exist in /tmp/%s/' % (market_id, stream_id))
+            logger.error('File: %s does not exist in /%s/%s/' % (FLUMINE_DATA, market_id, stream_id))
             return
 
         # zip file
@@ -70,7 +79,7 @@ class BaseEngine:
         """If zip > 1hr old remove zip and txt
         file
         """
-        directory = os.path.join('/tmp', stream_id)
+        directory = os.path.join(FLUMINE_DATA, stream_id)
 
         for file in os.listdir(directory):
             if file.endswith('.zip'):
@@ -81,7 +90,7 @@ class BaseEngine:
                 seconds_since = (datetime.datetime.now()-last_modified).total_seconds()
 
                 if seconds_since > self.market_expiration:
-                    logging.info('Removing: %s, age: %ss' % (file, round(seconds_since, 2)))
+                    logger.info('Removing: %s, age: %ss' % (file, round(seconds_since, 2)))
 
                     txt_path = os.path.join(directory, file.split('.zip')[0])
                     zip_path = os.path.join(directory, file)
@@ -93,7 +102,7 @@ class BaseEngine:
     def zip_file(file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
-        zip_file_directory = os.path.join('/tmp', stream_id, '%s.zip' % market_id)
+        zip_file_directory = os.path.join(FLUMINE_DATA, stream_id, '%s.zip' % market_id)
         with zipfile.ZipFile(zip_file_directory, mode='w') as zf:
             zf.write(file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED)
         return zip_file_directory
@@ -128,7 +137,7 @@ class S3(BaseEngine):
 
     NAME = 'S3'
 
-    def __init__(self, directory, access_key=None, secret_key=None):
+    def __init__(self, directory, access_key=None, secret_key=None, data_type='marketdata', **kwargs):
         self.s3 = boto3.client(
             's3',
             aws_access_key_id=access_key,
@@ -136,23 +145,24 @@ class S3(BaseEngine):
         )
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
-        super(S3, self).__init__(directory)
+        self.data_type = data_type
+        super(S3, self).__init__(directory, **kwargs)
 
     def validate_settings(self):
         # error raised if bucket not present
         self.s3.head_bucket(Bucket=self.directory)
 
     def load(self, zip_file_dir, market_definition):
-        event_type_id = market_definition.get('eventTypeId')
+        event_type_id = market_definition.get('eventTypeId', 0) if market_definition else '7'
         try:
             self.transfer.upload_file(
                 filename=zip_file_dir,
                 bucket=self.directory,
                 key=os.path.join(
-                    'marketdata', 'streaming', event_type_id, os.path.basename(zip_file_dir)
+                    self.data_type, 'streaming', event_type_id, os.path.basename(zip_file_dir)
                 ),
                 extra_args={
-                    'Metadata': self.create_metadata(market_definition)
+                    'Metadata': self.create_metadata(market_definition) if market_definition else {}
                 }
             )
             logger.info('%s successfully loaded to s3' % zip_file_dir)
