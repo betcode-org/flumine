@@ -27,7 +27,10 @@ def setup_logging():
 def main():
     setup_logging()
     logging.info(sys.argv)
-    stream_type = sys.argv[1]
+    try:
+        stream_type = sys.argv[1]
+    except IndexError:
+        stream_type = 'market'
 
     logging.info('betfairlightweight version: %s' % betfairlightweight.__version__)
     logging.info('flumine version: %s' % __version__)
@@ -67,7 +70,10 @@ def main():
     else:
         raise ValueError('Invalid stream_type must be "race" or "market"')
 
-    flumine = Flumine(recorder=recorder)
+    flumine = Flumine(
+        recorder=recorder,
+        settings={'certificate_login': False}
+    )
     try:
         flumine.start(async=False)
     except FlumineException as e:
