@@ -1,16 +1,10 @@
+import os
 import re
 from setuptools import setup
 
 
-INSTALL_REQUIRES = [
-    'betfairlightweight==0.0.0b3',
-    'boto3',
-    'botocore',
-    'retrying',
-]
-
-TEST_REQUIRES = [
-]
+with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
+    INSTALL_REQUIRES = f.read().splitlines()
 
 with open('flumine/__init__.py', 'r') as f:
     version = re.search(
