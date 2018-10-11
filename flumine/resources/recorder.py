@@ -30,7 +30,7 @@ class BaseRecorder:
                 'EX_ALL_OFFERS', 'EX_TRADED', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF', 'SP_TRADED', 'SP_PROJECTED'
             ]
         )
-        self.stream_id = create_short_uuid()  # used to differentiate markets /FLUMINE_DATA/<stream_id>
+        self.stream_id = create_short_uuid()  # used to differentiate markets /<FLUMINE_DATA>/<stream_id>
         self.live_markets = []  # list of markets to be processed
         self._setup()
         logger.info('Recorder created %s' % self.stream_id)
@@ -77,7 +77,7 @@ class BaseRecorder:
         self.storage_engine(market_id, market_definition, self.stream_id)
 
     def _setup(self):
-        """Create stream folder in /data
+        """Create stream folder in <FLUMINE_DATA>
         """
         directory = os.path.join(FLUMINE_DATA, self.stream_id)
         if not os.path.exists(directory):
@@ -89,7 +89,7 @@ class BaseRecorder:
 
 class MarketRecorder(BaseRecorder):
     """Data recorder, records stream data
-    to /FLUMINE_DATA/stream_id/market_id,
+    to /<FLUMINE_DATA>/<stream_id>/market_id,
     a single market per file.
     """
 

@@ -76,8 +76,8 @@ class BaseEngine:
         return dict([a, str(x)] for a, x in market_definition.items())
 
     def clean_up(self, stream_id):
-        """If zip > 1hr old remove zip and txt
-        file
+        """If zip > market_expiration old remove
+        zip and txt file
         """
         directory = os.path.join(FLUMINE_DATA, stream_id)
 

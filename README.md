@@ -37,6 +37,7 @@ The framework can be used as follows:
             storage_engine=storage_engine,
             market_filter=market_filter,
         ),
+        settings={'certificate_login': False}
     )
 
 >>> flumine.start()
