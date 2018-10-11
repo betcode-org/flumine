@@ -1,4 +1,4 @@
-betfairlightweight==0.0.0b3
+betfairlightweight==0.0.0b4
 boto3
 botocore
 retrying
