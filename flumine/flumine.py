@@ -12,7 +12,6 @@ from .exceptions import (
     RunError,
     StreamError,
 )
-from .utils import login_no_certs
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +124,7 @@ class Flumine:
             if self._certificate_login:
                 self.trading.login()
             else:
-                login_no_certs(self.trading)
+                self.trading.login_interactive()
 
     def _create_socket(self):
         """Creates stream
