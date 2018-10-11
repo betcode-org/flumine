@@ -32,7 +32,7 @@ class Flumine:
         self._socket = None
         self.listener = FlumineListener(recorder)  # output queue hack
 
-    def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None, async=True):
+    def start(self, heartbeat_ms=None, conflate_ms=None, segmentation_enabled=None, _async=True):
         """Checks trading is logged in, creates socket,
         subscribes to markets, sets running to True and
         starts handler/run threads.
@@ -40,7 +40,7 @@ class Flumine:
         logger.info('Starting stream: %s' % self.unique_id)
         if self._running:
             raise RunError('Flumine is already running, call .stop() first')
-        if async:
+        if _async:
             threading.Thread(
                 target=self._run,
                 args=(conflate_ms, heartbeat_ms, segmentation_enabled),
@@ -110,7 +110,7 @@ class Flumine:
         self._running = True
         try:
             logger.info('Starting socket..')
-            self._socket.start(async=False)
+            self._socket.start(_async=False)
         except BetfairError as e:
             logger.error('Betfair error: %s' % e)
             raise

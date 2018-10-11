@@ -75,7 +75,7 @@ def main():
         settings={'certificate_login': False}
     )
     try:
-        flumine.start(async=False)
+        flumine.start(_async=False)
     except FlumineException as e:
         logging.critical('Major flumine error: %s' % e)
 
