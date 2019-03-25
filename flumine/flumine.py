@@ -1,7 +1,7 @@
 import os
 import logging
 import threading
-from retrying import retry
+from tenacity import retry, wait_exponential
 from betfairlightweight import (
     APIClient,
     BetfairError,
@@ -80,10 +80,11 @@ class Flumine:
                 username=username
             )
 
-    @retry(wait_fixed=2000)
+    @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def _run(self, conflate_ms, heartbeat_ms, segmentation_enabled):
         """ Runs socket and catches any errors, will
-        attempt reconnect every 2s.
+        attempt reconnect after 2s exponentially backing
+        off to 20s.
         """
         self._check_login(force=True)
 
@@ -91,18 +92,26 @@ class Flumine:
 
         if self.recorder.STREAM_TYPE == 'market':
             logger.info('Subscribing to markets')
-            self.unique_id = self._socket.subscribe_to_markets(
-                market_filter=self.recorder.market_filter,
-                market_data_filter=self.recorder.market_data_filter,
-                conflate_ms=conflate_ms,
-                heartbeat_ms=heartbeat_ms,
-                segmentation_enabled=segmentation_enabled,
-                initial_clk=self.listener.initial_clk,
-                clk=self.listener.clk,
-            )
+            try:
+                self.unique_id = self._socket.subscribe_to_markets(
+                    market_filter=self.recorder.market_filter,
+                    market_data_filter=self.recorder.market_data_filter,
+                    conflate_ms=conflate_ms,
+                    heartbeat_ms=heartbeat_ms,
+                    segmentation_enabled=segmentation_enabled,
+                    initial_clk=self.listener.initial_clk,
+                    clk=self.listener.clk,
+                )
+            except BetfairError as e:
+                logger.error('Betfair subscribe_to_markets error: %s' % e)
+                raise
         elif self.recorder.STREAM_TYPE == 'race':
             logger.info('Subscribing to races')
-            self.unique_id = self._socket.subscribe_to_races()
+            try:
+                self.unique_id = self._socket.subscribe_to_races()
+            except BetfairError as e:
+                logger.error('Betfair subscribe_to_races error: %s' % e)
+                raise
         else:
             raise StreamError('%s is not a valid stream type' % self.recorder.STREAM_TYPE)
 
@@ -122,9 +131,17 @@ class Flumine:
         """
         if self.trading.session_expired or force:
             if self._certificate_login:
-                self.trading.login()
+                try:
+                    self.trading.login()
+                except BetfairError as e:
+                    logger.error('Betfair login error: %s' % e)
+                    raise
             else:
-                self.trading.login_interactive()
+                try:
+                    self.trading.login_interactive()
+                except BetfairError as e:
+                    logger.error('Betfair login_interactive error: %s' % e)
+                    raise
 
     def _create_socket(self):
         """Creates stream
