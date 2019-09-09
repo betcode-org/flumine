@@ -30,14 +30,19 @@ from flumine.storage import storageengine
 
 market_filter = {"marketIds": ["1.132452335"]}
 
-storage_engine = storageengine.S3('flumine')
+storage_engine = storageengine.Local(directory="/tmp")
 
 flumine = Flumine(
     recorder=MarketRecorder(
         storage_engine=storage_engine,
         market_filter=market_filter,
     ),
-    settings={'certificate_login': False}
+    settings={  # passed to betfairlightweight
+        "username": "test",
+        "password": "test",
+        "app_key": "test",
+        "certificate_login": False,
+    }
 )
 
 flumine.start(async_=True)
