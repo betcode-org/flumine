@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - black fmt
+- _async renamed to async_ to match bflw
 
 **Bug Fixes**
 

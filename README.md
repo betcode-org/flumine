@@ -24,32 +24,31 @@ $ pip install flumine
 The framework can be used as follows:
 
 ```python
->>> import flumine
-    from flumine.resources import StreamRecorder
-    from flumine.storage import storageengine
+from flumine import Flumine
+from flumine.resources import MarketRecorder
+from flumine.storage import storageengine
 
->>> market_filter = {"marketIds": ["1.132452335"]}
+market_filter = {"marketIds": ["1.132452335"]}
 
-    storage_engine = flumine.storageengine.S3('flumine')
+storage_engine = storageengine.S3('flumine')
 
-    flumine = Flumine(
-        recorder=StreamRecorder(
-            storage_engine=storage_engine,
-            market_filter=market_filter,
-        ),
-        settings={'certificate_login': False}
-    )
+flumine = Flumine(
+    recorder=MarketRecorder(
+        storage_engine=storage_engine,
+        market_filter=market_filter,
+    ),
+    settings={'certificate_login': False}
+)
 
->>> flumine.start()
+flumine.start(async_=True)
 
->>> flumine
-<Flumine [running]>
+flumine
+# <Flumine [running]>
 
->>> flumine.stop()
+flumine.stop()
 
->>> flumine
-<Flumine [not running]>
-
+flumine
+# <Flumine [not running]>
 ```
 
 ## docker
