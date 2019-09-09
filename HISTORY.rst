@@ -10,10 +10,8 @@ Release History
 
 - black fmt
 - _async renamed to async_ to match bflw
-
-**Bug Fixes**
-
--
+- py3.7 added to travis
+- #28 readme update
 
 **Libraries**
 
