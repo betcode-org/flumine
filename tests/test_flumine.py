@@ -7,9 +7,8 @@ from betfairlightweight import BetfairError
 
 
 class FlumineTest(unittest.TestCase):
-
     def setUp(self):
-        self.settings = {'betfairlightweight': {'username': 'username'}}
+        self.settings = {"betfairlightweight": {"username": "username"}}
         self.recorder = mock.Mock()
         self.mock_client = mock.Mock()
         Flumine._create_client = self.mock_client
@@ -24,7 +23,7 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine._running is False
         assert self.flumine.listener is not None
 
-    @mock.patch('flumine.flumine.Flumine._run')
+    @mock.patch("flumine.flumine.Flumine._run")
     def test_start(self, mock_run):
         mock_socket = mock.Mock()
         handler_thread = mock.Mock()
@@ -55,9 +54,9 @@ class FlumineTest(unittest.TestCase):
         with self.assertRaises(RunError):
             self.flumine.stop()
 
-    @mock.patch('flumine.flumine.APIClient')
+    @mock.patch("flumine.flumine.APIClient")
     def test_create_client(self, mock_api_client):
-        settings = {'betfairlightweight': {'username': 'username'}}
+        settings = {"betfairlightweight": {"username": "username"}}
         client = self.flumine._create_client(settings)
 
         assert client == self.mock_client()
@@ -109,21 +108,21 @@ class FlumineTest(unittest.TestCase):
         self.flumine._create_socket()
 
         self.flumine.trading.streaming.create_stream.assert_called_with(
-            description='Flumine Socket',
+            description="Flumine Socket",
             unique_id=1000,
             listener=self.listener,
             host=self.recorder.HOST,
         )
 
     def test_stream_status(self):
-        assert self.flumine.stream_status() == 'Socket not created'
+        assert self.flumine.stream_status() == "Socket not created"
 
         self.flumine._socket = mock.Mock()
         socket_str = mock.Mock()
-        socket_str.return_value = '123'
+        socket_str.return_value = "123"
         self.flumine._socket.__str__ = socket_str
 
-        assert self.flumine.stream_status() == '123'
+        assert self.flumine.stream_status() == "123"
 
     def test_running(self):
         self.flumine._running = True
@@ -133,7 +132,7 @@ class FlumineTest(unittest.TestCase):
         assert self.flumine.running is False
 
     def test_str(self):
-        assert str(self.flumine) == '<Flumine [not running]>'
+        assert str(self.flumine) == "<Flumine [not running]>"
 
     def test_repr(self):
-        assert repr(self.flumine) == '<Flumine>'
+        assert repr(self.flumine) == "<Flumine>"

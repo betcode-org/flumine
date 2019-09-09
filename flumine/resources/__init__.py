@@ -1,5 +1,1 @@
-from .recorder import (
-    BaseRecorder,
-    MarketRecorder,
-    RaceRecorder,
-)
+from .recorder import BaseRecorder, MarketRecorder, RaceRecorder
