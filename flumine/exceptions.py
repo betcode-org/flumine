@@ -1,7 +1,6 @@
-
-
 class FlumineException(Exception):
     """Base class for Flumine Errors"""
+
     pass
 
 

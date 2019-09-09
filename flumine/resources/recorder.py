@@ -17,7 +17,7 @@ class BaseRecorder:
     markets by default.
     """
 
-    NAME = 'BASE_RECORDER'
+    NAME = "BASE_RECORDER"
     STREAM_TYPE = None
     MARKET_ID_LOOKUP = None
     HOST = None
@@ -27,13 +27,21 @@ class BaseRecorder:
         self.market_filter = market_filter or streaming_market_filter()
         self.market_data_filter = market_data_filter or streaming_market_data_filter(
             fields=[
-                'EX_ALL_OFFERS', 'EX_TRADED', 'EX_TRADED_VOL', 'EX_LTP', 'EX_MARKET_DEF', 'SP_TRADED', 'SP_PROJECTED'
+                "EX_ALL_OFFERS",
+                "EX_TRADED",
+                "EX_TRADED_VOL",
+                "EX_LTP",
+                "EX_MARKET_DEF",
+                "SP_TRADED",
+                "SP_PROJECTED",
             ]
         )
-        self.stream_id = create_short_uuid()  # used to differentiate markets /<FLUMINE_DATA>/<stream_id>
+        self.stream_id = (
+            create_short_uuid()
+        )  # used to differentiate markets /<FLUMINE_DATA>/<stream_id>
         self.live_markets = []  # list of markets to be processed
         self._setup()
-        logger.info('Recorder created %s' % self.stream_id)
+        logger.info("Recorder created %s" % self.stream_id)
 
     def __call__(self, updates, publish_time):
         """Checks market using market book parameters
@@ -72,8 +80,8 @@ class BaseRecorder:
         after being closed.
         """
         market_id = update.get(self.MARKET_ID_LOOKUP)
-        market_definition = update.get('marketDefinition')
-        logger.info('Closing market %s' % market_id)
+        market_definition = update.get("marketDefinition")
+        logger.info("Closing market %s" % market_id)
         self.storage_engine(market_id, market_definition, self.stream_id)
 
     def _setup(self):
@@ -84,7 +92,7 @@ class BaseRecorder:
             os.makedirs(directory)
 
     def __str__(self):
-        return '<%s>' % self.NAME
+        return "<%s>" % self.NAME
 
 
 class MarketRecorder(BaseRecorder):
@@ -93,51 +101,55 @@ class MarketRecorder(BaseRecorder):
     a single market per file.
     """
 
-    NAME = 'MARKET_RECORDER'
-    STREAM_TYPE = 'market'
-    MARKET_ID_LOOKUP = 'id'
+    NAME = "MARKET_RECORDER"
+    STREAM_TYPE = "market"
+    MARKET_ID_LOOKUP = "id"
 
     def process_update(self, market_book, publish_time):
-        filename = '%s' % market_book.get(self.MARKET_ID_LOOKUP)
+        filename = "%s" % market_book.get(self.MARKET_ID_LOOKUP)
         file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
 
-        with open(file_directory, 'a') as outfile:
+        with open(file_directory, "a") as outfile:
             outfile.write(
-                json.dumps({
-                    "op": "mcm",
-                    "clk": None,
-                    "pt": publish_time,
-                    "mc": [market_book]
-                }) + '\n'
+                json.dumps(
+                    {"op": "mcm", "clk": None, "pt": publish_time, "mc": [market_book]}
+                )
+                + "\n"
             )
 
-        if 'marketDefinition' in market_book and market_book['marketDefinition']['status'] == 'CLOSED':
+        if (
+            "marketDefinition" in market_book
+            and market_book["marketDefinition"]["status"] == "CLOSED"
+        ):
             self.on_market_closed(market_book)
 
 
 class RaceRecorder(BaseRecorder):
 
-    NAME = 'RACE_RECORDER'
-    STREAM_TYPE = 'race'
-    MARKET_ID_LOOKUP = 'mid'
-    HOST = 'race'
+    NAME = "RACE_RECORDER"
+    STREAM_TYPE = "race"
+    MARKET_ID_LOOKUP = "mid"
+    HOST = "race"
 
     def process_update(self, update, publish_time):
-        filename = '%s' % update.get(self.MARKET_ID_LOOKUP)
+        filename = "%s" % update.get(self.MARKET_ID_LOOKUP)
         file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
 
-        with open(file_directory, 'a') as outfile:
+        with open(file_directory, "a") as outfile:
             outfile.write(
-                json.dumps({
-                    "op": "rcm",
-                    "clk": None,
-                    "pt": publish_time,
-                    "rc": [update]
-                }) + '\n'
+                json.dumps(
+                    {"op": "rcm", "clk": None, "pt": publish_time, "rc": [update]}
+                )
+                + "\n"
             )
 
         # todo validate this is correct
-        if 'rpc' in update:
-            rpc = update['rpc']
-            if rpc['g'] == 'Finish' and rpc['prg'] == 0 and rpc['ord'] == [] and 'rrc' not in update:
+        if "rpc" in update:
+            rpc = update["rpc"]
+            if (
+                rpc["g"] == "Finish"
+                and rpc["prg"] == 0
+                and rpc["ord"] == []
+                and "rrc" not in update
+            ):
                 self.on_market_closed(update)
