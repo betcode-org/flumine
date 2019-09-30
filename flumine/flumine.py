@@ -100,14 +100,16 @@ class Flumine:
                     clk=self.listener.clk,
                 )
             except BetfairError as e:
-                logger.error("Betfair subscribe_to_markets error: %s" % e)
+                logger.error(
+                    "Betfair subscribe_to_markets error: %s" % e, exc_info=True
+                )
                 raise
         elif self.recorder.STREAM_TYPE == "race":
             logger.info("Subscribing to races")
             try:
                 self.unique_id = self._socket.subscribe_to_races()
             except BetfairError as e:
-                logger.error("Betfair subscribe_to_races error: %s" % e)
+                logger.error("Betfair subscribe_to_races error: %s" % e, exc_info=True)
                 raise
         else:
             raise StreamError(
@@ -119,10 +121,10 @@ class Flumine:
             logger.info("Starting socket..")
             self._socket.start(async_=False)
         except BetfairError as e:
-            logger.error("Betfair error: %s" % e)
+            logger.error("Betfair error: %s" % e, exc_info=True)
             raise
         except Exception as e:
-            logger.error("Unknown error: %s" % e)
+            logger.error("Unknown error: %s" % e, exc_info=True)
             raise
 
     def _check_login(self, force=False):
@@ -133,13 +135,15 @@ class Flumine:
                 try:
                     self.trading.login()
                 except BetfairError as e:
-                    logger.error("Betfair login error: %s" % e)
+                    logger.error("Betfair login error: %s" % e, exc_info=True)
                     raise
             else:
                 try:
                     self.trading.login_interactive()
                 except BetfairError as e:
-                    logger.error("Betfair login_interactive error: %s" % e)
+                    logger.error(
+                        "Betfair login_interactive error: %s" % e, exc_info=True
+                    )
                     raise
 
     def _create_socket(self):
