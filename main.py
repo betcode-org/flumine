@@ -73,7 +73,7 @@ def main():
 
     flumine = Flumine(recorder=recorder, settings={"certificate_login": False})
     try:
-        flumine.start(_async=False)
+        flumine.start(async_=False)
     except FlumineException as e:
         logging.critical("Major flumine error: %s" % e)
 
