@@ -8,6 +8,7 @@ from boto3.s3.transfer import S3Transfer, TransferConfig
 from botocore.exceptions import BotoCoreError
 
 from ..flumine import FLUMINE_DATA
+from ..utils import file_line_count
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,14 @@ class BaseEngine:
             logger.error(
                 "File: %s does not exist in /%s/%s/"
                 % (FLUMINE_DATA, market_id, stream_id)
+            )
+            return
+
+        # check that file is not empty / 1 line (i.e. the market had already closed on startup)
+        line_count = file_line_count(file_dir)
+        if line_count == 1:
+            logger.warning(
+                "File: %s contains one line only and will not be loaded" % file_dir
             )
             return
 

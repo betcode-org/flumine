@@ -8,7 +8,12 @@ Release History
 
 **Improvements**
 
-- Black fmt
+- py3.7/3.8 testing and Black fmt
+- main.py update to remove flumine hardcoding
+
+**Bug Fixes**
+
+- File only loaded if < than 1 line
 
 **Libraries**
 
