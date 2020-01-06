@@ -5,9 +5,7 @@
 
 Betfair data record framework utilising streaming to create a simple data recorder, requires [betfairlightweight](https://github.com/liampauling/betfairlightweight).
 
-IN DEVELOPMENT.
-
-Currently tested on Python 3.5, 3.6 and 3.7.
+Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 
 ## roadmap
 
@@ -40,39 +38,24 @@ flumine = Flumine(
         market_filter=market_filter,
     ),
     settings={  # passed to betfairlightweight
-        "username": "test",
-        "password": "test",
-        "app_key": "test",
+        "betfairlightweight": {
+            "username": "test",
+            "password": "test",
+            "app_key": "test",
+        },
         "certificate_login": False,
     }
 )
 
 flumine.start(async_=True)
 
-flumine
+print(flumine)
 # <Flumine [running]>
 
 flumine.stop()
 
-flumine
+print(flumine)
 # <Flumine [not running]>
 ```
 
-## docker
-
-Assuming your username is JohnSmith and your certs are in /certs.
-
-[liampauling/flumine](https://hub.docker.com/r/liampauling/flumine/)
-
-```bash
-$ docker volume create flumine_data
-$ docker run -d
-    -e username='JohnSmith'
-    -e JohnSmithpassword='beer'
-    -e JohnSmith='morebeer'
-    -e STREAM_TYPE='market'
-    -e MARKET_FILTER='{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
-    -v /certs:/certs
-    -v flumine_data:/data
-    liampauling/flumine:latest
-```
+See main.py for example.

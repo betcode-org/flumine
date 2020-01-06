@@ -3,6 +3,26 @@
 Release History
 ---------------
 
+0.9.0 (2020-01-06)
++++++++++++++++++++
+
+**Improvements**
+
+- py3.7/3.8 testing and Black fmt
+- main.py update to remove flumine hardcoding
+- Remove docker and change to 'main.py' example
+- Refactor to local_dir so that it can be overwritten
+
+**Bug Fixes**
+
+- File only loaded if < than 1 line
+- FLUMINE_DATA updated to /tmp to prevent permission issues
+
+**Libraries**
+
+- betfairlightweight upgraded to 1.10.4
+- Add py3.8 support
+
 0.8.1 (2019-09-30)
 +++++++++++++++++++
 

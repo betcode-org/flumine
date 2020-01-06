@@ -7,9 +7,11 @@ from betfairlightweight.filters import (
 )
 
 from ..utils import create_short_uuid
-from ..flumine import FLUMINE_DATA
 
 logger = logging.getLogger(__name__)
+
+# dir used to store all local data
+LOCAL_DIR = "/tmp"
 
 
 class BaseRecorder:
@@ -22,8 +24,15 @@ class BaseRecorder:
     MARKET_ID_LOOKUP = None
     HOST = None
 
-    def __init__(self, storage_engine, market_filter=None, market_data_filter=None):
+    def __init__(
+        self,
+        storage_engine,
+        market_filter=None,
+        market_data_filter=None,
+        local_dir=LOCAL_DIR,
+    ):
         self.storage_engine = storage_engine
+        self.storage_engine.recorder = self
         self.market_filter = market_filter or streaming_market_filter()
         self.market_data_filter = market_data_filter or streaming_market_data_filter(
             fields=[
@@ -36,9 +45,10 @@ class BaseRecorder:
                 "SP_PROJECTED",
             ]
         )
+        self.local_dir = local_dir
         self.stream_id = (
             create_short_uuid()
-        )  # used to differentiate markets /<FLUMINE_DATA>/<stream_id>
+        )  # used to differentiate markets /<self.local_dir>/<stream_id>
         self.live_markets = []  # list of markets to be processed
         self._setup()
         logger.info("Recorder created %s" % self.stream_id)
@@ -85,9 +95,9 @@ class BaseRecorder:
         self.storage_engine(market_id, market_definition, self.stream_id)
 
     def _setup(self):
-        """Create stream folder in <FLUMINE_DATA>
+        """Create stream folder in <self.local_dir>
         """
-        directory = os.path.join(FLUMINE_DATA, self.stream_id)
+        directory = os.path.join(self.local_dir, self.stream_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -97,7 +107,7 @@ class BaseRecorder:
 
 class MarketRecorder(BaseRecorder):
     """Data recorder, records stream data
-    to /<FLUMINE_DATA>/<stream_id>/market_id,
+    to /<self.local_dir>/<stream_id>/market_id,
     a single market per file.
     """
 
@@ -107,7 +117,7 @@ class MarketRecorder(BaseRecorder):
 
     def process_update(self, market_book, publish_time):
         filename = "%s" % market_book.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
+        file_directory = os.path.join(self.local_dir, self.stream_id, filename)
 
         with open(file_directory, "a") as outfile:
             outfile.write(
@@ -133,7 +143,7 @@ class RaceRecorder(BaseRecorder):
 
     def process_update(self, update, publish_time):
         filename = "%s" % update.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join(FLUMINE_DATA, self.stream_id, filename)
+        file_directory = os.path.join(self.local_dir, self.stream_id, filename)
 
         with open(file_directory, "a") as outfile:
             outfile.write(
