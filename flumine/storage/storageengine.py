@@ -113,8 +113,7 @@ class BaseEngine:
                     os.remove(txt_path)
                     os.remove(zip_path)
 
-    @staticmethod
-    def zip_file(file_dir, market_id, stream_id):
+    def zip_file(self, file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
         zip_file_directory = os.path.join(
