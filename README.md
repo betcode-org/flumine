@@ -7,7 +7,7 @@ Betfair data record framework utilising streaming to create a simple data record
 
 IN DEVELOPMENT.
 
-Currently tested on Python 3.5, 3.6 and 3.7.
+Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 
 ## roadmap
 

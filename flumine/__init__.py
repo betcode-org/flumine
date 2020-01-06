@@ -3,17 +3,8 @@ import logging
 from .flumine import Flumine
 from . import resources
 from .exceptions import FlumineException
-
-
-__title__ = "flumine"
-__version__ = "0.8.1"
-__author__ = "Liam Pauling"
+from .__version__ import __title__, __version__, __author__
 
 
 # Set default logging handler to avoid "No handler found" warnings.
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
-
-logging.getLogger(__name__).addHandler(NullHandler())
+logging.getLogger(__name__).addHandler(logging.NullHandler())

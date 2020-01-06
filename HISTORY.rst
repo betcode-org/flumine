@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+0.9.0 (2020-01-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Black fmt
+
+**Libraries**
+
+- betfairlightweight upgraded to 1.10.4
+- Add py3.8 support
+
 0.8.1 (2019-09-30)
 +++++++++++++++++++
 
