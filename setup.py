@@ -7,7 +7,7 @@ with open(os.path.join(here, "requirements.txt")) as f:
     INSTALL_REQUIRES = f.read().splitlines()
 
 about = {}
-with open(os.path.join(here, "betfairlightweight", "__version__.py"), "r") as f:
+with open(os.path.join(here, "flumine", "__version__.py"), "r") as f:
     exec(f.read(), about)
 
 setup(
