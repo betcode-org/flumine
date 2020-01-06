@@ -1,12 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.resources.recorder import (
-    BaseRecorder,
-    MarketRecorder,
-    RaceRecorder,
-    FLUMINE_DATA,
-)
+from flumine.resources.recorder import BaseRecorder, MarketRecorder, RaceRecorder
 
 
 class BaseRecorderTest(unittest.TestCase):
@@ -20,7 +15,6 @@ class BaseRecorderTest(unittest.TestCase):
         )
 
     def test_init(self):
-        assert FLUMINE_DATA == "/data"
         assert self.base_recorder.NAME == "BASE_RECORDER"
         assert self.base_recorder.STREAM_TYPE is None
         assert self.base_recorder.MARKET_ID_LOOKUP is None
@@ -30,6 +24,7 @@ class BaseRecorderTest(unittest.TestCase):
         assert self.base_recorder.market_data_filter == self.mock_market_data_filter
         assert self.base_recorder.stream_id is not None
         assert self.base_recorder.live_markets == []
+        assert self.base_recorder.local_dir == "/tmp"
 
     @mock.patch("flumine.resources.recorder.BaseRecorder.process_update")
     @mock.patch("flumine.resources.recorder.BaseRecorder.check_market_book")

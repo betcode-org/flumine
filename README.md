@@ -38,9 +38,11 @@ flumine = Flumine(
         market_filter=market_filter,
     ),
     settings={  # passed to betfairlightweight
-        "username": "test",
-        "password": "test",
-        "app_key": "test",
+        "betfairlightweight": {
+            "username": "test",
+            "password": "test",
+            "app_key": "test",
+        },
         "certificate_login": False,
     }
 )
@@ -56,22 +58,4 @@ print(flumine)
 # <Flumine [not running]>
 ```
 
-## docker
-
-Assuming your username is JohnSmith and your certs are in /certs.
-
-[liampauling/flumine](https://hub.docker.com/r/liampauling/flumine/)
-
-```bash
-$ docker volume create flumine_data
-$ docker run -d
-    -e username='JohnSmith'
-    -e JohnSmithpassword='beer'
-    -e JohnSmith='morebeer'
-    -e S3_BUCKET='mybucket'
-    -e STREAM_TYPE='market'
-    -e MARKET_FILTER='{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
-    -v /certs:/certs
-    -v flumine_data:/data
-    liampauling/flumine:latest
-```
+See main.py for example.

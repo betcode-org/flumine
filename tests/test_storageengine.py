@@ -7,7 +7,10 @@ from flumine.storage.storageengine import BaseEngine, Local, S3
 class BaseEngineTest(unittest.TestCase):
     def setUp(self):
         self.directory = mock.Mock()
+        self.mock_recorder = mock.Mock()
+        self.mock_recorder.local_dir = "/tmp"
         self.engine = BaseEngine(self.directory, 600)
+        self.engine.recorder = self.mock_recorder
 
     def test_init(self):
         assert self.engine.NAME is None

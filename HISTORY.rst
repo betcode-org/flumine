@@ -10,10 +10,13 @@ Release History
 
 - py3.7/3.8 testing and Black fmt
 - main.py update to remove flumine hardcoding
+- Remove docker and change to 'main.py' example
+- Refactor to local_dir so that it can be overwritten
 
 **Bug Fixes**
 
 - File only loaded if < than 1 line
+- FLUMINE_DATA updated to /tmp to prevent permission issues
 
 **Libraries**
 

@@ -9,9 +9,6 @@ from .exceptions import RunError, StreamError
 
 logger = logging.getLogger(__name__)
 
-# dir used to store all data
-FLUMINE_DATA = "/data"
-
 
 class Flumine:
     def __init__(self, recorder, settings=None, unique_id=1e3):

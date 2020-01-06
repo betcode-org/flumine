@@ -7,7 +7,6 @@ import boto3
 from boto3.s3.transfer import S3Transfer, TransferConfig
 from botocore.exceptions import BotoCoreError
 
-from ..flumine import FLUMINE_DATA
 from ..utils import file_line_count
 
 logger = logging.getLogger(__name__)
@@ -18,6 +17,7 @@ class BaseEngine:
     NAME = None
 
     def __init__(self, directory, market_expiration=3600, force_update=True):
+        self.recorder = None
         self.directory = directory
         self.market_expiration = market_expiration
         self.force_update = force_update
@@ -30,23 +30,23 @@ class BaseEngine:
             if self.force_update:
                 logger.warning(
                     "File: /%s/%s/%s has already been loaded, updating.."
-                    % (FLUMINE_DATA, stream_id, market_id)
+                    % (self.recorder.local_dir, stream_id, market_id)
                 )
             else:
                 logger.warning(
                     "File: /%s/%s/%s has already been loaded, NOT updating.."
-                    % (FLUMINE_DATA, stream_id, market_id)
+                    % (self.recorder.local_dir, stream_id, market_id)
                 )
                 return
 
         logger.info("Loading %s to %s:%s" % (market_id, self.NAME, self.directory))
-        file_dir = os.path.join(FLUMINE_DATA, stream_id, market_id)
+        file_dir = os.path.join(self.recorder.local_dir, stream_id, market_id)
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
             logger.error(
                 "File: %s does not exist in /%s/%s/"
-                % (FLUMINE_DATA, market_id, stream_id)
+                % (self.recorder.local_dir, market_id, stream_id)
             )
             return
 
@@ -92,7 +92,7 @@ class BaseEngine:
         """If zip > market_expiration old remove
         zip and txt file
         """
-        directory = os.path.join(FLUMINE_DATA, stream_id)
+        directory = os.path.join(self.recorder.local_dir, stream_id)
 
         for file in os.listdir(directory):
             if file.endswith(".zip"):
@@ -117,7 +117,9 @@ class BaseEngine:
     def zip_file(file_dir, market_id, stream_id):
         """zips txt file into filename.zip
         """
-        zip_file_directory = os.path.join(FLUMINE_DATA, stream_id, "%s.zip" % market_id)
+        zip_file_directory = os.path.join(
+            self.recorder.local_dir, stream_id, "%s.zip" % market_id
+        )
         with zipfile.ZipFile(zip_file_directory, mode="w") as zf:
             zf.write(
                 file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED
