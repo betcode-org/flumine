@@ -27,7 +27,9 @@ class BaseEngineTest(unittest.TestCase):
     @mock.patch("flumine.storage.storageengine.BaseEngine.clean_up")
     @mock.patch("flumine.storage.storageengine.BaseEngine.load")
     @mock.patch("flumine.storage.storageengine.BaseEngine.zip_file", return_value=123)
-    def test_call_true(self, mock_zip_file, mock_load, mock_clean_up, mock_os, mock_file_line_count):
+    def test_call_true(
+        self, mock_zip_file, mock_load, mock_clean_up, mock_os, mock_file_line_count
+    ):
         mock_os.os.path.isfile = True
         mock_join = mock.Mock()
         mock_os.path.join = mock_join
@@ -45,7 +47,9 @@ class BaseEngineTest(unittest.TestCase):
     @mock.patch("flumine.storage.storageengine.BaseEngine.clean_up")
     @mock.patch("flumine.storage.storageengine.BaseEngine.load")
     @mock.patch("flumine.storage.storageengine.BaseEngine.zip_file", return_value=123)
-    def test_call_one_line(self, mock_zip_file, mock_load, mock_clean_up, mock_os, mock_file_line_count):
+    def test_call_one_line(
+        self, mock_zip_file, mock_load, mock_clean_up, mock_os, mock_file_line_count
+    ):
         mock_os.os.path.isfile = True
         mock_join = mock.Mock()
         mock_os.path.join = mock_join

@@ -5,8 +5,6 @@
 
 Betfair data record framework utilising streaming to create a simple data recorder, requires [betfairlightweight](https://github.com/liampauling/betfairlightweight).
 
-IN DEVELOPMENT.
-
 Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 
 ## roadmap
@@ -49,12 +47,12 @@ flumine = Flumine(
 
 flumine.start(async_=True)
 
-flumine
+print(flumine)
 # <Flumine [running]>
 
 flumine.stop()
 
-flumine
+print(flumine)
 # <Flumine [not running]>
 ```
 
