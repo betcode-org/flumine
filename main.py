@@ -20,8 +20,15 @@ def setup_logging():
 def main():
     setup_logging()
     logging.info(sys.argv)
+
     try:
-        stream_type = sys.argv[1]
+        s3_bucket = sys.argv[1]
+    except IndexError:
+        logging.error("s3 bucket not provided")
+        raise
+
+    try:
+        stream_type = sys.argv[2]
     except IndexError:
         stream_type = "market"
 
@@ -31,13 +38,13 @@ def main():
     if stream_type == "race":
         logging.info('Creating "storageengine.s3"')
         storage_engine = storageengine.S3(
-            "flumine", data_type="racedata", force_update=False
+            s3_bucket, data_type="racedata", force_update=False
         )
         logging.info('Creating "RaceRecorder"')
         recorder = RaceRecorder(storage_engine=storage_engine)
     elif stream_type == "market":
         try:
-            market_filter = json.loads(sys.argv[2])
+            market_filter = json.loads(sys.argv[3])
         except IndexError:
             logging.warning(
                 "Market Filter not provided, defaulting to GB and IE WIN racing"
@@ -52,7 +59,7 @@ def main():
             raise
 
         try:
-            market_data_filter = json.loads(sys.argv[3])
+            market_data_filter = json.loads(sys.argv[4])
         except IndexError:
             logging.warning("Market Data Filter not provided, defaulting to None")
             market_data_filter = None
@@ -61,7 +68,7 @@ def main():
             market_data_filter = None
 
         logging.info('Creating "storageengine.s3"')
-        storage_engine = storageengine.S3("flumine", data_type="marketdata")
+        storage_engine = storageengine.S3(s3_bucket, data_type="marketdata")
         logging.info('Creating "MarketRecorder"')
         recorder = MarketRecorder(
             storage_engine=storage_engine,
@@ -80,9 +87,10 @@ def main():
 
 if __name__ == "__main__":
     """
-    sys.argv[1] == race or market
+    sys.argv[1] == s3 bucket
+    sys.argv[2] == race or market
     if market:
-        sys.argv[2] == market_filter (optional)
-        sys.argv[3] == market_data_filter (optional)
+        sys.argv[3] == market_filter (optional)
+        sys.argv[4] == market_data_filter (optional)
     """
     main()

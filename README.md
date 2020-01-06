@@ -70,6 +70,7 @@ $ docker run -d
     -e username='JohnSmith'
     -e JohnSmithpassword='beer'
     -e JohnSmith='morebeer'
+    -e S3_BUCKET='mybucket'
     -e STREAM_TYPE='market'
     -e MARKET_FILTER='{"eventTypeIds": ["7"], "countryCodes": ["GB", "IE"], "marketTypes": ["WIN"]}'
     -v /certs:/certs
