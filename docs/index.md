@@ -39,7 +39,7 @@ from flumine import Flumine
 trading = betfairlightweight.APIClient("username")
 
 framework = Flumine(
-    client=trading,
+    trading=trading,
 )
 ```
 
@@ -56,19 +56,23 @@ class ExampleStrategy(BaseStrategy):
         self.subscribe_to_race_card()
         
     def check_market_book(self, market_book):
+        # process_market_book only executed if this returns True
         if market_book.status != 'CLOSED':
             return True
 
     def process_market_book(self, market_book):
+        # process marketBook; place/cancel/replace orders
         print(market_book.status)
         
     def process_race_card(self, race_card):
+        # process raceCard object
         print(race_card)
     
     def process_orders(self, orders):
+        # process currentOrders object
         print(orders)
-        
-        
+
+
 strategy = ExampleStrategy(
     market_filter=streaming_market_filter(
         event_type_ids=['7'],
@@ -107,6 +111,7 @@ flumine relies on these libraries:
 
 * `betfairlightweight` - Betfair API support.
 * `tenacity` - Used for connection retrying (streaming).
+* `python-json-logger` - JSON logging.
 
 ## Installation
 
