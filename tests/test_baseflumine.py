@@ -21,6 +21,18 @@ class BaseFlumineTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.base_flumine.run()
 
+    def test_add_strategy(self):
+        mock_strategy = mock.Mock()
+        self.base_flumine.add_strategy(mock_strategy)
+        self.assertEqual(len(self.base_flumine.strategies), 1)
+        self.assertEqual(len(self.base_flumine.streams), 1)
+
+    def test__process_market_books(self):
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock()
+        mock_event.event = [mock_market_book]
+        self.base_flumine._process_market_books(mock_event)
+
     def test_status(self):
         self.base_flumine._running = True
         self.assertEqual(self.base_flumine.status, "running")

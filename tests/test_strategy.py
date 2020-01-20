@@ -9,12 +9,12 @@ class StrategiesTest(unittest.TestCase):
         self.strategies = strategy.Strategies()
 
     def test_init(self):
-        self.assertEqual(self.strategies.strategies, [])
+        self.assertEqual(self.strategies._strategies, [])
 
     def test_call(self):
         mock_strategy = mock.Mock()
         self.strategies(mock_strategy)
-        self.assertEqual(self.strategies.strategies, [mock_strategy])
+        self.assertEqual(self.strategies._strategies, [mock_strategy])
         mock_strategy.start.assert_called()
 
     def test_iter(self):
@@ -29,14 +29,17 @@ class BaseStrategyTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
+        self.streaming_timeout = 2
         self.strategy = strategy.BaseStrategy(
             market_filter=self.mock_market_filter,
             market_data_filter=self.mock_market_data_filter,
+            streaming_timeout=self.streaming_timeout,
         )
 
     def test_init(self):
         self.assertEqual(self.strategy.market_filter, self.mock_market_filter)
         self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
+        self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
 
     def test_start(self):
         self.strategy.start()

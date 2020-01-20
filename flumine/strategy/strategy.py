@@ -3,23 +3,29 @@ from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
 
 class Strategies:
     def __init__(self):
-        self.strategies = []
+        self._strategies = []
 
     def __call__(self, strategy):
-        self.strategies.append(strategy)
+        self._strategies.append(strategy)
         strategy.start()
 
     def __iter__(self):
-        return iter(self.strategies)
+        return iter(self._strategies)
 
     def __len__(self):
-        return len(self.strategies)
+        return len(self._strategies)
 
 
 class BaseStrategy:
-    def __init__(self, market_filter: dict, market_data_filter: dict = None):
+    def __init__(
+        self,
+        market_filter: dict,
+        market_data_filter: dict = None,
+        streaming_timeout: float = None,
+    ):
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter
+        self.streaming_timeout = streaming_timeout
 
     def start(self):
         # subscribe to streams

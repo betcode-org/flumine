@@ -2,8 +2,9 @@ import queue
 import logging
 from betfairlightweight import APIClient
 
-from .strategy.strategy import Strategies
+from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
+from .event.event import BaseEvent
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class BaseFlumine:
         self.strategies = Strategies()
 
         # all streams (market/order)
-        self.streams = Streams()
+        self.streams = Streams(self)
 
         # order execution class
         self.execution = None  # todo
@@ -42,31 +43,36 @@ class BaseFlumine:
     def run(self) -> None:
         raise NotImplementedError
 
-    def add_strategy(self, strategy):
+    def add_strategy(self, strategy: BaseStrategy):
         # create stream if required
         self.streams(strategy)  # create required streams
         self.strategies(strategy)  # store in strategies
+
+    def _process_market_books(self, event: BaseEvent):
+        for market_book in event.event:
+            for strategy in self.strategies:
+                if strategy.check_market_book(market_book):
+                    strategy.process_market_book(market_book)
 
     @property
     def status(self) -> str:
         return "running" if self._running else "not running"
 
     def __enter__(self):
+        # login
+        self.trading.login()
         # start streams
         self.streams.start()
 
-        self.trading.login()
         self._running = True
 
     def __exit__(self, *args):
         # shutdown streams
         self.streams.stop()
-
         # shutdown thread pools
         # todo
-
         # shutdown logging controls
         # todo
-
+        # logout
         self.trading.logout()
         self._running = False
