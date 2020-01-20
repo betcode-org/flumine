@@ -12,11 +12,11 @@ class BaseEventTest(unittest.TestCase):
     def test_init(self):
         mock_event = mock.Mock()
         base_event = event.BaseEvent(mock_event)
-        self.assertIsNone(base_event.EVENT)
-        self.assertIsNone(base_event.QUEUE)
+        self.assertIsNone(base_event.EVENT_TYPE)
+        self.assertIsNone(base_event.QUEUE_TYPE)
         self.assertEqual(base_event.event, mock_event)
 
     def test_str(self):
-        self.base_event.EVENT = event.Event.MARKET_BOOK
-        self.base_event.QUEUE = event.Queue.HANDLER
+        self.base_event.EVENT_TYPE = event.EventType.MARKET_BOOK
+        self.base_event.QUEUE_TYPE = event.QueueType.HANDLER
         self.assertEqual(str(self.base_event), "<MARKET_BOOK [HANDLER]>")

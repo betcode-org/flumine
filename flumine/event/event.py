@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Event(Enum):
+class EventType(Enum):
     TERMINATOR = 0
     # betfair objects
     MARKET_CATALOGUE = 1
@@ -16,62 +16,62 @@ class Event(Enum):
     NEW_DAY = 104
 
 
-class Queue(Enum):
+class QueueType(Enum):
     HANDLER = 1
     ACCOUNT = 2
 
 
 class BaseEvent:
-    EVENT: Enum = None
-    QUEUE: Enum = None
+    EVENT_TYPE: Enum = None
+    QUEUE_TYPE: Enum = None
 
     def __init__(self, event):
         self.event = event
 
     def __str__(self):
-        return "<{0} [{1}]>".format(self.EVENT.name, self.QUEUE.name)
+        return "<{0} [{1}]>".format(self.EVENT_TYPE.name, self.QUEUE_TYPE.name)
 
 
 class MarketCatalogueEvent(BaseEvent):
-    EVENT = Event.MARKET_CATALOGUE
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.MARKET_CATALOGUE
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class MarketBookEvent(BaseEvent):
-    EVENT = Event.MARKET_BOOK
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.MARKET_BOOK
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class CurrentOrdersEvent(BaseEvent):
-    EVENT = Event.CURRENT_ORDERS
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.CURRENT_ORDERS
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class ClearedMarketsEvent(BaseEvent):
-    EVENT = Event.CLEARED_MARKETS
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.CLEARED_MARKETS
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class ClearedOrdersEvent(BaseEvent):
-    EVENT = Event.CLEARED_ORDERS
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.CLEARED_ORDERS
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class CloseMarketEvent(BaseEvent):
-    EVENT = Event.CLOSE_MARKET
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.CLOSE_MARKET
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class StrategyResetEvent(BaseEvent):
-    EVENT = Event.STRATEGY_RESET
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.STRATEGY_RESET
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class CustomEvent(BaseEvent):
-    EVENT = Event.CUSTOM_EVENT
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.CUSTOM_EVENT
+    QUEUE_TYPE = QueueType.HANDLER
 
 
 class NewDayEvent(BaseEvent):
-    EVENT = Event.NEW_DAY
-    QUEUE = Queue.HANDLER
+    EVENT_TYPE = EventType.NEW_DAY
+    QUEUE_TYPE = QueueType.HANDLER

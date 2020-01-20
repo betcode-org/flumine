@@ -1,7 +1,7 @@
 import logging
 
 from .baseflumine import BaseFlumine
-from .event.event import Event
+from .event.event import EventType
 
 logger = logging.getLogger(__name__)
 
@@ -14,34 +14,34 @@ class Flumine(BaseFlumine):
         with self:
             while True:
                 event = self.handler_queue.get()
-                if event == Event.TERMINATOR:
+                if event == EventType.TERMINATOR:
                     break
 
-                elif event.EVENT == Event.MARKET_CATALOGUE:
+                elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:
                     print(event)
 
-                elif event.EVENT == Event.MARKET_BOOK:
+                elif event.EVENT_TYPE == EventType.MARKET_BOOK:
                     print(event)
 
-                elif event.EVENT == Event.CURRENT_ORDERS:
+                elif event.EVENT_TYPE == EventType.CURRENT_ORDERS:
                     print(event)
 
-                elif event.EVENT == Event.CLEARED_MARKETS:
+                elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
                     print(event)
 
-                elif event.EVENT == Event.CLEARED_ORDERS:
+                elif event.EVENT_TYPE == EventType.CLEARED_ORDERS:
                     print(event)
 
-                elif event.EVENT == Event.CLOSE_MARKET:
+                elif event.EVENT_TYPE == EventType.CLOSE_MARKET:
                     print(event)
 
-                elif event.EVENT == Event.STRATEGY_RESET:
+                elif event.EVENT_TYPE == EventType.STRATEGY_RESET:
                     print(event)
 
-                elif event.EVENT == Event.CUSTOM_EVENT:
+                elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
                     print(event)
 
-                elif event.EVENT == Event.NEW_DAY:
+                elif event.EVENT_TYPE == EventType.NEW_DAY:
                     print(event)
 
                 else:
