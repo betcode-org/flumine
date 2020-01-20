@@ -1,0 +1,24 @@
+site_name: flumine
+site_description: Trading framework for Betfair API-NG.
+
+theme:
+    name: 'material'
+
+    palette:
+      primary: 'blue grey'
+      accent: 'indigo'
+
+repo_name: liampauling/flumine
+repo_url: https://github.com/liampauling/flumine
+edit_uri: ""
+
+nav:
+    - Introduction: 'index.md'
+    - QuickStart: 'quickstart.md'
+    - Advanced Usage: 'advanced.md'
+    - Design: 'design.md'
+    - Help: 'help.md'
+
+markdown_extensions:
+  - admonition
+  - codehilite
