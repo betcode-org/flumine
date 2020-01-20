@@ -14,8 +14,14 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(self.streams._streams, [])
         self.assertEqual(self.streams._stream_id, 0)
 
-    def test_call(self):
-        pass
+    @mock.patch("flumine.streams.streams.Streams._add_market_stream")
+    def test_call(self, mock__add_market_stream):
+        mock_strategy = mock.Mock()
+        mock_strategy.streams = []
+        self.streams(mock_strategy)
+
+        mock__add_market_stream.assert_called_with(mock_strategy)
+        self.assertEqual(len(mock_strategy.streams), 1)
 
     @mock.patch("flumine.streams.streams.MarketStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
@@ -76,11 +82,7 @@ class TestMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.MarketStream(
-            self.mock_flumine,
-            123,
-            {"test": "me"},
-            {"please": "now"},
-            0.01,
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
         )
 
     def test_init(self):

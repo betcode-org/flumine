@@ -9,7 +9,8 @@ class Streams:
         self._stream_id = 0
 
     def __call__(self, strategy: BaseStrategy):
-        self._add_market_stream(strategy)
+        stream = self._add_market_stream(strategy)
+        strategy.streams.append(stream)
 
     def _add_market_stream(self, strategy: BaseStrategy) -> MarketStream:
         # check if market stream already exists
@@ -20,18 +21,17 @@ class Streams:
                 and stream.market_data_filter == strategy.market_data_filter
             ):
                 return stream
-
-        # nope? lets create a new one
-        stream_id = self._increment_stream_id()
-        stream = MarketStream(
-            self.flumine,
-            stream_id,
-            strategy.market_filter,
-            strategy.market_data_filter,
-            strategy.streaming_timeout,
-        )
-        self._streams.append(stream)
-        return stream
+        else:  # nope? lets create a new one
+            stream_id = self._increment_stream_id()
+            stream = MarketStream(
+                self.flumine,
+                stream_id,
+                strategy.market_filter,
+                strategy.market_data_filter,
+                strategy.streaming_timeout,
+            )
+            self._streams.append(stream)
+            return stream
 
     def start(self) -> None:
         for stream in self:

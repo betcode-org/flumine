@@ -41,6 +41,44 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
         self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
 
+    def test_check_market_no_subscribed(self):
+        mock_market_book = mock.Mock()
+        mock_market_book.streaming_unique_id = 12
+        self.assertFalse(self.strategy.check_market(mock_market_book))
+
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.market_stream_ids",
+        return_value=[12],
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=False
+    )
+    def test_check_market_check_fail(
+        self, mock_check_market_book, mock_market_stream_ids
+    ):
+        mock_market_book = mock.Mock()
+        mock_market_book.streaming_unique_id = 12
+        self.assertFalse(self.strategy.check_market(mock_market_book))
+        mock_check_market_book.assert_called_with(mock_market_book)
+        mock_market_stream_ids.assert_called_with()
+
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.market_stream_ids",
+        return_value=[12],
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=True
+    )
+    def test_check_market_check_pass(
+        self, mock_check_market_book, mock_market_stream_ids
+    ):
+        mock_market_book = mock.Mock()
+        mock_market_book.streaming_unique_id = 12
+        self.assertTrue(self.strategy.check_market(mock_market_book))
+        mock_check_market_book.assert_called_with(mock_market_book)
+
     def test_start(self):
         self.strategy.start()
 
@@ -57,3 +95,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_process_orders(self):
         self.strategy.process_orders(None)
+
+    def test_market_stream_ids(self):
+        mock_stream = mock.Mock()
+        mock_stream.stream_id = 321
+        self.strategy.streams = [mock_stream]
+        self.assertEqual(self.strategy.market_stream_ids, [321])

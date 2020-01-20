@@ -44,18 +44,18 @@ class MarketStream(threading.Thread):
             logger.info("Starting output_thread {0}".format(self._output_thread))
             self._output_thread.start()
 
-        self.stream = self.trading.streaming.create_stream(
+        self._stream = self.trading.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
         try:
-            self.streaming_unique_id = self.stream.subscribe_to_markets(
+            self.stream_id = self._stream.subscribe_to_markets(
                 market_filter=self.market_filter,
                 market_data_filter=self.market_data_filter,
                 # conflate_ms=self.conflate_ms,
                 initial_clk=self._listener.initial_clk,  # supplying these two values allows a reconnect
                 clk=self._listener.clk,
             )
-            self.stream.start()
+            self._stream.start()
         except BetfairError:
             logger.error("MarketStreaming run error", exc_info=True)
             raise
@@ -64,7 +64,7 @@ class MarketStream(threading.Thread):
             raise
         logger.info("Stopped MarketStreaming {0}".format(self.stream_id))
 
-    def handle_output(self):
+    def handle_output(self) -> None:
         """Handles output from stream.
         """
         while self.is_alive():

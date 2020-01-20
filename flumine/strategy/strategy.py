@@ -27,6 +27,16 @@ class BaseStrategy:
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
 
+        self.streams = []  # list of streams strategy is subscribed
+
+    def check_market(self, market_book: MarketBook) -> bool:
+        if market_book.streaming_unique_id not in self.market_stream_ids:
+            return False  # strategy not subscribed to market stream
+        elif self.check_market_book(market_book):
+            return True
+        else:
+            return False
+
     def start(self):
         # subscribe to streams
         return
@@ -46,3 +56,7 @@ class BaseStrategy:
     def process_orders(self, orders: CurrentOrders) -> None:
         # process currentOrders object
         return
+
+    @property
+    def market_stream_ids(self):
+        return [stream.stream_id for stream in self.streams]

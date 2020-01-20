@@ -51,7 +51,7 @@ class BaseFlumine:
     def _process_market_books(self, event: BaseEvent):
         for market_book in event.event:
             for strategy in self.strategies:
-                if strategy.check_market_book(market_book):
+                if strategy.check_market(market_book):
                     strategy.process_market_book(market_book)
 
     @property
