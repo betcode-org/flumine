@@ -2,8 +2,6 @@ import unittest
 from unittest import mock
 
 from flumine.baseflumine import BaseFlumine
-from flumine.exceptions import RunError
-from betfairlightweight import BetfairError
 
 
 class BaseFlumineTest(unittest.TestCase):
@@ -31,6 +29,11 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event = mock.Mock()
         mock_market_book = mock.Mock()
         mock_event.event = [mock_market_book]
+        self.base_flumine._process_market_books(mock_event)
+
+    def test__process_raw_data(self):
+        mock_event = mock.Mock()
+        mock_event.event = (12, 12345, {})
         self.base_flumine._process_market_books(mock_event)
 
     def test_status(self):

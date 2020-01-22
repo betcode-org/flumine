@@ -4,21 +4,22 @@ from enum import Enum
 class EventType(Enum):
     TERMINATOR = 0
     # betfair objects
-    MARKET_CATALOGUE = 1
-    MARKET_BOOK = 2
-    CURRENT_ORDERS = 3
-    CLEARED_MARKETS = 4
-    CLEARED_ORDERS = 5
+    MARKET_CATALOGUE = 10
+    MARKET_BOOK = 20
+    RAW_DATA = 30
+    CURRENT_ORDERS = 40
+    CLEARED_MARKETS = 50
+    CLEARED_ORDERS = 60
     # flumine objects
-    CLOSE_MARKET = 101
-    STRATEGY_RESET = 102
-    CUSTOM_EVENT = 103
-    NEW_DAY = 104
+    CLOSE_MARKET = 100
+    STRATEGY_RESET = 110
+    CUSTOM_EVENT = 120
+    NEW_DAY = 130
 
 
 class QueueType(Enum):
-    HANDLER = 1
-    ACCOUNT = 2
+    HANDLER = 10
+    ACCOUNT = 20
 
 
 class BaseEvent:
@@ -39,6 +40,11 @@ class MarketCatalogueEvent(BaseEvent):
 
 class MarketBookEvent(BaseEvent):
     EVENT_TYPE = EventType.MARKET_BOOK
+    QUEUE_TYPE = QueueType.HANDLER
+
+
+class RawDataEvent(BaseEvent):
+    EVENT_TYPE = EventType.RAW_DATA
     QUEUE_TYPE = QueueType.HANDLER
 
 

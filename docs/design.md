@@ -7,7 +7,7 @@ Typical to most trading frameworks flumine uses an event driven design with the 
 - handles all events in order one by one
 - runs in __main__
 
-Events:
+### Events:
 
 - `MARKET_CATALOGUE` Betfair MarketCatalogue object
 - `MARKET_BOOK` Betfair MarketBook object
@@ -32,7 +32,7 @@ The above events are handled in the [flumine class]()
     - Separate threads
     - Order stream
 
-### Strategies (previously storageengine)
+### Strategy
 - Class based
 - Subscribe to streams
 

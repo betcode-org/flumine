@@ -23,6 +23,9 @@ class Flumine(BaseFlumine):
                 elif event.EVENT_TYPE == EventType.MARKET_BOOK:
                     self._process_market_books(event)
 
+                elif event.EVENT_TYPE == EventType.RAW_DATA:
+                    self._process_raw_data(event)
+
                 elif event.EVENT_TYPE == EventType.CURRENT_ORDERS:
                     print(event)
 

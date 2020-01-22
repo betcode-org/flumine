@@ -34,12 +34,14 @@ class BaseStrategyTest(unittest.TestCase):
             market_filter=self.mock_market_filter,
             market_data_filter=self.mock_market_data_filter,
             streaming_timeout=self.streaming_timeout,
+            raw_data=False,
         )
 
     def test_init(self):
         self.assertEqual(self.strategy.market_filter, self.mock_market_filter)
         self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
         self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
+        self.assertFalse(self.strategy.raw_data)
 
     def test_check_market_no_subscribed(self):
         mock_market_book = mock.Mock()
@@ -47,7 +49,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertFalse(self.strategy.check_market(mock_market_book))
 
     @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.market_stream_ids",
+        "flumine.strategy.strategy.BaseStrategy.stream_ids",
         return_value=[12],
         new_callable=mock.PropertyMock,
     )
@@ -64,7 +66,7 @@ class BaseStrategyTest(unittest.TestCase):
         mock_market_stream_ids.assert_called_with()
 
     @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.market_stream_ids",
+        "flumine.strategy.strategy.BaseStrategy.stream_ids",
         return_value=[12],
         new_callable=mock.PropertyMock,
     )
@@ -83,12 +85,13 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.start()
 
     def test_check_market_book(self):
-        with self.assertRaises(NotImplementedError):
-            self.strategy.check_market_book(None)
+        self.assertFalse(self.strategy.check_market_book(None))
 
     def test_process_market_book(self):
-        with self.assertRaises(NotImplementedError):
-            self.strategy.process_market_book(None)
+        self.strategy.process_market_book(None)
+
+    def test_process_raw_data(self):
+        self.strategy.process_raw_data(None, None)
 
     def test_process_race_card(self):
         self.strategy.process_race_card(None)
@@ -96,8 +99,8 @@ class BaseStrategyTest(unittest.TestCase):
     def test_process_orders(self):
         self.strategy.process_orders(None)
 
-    def test_market_stream_ids(self):
+    def test_stream_ids(self):
         mock_stream = mock.Mock()
         mock_stream.stream_id = 321
         self.strategy.streams = [mock_stream]
-        self.assertEqual(self.strategy.market_stream_ids, [321])
+        self.assertEqual(self.strategy.stream_ids, [321])

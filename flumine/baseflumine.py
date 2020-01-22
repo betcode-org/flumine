@@ -54,6 +54,13 @@ class BaseFlumine:
                 if strategy.check_market(market_book):
                     strategy.process_market_book(market_book)
 
+    def _process_raw_data(self, event: BaseEvent):
+        stream_id, publish_time, data = event.event
+        for datum in data:
+            for strategy in self.strategies:
+                if stream_id in strategy.stream_ids:
+                    strategy.process_raw_data(publish_time, datum)
+
     @property
     def status(self) -> str:
         return "running" if self._running else "not running"

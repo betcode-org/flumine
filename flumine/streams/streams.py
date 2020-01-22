@@ -1,5 +1,8 @@
+from typing import Union, Type
+
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
+from .datastream import DataStream
 
 
 class Streams:
@@ -8,22 +11,28 @@ class Streams:
         self._streams = []
         self._stream_id = 0
 
-    def __call__(self, strategy: BaseStrategy):
-        stream = self._add_market_stream(strategy)
+    def __call__(self, strategy: BaseStrategy) -> None:
+        if strategy.raw_data:
+            stream = self._add_market_stream(strategy, DataStream)
+        else:
+            stream = self._add_market_stream(strategy, MarketStream)
         strategy.streams.append(stream)
 
-    def _add_market_stream(self, strategy: BaseStrategy) -> MarketStream:
-        # check if market stream already exists
-        for stream in self:
+    def _add_market_stream(
+        self,
+        strategy: BaseStrategy,
+        stream_class: Union[Type[MarketStream], Type[DataStream]],
+    ) -> Union[MarketStream, DataStream]:
+        for stream in self:  # check if market stream already exists
             if (
-                isinstance(stream, MarketStream)
+                isinstance(stream, stream_class)
                 and stream.market_filter == strategy.market_filter
                 and stream.market_data_filter == strategy.market_data_filter
             ):
                 return stream
         else:  # nope? lets create a new one
             stream_id = self._increment_stream_id()
-            stream = MarketStream(
+            stream = stream_class(
                 self.flumine,
                 stream_id,
                 strategy.market_filter,

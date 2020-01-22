@@ -15,12 +15,23 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(self.streams._stream_id, 0)
 
     @mock.patch("flumine.streams.streams.Streams._add_market_stream")
-    def test_call(self, mock__add_market_stream):
+    def test_call(self, mock__add_stream):
         mock_strategy = mock.Mock()
         mock_strategy.streams = []
+        mock_strategy.raw_data = False
         self.streams(mock_strategy)
 
-        mock__add_market_stream.assert_called_with(mock_strategy)
+        mock__add_stream.assert_called_with(mock_strategy, streams.MarketStream)
+        self.assertEqual(len(mock_strategy.streams), 1)
+
+    @mock.patch("flumine.streams.streams.Streams._add_market_stream")
+    def test_call_data_stream(self, mock__add_stream):
+        mock_strategy = mock.Mock()
+        mock_strategy.streams = []
+        mock_strategy.data_stream = True
+        self.streams(mock_strategy)
+
+        mock__add_stream.assert_called_with(mock_strategy, streams.DataStream)
         self.assertEqual(len(mock_strategy.streams), 1)
 
     @mock.patch("flumine.streams.streams.MarketStream")
@@ -28,7 +39,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_market_stream_new(self, mock_increment, mock_market_streaming):
         mock_strategy = mock.Mock()
 
-        self.streams._add_market_stream(mock_strategy)
+        self.streams._add_market_stream(mock_strategy, streams.MarketStream)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_market_streaming.assert_called_with(
@@ -50,7 +61,9 @@ class StreamsTest(unittest.TestCase):
         stream.market_data_filter = None
         self.streams._streams = [stream]
 
-        new_stream = self.streams._add_market_stream(mock_strategy)
+        new_stream = self.streams._add_market_stream(
+            mock_strategy, streams.MarketStream
+        )
         self.assertEqual(len(self.streams), 1)
         self.assertEqual(stream, new_stream)
         mock_increment.assert_not_called()
