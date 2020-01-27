@@ -13,7 +13,12 @@ class FlumineTest(unittest.TestCase):
     @mock.patch("flumine.flumine.Flumine._process_end_flumine")
     @mock.patch("flumine.flumine.Flumine._process_raw_data")
     @mock.patch("flumine.flumine.Flumine._process_market_books")
-    def test_run(self, mock__process_market_books, mock__process_raw_data, mock__process_end_flumine):
+    def test_run(
+        self,
+        mock__process_market_books,
+        mock__process_raw_data,
+        mock__process_end_flumine,
+    ):
         events = [
             event.MarketCatalogueEvent(None),
             event.MarketBookEvent(None),

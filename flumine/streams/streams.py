@@ -16,12 +16,12 @@ class Streams:
 
     def __call__(self, strategy: BaseStrategy) -> None:
         if strategy.raw_data:
-            stream = self._add_market_stream(strategy, DataStream)
+            stream = self.add_market_stream(strategy, DataStream)
         else:
-            stream = self._add_market_stream(strategy, MarketStream)
+            stream = self.add_market_stream(strategy, MarketStream)
         strategy.streams.append(stream)
 
-    def _add_market_stream(
+    def add_market_stream(
         self,
         strategy: BaseStrategy,
         stream_class: Union[Type[MarketStream], Type[DataStream]],
@@ -31,6 +31,8 @@ class Streams:
                 isinstance(stream, stream_class)
                 and stream.market_filter == strategy.market_filter
                 and stream.market_data_filter == strategy.market_data_filter
+                and stream.streaming_timeout == strategy.streaming_timeout
+                and stream.conflate_ms == strategy.conflate_ms
             ):
                 return stream
         else:  # nope? lets create a new one
@@ -41,6 +43,7 @@ class Streams:
                 strategy.market_filter,
                 strategy.market_data_filter,
                 strategy.streaming_timeout,
+                strategy.conflate_ms,
             )
             self._streams.append(stream)
             return stream

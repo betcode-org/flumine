@@ -22,6 +22,7 @@ class BaseStream(threading.Thread):
         market_filter: dict,
         market_data_filter: dict,
         streaming_timeout: float,
+        conflate_ms: int,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
         self.flumine = flumine
@@ -29,6 +30,7 @@ class BaseStream(threading.Thread):
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
+        self.conflate_ms = conflate_ms
         self._stream = None
         self._output_queue = queue.Queue()
         self._listener = self.LISTENER(output_queue=self._output_queue)

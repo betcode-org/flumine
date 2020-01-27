@@ -22,11 +22,13 @@ class BaseStrategy:
         market_filter: dict,
         market_data_filter: dict = None,
         streaming_timeout: float = None,
+        conflate_ms: int = None,
         raw_data: bool = False,
     ):
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
+        self.conflate_ms = conflate_ms
         self.raw_data = raw_data
 
         self.streams = []  # list of streams strategy is subscribed
@@ -40,7 +42,7 @@ class BaseStrategy:
             return False
 
     def start(self) -> None:
-        # subscribe to streams
+        # e.g. subscribe to streams
         return
 
     def check_market_book(self, market_book: MarketBook) -> bool:
@@ -60,6 +62,10 @@ class BaseStrategy:
 
     def process_orders(self, orders: CurrentOrders) -> None:
         # process currentOrders object
+        return
+
+    def finish(self) -> None:
+        # called before flumine ends
         return
 
     @property

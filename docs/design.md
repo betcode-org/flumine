@@ -36,6 +36,7 @@ The above events are handled in the [flumine class]()
 ### Strategy
 - Class based
 - Subscribe to streams
+- Single strategy subscribes to a single market stream
 
 ### Handles
 - Stream reconnect

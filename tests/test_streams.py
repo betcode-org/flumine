@@ -15,7 +15,7 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(self.streams._streams, [])
         self.assertEqual(self.streams._stream_id, 0)
 
-    @mock.patch("flumine.streams.streams.Streams._add_market_stream")
+    @mock.patch("flumine.streams.streams.Streams.add_market_stream")
     def test_call(self, mock__add_stream):
         mock_strategy = mock.Mock()
         mock_strategy.streams = []
@@ -25,7 +25,7 @@ class StreamsTest(unittest.TestCase):
         mock__add_stream.assert_called_with(mock_strategy, streams.MarketStream)
         self.assertEqual(len(mock_strategy.streams), 1)
 
-    @mock.patch("flumine.streams.streams.Streams._add_market_stream")
+    @mock.patch("flumine.streams.streams.Streams.add_market_stream")
     def test_call_data_stream(self, mock__add_stream):
         mock_strategy = mock.Mock()
         mock_strategy.streams = []
@@ -40,7 +40,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_market_stream_new(self, mock_increment, mock_market_streaming):
         mock_strategy = mock.Mock()
 
-        self.streams._add_market_stream(mock_strategy, streams.MarketStream)
+        self.streams.add_market_stream(mock_strategy, streams.MarketStream)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_market_streaming.assert_called_with(
@@ -49,22 +49,25 @@ class StreamsTest(unittest.TestCase):
             mock_strategy.market_filter,
             mock_strategy.market_data_filter,
             mock_strategy.streaming_timeout,
+            mock_strategy.conflate_ms,
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_market_stream_old(self, mock_increment):
         mock_strategy = mock.Mock()
-        mock_strategy.market_filter = None
-        mock_strategy.market_data_filter = None
+        mock_strategy.market_filter = 1
+        mock_strategy.market_data_filter = 2
+        mock_strategy.streaming_timeout = 3
+        mock_strategy.conflate_ms = 4
 
         stream = mock.Mock(spec=streams.MarketStream)
-        stream.market_filter = None
-        stream.market_data_filter = None
+        stream.market_filter = 1
+        stream.market_data_filter = 2
+        stream.streaming_timeout = 3
+        stream.conflate_ms = 4
         self.streams._streams = [stream]
 
-        new_stream = self.streams._add_market_stream(
-            mock_strategy, streams.MarketStream
-        )
+        new_stream = self.streams.add_market_stream(mock_strategy, streams.MarketStream)
         self.assertEqual(len(self.streams), 1)
         self.assertEqual(stream, new_stream)
         mock_increment.assert_not_called()
@@ -96,7 +99,7 @@ class TestBaseStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = BaseStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
         )
 
     def test_init(self):
@@ -105,6 +108,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream.market_filter, {"test": "me"})
         self.assertEqual(self.stream.market_data_filter, {"please": "now"})
         self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
 
     def test_run(self):
@@ -129,7 +133,7 @@ class TestMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.MarketStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
         )
 
     def test_init(self):
@@ -138,6 +142,7 @@ class TestMarketStream(unittest.TestCase):
         self.assertEqual(self.stream.market_filter, {"test": "me"})
         self.assertEqual(self.stream.market_data_filter, {"please": "now"})
         self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
 
     # def test_run(self):
@@ -151,7 +156,7 @@ class TestDataStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.DataStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
         )
 
     def test_init(self):
@@ -160,6 +165,7 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(self.stream.market_filter, {"test": "me"})
         self.assertEqual(self.stream.market_data_filter, {"please": "now"})
         self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
 
     # def test_run(self):

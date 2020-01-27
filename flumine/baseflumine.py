@@ -61,7 +61,8 @@ class BaseFlumine:
                     strategy.process_raw_data(publish_time, datum)
 
     def _process_end_flumine(self) -> None:
-        pass
+        for strategy in self.strategies:
+            strategy.finish()
 
     @property
     def status(self) -> str:

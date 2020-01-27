@@ -1,7 +1,7 @@
 import logging
+from tenacity import retry, wait_exponential
 from betfairlightweight import StreamListener
 from betfairlightweight import BetfairError
-from tenacity import retry, wait_exponential
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
 
 from .basestream import BaseStream
@@ -103,7 +103,7 @@ class DataStream(BaseStream):
             self.stream_id = self._stream.subscribe_to_markets(
                 market_filter=self.market_filter,
                 market_data_filter=self.market_data_filter,
-                # conflate_ms=self.conflate_ms,
+                conflate_ms=self.conflate_ms,
                 initial_clk=self._listener.initial_clk,  # supplying these two values allows a reconnect
                 clk=self._listener.clk,
             )
