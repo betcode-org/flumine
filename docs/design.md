@@ -11,6 +11,7 @@ Typical to most trading frameworks flumine uses an event driven design with the 
 
 - `MARKET_CATALOGUE` Betfair MarketCatalogue object
 - `MARKET_BOOK` Betfair MarketBook object
+- `RAW_DATA` Raw streaming data
 - `CURRENT_ORDERS` Betfair CurrentOrders object
 - `CLEARED_MARKETS` Betfair ClearedMarkets object
 - `CLEARED_ORDERS` Betfair ClearedOrders object

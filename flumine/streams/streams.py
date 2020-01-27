@@ -1,8 +1,11 @@
+import logging
 from typing import Union, Type
 
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
 from .datastream import DataStream
+
+logger = logging.getLogger(__name__)
 
 
 class Streams:
@@ -43,6 +46,7 @@ class Streams:
             return stream
 
     def start(self) -> None:
+        logger.info("Starting streams..")
         for stream in self:
             stream.start()
 

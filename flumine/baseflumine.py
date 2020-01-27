@@ -16,7 +16,6 @@ class BaseFlumine:
 
         # queues
         self.handler_queue = queue.Queue()
-        self.background_queue = queue.Queue()
 
         # all markets
         self.markets = None  # todo
@@ -66,6 +65,7 @@ class BaseFlumine:
         return "running" if self._running else "not running"
 
     def __enter__(self):
+        logger.info("Starting flumine")
         # login
         self.trading.login()
         # start streams
@@ -83,3 +83,4 @@ class BaseFlumine:
         # logout
         self.trading.logout()
         self._running = False
+        logger.info("Exiting flumine")
