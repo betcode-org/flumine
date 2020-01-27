@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.streams import streams
+from flumine.streams.basestream import BaseStream
 
 
 class StreamsTest(unittest.TestCase):
@@ -91,6 +92,39 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(len(self.streams), 0)
 
 
+class TestBaseStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = BaseStream(
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertIsNone(self.stream._stream)
+
+    def test_run(self):
+        with self.assertRaises(NotImplementedError):
+            self.stream.run()
+
+    def test_handle_output(self):
+        with self.assertRaises(NotImplementedError):
+            self.stream.handle_output()
+
+    def test_stop(self):
+        mock_stream = mock.Mock()
+        self.stream._stream = mock_stream
+        self.stream.stop()
+        mock_stream.stop.assert_called()
+
+    def test_trading(self):
+        self.assertEqual(self.stream.trading, self.mock_flumine.trading)
+
+
 class TestMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
@@ -112,11 +146,24 @@ class TestMarketStream(unittest.TestCase):
     # def test_handle_output(self):
     #     pass
 
-    def test_stop(self):
-        mock_stream = mock.Mock()
-        self.stream._stream = mock_stream
-        self.stream.stop()
-        mock_stream.stop.assert_called()
 
-    def test_trading(self):
-        self.assertEqual(self.stream.trading, self.mock_flumine.trading)
+class TestDataStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.DataStream(
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+    #
+    # def test_handle_output(self):
+    #     pass

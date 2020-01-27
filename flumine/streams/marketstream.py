@@ -1,40 +1,18 @@
-import threading
 import queue
 import logging
-import betfairlightweight
 from betfairlightweight import StreamListener
 from betfairlightweight import BetfairError
 from tenacity import retry, wait_exponential
 
+from .basestream import BaseStream
 from ..event.event import MarketBookEvent
 
 logger = logging.getLogger(__name__)
 
 
-class MarketStream(threading.Thread):
-    def __init__(
-        self,
-        flumine,
-        stream_id: int,
-        market_filter: dict,
-        market_data_filter: dict,
-        streaming_timeout: float,
-    ):
-        threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
-        self.flumine = flumine
-        self.stream_id = stream_id
-        self.market_filter = market_filter
-        self.market_data_filter = market_data_filter
-        self.streaming_timeout = streaming_timeout
-        self._stream = None
-        self._output_queue = queue.Queue()
-        self._listener = StreamListener(output_queue=self._output_queue)
+class MarketStream(BaseStream):
 
-        self._output_thread = threading.Thread(
-            name="{0}_output_thread".format(self._name),
-            target=self.handle_output,
-            daemon=True,
-        )
+    LISTENER = StreamListener
 
     @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
@@ -79,11 +57,3 @@ class MarketStream(threading.Thread):
             self.flumine.handler_queue.put(MarketBookEvent(market_books))
 
         logger.info("Stopped output_thread (MarketStream {0})".format(self.stream_id))
-
-    def stop(self) -> None:
-        if self._stream:
-            self._stream.stop()
-
-    @property
-    def trading(self) -> betfairlightweight.APIClient:
-        return self.flumine.trading
