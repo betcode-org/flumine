@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 import zipfile
 
@@ -17,6 +18,8 @@ class MarketRecorder(BaseStrategy):
         BaseStrategy.__init__(self, *args, **kwargs)
         self.local_dir = local_dir
         self.stream_id = create_short_uuid()
+        self._market_expiration = 3600  # seconds
+        self._remove_file = False
         self._loaded_markets = []  # list of marketIds
 
     def start(self) -> None:
@@ -29,15 +32,13 @@ class MarketRecorder(BaseStrategy):
             os.makedirs(directory)
 
     def process_raw_data(self, publish_time, data):
-        filename = "%s" % data.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join(self.local_dir, self.stream_id, filename)
-
+        market_id = data.get(self.MARKET_ID_LOOKUP)
+        file_directory = os.path.join(self.local_dir, self.stream_id, market_id)
         with open(file_directory, "a") as f:
             f.write(
                 json.dumps({"op": "mcm", "clk": None, "pt": publish_time, "mc": [data]})
                 + "\n"
             )
-
         if (
             "marketDefinition" in data
             and data["marketDefinition"]["status"] == "CLOSED"
@@ -62,11 +63,12 @@ class MarketRecorder(BaseStrategy):
 
         # zip file
         zip_file_dir = self._zip_file(file_dir, market_id)
-        print(zip_file_dir)
 
-        # todo core load code
+        # core load code
+        self._load(zip_file_dir, market_definition)
 
-        # todo clean up
+        # clean up
+        self._clean_up()
 
         self._loaded_markets.append(market_id)
 
@@ -82,6 +84,28 @@ class MarketRecorder(BaseStrategy):
             )
         return zip_file_directory
 
+    def _load(self, zip_file_dir: str, market_definition: dict) -> None:
+        pass
+
+    def _clean_up(self) -> None:
+        """If zip > market_expiration old remove
+        zip and txt file
+        """
+        directory = os.path.join(self.local_dir, self.stream_id)
+        for file in os.listdir(directory):
+            if file.endswith(".zip"):
+                file_stats = os.stat(os.path.join(directory, file))
+                seconds_since = time.time() - file_stats.st_mtime
+                if seconds_since > self._market_expiration:
+                    logger.info(
+                        "Removing: %s, age: %ss" % (file, round(seconds_since, 2))
+                    )
+                    txt_path = os.path.join(directory, file.split(".zip")[0])
+                    zip_path = os.path.join(directory, file)
+                    os.remove(zip_path)
+                    if self._remove_file:
+                        os.remove(txt_path)
+
     @staticmethod
     def _create_metadata(market_definition: dict) -> dict:
         try:
@@ -92,4 +116,13 @@ class MarketRecorder(BaseStrategy):
 
 
 class S3MarketRecorder(MarketRecorder):
-    pass
+
+    # todo create s3 client
+
+    def start(self) -> None:
+        MarketRecorder.start(self)
+        # todo validate bucket access
+
+    def _load(self, zip_file_dir: str, market_definition: dict) -> None:
+        # todo load to s3
+        pass
