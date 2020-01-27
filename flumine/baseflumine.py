@@ -42,23 +42,26 @@ class BaseFlumine:
     def run(self) -> None:
         raise NotImplementedError
 
-    def add_strategy(self, strategy: BaseStrategy):
+    def add_strategy(self, strategy: BaseStrategy) -> None:
         # create stream if required
         self.streams(strategy)  # create required streams
         self.strategies(strategy)  # store in strategies
 
-    def _process_market_books(self, event: BaseEvent):
+    def _process_market_books(self, event: BaseEvent) -> None:
         for market_book in event.event:
             for strategy in self.strategies:
                 if strategy.check_market(market_book):
                     strategy.process_market_book(market_book)
 
-    def _process_raw_data(self, event: BaseEvent):
+    def _process_raw_data(self, event: BaseEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
                     strategy.process_raw_data(publish_time, datum)
+
+    def _process_end_flumine(self) -> None:
+        pass
 
     @property
     def status(self) -> str:

@@ -15,6 +15,7 @@ class Flumine(BaseFlumine):
             while True:
                 event = self.handler_queue.get()
                 if event == EventType.TERMINATOR:
+                    self._process_end_flumine()
                     break
 
                 elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:

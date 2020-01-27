@@ -36,6 +36,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = (12, 12345, {})
         self.base_flumine._process_market_books(mock_event)
 
+    def test__process_end_flumine(self):
+        self.base_flumine._process_end_flumine()
+
     def test_status(self):
         self.base_flumine._running = True
         self.assertEqual(self.base_flumine.status, "running")
