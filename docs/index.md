@@ -57,7 +57,7 @@ class ExampleStrategy(BaseStrategy):
         
     def check_market_book(self, market_book):
         # process_market_book only executed if this returns True
-        if market_book.status != 'CLOSED':
+        if market_book.status != "CLOSED":
             return True
 
     def process_market_book(self, market_book):
@@ -75,9 +75,9 @@ class ExampleStrategy(BaseStrategy):
 
 strategy = ExampleStrategy(
     market_filter=streaming_market_filter(
-        event_type_ids=['7'],
-        country_codes=['GB'],
-        market_types=['WIN'],
+        event_type_ids=["7"],
+        country_codes=["GB"],
+        market_types=["WIN"],
     )
 )
 

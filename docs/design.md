@@ -51,3 +51,11 @@ The above events are handled in the [flumine class]()
     - Polling (scores/raceCard etc)
     - CurrentOrders / ClearedOrders
     - database connection/logging
+
+
+
+### notes
+- market middleware (analytics/logging)
+- order middleware (controls)
+- paper trading
+- back testing
