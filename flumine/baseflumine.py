@@ -2,9 +2,11 @@ import queue
 import logging
 from betfairlightweight import APIClient
 
+from . import utils
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .event.event import BaseEvent
+from .worker.worker import BackgroundWorker
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,14 @@ class BaseFlumine:
         # finance blotter
         self.blotter = None  # todo
 
+        # workers
+        self._workers = []
+        self._workers.append(
+            BackgroundWorker(
+                interval=1200, function=utils.keep_alive, args=(self.trading,)
+            )
+        )
+
     def run(self) -> None:
         raise NotImplementedError
 
@@ -72,6 +82,9 @@ class BaseFlumine:
         logger.info("Starting flumine")
         # login
         self.trading.login()
+        # start workers
+        for w in self._workers:
+            w.start()
         # start streams
         self.streams.start()
 

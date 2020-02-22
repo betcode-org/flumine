@@ -14,6 +14,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
         self.assertEqual(self.base_flumine._trading_controls, [])
+        self.assertEqual(len(self.base_flumine._workers), 1)
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
