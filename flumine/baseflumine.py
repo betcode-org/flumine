@@ -6,7 +6,7 @@ from . import utils
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .event.event import BaseEvent
-from .worker.worker import BackgroundWorker
+from .worker import BackgroundWorker
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +42,11 @@ class BaseFlumine:
         self.blotter = None  # todo
 
         # workers
-        self._workers = []
-        self._workers.append(
+        self._workers = [
             BackgroundWorker(
                 interval=1200, function=utils.keep_alive, args=(self.trading,)
             )
-        )
+        ]
 
     def run(self) -> None:
         raise NotImplementedError
@@ -56,6 +55,9 @@ class BaseFlumine:
         # create stream if required
         self.streams(strategy)  # create required streams
         self.strategies(strategy)  # store in strategies
+
+    def add_worker(self, worker: BackgroundWorker) -> None:
+        self._workers.append(worker)
 
     def _process_market_books(self, event: BaseEvent) -> None:
         for market_book in event.event:

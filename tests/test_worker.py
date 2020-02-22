@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.worker.worker import BackgroundWorker
+from flumine.worker import BackgroundWorker
 
 
 class BackgroundWorkerTest(unittest.TestCase):

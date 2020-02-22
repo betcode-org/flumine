@@ -26,6 +26,11 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(len(self.base_flumine.strategies), 1)
         self.assertEqual(len(self.base_flumine.streams), 1)
 
+    def test_add_worker(self):
+        mock_worker = mock.Mock()
+        self.base_flumine.add_worker(mock_worker)
+        self.assertEqual(len(self.base_flumine._workers), 2)
+
     def test__process_market_books(self):
         mock_event = mock.Mock()
         mock_market_book = mock.Mock()
