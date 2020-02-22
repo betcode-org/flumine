@@ -34,3 +34,13 @@ flumine.add_worker(
 ### Custom Polling / Streaming
 
 ### Strategies
+
+
+### Flumine
+
+The Flumine class can be adapted by overriding the following functions:
+
+
+- _process_market_books called on MarketBook event
+- _process_raw_data called on RawData event
+- _process_end_flumine called on Flumine termination
