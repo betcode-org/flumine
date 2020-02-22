@@ -1,8 +1,9 @@
 import unittest
 from unittest import mock
 
-from flumine.streams import streams
+from flumine.streams import streams, datastream
 from flumine.streams.basestream import BaseStream
+from flumine.exceptions import ListenerError
 
 
 class StreamsTest(unittest.TestCase):
@@ -167,9 +168,74 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
+        self.assertEqual(self.stream.LISTENER, datastream.FlumineListener)
 
     # def test_run(self):
     #     pass
     #
     # def test_handle_output(self):
     #     pass
+
+    @mock.patch("flumine.streams.datastream.FlumineRaceStream")
+    @mock.patch("flumine.streams.datastream.FlumineMarketStream")
+    def test_flumine_listener(self, mock_market_stream, mock_race_stream):
+        listener = datastream.FlumineListener()
+        self.assertEqual(
+            listener._add_stream(123, "marketSubscription"), mock_market_stream()
+        )
+
+        with self.assertRaises(ListenerError):
+            listener._add_stream(123, "orderSubscription")
+
+        listener = datastream.FlumineListener()
+        self.assertEqual(
+            listener._add_stream(123, "raceSubscription"), mock_race_stream()
+        )
+
+    def test_flumine_stream(self):
+        mock_listener = mock.Mock()
+        stream = datastream.FlumineStream(mock_listener)
+        self.assertEqual(str(stream), "FlumineStream")
+        self.assertEqual(repr(stream), "<FlumineStream [0]>")
+
+    @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
+    def test_flumine_market_stream(self, mock_on_process):
+        mock_listener = mock.Mock()
+        stream = datastream.FlumineMarketStream(mock_listener)
+        market_books = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
+        stream._process(market_books, 123)
+
+        self.assertEqual(len(stream._caches), 2)
+        self.assertEqual(stream._updates_processed, 3)
+        mock_on_process.assert_called_with(
+            (mock_listener.stream_unique_id, 123, market_books)
+        )
+
+    @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
+    def test_flumine_market_stream_market_closed(self, mock_on_process):
+        mock_listener = mock.Mock()
+        stream = datastream.FlumineMarketStream(mock_listener)
+        stream._caches = {"1.123": object}
+        market_books = [{"id": "1.123", "marketDefinition": {"status": "CLOSED"}}]
+        stream._process(market_books, 123)
+
+        self.assertEqual(stream._lookup, "mc")
+        self.assertEqual(len(stream._caches), 0)
+        self.assertEqual(stream._updates_processed, 1)
+        mock_on_process.assert_called_with(
+            (mock_listener.stream_unique_id, 123, market_books)
+        )
+
+    @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")
+    def test_flumine_race_stream(self, mock_on_process):
+        mock_listener = mock.Mock()
+        stream = datastream.FlumineRaceStream(mock_listener)
+        race_updates = [{"mid": "1.123"}, {"mid": "1.456"}, {"mid": "1.123"}]
+        stream._process(race_updates, 123)
+
+        self.assertEqual(stream._lookup, "rc")
+        self.assertEqual(len(stream._caches), 2)
+        self.assertEqual(stream._updates_processed, 3)
+        mock_on_process.assert_called_with(
+            (mock_listener.stream_unique_id, 123, race_updates)
+        )

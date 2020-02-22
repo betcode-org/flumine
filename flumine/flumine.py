@@ -19,7 +19,7 @@ class Flumine(BaseFlumine):
                     break
 
                 elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.MARKET_BOOK:
                     self._process_market_books(event)
@@ -28,25 +28,25 @@ class Flumine(BaseFlumine):
                     self._process_raw_data(event)
 
                 elif event.EVENT_TYPE == EventType.CURRENT_ORDERS:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.CLEARED_ORDERS:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.CLOSE_MARKET:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.STRATEGY_RESET:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
-                    print(event)
+                    logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.NEW_DAY:
-                    print(event)
+                    logger.info(event)
 
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
