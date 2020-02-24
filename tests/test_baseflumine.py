@@ -7,10 +7,11 @@ from flumine.baseflumine import BaseFlumine
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
         self.mock_trading = mock.Mock()
-        self.base_flumine = BaseFlumine(self.mock_trading)
+        self.base_flumine = BaseFlumine(self.mock_trading, False)
 
     def test_init(self):
         self.assertEqual(self.base_flumine.trading, self.mock_trading)
+        self.assertFalse(self.base_flumine.interactive)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
         self.assertEqual(self.base_flumine._trading_controls, [])
@@ -57,4 +58,13 @@ class BaseFlumineTest(unittest.TestCase):
             self.mock_trading.login.assert_called()
 
         self.assertFalse(self.base_flumine._running)
+        self.mock_trading.logout.assert_called()
+
+    def test_enter_exit_interactive(self):
+        base_flumine = BaseFlumine(self.mock_trading, True)
+        with base_flumine:
+            self.assertTrue(base_flumine._running)
+            self.mock_trading.login_interactive.assert_called()
+
+        self.assertFalse(base_flumine._running)
         self.mock_trading.logout.assert_called()

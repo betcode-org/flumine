@@ -12,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFlumine:
-    def __init__(self, trading: APIClient):
+    def __init__(self, trading: APIClient, interactive: bool = False):
         self.trading = trading
+        self.interactive = interactive
         self._running = False
 
         # queues
@@ -44,7 +45,9 @@ class BaseFlumine:
         # workers
         self._workers = [
             BackgroundWorker(
-                interval=1200, function=utils.keep_alive, args=(self.trading,)
+                interval=1200,
+                function=utils.keep_alive,
+                args=(self.trading, self.interactive),
             )
         ]
 
@@ -83,7 +86,10 @@ class BaseFlumine:
     def __enter__(self):
         logger.info("Starting flumine")
         # login
-        self.trading.login()
+        if self.interactive:
+            self.trading.login_interactive()
+        else:
+            self.trading.login()
         # start workers
         for w in self._workers:
             w.start()

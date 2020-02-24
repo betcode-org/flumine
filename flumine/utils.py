@@ -16,11 +16,14 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def keep_alive(trading: APIClient) -> None:
+def keep_alive(trading: APIClient, interactive: bool) -> None:
     logger.info(
         "Trading client keep_alive worker executing", extra={"trading": trading}
     )
     if trading.session_token is None:
-        trading.login()
+        if interactive:
+            trading.login_interactive()
+        else:
+            trading.login()
     elif trading.session_expired:
         trading.keep_alive()

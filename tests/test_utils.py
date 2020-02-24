@@ -14,10 +14,13 @@ class UtilsTest(unittest.TestCase):
     def test_keep_alive(self):
         mock_trading = mock.Mock()
         mock_trading.session_token = None
-        utils.keep_alive(mock_trading)
+        utils.keep_alive(mock_trading, False)
         mock_trading.login.assert_called()
+
+        utils.keep_alive(mock_trading, True)
+        mock_trading.login_interactive.assert_called()
 
         mock_trading.session_token = 1
         mock_trading.session_expired = True
-        utils.keep_alive(mock_trading)
+        utils.keep_alive(mock_trading, False)
         mock_trading.keep_alive.assert_called()
