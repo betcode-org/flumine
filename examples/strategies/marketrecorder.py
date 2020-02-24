@@ -20,23 +20,24 @@ class MarketRecorder(BaseStrategy):
     def __init__(self, local_dir: str, *args, **kwargs):
         BaseStrategy.__init__(self, *args, **kwargs)
         self.local_dir = local_dir
-        self.stream_id = create_short_uuid()
+        self.recorder_id = create_short_uuid()
         self._market_expiration = kwargs.get("market_expiration", 3600)  # seconds
         self._remove_file = kwargs.get("remove_file", True)  # remove txt file after zip
         self._loaded_markets = []  # list of marketIds
 
     def start(self) -> None:
+        logger.info("Starting strategy %s with id %s" % (self.name, self.recorder_id))
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
         # create sub dir
-        directory = os.path.join(self.local_dir, self.stream_id)
+        directory = os.path.join(self.local_dir, self.recorder_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
     def process_raw_data(self, publish_time, data):
         market_id = data.get(self.MARKET_ID_LOOKUP)
-        file_directory = os.path.join(self.local_dir, self.stream_id, market_id)
+        file_directory = os.path.join(self.local_dir, self.recorder_id, market_id)
         with open(file_directory, "a") as f:
             f.write(
                 json.dumps({"op": "mcm", "clk": None, "pt": publish_time, "mc": [data]})
@@ -54,18 +55,18 @@ class MarketRecorder(BaseStrategy):
         if market_id in self._loaded_markets:
             logger.warning(
                 "File: /{0}/{1}/{2} has already been loaded, updating..".format(
-                    self.local_dir, self.stream_id, market_id
+                    self.local_dir, self.recorder_id, market_id
                 )
             )
 
-        file_dir = os.path.join(self.local_dir, self.stream_id, market_id)
+        file_dir = os.path.join(self.local_dir, self.recorder_id, market_id)
         market_definition = data.get("marketDefinition")
 
         # check that file actually exists
         if not os.path.isfile(file_dir):
             logger.error(
                 "File: %s does not exist in /%s/%s/"
-                % (self.local_dir, market_id, self.stream_id)
+                % (self.local_dir, market_id, self.recorder_id)
             )
             return
 
@@ -93,7 +94,7 @@ class MarketRecorder(BaseStrategy):
         """zips txt file into filename.zip
         """
         zip_file_directory = os.path.join(
-            self.local_dir, self.stream_id, "%s.zip" % market_id
+            self.local_dir, self.recorder_id, "%s.zip" % market_id
         )
         with zipfile.ZipFile(zip_file_directory, mode="w") as zf:
             zf.write(
@@ -108,7 +109,7 @@ class MarketRecorder(BaseStrategy):
         """If zip > market_expiration old remove
         zip and txt file
         """
-        directory = os.path.join(self.local_dir, self.stream_id)
+        directory = os.path.join(self.local_dir, self.recorder_id)
         for file in os.listdir(directory):
             if file.endswith(".zip"):
                 file_stats = os.stat(os.path.join(directory, file))

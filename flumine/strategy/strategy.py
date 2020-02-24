@@ -24,12 +24,14 @@ class BaseStrategy:
         streaming_timeout: float = None,
         conflate_ms: int = None,
         raw_data: bool = False,
+        name: str = None,
     ):
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self.raw_data = raw_data
+        self._name = name
 
         self.streams = []  # list of streams strategy is subscribed
 
@@ -71,3 +73,10 @@ class BaseStrategy:
     @property
     def stream_ids(self) -> list:
         return [stream.stream_id for stream in self.streams]
+
+    @property
+    def name(self):
+        return self._name or self.__class__.__name__
+
+    def __str__(self):
+        return "{0}".format(self.name)

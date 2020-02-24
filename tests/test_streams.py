@@ -66,6 +66,7 @@ class StreamsTest(unittest.TestCase):
         stream.market_data_filter = 2
         stream.streaming_timeout = 3
         stream.conflate_ms = 4
+        stream.stream_id = 1001
         self.streams._streams = [stream]
 
         new_stream = self.streams.add_market_stream(mock_strategy, streams.MarketStream)

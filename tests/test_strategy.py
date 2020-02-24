@@ -37,6 +37,7 @@ class BaseStrategyTest(unittest.TestCase):
             streaming_timeout=self.streaming_timeout,
             conflate_ms=self.conflate_ms,
             raw_data=False,
+            name="test",
         )
 
     def test_init(self):
@@ -45,6 +46,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
         self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
         self.assertFalse(self.strategy.raw_data)
+        self.assertEqual(self.strategy._name, "test")
 
     def test_check_market_no_subscribed(self):
         mock_market_book = mock.Mock()
@@ -110,3 +112,9 @@ class BaseStrategyTest(unittest.TestCase):
         mock_stream.stream_id = 321
         self.strategy.streams = [mock_stream]
         self.assertEqual(self.strategy.stream_ids, [321])
+
+    def test_name(self):
+        self.assertEqual(self.strategy.name, "test")
+
+    def test_str(self):
+        self.assertEqual(str(self.strategy), "test")
