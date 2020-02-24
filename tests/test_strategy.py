@@ -36,7 +36,7 @@ class BaseStrategyTest(unittest.TestCase):
             market_data_filter=self.mock_market_data_filter,
             streaming_timeout=self.streaming_timeout,
             conflate_ms=self.conflate_ms,
-            raw_data=False,
+            stream_class=strategy.MarketStream,
             name="test",
         )
 
@@ -45,7 +45,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
         self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
         self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
-        self.assertFalse(self.strategy.raw_data)
+        self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
         self.assertEqual(self.strategy._name, "test")
 
     def test_check_market_no_subscribed(self):

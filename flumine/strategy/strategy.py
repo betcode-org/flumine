@@ -1,4 +1,7 @@
+from typing import Type
 from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
+
+from ..streams.marketstream import BaseStream, MarketStream
 
 
 class Strategies:
@@ -23,14 +26,14 @@ class BaseStrategy:
         market_data_filter: dict = None,
         streaming_timeout: float = None,
         conflate_ms: int = None,
-        raw_data: bool = False,
+        stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
     ):
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
-        self.raw_data = raw_data
+        self.stream_class = stream_class
         self._name = name
 
         self.streams = []  # list of streams strategy is subscribed
@@ -44,7 +47,7 @@ class BaseStrategy:
             return False
 
     def start(self) -> None:
-        # e.g. subscribe to streams
+        # called when flumine starts e.g. subscribe to extra streams
         return
 
     def check_market_book(self, market_book: MarketBook) -> bool:

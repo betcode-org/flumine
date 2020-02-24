@@ -1,5 +1,5 @@
 import logging
-from typing import Union, Type
+from typing import Union
 
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
@@ -15,37 +15,32 @@ class Streams:
         self._stream_id = 0
 
     def __call__(self, strategy: BaseStrategy) -> None:
-        if strategy.raw_data:
-            stream = self.add_market_stream(strategy, DataStream)
-        else:
-            stream = self.add_market_stream(strategy, MarketStream)
+        stream = self.add_stream(strategy)
         strategy.streams.append(stream)
 
-    def add_market_stream(
-        self,
-        strategy: BaseStrategy,
-        stream_class: Union[Type[MarketStream], Type[DataStream]],
-    ) -> Union[MarketStream, DataStream]:
+    def add_stream(self, strategy: BaseStrategy) -> Union[MarketStream, DataStream]:
         for stream in self:  # check if market stream already exists
             if (
-                isinstance(stream, stream_class)
+                isinstance(stream, strategy.stream_class)
                 and stream.market_filter == strategy.market_filter
                 and stream.market_data_filter == strategy.market_data_filter
                 and stream.streaming_timeout == strategy.streaming_timeout
                 and stream.conflate_ms == strategy.conflate_ms
             ):
                 logger.info(
-                    "Using stream ({0}) for strategy {1}".format(
-                        stream.stream_id, strategy
+                    "Using {0} ({1}) for strategy {2}".format(
+                        strategy.stream_class, stream.stream_id, strategy
                     )
                 )
                 return stream
         else:  # nope? lets create a new one
             stream_id = self._increment_stream_id()
             logger.info(
-                "Creating new stream ({0}) for strategy {1}".format(stream_id, strategy)
+                "Creating new {0} ({1}) for strategy {2}".format(
+                    strategy.stream_class, stream_id, strategy
+                )
             )
-            stream = stream_class(
+            stream = strategy.stream_class(
                 flumine=self.flumine,
                 stream_id=stream_id,
                 market_filter=strategy.market_filter,
