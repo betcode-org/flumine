@@ -1,5 +1,5 @@
 <h1 align="center" style="font-size: 3rem; margin: -15px 0">
-flumine
+flūmine
 </h1>
 
 ---
@@ -26,9 +26,19 @@ Betfair trading framework with a focus on:
 - rock-solid
 - safe
 
-Support for market, order, score and custom streaming / polling data.
+Support for market and custom streaming data (order, score and custom polling data in development)
 
----
+[Join slack group](https://betfairlightweight.herokuapp.com)
+
+Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
+
+## installation
+
+```
+$ pip install flumine
+```
+
+## setup
 
 Get started...
 
@@ -53,7 +63,7 @@ from betfairlightweight.filters import streaming_market_filter
 class ExampleStrategy(BaseStrategy):
     def start(self):
         # subscribe to streams
-        self.subscribe_to_race_card()
+        print("starting strategy 'ExampleStrategy'")
         
     def check_market_book(self, market_book):
         # process_market_book only executed if this returns True
@@ -61,16 +71,8 @@ class ExampleStrategy(BaseStrategy):
             return True
 
     def process_market_book(self, market_book):
-        # process marketBook; place/cancel/replace orders
+        # process marketBook object
         print(market_book.status)
-        
-    def process_race_card(self, race_card):
-        # process raceCard object
-        print(race_card)
-    
-    def process_orders(self, orders):
-        # process currentOrders object
-        print(orders)
 
 
 strategy = ExampleStrategy(

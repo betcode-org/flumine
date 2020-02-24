@@ -1,7 +1,20 @@
 from typing import Type
+from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
 
 from ..streams.marketstream import BaseStream, MarketStream
+
+DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
+    fields=[
+        "EX_ALL_OFFERS",
+        "EX_TRADED",
+        "EX_TRADED_VOL",
+        "EX_LTP",
+        "EX_MARKET_DEF",
+        "SP_TRADED",
+        "SP_PROJECTED",
+    ]
+)
 
 
 class Strategies:
@@ -30,7 +43,7 @@ class BaseStrategy:
         name: str = None,
     ):
         self.market_filter = market_filter
-        self.market_data_filter = market_data_filter
+        self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self.stream_class = stream_class
