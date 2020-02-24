@@ -147,6 +147,8 @@ class S3MarketRecorder(MarketRecorder):
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, zip_file_dir: str, market_definition: dict) -> None:
+        # note this will block the main handler queue during upload
+        # todo create background worker instead?
         event_type_id = (
             market_definition.get("eventTypeId", 0) if market_definition else "7"
         )

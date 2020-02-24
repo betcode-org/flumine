@@ -45,12 +45,12 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_market_streaming.assert_called_with(
-            self.mock_flumine,
-            mock_increment(),
-            mock_strategy.market_filter,
-            mock_strategy.market_data_filter,
-            mock_strategy.streaming_timeout,
-            mock_strategy.conflate_ms,
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            market_filter=mock_strategy.market_filter,
+            market_data_filter=mock_strategy.market_data_filter,
+            streaming_timeout=mock_strategy.streaming_timeout,
+            conflate_ms=mock_strategy.conflate_ms,
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
@@ -170,6 +170,9 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
         self.assertEqual(self.stream.LISTENER, datastream.FlumineListener)
+        self.assertEqual(
+            self.stream._listener.output_queue, self.mock_flumine.handler_queue
+        )
 
     # def test_run(self):
     #     pass
@@ -199,6 +202,12 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(str(stream), "FlumineStream")
         self.assertEqual(repr(stream), "<FlumineStream [0]>")
 
+    def test_flumine_stream_on_process(self):
+        mock_listener = mock.Mock()
+        stream = datastream.FlumineStream(mock_listener)
+        stream.on_process([1, 2, 3])
+        mock_listener.output_queue.put.called_with(datastream.RawDataEvent([1, 2, 3]))
+
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream(self, mock_on_process):
         mock_listener = mock.Mock()
@@ -209,7 +218,7 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
-            (mock_listener.stream_unique_id, 123, market_books)
+            [mock_listener.stream_unique_id, 123, market_books]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
@@ -224,7 +233,7 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 0)
         self.assertEqual(stream._updates_processed, 1)
         mock_on_process.assert_called_with(
-            (mock_listener.stream_unique_id, 123, market_books)
+            [mock_listener.stream_unique_id, 123, market_books]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")
@@ -238,5 +247,5 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
-            (mock_listener.stream_unique_id, 123, race_updates)
+            [mock_listener.stream_unique_id, 123, race_updates]
         )

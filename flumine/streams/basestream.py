@@ -21,7 +21,7 @@ class BaseStream(threading.Thread):
         stream_id: int,
         market_filter: dict,
         market_data_filter: dict,
-        streaming_timeout: float,
+        streaming_timeout: float,  # snaps listener if no update
         conflate_ms: int,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)

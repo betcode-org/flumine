@@ -34,18 +34,24 @@ class Streams:
                 and stream.streaming_timeout == strategy.streaming_timeout
                 and stream.conflate_ms == strategy.conflate_ms
             ):
-                logger.info("Using stream ({0}) for strategy {1}".format(stream.stream_id, strategy))
+                logger.info(
+                    "Using stream ({0}) for strategy {1}".format(
+                        stream.stream_id, strategy
+                    )
+                )
                 return stream
         else:  # nope? lets create a new one
             stream_id = self._increment_stream_id()
-            logger.info("Creating new stream ({0}) for strategy {1}".format(stream_id, strategy))
+            logger.info(
+                "Creating new stream ({0}) for strategy {1}".format(stream_id, strategy)
+            )
             stream = stream_class(
-                self.flumine,
-                stream_id,
-                strategy.market_filter,
-                strategy.market_data_filter,
-                strategy.streaming_timeout,
-                strategy.conflate_ms,
+                flumine=self.flumine,
+                stream_id=stream_id,
+                market_filter=strategy.market_filter,
+                market_data_filter=strategy.market_data_filter,
+                streaming_timeout=strategy.streaming_timeout,
+                conflate_ms=strategy.conflate_ms,
             )
             self._streams.append(stream)
             return stream

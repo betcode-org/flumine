@@ -5,6 +5,19 @@
 
 _betfairlightweight_
 
+
+### Streams
+
+_Market Stream_
+
+_Data Stream_
+
+_Historical Stream_
+
+_Order Stream_
+
+_Custom Stream_
+
 ### Trading Controls
 
 ### Logging Controls

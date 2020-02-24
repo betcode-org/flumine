@@ -15,7 +15,7 @@ class BaseFlumine:
     def __init__(self, trading: APIClient, interactive: bool = False):
         self.trading = trading
         self.interactive = interactive
-        self._running = False
+        self._running: bool = False
 
         # queues
         self.handler_queue = queue.Queue()
@@ -33,17 +33,17 @@ class BaseFlumine:
         self.execution = None  # todo
 
         # logging controls (e.g. database logger)
-        self._logging_controls = []
+        self._logging_controls: list = []
 
         # trading controls
-        self._trading_controls = []
+        self._trading_controls: list = []
         # todo register default controls
 
         # finance blotter
         self.blotter = None  # todo
 
         # workers
-        self._workers = [
+        self._workers: list = [
             BackgroundWorker(
                 interval=1200,
                 function=utils.keep_alive,

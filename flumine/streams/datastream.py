@@ -28,6 +28,9 @@ class FlumineListener(StreamListener):
 
 
 class FlumineStream(BFBaseStream):
+    def on_process(self, output: list) -> None:
+        self.output_queue.put(RawDataEvent(output))
+
     def __str__(self):
         return "FlumineStream"
 
@@ -61,7 +64,7 @@ class FlumineMarketStream(FlumineStream):
                     % (self.unique_id, market_id, len(self._caches))
                 )
 
-        self.on_process((self.unique_id, publish_time, market_books))
+        self.on_process([self.unique_id, publish_time, market_books])
         self._updates_processed += len(market_books)
 
 
@@ -80,7 +83,7 @@ class FlumineRaceStream(FlumineStream):
                     % (self.unique_id, market_id, len(self._caches))
                 )
 
-        self.on_process((self.unique_id, publish_time, race_updates))
+        self.on_process([self.unique_id, publish_time, race_updates])
         self._updates_processed += len(race_updates)
 
 
@@ -88,13 +91,13 @@ class DataStream(BaseStream):
 
     LISTENER = FlumineListener
 
+    def __init__(self, *args, **kwargs):
+        BaseStream.__init__(self, *args, **kwargs)
+        self._listener = self.LISTENER(output_queue=self.flumine.handler_queue)
+
     @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
         logger.info("Starting DataStream")
-
-        if not self._output_thread.is_alive():
-            logger.info("Starting output_thread {0}".format(self._output_thread))
-            self._output_thread.start()
 
         self._stream = self.trading.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
@@ -115,12 +118,3 @@ class DataStream(BaseStream):
             logger.critical("DataStream run error", exc_info=True)
             raise
         logger.info("Stopped DataStream {0}".format(self.stream_id))
-
-    def handle_output(self) -> None:
-        """Handles output from stream.
-        """
-        while self.is_alive():
-            raw_data = self._output_queue.get(block=True)
-            self.flumine.handler_queue.put(RawDataEvent(raw_data))
-
-        logger.info("Stopped output_thread (DataStream {0})".format(self.stream_id))
