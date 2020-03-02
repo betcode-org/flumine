@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -13,7 +13,7 @@ with open(os.path.join(here, "flumine", "__version__.py"), "r") as f:
 setup(
     name=about["__title__"],
     version=about["__version__"],
-    packages=["flumine", "flumine.resources", "flumine.storage"],
+    packages=find_packages(exclude=["examples"]),
     package_dir={"flumine": "flumine"},
     install_requires=INSTALL_REQUIRES,
     url=about["__url__"],

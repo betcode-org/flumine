@@ -1,7 +1,22 @@
-# flūmine
+<h1 align="center" style="font-size: 3rem; margin: -15px 0">
+flūmine
+</h1>
 
-[![Build Status](https://travis-ci.org/liampauling/flumine.svg?branch=master)](https://travis-ci.org/liampauling/flumine) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine)
+---
 
+<div align="center">
+<p>
+<a href="https://travis-ci.org/liampauling/flumine">
+    <img src="https://travis-ci.org/liampauling/flumine.svg?branch=master" alt="Build Status">
+</a>
+<a href="https://coveralls.io/github/liampauling/flumine?branch=master">
+    <img src="https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master" alt="Coverage">
+</a>
+<a href="https://pypi.python.org/pypi/flumine">
+    <img src="https://badge.fury.io/py/flumine.svg" alt="Package version">
+</a>
+</p>
+</div>
 
 Betfair trading framework with a focus on:
 
@@ -12,8 +27,6 @@ Betfair trading framework with a focus on:
 - safe
 
 Support for market and custom streaming data (order, score and custom polling data in development)
-
-[docs](https://liampauling.github.io/flumine/)
 
 [Join slack group](https://betfairlightweight.herokuapp.com)
 
@@ -51,7 +64,7 @@ class ExampleStrategy(BaseStrategy):
     def start(self):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
-
+        
     def check_market_book(self, market_book):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
@@ -70,7 +83,7 @@ strategy = ExampleStrategy(
     )
 )
 
-framework.add_strategy(strategy)
+flumine.add_strategy(strategy)
 ```
 
 Run framework:
@@ -78,6 +91,11 @@ Run framework:
 ```python
 framework.run()
 ```
+
+!!! danger
+    By default flumine will try and prevent coding errors which result in [flash crashes](https://en.wikipedia.org/wiki/Flash_crash) and [burnt fingers](https://www.betangel.com/forum/viewtopic.php?f=5&t=2458) but use at your own risk as per the MIT license.
+    
+    Recommendation is not to remove the [trading controls](/advanced) and carry out extensive testing before executing on live markets, even then only use new strategies on an account with a small balance (transfer balance to games wallet).
 
 ## Features
 
@@ -96,3 +114,13 @@ flumine relies on these libraries:
 * `betfairlightweight` - Betfair API support.
 * `tenacity` - Used for connection retrying (streaming).
 * `python-json-logger` - JSON logging.
+
+## Installation
+
+Install with pip:
+
+```shell
+$ pip install flumine
+```
+
+flumine requires Python 3.5+

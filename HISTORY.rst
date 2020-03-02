@@ -3,6 +3,24 @@
 Release History
 ---------------
 
+1.0.0 (2020-03-02)
++++++++++++++++++++
+
+**Improvements**
+
+- Refactor to trading framework / engine
+- Remove recorder/storage engine and replace with 'strategies'
+- Market and data streams added
+- Background worker class added
+- Add docs
+- exampleone added
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.0.1
+- Add tenacity 5.0.3
+- Add python-json-logger 0.1.11
+
 0.9.0 (2020-01-06)
 +++++++++++++++++++
 
