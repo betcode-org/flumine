@@ -15,12 +15,12 @@ class UtilsTest(unittest.TestCase):
         mock_trading = mock.Mock()
         mock_trading.session_token = None
         utils.keep_alive(mock_trading, False)
-        mock_trading.login.assert_called()
+        mock_trading.login.assert_called_with()
 
         utils.keep_alive(mock_trading, True)
-        mock_trading.login_interactive.assert_called()
+        mock_trading.login_interactive.assert_called_with()
 
         mock_trading.session_token = 1
         mock_trading.session_expired = True
         utils.keep_alive(mock_trading, False)
-        mock_trading.keep_alive.assert_called()
+        mock_trading.keep_alive.assert_called_with()

@@ -80,13 +80,13 @@ class StreamsTest(unittest.TestCase):
         mock_stream = mock.Mock()
         self.streams._streams = [mock_stream]
         self.streams.start()
-        mock_stream.start.assert_called()
+        mock_stream.start.assert_called_with()
 
     def test_stop(self):
         mock_stream = mock.Mock()
         self.streams._streams = [mock_stream]
         self.streams.stop()
-        mock_stream.stop.assert_called()
+        mock_stream.stop.assert_called_with()
 
     def test__increment_stream_id(self):
         self.assertEqual(self.streams._increment_stream_id(), 1000)
@@ -127,7 +127,7 @@ class TestBaseStream(unittest.TestCase):
         mock_stream = mock.Mock()
         self.stream._stream = mock_stream
         self.stream.stop()
-        mock_stream.stop.assert_called()
+        mock_stream.stop.assert_called_with()
 
     def test_trading(self):
         self.assertEqual(self.stream.trading, self.mock_flumine.trading)

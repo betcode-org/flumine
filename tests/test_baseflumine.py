@@ -55,16 +55,16 @@ class BaseFlumineTest(unittest.TestCase):
     def test_enter_exit(self):
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
-            self.mock_trading.login.assert_called()
+            self.mock_trading.login.assert_called_with()
 
         self.assertFalse(self.base_flumine._running)
-        self.mock_trading.logout.assert_called()
+        self.mock_trading.logout.assert_called_with()
 
     def test_enter_exit_interactive(self):
         base_flumine = BaseFlumine(self.mock_trading, True)
         with base_flumine:
             self.assertTrue(base_flumine._running)
-            self.mock_trading.login_interactive.assert_called()
+            self.mock_trading.login_interactive.assert_called_with()
 
         self.assertFalse(base_flumine._running)
-        self.mock_trading.logout.assert_called()
+        self.mock_trading.logout.assert_called_with()

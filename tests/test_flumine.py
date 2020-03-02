@@ -36,9 +36,9 @@ class FlumineTest(unittest.TestCase):
             self.flumine.handler_queue.put(i)
         self.flumine.run()
 
-        mock__process_market_books.assert_called()
-        mock__process_raw_data.assert_called()
-        mock__process_end_flumine.assert_called()
+        mock__process_market_books.assert_called_with(events[1])
+        mock__process_raw_data.assert_called_with(events[2])
+        mock__process_end_flumine.assert_called_with()
 
     def test_str(self):
         assert str(self.flumine) == "<Flumine [not running]>"

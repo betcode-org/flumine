@@ -15,7 +15,7 @@ class StrategiesTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.strategies(mock_strategy)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
-        mock_strategy.start.assert_called()
+        mock_strategy.start.assert_called_with()
 
     def test_iter(self):
         for i in self.strategies:
