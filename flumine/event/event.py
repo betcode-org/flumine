@@ -23,8 +23,8 @@ class QueueType(Enum):
 
 
 class BaseEvent:
-    EVENT_TYPE: Enum = None
-    QUEUE_TYPE: Enum = None
+    EVENT_TYPE = None
+    QUEUE_TYPE = None
 
     def __init__(self, event):
         self.event = event
