@@ -18,11 +18,14 @@ class MarketRecorder(BaseStrategy):
     MARKET_ID_LOOKUP = "id"
 
     def __init__(self, local_dir: str, *args, **kwargs):
+        self._market_expiration = kwargs.pop("market_expiration", 3600)  # seconds
+        self._remove_file = kwargs.pop("remove_file", True)  # remove txt file after zip
+        self._force_update = kwargs.pop(
+            "force_update", True
+        )  # update after initial closure
         BaseStrategy.__init__(self, *args, **kwargs)
         self.local_dir = local_dir
         self.recorder_id = create_short_uuid()
-        self._market_expiration = kwargs.get("market_expiration", 3600)  # seconds
-        self._remove_file = kwargs.get("remove_file", True)  # remove txt file after zip
         self._loaded_markets = []  # list of marketIds
 
     def start(self) -> None:
@@ -51,13 +54,16 @@ class MarketRecorder(BaseStrategy):
 
     def _on_market_closed(self, data: dict) -> None:
         market_id = data.get(self.MARKET_ID_LOOKUP)
-        logger.info("Closing market %s" % market_id)
         if market_id in self._loaded_markets:
-            logger.warning(
-                "File: /{0}/{1}/{2} has already been loaded, updating..".format(
-                    self.local_dir, self.recorder_id, market_id
+            if self._force_update:
+                logger.warning(
+                    "File: /{0}/{1}/{2} has already been loaded, updating..".format(
+                        self.local_dir, self.recorder_id, market_id
+                    )
                 )
-            )
+            else:
+                return
+        logger.info("Closing market %s" % market_id)
 
         file_dir = os.path.join(self.local_dir, self.recorder_id, market_id)
         market_definition = data.get("marketDefinition")

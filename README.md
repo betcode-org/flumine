@@ -70,7 +70,7 @@ strategy = ExampleStrategy(
     )
 )
 
-flumine.add_strategy(strategy)
+framework.add_strategy(strategy)
 ```
 
 Run framework:
