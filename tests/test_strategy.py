@@ -15,6 +15,12 @@ class StrategiesTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.strategies(mock_strategy)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
+        mock_strategy.add.assert_called_with()
+
+    def test_start(self):
+        mock_strategy = mock.Mock()
+        self.strategies._strategies.append(mock_strategy)
+        self.strategies.start()
         mock_strategy.start.assert_called_with()
 
     def test_iter(self):
@@ -87,6 +93,9 @@ class BaseStrategyTest(unittest.TestCase):
         mock_market_book.streaming_unique_id = 12
         self.assertTrue(self.strategy.check_market(mock_market_book))
         mock_check_market_book.assert_called_with(mock_market_book)
+
+    def test_add(self):
+        self.strategy.add()
 
     def test_start(self):
         self.strategy.start()

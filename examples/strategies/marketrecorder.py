@@ -30,8 +30,8 @@ class MarketRecorder(BaseStrategy):
         self.recorder_id = create_short_uuid()
         self._loaded_markets = []  # list of marketIds
 
-    def start(self) -> None:
-        logger.info("Starting strategy %s with id %s" % (self.name, self.recorder_id))
+    def add(self) -> None:
+        logger.info("Adding strategy %s with id %s" % (self.name, self.recorder_id))
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
@@ -150,8 +150,8 @@ class S3MarketRecorder(MarketRecorder):
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
 
-    def start(self) -> None:
-        super().start()
+    def add(self) -> None:
+        super().add()
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, zip_file_dir: str, market_definition: dict) -> None:

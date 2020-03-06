@@ -99,6 +99,8 @@ class BaseFlumine:
         # start workers
         for w in self._workers:
             w.start()
+        # start strategies
+        self.strategies.start()
         # start streams
         self.streams.start()
 

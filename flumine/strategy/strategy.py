@@ -23,7 +23,11 @@ class Strategies:
 
     def __call__(self, strategy):
         self._strategies.append(strategy)
-        strategy.start()
+        strategy.add()
+
+    def start(self):
+        for s in self:
+            s.start()
 
     def __iter__(self):
         return iter(self._strategies)
@@ -72,8 +76,13 @@ class BaseStrategy:
         else:
             return False
 
+    def add(self) -> None:
+        # called when strategy is added to framework
+        return
+
     def start(self) -> None:
-        # called when flumine starts e.g. subscribe to extra streams
+        # called when flumine starts but before streams start
+        # e.g. subscribe to extra streams
         return
 
     def check_market_book(self, market_book: MarketBook) -> bool:
