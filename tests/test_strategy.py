@@ -38,6 +38,7 @@ class BaseStrategyTest(unittest.TestCase):
             conflate_ms=self.conflate_ms,
             stream_class=strategy.MarketStream,
             name="test",
+            context={"trigger": 0.123},
         )
 
     def test_init(self):
@@ -47,6 +48,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
         self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
         self.assertEqual(self.strategy._name, "test")
+        self.assertEqual(self.strategy.context, {"trigger": 0.123})
 
     def test_check_market_no_subscribed(self):
         mock_market_book = mock.Mock()
@@ -112,6 +114,20 @@ class BaseStrategyTest(unittest.TestCase):
         mock_stream.stream_id = 321
         self.strategy.streams = [mock_stream]
         self.assertEqual(self.strategy.stream_ids, [321])
+
+    def test_info(self):
+        self.assertEqual(
+            self.strategy.info,
+            {
+                "conflate_ms": self.conflate_ms,
+                "market_data_filter": self.mock_market_data_filter,
+                "market_filter": self.mock_market_filter,
+                "name": "test",
+                "stream_ids": [],
+                "streaming_timeout": self.streaming_timeout,
+                "context": {"trigger": 0.123},
+            },
+        )
 
     def test_name(self):
         self.assertEqual(self.strategy.name, "test")

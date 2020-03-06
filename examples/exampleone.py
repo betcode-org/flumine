@@ -31,9 +31,12 @@ strategy = S3MarketRecorder(
         # event_ids=[29671376]
     ),
     stream_class=DataStream,
-    local_dir="/tmp/flu",
-    bucket="fluminetest",
-    force_update=False,
+    context={
+        "local_dir": "/tmp",
+        "bucket": "fluminetest",
+        "force_update": False,
+        "remove_file": True,
+    }
 )
 
 framework.add_strategy(strategy)

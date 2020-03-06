@@ -41,13 +41,26 @@ class BaseStrategy:
         conflate_ms: int = None,
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
+        context: dict = None,
     ):
+        """
+        Processes data from streams.
+
+        :param market_filter: Streaming market filter
+        :param market_data_filter: Streaming market data filter
+        :param streaming_timeout: Streaming timeout, will call snap() on cache
+        :param conflate_ms: Streaming conflation
+        :param stream_class: Can be Market or Data
+        :param name: Strategy name
+        :param context: Dictionary holding additional vars
+        """
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self.stream_class = stream_class
         self._name = name
+        self.context = context
 
         self.streams = []  # list of streams strategy is subscribed
 
@@ -89,6 +102,18 @@ class BaseStrategy:
     @property
     def stream_ids(self) -> list:
         return [stream.stream_id for stream in self.streams]
+
+    @property
+    def info(self):
+        return {
+            "name": self.name,
+            "market_filter": self.market_filter,
+            "market_data_filter": self.market_data_filter,
+            "streaming_timeout": self.streaming_timeout,
+            "conflate_ms": self.conflate_ms,
+            "stream_ids": self.stream_ids,
+            "context": self.context,
+        }
 
     @property
     def name(self):
