@@ -20,7 +20,9 @@ class MarketRecorder(BaseStrategy):
     def __init__(self, *args, **kwargs):
         BaseStrategy.__init__(self, *args, **kwargs)
         self._market_expiration = self.context.get("market_expiration", 3600)  # seconds
-        self._remove_file = self.context.get("remove_file", True)  # remove txt file after zip
+        self._remove_file = self.context.get(
+            "remove_file", True
+        )  # remove txt file after zip
         self._force_update = self.context.get(
             "force_update", True
         )  # update after initial closure

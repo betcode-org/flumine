@@ -36,7 +36,7 @@ strategy = S3MarketRecorder(
         "bucket": "fluminetest",
         "force_update": False,
         "remove_file": True,
-    }
+    },
 )
 
 framework.add_strategy(strategy)
