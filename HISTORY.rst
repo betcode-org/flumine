@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.1.0 (2020-03-09)
++++++++++++++++++++
+
+**Improvements**
+
+- `context` added to strategy
+- `.start` / `.add` refactored to make more sense
+- HistoricalStream added and working but will change in the future to not use threads (example added)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.1.0
+
 1.0.0 (2020-03-02)
 +++++++++++++++++++
 

@@ -114,6 +114,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
+        self.assertEqual(self.stream.MAX_LATENCY, 0.5)
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
@@ -251,3 +252,27 @@ class TestDataStream(unittest.TestCase):
         mock_on_process.assert_called_with(
             [mock_listener.stream_unique_id, 123, race_updates]
         )
+
+
+class TestHistoricalStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.HistoricalStream(
+            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+        self.assertEqual(self.stream.MAX_LATENCY, 1e100)
+
+    # def test_run(self):
+    #     pass
+    #
+    # def test_handle_output(self):
+    #     pass

@@ -17,19 +17,21 @@ class MarketRecorder(BaseStrategy):
 
     MARKET_ID_LOOKUP = "id"
 
-    def __init__(self, local_dir: str, *args, **kwargs):
-        self._market_expiration = kwargs.pop("market_expiration", 3600)  # seconds
-        self._remove_file = kwargs.pop("remove_file", True)  # remove txt file after zip
-        self._force_update = kwargs.pop(
+    def __init__(self, *args, **kwargs):
+        BaseStrategy.__init__(self, *args, **kwargs)
+        self._market_expiration = self.context.get("market_expiration", 3600)  # seconds
+        self._remove_file = self.context.get(
+            "remove_file", True
+        )  # remove txt file after zip
+        self._force_update = self.context.get(
             "force_update", True
         )  # update after initial closure
-        BaseStrategy.__init__(self, *args, **kwargs)
-        self.local_dir = local_dir
+        self.local_dir = self.context.get("local_dir", "/tmp")
         self.recorder_id = create_short_uuid()
         self._loaded_markets = []  # list of marketIds
 
-    def start(self) -> None:
-        logger.info("Starting strategy %s with id %s" % (self.name, self.recorder_id))
+    def add(self) -> None:
+        logger.info("Adding strategy %s with id %s" % (self.name, self.recorder_id))
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
@@ -141,15 +143,15 @@ class MarketRecorder(BaseStrategy):
 
 class S3MarketRecorder(MarketRecorder):
     def __init__(self, *args, **kwargs):
-        self._bucket = kwargs.pop("bucket")
-        self._data_type = kwargs.pop("data_type", "marketdata")
         MarketRecorder.__init__(self, *args, **kwargs)
+        self._bucket = self.context["bucket"]
+        self._data_type = self.context.get("data_type", "marketdata")
         self.s3 = boto3.client("s3")
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
 
-    def start(self) -> None:
-        super().start()
+    def add(self) -> None:
+        super().add()
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, zip_file_dir: str, market_definition: dict) -> None:

@@ -15,6 +15,12 @@ class StrategiesTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.strategies(mock_strategy)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
+        mock_strategy.add.assert_called_with()
+
+    def test_start(self):
+        mock_strategy = mock.Mock()
+        self.strategies._strategies.append(mock_strategy)
+        self.strategies.start()
         mock_strategy.start.assert_called_with()
 
     def test_iter(self):
@@ -38,6 +44,7 @@ class BaseStrategyTest(unittest.TestCase):
             conflate_ms=self.conflate_ms,
             stream_class=strategy.MarketStream,
             name="test",
+            context={"trigger": 0.123},
         )
 
     def test_init(self):
@@ -47,6 +54,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
         self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
         self.assertEqual(self.strategy._name, "test")
+        self.assertEqual(self.strategy.context, {"trigger": 0.123})
 
     def test_check_market_no_subscribed(self):
         mock_market_book = mock.Mock()
@@ -86,6 +94,9 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertTrue(self.strategy.check_market(mock_market_book))
         mock_check_market_book.assert_called_with(mock_market_book)
 
+    def test_add(self):
+        self.strategy.add()
+
     def test_start(self):
         self.strategy.start()
 
@@ -112,6 +123,20 @@ class BaseStrategyTest(unittest.TestCase):
         mock_stream.stream_id = 321
         self.strategy.streams = [mock_stream]
         self.assertEqual(self.strategy.stream_ids, [321])
+
+    def test_info(self):
+        self.assertEqual(
+            self.strategy.info,
+            {
+                "conflate_ms": self.conflate_ms,
+                "market_data_filter": self.mock_market_data_filter,
+                "market_filter": self.mock_market_filter,
+                "name": "test",
+                "stream_ids": [],
+                "streaming_timeout": self.streaming_timeout,
+                "context": {"trigger": 0.123},
+            },
+        )
 
     def test_name(self):
         self.assertEqual(self.strategy.name, "test")

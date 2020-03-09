@@ -28,7 +28,7 @@ Betfair trading framework with a focus on:
 
 Support for market and custom streaming data (order, score and custom polling data in development)
 
-[Join slack group](https://betfairlightweight.herokuapp.com)
+[join slack group](https://betfairlightweight.herokuapp.com)
 
 Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 
@@ -83,7 +83,7 @@ strategy = ExampleStrategy(
     )
 )
 
-flumine.add_strategy(strategy)
+framework.add_strategy(strategy)
 ```
 
 Run framework:

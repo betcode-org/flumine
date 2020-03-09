@@ -13,6 +13,12 @@ logger = logging.getLogger(__name__)
 
 class BaseFlumine:
     def __init__(self, trading: APIClient, interactive: bool = False):
+        """
+        Base framework class
+
+        :param trading: betfairlightweight client instance
+        :param interactive: Interactive login for client
+        """
         self.trading = trading
         self.interactive = interactive
         self._running = False
@@ -93,6 +99,8 @@ class BaseFlumine:
         # start workers
         for w in self._workers:
             w.start()
+        # start strategies
+        self.strategies.start()
         # start streams
         self.streams.start()
 

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class BaseStream(threading.Thread):
 
     LISTENER = StreamListener
+    MAX_LATENCY = 0.5
 
     def __init__(
         self,
@@ -33,7 +34,9 @@ class BaseStream(threading.Thread):
         self.conflate_ms = conflate_ms
         self._stream = None
         self._output_queue = queue.Queue()
-        self._listener = self.LISTENER(output_queue=self._output_queue)
+        self._listener = self.LISTENER(
+            output_queue=self._output_queue, max_latency=self.MAX_LATENCY
+        )
         self._output_thread = threading.Thread(
             name="{0}_output_thread".format(self._name),
             target=self.handle_output,

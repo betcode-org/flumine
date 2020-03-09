@@ -13,7 +13,7 @@ with open(os.path.join(here, "flumine", "__version__.py"), "r") as f:
 setup(
     name=about["__title__"],
     version=about["__version__"],
-    packages=find_packages(exclude=["examples"]),
+    packages=find_packages(exclude=["examples", "examples.strategies"]),
     package_dir={"flumine": "flumine"},
     install_requires=INSTALL_REQUIRES,
     url=about["__url__"],

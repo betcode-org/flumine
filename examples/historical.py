@@ -3,9 +3,8 @@ import logging
 import betfairlightweight
 from pythonjsonlogger import jsonlogger
 
-from flumine import Flumine
-from flumine.streams.datastream import DataStream
-from strategies.marketrecorder import S3MarketRecorder
+from flumine import Flumine, BaseStrategy
+from flumine.streams.historicalstream import HistoricalStream
 
 logger = logging.getLogger()
 
@@ -17,23 +16,22 @@ log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
 logger.setLevel(logging.INFO)
 
+
+class Ex(BaseStrategy):
+    def check_market_book(self, market_book):
+        return True
+
+    def process_market_book(self, market_book):
+        print(market_book, market_book.total_matched)
+
+
 trading = betfairlightweight.APIClient("username")
 
 framework = Flumine(trading=trading, interactive=True)
 
-strategy = S3MarketRecorder(
-    name="WIN",
-    market_filter=betfairlightweight.filters.streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB", "IE"],
-        market_types=["WIN"],
-        # market_ids=["1.169056942"],
-        # event_ids=[29671376]
-    ),
-    stream_class=DataStream,
-    local_dir="/tmp/flu",
-    bucket="fluminetest",
-    force_update=False,
+strategy = Ex(
+    market_filter={"markets": ["/tmp/marketdata/1.167775532"]},
+    stream_class=HistoricalStream,
 )
 
 framework.add_strategy(strategy)

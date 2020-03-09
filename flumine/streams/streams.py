@@ -4,6 +4,7 @@ from typing import Union
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
 from .datastream import DataStream
+from .historicalstream import HistoricalStream
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,9 @@ class Streams:
         stream = self.add_stream(strategy)
         strategy.streams.append(stream)
 
-    def add_stream(self, strategy: BaseStrategy) -> Union[MarketStream, DataStream]:
+    def add_stream(
+        self, strategy: BaseStrategy
+    ) -> Union[MarketStream, DataStream, HistoricalStream]:
         for stream in self:  # check if market stream already exists
             if (
                 isinstance(stream, strategy.stream_class)

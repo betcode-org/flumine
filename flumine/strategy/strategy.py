@@ -23,7 +23,11 @@ class Strategies:
 
     def __call__(self, strategy):
         self._strategies.append(strategy)
-        strategy.start()
+        strategy.add()
+
+    def start(self):
+        for s in self:
+            s.start()
 
     def __iter__(self):
         return iter(self._strategies)
@@ -41,13 +45,26 @@ class BaseStrategy:
         conflate_ms: int = None,
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
+        context: dict = None,
     ):
+        """
+        Processes data from streams.
+
+        :param market_filter: Streaming market filter
+        :param market_data_filter: Streaming market data filter
+        :param streaming_timeout: Streaming timeout, will call snap() on cache
+        :param conflate_ms: Streaming conflation
+        :param stream_class: Can be Market or Data
+        :param name: Strategy name
+        :param context: Dictionary holding additional vars
+        """
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self.stream_class = stream_class
         self._name = name
+        self.context = context
 
         self.streams = []  # list of streams strategy is subscribed
 
@@ -59,8 +76,13 @@ class BaseStrategy:
         else:
             return False
 
+    def add(self) -> None:
+        # called when strategy is added to framework
+        return
+
     def start(self) -> None:
-        # called when flumine starts e.g. subscribe to extra streams
+        # called when flumine starts but before streams start
+        # e.g. subscribe to extra streams
         return
 
     def check_market_book(self, market_book: MarketBook) -> bool:
@@ -89,6 +111,18 @@ class BaseStrategy:
     @property
     def stream_ids(self) -> list:
         return [stream.stream_id for stream in self.streams]
+
+    @property
+    def info(self):
+        return {
+            "name": self.name,
+            "market_filter": self.market_filter,
+            "market_data_filter": self.market_data_filter,
+            "streaming_timeout": self.streaming_timeout,
+            "conflate_ms": self.conflate_ms,
+            "stream_ids": self.stream_ids,
+            "context": self.context,
+        }
 
     @property
     def name(self):

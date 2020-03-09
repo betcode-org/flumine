@@ -48,6 +48,12 @@ flumine.add_worker(
 
 ### Strategies
 
+market_filter
+
+market_data_filter
+
+context
+
 
 ### Flumine
 
