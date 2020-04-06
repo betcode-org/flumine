@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFlumine:
+
+    BACKTEST = False
+
     def __init__(self, client: BaseClient):
         """
         Base framework class

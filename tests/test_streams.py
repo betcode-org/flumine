@@ -9,6 +9,7 @@ from flumine.exceptions import ListenerError
 class StreamsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
+        self.mock_flumine.BACKTEST = False
         self.streams = streams.Streams(self.mock_flumine)
 
     def test_init(self):
@@ -17,24 +18,45 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(self.streams._stream_id, 0)
 
     @mock.patch("flumine.streams.streams.Streams.add_stream")
-    def test_call(self, mock__add_stream):
+    def test_call(self, mock_add_stream):
         mock_strategy = mock.Mock()
         mock_strategy.streams = []
         mock_strategy.raw_data = False
         self.streams(mock_strategy)
 
-        mock__add_stream.assert_called_with(mock_strategy)
+        mock_add_stream.assert_called_with(mock_strategy)
         self.assertEqual(len(mock_strategy.streams), 1)
 
     @mock.patch("flumine.streams.streams.Streams.add_stream")
-    def test_call_data_stream(self, mock__add_stream):
+    def test_call_data_stream(self, mock_add_stream):
         mock_strategy = mock.Mock()
         mock_strategy.streams = []
         mock_strategy.stream_class = datastream.DataStream
         self.streams(mock_strategy)
 
-        mock__add_stream.assert_called_with(mock_strategy)
+        mock_add_stream.assert_called_with(mock_strategy)
         self.assertEqual(len(mock_strategy.streams), 1)
+
+    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
+    def test_call_backtest(self, mock_add_historical_stream):
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_strategy.streams = []
+        mock_strategy.market_filter = {"markets": ["dubs of the mad skint and british"]}
+        self.streams(mock_strategy)
+
+        mock_add_historical_stream.assert_called_with(
+            mock_strategy, "dubs of the mad skint and british"
+        )
+        self.assertEqual(len(mock_strategy.streams), 1)
+
+    def test_call_backtest_no_markets(self):
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_strategy.streams = []
+        mock_strategy.market_filter = {}
+        self.streams(mock_strategy)
+        self.assertEqual(len(mock_strategy.streams), 0)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
@@ -76,11 +98,52 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(stream, new_stream)
         mock_increment.assert_not_called()
 
+    @mock.patch("flumine.streams.streams.HistoricalStream")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_historical_stream(self, mock_increment, mock_historical_stream_class):
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_strategy.market_filter = 1
+        mock_strategy.market_data_filter = 2
+        mock_strategy.streaming_timeout = 3
+        mock_strategy.conflate_ms = 4
+        mock_strategy.stream_class = streams.MarketStream
+
+        self.streams.add_historical_stream(mock_strategy, "GANG")
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called()
+        mock_historical_stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            market_filter="GANG",
+            market_data_filter=mock_strategy.market_data_filter,
+            streaming_timeout=mock_strategy.streaming_timeout,
+            conflate_ms=mock_strategy.conflate_ms,
+        )
+
+    def test_add_historical_stream_old(self):
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_stream = mock.Mock(spec=streams.HistoricalStream)
+        mock_stream.market_filter = "GANG"
+        self.streams._streams = [mock_stream]
+
+        stream = self.streams.add_historical_stream(mock_strategy, "GANG")
+        self.assertEqual(stream, mock_stream)
+        self.assertEqual(len(self.streams), 1)
+
     def test_start(self):
         mock_stream = mock.Mock()
         self.streams._streams = [mock_stream]
         self.streams.start()
         mock_stream.start.assert_called_with()
+
+    def test_start_backtest(self):
+        self.mock_flumine.BACKTEST = True
+        mock_stream = mock.Mock()
+        self.streams._streams = [mock_stream]
+        self.streams.start()
+        mock_stream.start.assert_not_called()
 
     def test_stop(self):
         mock_stream = mock.Mock()
@@ -271,10 +334,16 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
-        self.assertEqual(self.stream.MAX_LATENCY, 1e100)
+        self.assertIsNone(self.stream.MAX_LATENCY)
 
-    # def test_run(self):
-    #     pass
-    #
-    # def test_handle_output(self):
-    #     pass
+    def test_run(self):
+        self.stream.run()
+
+    def test_handle_output(self):
+        self.stream.handle_output()
+
+    @mock.patch("flumine.streams.historicalstream.HistoricalGeneratorStream")
+    def test_create_generator(self, mock_generator):
+        self.assertEqual(
+            self.stream.create_generator(), mock_generator().get_generator()
+        )

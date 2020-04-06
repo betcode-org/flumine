@@ -1,9 +1,8 @@
 import time
 import logging
-import betfairlightweight
 from pythonjsonlogger import jsonlogger
 
-from flumine import FlumineBacktest, BaseStrategy
+from flumine import FlumineBacktest, clients, BaseStrategy
 from flumine.streams.historicalstream import HistoricalStream
 
 logger = logging.getLogger()
@@ -25,15 +24,21 @@ class Ex(BaseStrategy):
         print(market_book, market_book.total_matched)
 
 
-trading = betfairlightweight.APIClient("username")
+client = clients.BacktestClient()
 
-framework = FlumineBacktest(trading=trading, interactive=True)
+framework = FlumineBacktest(client=client)
+
+strategy = Ex(market_filter={"markets": ["/tmp/marketdata/1.170212754"]})
+framework.add_strategy(strategy)
+
+strategy = Ex(market_filter={"markets": ["/tmp/marketdata/1.170223719"]})
+framework.add_strategy(strategy)
 
 strategy = Ex(
-    market_filter={"markets": ["/tmp/marketdata/1.167775532"]},
-    stream_class=HistoricalStream,
+    market_filter={
+        "markets": ["/tmp/marketdata/1.170223719", "/tmp/marketdata/1.170212754"]
+    }
 )
-
 framework.add_strategy(strategy)
 
 framework.run()

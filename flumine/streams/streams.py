@@ -16,8 +16,17 @@ class Streams:
         self._stream_id = 0
 
     def __call__(self, strategy: BaseStrategy) -> None:
-        stream = self.add_stream(strategy)
-        strategy.streams.append(stream)
+        if self.flumine.BACKTEST:
+            markets = strategy.market_filter.get("markets")
+            if markets is None:
+                logging.warning("No markets found for strategy {0}".format(strategy))
+            else:
+                for market in markets:
+                    stream = self.add_historical_stream(strategy, market)
+                    strategy.streams.append(stream)
+        else:
+            stream = self.add_stream(strategy)
+            strategy.streams.append(stream)
 
     def add_stream(
         self, strategy: BaseStrategy
@@ -54,10 +63,33 @@ class Streams:
             self._streams.append(stream)
             return stream
 
-    def start(self) -> None:
-        logger.info("Starting streams..")
+    def add_historical_stream(self, strategy, market):
         for stream in self:
-            stream.start()
+            if stream.market_filter == market:
+                return stream
+        else:
+            stream_id = self._increment_stream_id()
+            logger.info(
+                "Creating new {0} ({1}) for strategy {2}".format(
+                    HistoricalStream, stream_id, strategy
+                )
+            )
+            stream = HistoricalStream(
+                flumine=self.flumine,
+                stream_id=stream_id,
+                market_filter=market,
+                market_data_filter=strategy.market_data_filter,
+                streaming_timeout=strategy.streaming_timeout,
+                conflate_ms=strategy.conflate_ms,
+            )
+            self._streams.append(stream)
+            return stream
+
+    def start(self) -> None:
+        if not self.flumine.BACKTEST:
+            logger.info("Starting streams..")
+            for stream in self:
+                stream.start()
 
     def stop(self) -> None:
         for stream in self:

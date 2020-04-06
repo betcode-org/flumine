@@ -10,6 +10,9 @@ class FlumineBacktestTest(unittest.TestCase):
         self.mock_trading = mock.Mock()
         self.flumine = FlumineBacktest(self.mock_trading)
 
+    def test_init(self):
+        self.assertTrue(self.flumine.BACKTEST)
+
     # @mock.patch("flumine.flumine.Flumine._process_end_flumine")
     # @mock.patch("flumine.flumine.Flumine._process_raw_data")
     # @mock.patch("flumine.flumine.Flumine._process_market_books")
@@ -40,9 +43,11 @@ class FlumineBacktestTest(unittest.TestCase):
     #     mock__process_raw_data.assert_called_with(events[2])
     #     mock__process_end_flumine.assert_called_with()
 
-    # def test__add_default_workers(self):
-    #     self.flumine._add_default_workers()
-    #     self.assertEqual(len(self.flumine._workers), 1)
+    def test__process_market_books(self):
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock()
+        mock_event.event = [mock_market_book]
+        self.flumine._process_market_books(mock_event)
 
     def test_str(self):
         assert str(self.flumine) == "<FlumineBacktest [not running]>"

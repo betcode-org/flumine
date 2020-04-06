@@ -10,6 +10,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
+        self.assertFalse(self.base_flumine.BACKTEST)
         self.assertEqual(self.base_flumine.client, self.mock_client)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
