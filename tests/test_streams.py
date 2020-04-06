@@ -111,7 +111,7 @@ class StreamsTest(unittest.TestCase):
 
         self.streams.add_historical_stream(mock_strategy, "GANG")
         self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called()
+        mock_increment.assert_called_with()
         mock_historical_stream_class.assert_called_with(
             flumine=self.mock_flumine,
             stream_id=mock_increment(),

@@ -72,18 +72,18 @@ class BetfairClientTest(unittest.TestCase):
     @mock.patch("flumine.clients.betfairclient.BetfairClient._get_account_funds")
     def test_update_account_details(self, mock_get_funds, mock_get_details):
         self.betfair_client.update_account_details()
-        mock_get_funds.assert_called()
-        mock_get_details.assert_called()
+        mock_get_funds.assert_called_with()
+        mock_get_details.assert_called_with()
         self.assertEqual(self.betfair_client.account_details, mock_get_details())
         self.assertEqual(self.betfair_client.account_funds, mock_get_funds())
 
     def test__get_account_details(self):
         self.betfair_client._get_account_details()
-        self.mock_betting_client.account.get_account_details.assert_called()
+        self.mock_betting_client.account.get_account_details.assert_called_with()
 
     def test__get_account_funds(self):
         self.betfair_client._get_account_funds()
-        self.mock_betting_client.account.get_account_funds.assert_called()
+        self.mock_betting_client.account.get_account_funds.assert_called_with()
 
 
 class BacktestClientTest(unittest.TestCase):

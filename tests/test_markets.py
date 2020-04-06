@@ -24,13 +24,13 @@ class MarketsTest(unittest.TestCase):
         self.markets.add_market("1.1", mock_market)
 
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
-        mock_market.open_market.assert_called()
+        mock_market.open_market.assert_called_with()
 
     def test_close_market(self):
         mock_market = mock.Mock()
         self.markets._markets = {"1.1": mock_market}
         self.markets.close_market("1.1")
-        mock_market.close_market.assert_called()
+        mock_market.close_market.assert_called_with()
         self.assertEqual(self.markets.markets, {})
 
     def test_markets(self):

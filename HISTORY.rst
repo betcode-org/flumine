@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.2.0 (2020-04-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest added and HistoricalStream refactor (single threaded)
+- Flumine clients created and integrated
+- MarketCatalogue polling worker added
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.3.0
+
 1.1.0 (2020-03-09)
 +++++++++++++++++++
 

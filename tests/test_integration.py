@@ -10,7 +10,7 @@ class IntegrationTest(unittest.TestCase):
                 return True
 
             def process_market_book(self, market, market_book):
-                print(market_book, market.seconds_to_start, market_book.total_matched)
+                return
 
         client = clients.BacktestClient()
         framework = FlumineBacktest(client=client)
