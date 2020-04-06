@@ -43,7 +43,7 @@ class WorkersTest(unittest.TestCase):
 
         worker.poll_market_catalogue(mock_client, mock_markets, mock_handler_queue)
         mock_client.betting_client.betting.list_market_catalogue.assert_called_with(
-            filter={"marketIds": ["1.234", "5.678"]},
+            filter={"marketIds": list(mock_markets.markets.keys())},
             market_projection=[
                 "COMPETITION",
                 "EVENT",
