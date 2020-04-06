@@ -2,6 +2,8 @@ import logging
 
 from .baseflumine import BaseFlumine
 from .event.event import EventType
+from .worker import BackgroundWorker
+from . import utils
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,16 @@ class Flumine(BaseFlumine):
 
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
+
+    def _add_default_workers(self):
+        self.add_worker(
+            BackgroundWorker(
+                interval=1200,
+                function=utils.keep_alive,
+                name="keep_alive",
+                func_args=(self.trading, self.interactive),
+            )
+        )
 
     def __repr__(self) -> str:
         return "<Flumine>"

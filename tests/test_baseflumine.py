@@ -15,7 +15,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
         self.assertEqual(self.base_flumine._trading_controls, [])
-        self.assertEqual(len(self.base_flumine._workers), 1)
+        self.assertEqual(self.base_flumine._workers, [])
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
@@ -30,7 +30,11 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_worker(self):
         mock_worker = mock.Mock()
         self.base_flumine.add_worker(mock_worker)
-        self.assertEqual(len(self.base_flumine._workers), 2)
+        self.assertEqual(len(self.base_flumine._workers), 1)
+
+    def test__add_default_workers(self):
+        self.base_flumine._add_default_workers()
+        self.assertEqual(len(self.base_flumine._workers), 0)
 
     def test__process_market_books(self):
         mock_event = mock.Mock()
