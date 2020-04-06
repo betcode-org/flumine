@@ -41,8 +41,7 @@ class BaseFlumine:
         self._logging_controls = []
 
         # trading controls
-        self._trading_controls = []
-        # todo register default controls
+        self._trading_controls = []  # todo register default controls
 
         # finance blotter
         self.blotter = None  # todo
@@ -96,6 +95,7 @@ class BaseFlumine:
         self._add_default_workers()
         for w in self._workers:
             w.start()
+        # todo start logging controls
         # start strategies
         self.strategies.start()
         # start streams
@@ -106,10 +106,8 @@ class BaseFlumine:
     def __exit__(self, *args):
         # shutdown streams
         self.streams.stop()
-        # shutdown thread pools
-        # todo
-        # shutdown logging controls
-        # todo
+        # todo shutdown thread pools
+        # todo shutdown logging controls
         # logout
         self.trading.logout()
         self._running = False

@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.flumine import Flumine
+from flumine import Flumine
 from flumine.event import event
 
 
