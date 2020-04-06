@@ -6,13 +6,14 @@
 First, start by importing flumine/bflw and creating a trading and framework client:
 
 ```python
-from flumine import Flumine
 import betfairlightweight
+from flumine import Flumine, clients
 
 trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
 framework = Flumine(
-    trading=trading,
+    client=client,
 )
 ```
 

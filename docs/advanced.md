@@ -99,7 +99,7 @@ worker = BackgroundWorker(
     interval=10, function=func, func_args=("hello",), name="print_a"
 )
 
-flumine.add_worker(
+framework.add_worker(
     worker
 )
 ```

@@ -31,12 +31,13 @@ Get started...
 
 ```python
 import betfairlightweight
-from flumine import Flumine
+from flumine import Flumine, clients
 
 trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
 framework = Flumine(
-    trading=trading,
+    client=client,
 )
 ```
 

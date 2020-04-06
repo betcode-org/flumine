@@ -3,7 +3,7 @@ import logging
 import betfairlightweight
 from pythonjsonlogger import jsonlogger
 
-from flumine import Flumine
+from flumine import Flumine, clients
 from flumine.streams.datastream import DataStream
 from strategies.marketrecorder import S3MarketRecorder
 
@@ -18,8 +18,9 @@ logger.addHandler(log_handler)
 logger.setLevel(logging.INFO)
 
 trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
-framework = Flumine(trading=trading, interactive=True)
+framework = Flumine(client=client)
 
 strategy = S3MarketRecorder(
     name="WIN",
