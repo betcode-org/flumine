@@ -20,7 +20,7 @@ class Ex(BaseStrategy):
         return True
 
     def process_market_book(self, market, market_book):
-        print(market_book, market_book.total_matched)
+        print(market_book, market.seconds_to_start, market_book.total_matched)
 
 
 client = clients.BacktestClient()

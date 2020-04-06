@@ -20,7 +20,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.transaction_limit, 1024)
         self.assertEqual(self.base_client.capital_base, 100)
         self.assertEqual(self.base_client.commission_base, 0.02)
-        self.assertTrue(self.base_client.certificate_login)
+        self.assertTrue(self.base_client.interactive_login)
         self.assertIsNone(self.base_client.account_details)
         self.assertIsNone(self.base_client.account_funds)
         self.assertEqual(self.base_client.commission_paid, 0)
@@ -55,7 +55,7 @@ class BetfairClientTest(unittest.TestCase):
         self.mock_betting_client.login.assert_called_with()
 
     def test_login_no_certs(self):
-        self.betfair_client.certificate_login = False
+        self.betfair_client.interactive_login = True
         self.betfair_client.login()
         self.mock_betting_client.login_interactive.assert_called_with()
 

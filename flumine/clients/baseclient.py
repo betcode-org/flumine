@@ -17,7 +17,7 @@ class BaseClient:
         transaction_limit: int = 1000,
         capital_base: int = DEFAULT_CAPITAL_BASE,
         commission_base: float = DEFAULT_COMMISSION_BASE,
-        certificate_login: bool = True,
+        interactive_login: bool = False,
         id_: str = None,
     ):
         self.id = id_ or create_short_uuid()
@@ -25,7 +25,7 @@ class BaseClient:
         self.transaction_limit = transaction_limit
         self.capital_base = capital_base
         self.commission_base = commission_base
-        self.certificate_login = certificate_login
+        self.interactive_login = interactive_login
 
         self.account_details = None
         self.account_funds = None

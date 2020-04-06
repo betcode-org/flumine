@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
@@ -71,3 +72,22 @@ class MarketTest(unittest.TestCase):
     def test_close_market(self):
         self.market.close_market()
         self.assertTrue(self.market.closed)
+
+    def test_seconds_to_start(self):
+        mock_market_catalogue = mock.Mock()
+        mock_market_catalogue.market_start_time = datetime.datetime.utcfromtimestamp(1)
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertLess(self.market.seconds_to_start, 0)
+
+    def test_seconds_to_start_market_book(self):
+        mock_market_book = mock.Mock()
+        mock_market_book.market_definition.market_time = datetime.datetime.utcfromtimestamp(
+            1
+        )
+        self.market.market_book = mock_market_book
+        self.assertLess(self.market.seconds_to_start, 0)
+
+    def test_seconds_to_start_none(self):
+        self.market.market_book = None
+        self.market.market_catalogue = None
+        self.assertLess(self.market.seconds_to_start, 0)

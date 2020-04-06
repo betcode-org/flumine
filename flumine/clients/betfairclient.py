@@ -16,10 +16,10 @@ class BetfairClient(BaseClient):
     EXCHANGE = ExchangeType.BETFAIR
 
     def login(self) -> None:
-        if self.certificate_login:
-            self.betting_client.login()
-        else:
+        if self.interactive_login:
             self.betting_client.login_interactive()
+        else:
+            self.betting_client.login()
 
     def keep_alive(self) -> None:
         if self.betting_client.session_expired:

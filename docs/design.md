@@ -28,6 +28,10 @@ The above events are handled in the [flumine class]()
 
 ### MarketBook Cycle
 
+### Backtesting
+
+Backtesting is achieved by monkeypatching the datetime function utcnow(), this allows strategies to be simulated as if they were being executed in real time. Functions such as market.seconds_to_start and fillKill.seconds work as per a live execution.
+
 ### Streams
 - Single stream (market)
 - As above but 'data' (flumine listener)
