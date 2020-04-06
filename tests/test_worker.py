@@ -14,8 +14,8 @@ class BackgroundWorkerTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.worker.interval, 123)
         self.assertEqual(self.worker.function, self.mock_function)
-        self.assertEqual(self.worker.args, (1, 2))
-        self.assertEqual(self.worker.kwargs, {"hello": "world"})
+        self.assertEqual(self.worker.func_args, (1, 2))
+        self.assertEqual(self.worker.func_kwargs, {"hello": "world"})
 
     # def test_run(self):
     #     self.worker.run()

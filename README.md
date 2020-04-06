@@ -15,7 +15,7 @@ Support for market and custom streaming data (order, score and custom polling da
 
 [docs](https://liampauling.github.io/flumine/)
 
-[Join slack group](https://betfairlightweight.herokuapp.com)
+[join slack group](https://betfairlightweight.herokuapp.com)
 
 Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 

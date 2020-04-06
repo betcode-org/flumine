@@ -53,7 +53,8 @@ class BaseFlumine:
             BackgroundWorker(
                 interval=1200,
                 function=utils.keep_alive,
-                args=(self.trading, self.interactive),
+                name="keep_alive",
+                func_args=(self.trading, self.interactive),
             )
         ]
 

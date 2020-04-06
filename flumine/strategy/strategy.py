@@ -52,7 +52,7 @@ class BaseStrategy:
 
         :param market_filter: Streaming market filter
         :param market_data_filter: Streaming market data filter
-        :param streaming_timeout: Streaming timeout, will call snap() on cache
+        :param streaming_timeout: Streaming timeout in seconds, will call snap() on cache
         :param conflate_ms: Streaming conflation
         :param stream_class: Can be Market or Data
         :param name: Strategy name
