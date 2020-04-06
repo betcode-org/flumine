@@ -4,7 +4,7 @@ from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
-from .event.event import BaseEvent
+from .event import event
 from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
@@ -38,9 +38,9 @@ class BaseFlumine:
         # all streams (market/order)
         self.streams = Streams(self)
 
-        # order execution class
+        # todo order execution class
         self.local_execution = None  # backtesting / paper
-        self.betfair_execution = None  # todo
+        self.betfair_execution = None
 
         # logging controls (e.g. database logger)
         self._logging_controls = []
@@ -68,7 +68,7 @@ class BaseFlumine:
     def _add_default_workers(self) -> None:
         return
 
-    def _process_market_books(self, event: BaseEvent) -> None:
+    def _process_market_books(self, event: event.MarketBookEvent) -> None:
         for market_book in event.event:
             market_id = market_book.market_id
             market = self.markets.markets.get(market_id)
@@ -91,12 +91,23 @@ class BaseFlumine:
         )
         return live_market
 
-    def _process_raw_data(self, event: BaseEvent) -> None:
+    def _process_raw_data(self, event: event.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
                     strategy.process_raw_data(publish_time, datum)
+
+    def _process_market_catalogues(self, event: event.MarketCatalogueEvent) -> None:
+        for market_catalogue in event.event:
+            market = self.markets.markets.get(market_catalogue.market_id)
+            if market:
+                if market.market_catalogue is None:
+                    logger.info(
+                        "Updated marketCatalogue for {0}".format(market.market_id)
+                    )
+                    # todo logging control
+                market.market_catalogue = market_catalogue
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

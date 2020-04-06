@@ -20,7 +20,7 @@ class Flumine(BaseFlumine):
                     break
 
                 elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:
-                    logger.info(event)
+                    self._process_market_catalogues(event)
 
                 elif event.EVENT_TYPE == EventType.MARKET_BOOK:
                     self._process_market_books(event)

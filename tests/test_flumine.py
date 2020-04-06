@@ -11,12 +11,14 @@ class FlumineTest(unittest.TestCase):
         self.flumine = Flumine(self.mock_trading)
 
     @mock.patch("flumine.flumine.Flumine._process_end_flumine")
+    @mock.patch("flumine.flumine.Flumine._process_market_catalogues")
     @mock.patch("flumine.flumine.Flumine._process_raw_data")
     @mock.patch("flumine.flumine.Flumine._process_market_books")
     def test_run(
         self,
         mock__process_market_books,
         mock__process_raw_data,
+        mock__process_market_catalogues,
         mock__process_end_flumine,
     ):
         events = [
@@ -38,6 +40,7 @@ class FlumineTest(unittest.TestCase):
 
         mock__process_market_books.assert_called_with(events[1])
         mock__process_raw_data.assert_called_with(events[2])
+        mock__process_market_catalogues.assert_called_with(events[0])
         mock__process_end_flumine.assert_called_with()
 
     def test__add_default_workers(self):
