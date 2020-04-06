@@ -54,5 +54,5 @@ class BaseStream(threading.Thread):
             self._stream.stop()
 
     @property
-    def trading(self) -> betfairlightweight.APIClient:
-        return self.flumine.trading
+    def betting_client(self) -> betfairlightweight.APIClient:
+        return self.flumine.client.betting_client

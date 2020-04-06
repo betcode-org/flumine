@@ -1,9 +1,13 @@
 import unittest
 from unittest import mock
 
-from flumine.clients.baseclient import BaseClient
-from flumine.clients.betfairclient import BetfairClient
-from flumine.clients.backtestclient import BacktestClient
+from flumine.clients.clients import ExchangeType
+from flumine.clients import BaseClient, BetfairClient, BacktestClient
+
+
+class ClientsTest(unittest.TestCase):
+    def test_exchange_type(self):
+        assert ExchangeType
 
 
 class BaseClientTest(unittest.TestCase):

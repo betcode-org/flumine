@@ -1,8 +1,7 @@
-import logging
 from betfairlightweight.resources.accountresources import AccountDetails
 
 from .baseclient import BaseClient
-from . import ExchangeType
+from .clients import ExchangeType
 
 
 class BacktestClient(BaseClient):

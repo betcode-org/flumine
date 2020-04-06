@@ -19,7 +19,7 @@ class MarketStream(BaseStream):
             logger.info("Starting output_thread {0}".format(self._output_thread))
             self._output_thread.start()
 
-        self._stream = self.trading.streaming.create_stream(
+        self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
         try:

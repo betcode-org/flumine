@@ -12,15 +12,12 @@ class UtilsTest(unittest.TestCase):
         self.assertGreater(utils.file_line_count(__file__), 10)
 
     def test_keep_alive(self):
-        mock_trading = mock.Mock()
-        mock_trading.session_token = None
-        utils.keep_alive(mock_trading, False)
-        mock_trading.login.assert_called_with()
+        mock_client = mock.Mock()
+        mock_client.betting_client.session_token = None
+        utils.keep_alive(mock_client)
+        mock_client.login.assert_called_with()
 
-        utils.keep_alive(mock_trading, True)
-        mock_trading.login_interactive.assert_called_with()
-
-        mock_trading.session_token = 1
-        mock_trading.session_expired = True
-        utils.keep_alive(mock_trading, False)
-        mock_trading.keep_alive.assert_called_with()
+        mock_client.betting_client.session_token = 1
+        mock_client.betting_client.session_expired = True
+        utils.keep_alive(mock_client)
+        mock_client.keep_alive.assert_called_with()

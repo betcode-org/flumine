@@ -131,7 +131,9 @@ class TestBaseStream(unittest.TestCase):
         mock_stream.stop.assert_called_with()
 
     def test_trading(self):
-        self.assertEqual(self.stream.trading, self.mock_flumine.trading)
+        self.assertEqual(
+            self.stream.betting_client, self.mock_flumine.client.betting_client
+        )
 
 
 class TestMarketStream(unittest.TestCase):

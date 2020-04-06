@@ -1,6 +1,5 @@
 import uuid
 import logging
-from betfairlightweight import APIClient
 
 logger = logging.getLogger(__name__)
 
@@ -16,14 +15,9 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def keep_alive(trading: APIClient, interactive: bool) -> None:
-    logger.info(
-        "Trading client keep_alive worker executing", extra={"trading": trading}
-    )
-    if trading.session_token is None:
-        if interactive:
-            trading.login_interactive()
-        else:
-            trading.login()
-    elif trading.session_expired:
-        trading.keep_alive()
+def keep_alive(client) -> None:
+    logger.info("Trading client keep_alive worker executing", extra={"client": client})
+    if client.betting_client.session_token is None:
+        client.login()
+    else:
+        client.keep_alive()

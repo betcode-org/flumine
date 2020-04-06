@@ -3,7 +3,7 @@ from betfairlightweight import BetfairError
 from betfairlightweight import resources
 
 from .baseclient import BaseClient
-from . import ExchangeType
+from .clients import ExchangeType
 
 logger = logging.getLogger(__name__)
 

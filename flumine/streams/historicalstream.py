@@ -24,7 +24,7 @@ class HistoricalStream(BaseStream):
             self._output_thread.start()
 
         for market in self.market_filter["markets"]:
-            self._stream = self.trading.streaming.create_historical_stream(
+            self._stream = self.betting_client.streaming.create_historical_stream(
                 directory=market, listener=self._listener
             )
             try:

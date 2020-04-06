@@ -59,7 +59,7 @@ class Flumine(BaseFlumine):
                 interval=1200,
                 function=utils.keep_alive,
                 name="keep_alive",
-                func_args=(self.trading, self.interactive),
+                func_args=(self.client,),
             )
         )
 

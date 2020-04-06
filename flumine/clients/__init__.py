@@ -1,6 +1,3 @@
-from enum import Enum
-
-
-class ExchangeType(Enum):
-    BETFAIR = "Betfair"
-    BACKTEST = "Backtest"
+from .baseclient import BaseClient
+from .betfairclient import BetfairClient
+from .backtestclient import BacktestClient

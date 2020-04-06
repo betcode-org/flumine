@@ -6,12 +6,11 @@ from flumine.baseflumine import BaseFlumine
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_trading = mock.Mock()
-        self.base_flumine = BaseFlumine(self.mock_trading, False)
+        self.mock_client = mock.Mock()
+        self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
-        self.assertEqual(self.base_flumine.trading, self.mock_trading)
-        self.assertFalse(self.base_flumine.interactive)
+        self.assertEqual(self.base_flumine.client, self.mock_client)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
         self.assertEqual(self.base_flumine._trading_controls, [])
@@ -59,16 +58,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test_enter_exit(self):
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
-            self.mock_trading.login.assert_called_with()
+            self.mock_client.login.assert_called_with()
 
         self.assertFalse(self.base_flumine._running)
-        self.mock_trading.logout.assert_called_with()
-
-    def test_enter_exit_interactive(self):
-        base_flumine = BaseFlumine(self.mock_trading, True)
-        with base_flumine:
-            self.assertTrue(base_flumine._running)
-            self.mock_trading.login_interactive.assert_called_with()
-
-        self.assertFalse(base_flumine._running)
-        self.mock_trading.logout.assert_called_with()
+        self.mock_client.logout.assert_called_with()

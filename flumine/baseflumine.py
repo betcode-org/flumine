@@ -1,25 +1,23 @@
 import queue
 import logging
-from betfairlightweight import APIClient
 
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .event.event import BaseEvent
 from .worker import BackgroundWorker
+from .clients.baseclient import BaseClient
 
 logger = logging.getLogger(__name__)
 
 
 class BaseFlumine:
-    def __init__(self, trading: APIClient, interactive: bool = False):
+    def __init__(self, client: BaseClient):
         """
         Base framework class
 
-        :param trading: betfairlightweight client instance
-        :param interactive: Interactive login for client
+        :param client: flumine client instance
         """
-        self.trading = trading
-        self.interactive = interactive
+        self.client = client
         self._running = False
 
         # queues
@@ -87,10 +85,7 @@ class BaseFlumine:
     def __enter__(self):
         logger.info("Starting flumine")
         # login
-        if self.interactive:
-            self.trading.login_interactive()
-        else:
-            self.trading.login()
+        self.client.login()
         # add default and start all workers
         self._add_default_workers()
         for w in self._workers:
@@ -109,6 +104,6 @@ class BaseFlumine:
         # todo shutdown thread pools
         # todo shutdown logging controls
         # logout
-        self.trading.logout()
+        self.client.logout()
         self._running = False
         logger.info("Exiting flumine")
