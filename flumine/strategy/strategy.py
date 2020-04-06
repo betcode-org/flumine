@@ -1,8 +1,9 @@
-from typing import Type
+from typing import Type, Iterator
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
 
 from ..streams.marketstream import BaseStream, MarketStream
+from ..markets.market import Market
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -15,25 +16,6 @@ DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
         "SP_PROJECTED",
     ]
 )
-
-
-class Strategies:
-    def __init__(self):
-        self._strategies = []
-
-    def __call__(self, strategy):
-        self._strategies.append(strategy)
-        strategy.add()
-
-    def start(self):
-        for s in self:
-            s.start()
-
-    def __iter__(self):
-        return iter(self._strategies)
-
-    def __len__(self):
-        return len(self._strategies)
 
 
 class BaseStrategy:
@@ -68,10 +50,10 @@ class BaseStrategy:
 
         self.streams = []  # list of streams strategy is subscribed
 
-    def check_market(self, market_book: MarketBook) -> bool:
+    def check_market(self, market: Market, market_book: MarketBook) -> bool:
         if market_book.streaming_unique_id not in self.stream_ids:
             return False  # strategy not subscribed to market stream
-        elif self.check_market_book(market_book):
+        elif self.check_market_book(market, market_book):
             return True
         else:
             return False
@@ -85,11 +67,11 @@ class BaseStrategy:
         # e.g. subscribe to extra streams
         return
 
-    def check_market_book(self, market_book: MarketBook) -> bool:
+    def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         return False
 
-    def process_market_book(self, market_book: MarketBook) -> None:
+    def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook; place/cancel/replace orders
         return
 
@@ -130,3 +112,22 @@ class BaseStrategy:
 
     def __str__(self):
         return "{0}".format(self.name)
+
+
+class Strategies:
+    def __init__(self):
+        self._strategies = []
+
+    def __call__(self, strategy):
+        self._strategies.append(strategy)
+        strategy.add()
+
+    def start(self) -> None:
+        for s in self:
+            s.start()
+
+    def __iter__(self) -> Iterator[BaseStrategy]:
+        return iter(self._strategies)
+
+    def __len__(self) -> int:
+        return len(self._strategies)

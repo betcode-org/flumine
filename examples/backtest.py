@@ -3,7 +3,6 @@ import logging
 from pythonjsonlogger import jsonlogger
 
 from flumine import FlumineBacktest, clients, BaseStrategy
-from flumine.streams.historicalstream import HistoricalStream
 
 logger = logging.getLogger()
 
@@ -17,10 +16,10 @@ logger.setLevel(logging.INFO)
 
 
 class Ex(BaseStrategy):
-    def check_market_book(self, market_book):
+    def check_market_book(self, market, market_book):
         return True
 
-    def process_market_book(self, market_book):
+    def process_market_book(self, market, market_book):
         print(market_book, market_book.total_matched)
 
 

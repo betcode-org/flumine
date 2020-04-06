@@ -66,12 +66,12 @@ class ExampleStrategy(BaseStrategy):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
         
-    def check_market_book(self, market_book):
+    def check_market_book(self, market, market_book):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
 
-    def process_market_book(self, market_book):
+    def process_market_book(self, market, market_book):
         # process marketBook object
         print(market_book.status)
 

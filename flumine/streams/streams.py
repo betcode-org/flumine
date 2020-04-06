@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Union, Iterator
 
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
@@ -28,9 +28,7 @@ class Streams:
             stream = self.add_stream(strategy)
             strategy.streams.append(stream)
 
-    def add_stream(
-        self, strategy: BaseStrategy
-    ) -> Union[MarketStream, DataStream, HistoricalStream]:
+    def add_stream(self, strategy: BaseStrategy) -> Union[MarketStream, DataStream]:
         for stream in self:  # check if market stream already exists
             if (
                 isinstance(stream, strategy.stream_class)
@@ -99,8 +97,8 @@ class Streams:
         self._stream_id += int(1e3)
         return self._stream_id
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Union[MarketStream, DataStream, HistoricalStream]]:
         return iter(self._streams)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._streams)

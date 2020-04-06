@@ -1,11 +1,14 @@
 import queue
 import logging
+from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .event.event import BaseEvent
 from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
+from .markets.markets import Markets
+from .markets.market import Market
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +30,7 @@ class BaseFlumine:
         self.handler_queue = queue.Queue()
 
         # all markets
-        self.markets = None  # todo
+        self.markets = Markets()
 
         # all strategies
         self.strategies = Strategies()
@@ -36,7 +39,8 @@ class BaseFlumine:
         self.streams = Streams(self)
 
         # order execution class
-        self.execution = None  # todo
+        self.local_execution = None  # backtesting / paper
+        self.betfair_execution = None  # todo
 
         # logging controls (e.g. database logger)
         self._logging_controls = []
@@ -66,9 +70,26 @@ class BaseFlumine:
 
     def _process_market_books(self, event: BaseEvent) -> None:
         for market_book in event.event:
+            market_id = market_book.market_id
+            market = self.markets.markets.get(market_id)
+
+            if not market:
+                market = self._add_live_market(market_id, market_book)
+
             for strategy in self.strategies:
-                if strategy.check_market(market_book):
-                    strategy.process_market_book(market_book)
+                if strategy.check_market(market, market_book):
+                    strategy.process_market_book(market, market_book)
+
+    def _add_live_market(
+        self, market_id: str, market_book: resources.MarketBook
+    ) -> Market:
+        live_market = Market(market_id, market_book)
+        self.markets.add_market(market_id, live_market)
+        # self.blotter.add_market(market_id)
+        logger.info(
+            "Adding: {0} to live markets and blotter".format(live_market.market_id)
+        )
+        return live_market
 
     def _process_raw_data(self, event: BaseEvent) -> None:
         stream_id, publish_time, data = event.event

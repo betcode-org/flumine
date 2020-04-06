@@ -45,12 +45,32 @@ The following functions can be overridden dependant on the strategy:
 
 `finish()` Function called when framework ends
 
-## Trading Client
+## Client
 
-Flumine requires a betfairlightweight trading client, future work may allow multiple clients / different exchanges. 
+Flumine uses clients to hold betting clients for example BetfairClient requires a betfairlightweight trading client, future work may allow multiple clients / different exchanges. 
+
+### Betfair Client
+
+### Backtest Client
 
 !!! tip
     It is possible to handle a custom client within a strategy just watch out for blocking the main loop if you make any http requests.
+
+## Execution
+
+### Betfair Execution
+
+### Backtest Execution
+
+## Markets
+
+Stores latest marketBook objects.
+
+### Middleware
+
+__In development__
+
+Analytics / historical tick data
 
 ## Streams
 
@@ -64,6 +84,8 @@ Similar to Market Streams but the raw streaming data is passed back, this reduce
 
 ### Historical Stream
 
+This is created on a per market basis when backtesting.
+
 ### Order Stream
 
 _In development_
@@ -75,6 +97,10 @@ _In development_
 ## Trading Controls
 
 _In development_
+
+### Client Controls
+
+### Trading Controls
 
 ## Logging Controls
 

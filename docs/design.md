@@ -26,12 +26,14 @@ ___
 
 The above events are handled in the [flumine class]()
 
+### MarketBook Cycle
+
 ### Streams
 - Single stream (market)
 - As above but 'data' (flumine listener)
 - Future work:
-    - Separate threads
     - Order stream
+    - Custom stream
 
 ### Strategy
 - Class based

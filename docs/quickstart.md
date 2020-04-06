@@ -1,5 +1,7 @@
 # QuickStart
 
+## Live
+
 !!! tip
     flumine uses `betfairlightweight` for communicating with the Betfair API, please see [docs](https://liampauling.github.io/betfair/) for how to use/setup before proceeding.
 
@@ -31,12 +33,12 @@ class ExampleStrategy(BaseStrategy):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
         
-    def check_market_book(self, market_book):
+    def check_market_book(self, market, market_book):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
 
-    def process_market_book(self, market_book):
+    def process_market_book(self, market, market_book):
         # process marketBook object
         print(market_book.status)
 ```
@@ -92,3 +94,26 @@ strategy = ExampleDataStrategy(
 
 flumine.add_strategy(strategy)
 ```
+
+## Backtesting
+
+Flumine can be used to backtest strategies using the following code:
+
+```python
+from flumine import FlumineBacktest, clients
+
+client = clients.BacktestClient()
+framework = FlumineBacktest(client=client)
+
+strategy = ExampleStrategy(
+    market_filter={"markets": ["/tmp/marketdata/1.170212754"]}
+)
+framework.add_strategy(strategy)
+
+framework.run()
+```
+
+Note the use of market filter to pass the file directories.
+
+!!! tip
+    Multiple strategies and markets can be passed, flumine will pass the MarketBooks to the correct strategy via its subscription.

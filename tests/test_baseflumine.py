@@ -42,10 +42,18 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
+    @mock.patch("flumine.baseflumine.Market")
+    def test__add_live_market(self, mock_market):
+        mock_market_book = mock.Mock()
+        self.assertEqual(
+            self.base_flumine._add_live_market("1.234", mock_market_book), mock_market()
+        )
+        self.assertEqual(len(self.base_flumine.markets._markets), 1)
+
     def test__process_raw_data(self):
         mock_event = mock.Mock()
         mock_event.event = (12, 12345, {})
-        self.base_flumine._process_market_books(mock_event)
+        self.base_flumine._process_raw_data(mock_event)
 
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()

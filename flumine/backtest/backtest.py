@@ -41,11 +41,11 @@ class FlumineBacktest(BaseFlumine):
 
             # todo un monkeypatch datetime
 
-    def _process_market_books(self, event):
-        for market_book in event.event:
-            for strategy in self.strategies:
-                if strategy.check_market(market_book):
-                    strategy.process_market_book(market_book)
+    # def _process_market_books(self, event):
+    #     for market_book in event.event:
+    #         for strategy in self.strategies:
+    #             if strategy.check_market(market_book):
+    #                 strategy.process_market_book(market_book)
 
     def __repr__(self) -> str:
         return "<FlumineBacktest>"
