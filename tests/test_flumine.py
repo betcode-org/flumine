@@ -42,7 +42,7 @@ class FlumineTest(unittest.TestCase):
 
     def test__add_default_workers(self):
         self.flumine._add_default_workers()
-        self.assertEqual(len(self.flumine._workers), 1)
+        self.assertEqual(len(self.flumine._workers), 2)
 
     def test_str(self):
         assert str(self.flumine) == "<Flumine [not running]>"

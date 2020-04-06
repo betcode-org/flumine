@@ -2,8 +2,7 @@ import logging
 
 from .baseflumine import BaseFlumine
 from .event.event import EventType
-from .worker import BackgroundWorker
-from . import utils
+from . import worker
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +54,20 @@ class Flumine(BaseFlumine):
 
     def _add_default_workers(self):
         self.add_worker(
-            BackgroundWorker(
+            worker.BackgroundWorker(
                 interval=1200,
-                function=utils.keep_alive,
+                function=worker.keep_alive,
                 name="keep_alive",
                 func_args=(self.client,),
+            )
+        )
+        self.add_worker(
+            worker.BackgroundWorker(
+                start_delay=5,  # wait for streams to populate
+                interval=60,
+                function=worker.poll_market_catalogue,
+                name="poll_market_catalogue",
+                func_args=(self.client, self.markets, self.handler_queue),
             )
         )
 
