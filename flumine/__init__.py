@@ -1,6 +1,7 @@
 import logging
 
 from .flumine import Flumine
+from .backtest.backtest import FlumineBacktest
 from .strategy.strategy import BaseStrategy
 from .exceptions import FlumineException
 from .__version__ import __title__, __version__, __author__

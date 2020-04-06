@@ -99,7 +99,7 @@ class DataStream(BaseStream):
     def run(self) -> None:
         logger.info("Starting DataStream")
 
-        self._stream = self.trading.streaming.create_stream(
+        self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
         try:

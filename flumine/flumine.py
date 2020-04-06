@@ -2,6 +2,7 @@ import logging
 
 from .baseflumine import BaseFlumine
 from .event.event import EventType
+from . import worker
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class Flumine(BaseFlumine):
                     break
 
                 elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:
-                    logger.info(event)
+                    self._process_market_catalogues(event)
 
                 elif event.EVENT_TYPE == EventType.MARKET_BOOK:
                     self._process_market_books(event)
@@ -50,6 +51,25 @@ class Flumine(BaseFlumine):
 
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
+
+    def _add_default_workers(self):
+        self.add_worker(
+            worker.BackgroundWorker(
+                interval=1200,
+                function=worker.keep_alive,
+                name="keep_alive",
+                func_args=(self.client,),
+            )
+        )
+        self.add_worker(
+            worker.BackgroundWorker(
+                start_delay=5,  # wait for streams to populate
+                interval=60,
+                function=worker.poll_market_catalogue,
+                name="poll_market_catalogue",
+                func_args=(self.client, self.markets, self.handler_queue),
+            )
+        )
 
     def __repr__(self) -> str:
         return "<Flumine>"

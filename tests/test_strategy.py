@@ -57,9 +57,10 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
 
     def test_check_market_no_subscribed(self):
+        mock_market = mock.Mock()
         mock_market_book = mock.Mock()
         mock_market_book.streaming_unique_id = 12
-        self.assertFalse(self.strategy.check_market(mock_market_book))
+        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
 
     @mock.patch(
         "flumine.strategy.strategy.BaseStrategy.stream_ids",
@@ -72,10 +73,11 @@ class BaseStrategyTest(unittest.TestCase):
     def test_check_market_check_fail(
         self, mock_check_market_book, mock_market_stream_ids
     ):
+        mock_market = mock.Mock()
         mock_market_book = mock.Mock()
         mock_market_book.streaming_unique_id = 12
-        self.assertFalse(self.strategy.check_market(mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market_book)
+        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
+        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
         mock_market_stream_ids.assert_called_with()
 
     @mock.patch(
@@ -89,10 +91,11 @@ class BaseStrategyTest(unittest.TestCase):
     def test_check_market_check_pass(
         self, mock_check_market_book, mock_market_stream_ids
     ):
+        mock_market = mock.Mock()
         mock_market_book = mock.Mock()
         mock_market_book.streaming_unique_id = 12
-        self.assertTrue(self.strategy.check_market(mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market_book)
+        self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
+        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
 
     def test_add(self):
         self.strategy.add()
@@ -101,10 +104,10 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.start()
 
     def test_check_market_book(self):
-        self.assertFalse(self.strategy.check_market_book(None))
+        self.assertFalse(self.strategy.check_market_book(None, None))
 
     def test_process_market_book(self):
-        self.strategy.process_market_book(None)
+        self.strategy.process_market_book(None, None)
 
     def test_process_raw_data(self):
         self.strategy.process_raw_data(None, None)

@@ -15,7 +15,7 @@ Support for market and custom streaming data (order, score and custom polling da
 
 [docs](https://liampauling.github.io/flumine/)
 
-[Join slack group](https://betfairlightweight.herokuapp.com)
+[join slack group](https://betfairlightweight.herokuapp.com)
 
 Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 
@@ -31,12 +31,13 @@ Get started...
 
 ```python
 import betfairlightweight
-from flumine import Flumine
+from flumine import Flumine, clients
 
 trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
 framework = Flumine(
-    trading=trading,
+    client=client,
 )
 ```
 
@@ -52,12 +53,12 @@ class ExampleStrategy(BaseStrategy):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
 
-    def check_market_book(self, market_book):
+    def check_market_book(self, market, market_book):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
 
-    def process_market_book(self, market_book):
+    def process_market_book(self, market, market_book):
         # process marketBook object
         print(market_book.status)
 
