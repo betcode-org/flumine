@@ -132,6 +132,21 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(stream, mock_stream)
         self.assertEqual(len(self.streams), 1)
 
+    @mock.patch("flumine.streams.streams.OrderStream")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_historical_stream(self, mock_increment, mock_order_stream_class):
+        conflate_ms = 500
+        streaming_timeout = 0.5
+        self.streams.add_order_stream(conflate_ms, streaming_timeout)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        mock_order_stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            streaming_timeout=streaming_timeout,
+            conflate_ms=conflate_ms,
+        )
+
     def test_start(self):
         mock_stream = mock.Mock()
         self.streams._streams = [mock_stream]
@@ -166,7 +181,7 @@ class TestBaseStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = BaseStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
@@ -203,7 +218,7 @@ class TestMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.MarketStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
@@ -226,7 +241,7 @@ class TestDataStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.DataStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
@@ -327,7 +342,7 @@ class TestHistoricalStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.HistoricalStream(
-            self.mock_flumine, 123, {"test": "me"}, {"please": "now"}, 0.01, 100
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
@@ -351,3 +366,24 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertEqual(
             self.stream.create_generator(), mock_generator().get_generator()
         )
+
+
+class TestOrderStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.OrderStream(self.mock_flumine, 123, 0.01, 100)
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertIsNone(self.stream.market_filter)
+        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+    #
+    # def test_handle_output(self):
+    #     pass
