@@ -109,6 +109,14 @@ class BaseFlumine:
                     # todo logging control
                 market.market_catalogue = market_catalogue
 
+    def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
+        for current_orders in event.event:
+            # todo process_current_orders()
+            print(current_orders)
+            # # todo get orders related to strategy only!
+            # for strategy in self.strategies:
+            #     strategy.process_orders(current_orders)
+
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
             strategy.finish()

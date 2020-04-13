@@ -55,6 +55,12 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = (12, 12345, {})
         self.base_flumine._process_raw_data(mock_event)
 
+    def test__process_current_orders(self):
+        mock_event = mock.Mock()
+        mock_current_orders = mock.Mock()
+        mock_event.event = [mock_current_orders]
+        self.base_flumine._process_current_orders(mock_event)
+
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 

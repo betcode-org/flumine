@@ -116,7 +116,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.process_race_card(None)
 
     def test_process_orders(self):
-        self.strategy.process_orders(None)
+        self.strategy.process_orders(None, None)
 
     def test_finish(self):
         self.strategy.finish()

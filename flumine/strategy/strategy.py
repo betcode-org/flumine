@@ -82,7 +82,7 @@ class BaseStrategy:
         # process raceCard object
         return
 
-    def process_orders(self, orders: CurrentOrders) -> None:
+    def process_orders(self, market: Market, orders: CurrentOrders) -> None:
         # process currentOrders object
         return
 
