@@ -45,11 +45,29 @@ class BackgroundWorker(threading.Thread):
 
 
 def keep_alive(client) -> None:
-    # todo error handling!
-    if client.betting_client.session_token is None:
+    """ Attempt keep alive if required or
+    login if keep alive failed
+    """
+    if client.betting_client.session_token:
+        try:
+            resp = client.keep_alive()
+            if resp.status == "SUCCESS":
+                return
+        except BetfairError as e:
+            logger.error(
+                "keep_alive error",
+                exc_info=True,
+                extra={"trading_function": "keep_alive", "response": e},
+            )
+    # attempt login
+    try:
         client.login()
-    else:
-        client.keep_alive()
+    except BetfairError as e:
+        logger.error(
+            "login error",
+            exc_info=True,
+            extra={"trading_function": "login", "response": e},
+        )
 
 
 def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
