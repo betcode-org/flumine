@@ -6,6 +6,7 @@ The Flumine class can be adapted by overriding the following functions:
 
 - `_process_market_books()` called on MarketBook event
 - `_process_raw_data()` called on RawData event
+- `_process_market_catalogues` called on MarketCatalogue event
 - `_process_end_flumine()` called on Flumine termination
 
 ## Base Strategy
@@ -110,8 +111,8 @@ _In development_
 
 By default flumine adds the following workers:
  
-- keep_alive: runs every 1200s to make sure the client is either logged in or kept alive
-- market
+- `keep_alive`: runs every 1200s to make sure the client is either logged in or kept alive
+- `poll_market_catalogue`: runs every 60s to poll listMarketCatalogue endpoint
 
 
 Further workers can be added as per:

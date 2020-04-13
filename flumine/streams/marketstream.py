@@ -1,6 +1,5 @@
 import queue
 import logging
-from betfairlightweight import StreamListener
 from betfairlightweight import BetfairError
 from tenacity import retry, wait_exponential
 

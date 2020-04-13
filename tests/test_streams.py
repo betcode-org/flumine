@@ -242,9 +242,13 @@ class TestDataStream(unittest.TestCase):
             self.stream._listener.output_queue, self.mock_flumine.handler_queue
         )
 
-    # def test_run(self):
-    #     pass
-    #
+    @mock.patch("flumine.streams.marketstream.BaseStream.betting_client")
+    def test_run(self, mock_betting_client):
+        self.stream.run()
+        mock_betting_client.streaming.create_stream.assert_called_with(
+            listener=self.stream._listener, unique_id=123
+        )
+
     # def test_handle_output(self):
     #     pass
 

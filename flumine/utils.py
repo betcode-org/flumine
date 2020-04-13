@@ -15,6 +15,6 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def chunks(l, n):
+def chunks(l: list, n: int) -> list:
     for i in range(0, len(l), n):
         yield l[i : i + n]

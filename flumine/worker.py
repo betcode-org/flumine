@@ -30,15 +30,22 @@ class BackgroundWorker(threading.Thread):
     def run(self) -> None:
         time.sleep(self.start_delay)
         while self.is_alive():
+            logger.debug(
+                "BackgroundWorker {0} executing".format(self.name),
+                extra={"name": self.name, "function": self.function},
+            )
             try:
                 self.function(*self.func_args, **self.func_kwargs)
             except Exception as e:
-                logger.error("Error in BackgroundWorker {0}: {1}".format(self.name, e))
+                logger.error(
+                    "Error in BackgroundWorker {0}: {1}".format(self.name, e),
+                    extra={"name": self.name, "function": self.function},
+                )
             time.sleep(self.interval)
 
 
 def keep_alive(client) -> None:
-    logger.info("Trading client keep_alive worker executing", extra={"client": client})
+    # todo error handling!
     if client.betting_client.session_token is None:
         client.login()
     else:
@@ -46,7 +53,6 @@ def keep_alive(client) -> None:
 
 
 def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
-    logger.info("Market Catalogue polling worker executing", extra={"client": client})
     live_markets = list(markets.markets.keys())
     for market_ids in chunks(live_markets, 100):
         try:
