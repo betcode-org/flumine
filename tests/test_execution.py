@@ -2,6 +2,8 @@ import unittest
 from unittest import mock
 
 from flumine.execution.baseexecution import BaseExecution
+from flumine.execution.betfairexecution import BetfairExecution
+from flumine.execution.simulatedexecution import SimulatedExecution
 
 
 class BaseExecutionTest(unittest.TestCase):
@@ -88,3 +90,47 @@ class BaseExecutionTest(unittest.TestCase):
 
     def test_markets(self):
         self.assertEqual(self.execution.markets, self.mock_flumine.markets)
+
+
+class BetfairExecutionTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.execution = BetfairExecution(self.mock_flumine)
+
+    def test_execute_place(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_cancel(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_update(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_replace(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+
+class SimulatedExecutionTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.execution = SimulatedExecution(self.mock_flumine)
+
+    def test_execute_place(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_cancel(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_update(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)
+
+    def test_execute_replace(self):
+        with self.assertRaises(NotImplementedError):
+            self.execution.execute_place(None, None)

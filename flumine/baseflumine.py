@@ -39,7 +39,7 @@ class BaseFlumine:
         self.streams = Streams(self)
 
         # todo order execution class
-        self.local_execution = None  # backtesting / paper
+        self.simulated_execution = None  # backtesting / paper
         self.betfair_execution = None
 
         # logging controls (e.g. database logger)
