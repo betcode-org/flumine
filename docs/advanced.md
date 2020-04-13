@@ -134,3 +134,18 @@ framework.add_worker(
 ## Error Handling
 
 ## Logging
+
+
+## Config
+
+### hostname
+
+Used as customerStrategyRefs so that only orders created by the running instance is returned.
+
+### process_id
+
+OS process id of running application.
+
+### current_time
+
+Used for backtesting

@@ -39,7 +39,7 @@ class BackgroundWorker(threading.Thread):
             except Exception as e:
                 logger.error(
                     "Error in BackgroundWorker {0}: {1}".format(self.name, e),
-                    extra={"name": self.name, "function": self.function},
+                    extra={"worker_name": self.name, "function": self.function},
                 )
             time.sleep(self.interval)
 
@@ -51,7 +51,7 @@ def keep_alive(client) -> None:
     if client.betting_client.session_token:
         try:
             resp = client.keep_alive()
-            if resp.status == "SUCCESS":
+            if resp is None or resp.status == "SUCCESS":
                 return
         except BetfairError as e:
             logger.error(

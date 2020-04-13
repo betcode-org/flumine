@@ -129,6 +129,8 @@ class BaseFlumine:
         # start strategies
         self.strategies.start()
         # start streams
+        if not self.BACKTEST:
+            self.streams.add_order_stream()  # todo move?
         self.streams.start()
 
         self._running = True
