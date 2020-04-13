@@ -1,9 +1,13 @@
 import requests
 
 from .baseexecution import BaseExecution
+from ..clients.clients import ExchangeType
 
 
 class BetfairExecution(BaseExecution):
+
+    EXCHANGE = ExchangeType.BETFAIR
+
     def execute_place(self, order_package, http_session: requests.Session) -> None:
         raise NotImplementedError
 

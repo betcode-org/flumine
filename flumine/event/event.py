@@ -11,6 +11,7 @@ class EventType(Enum):
     CLEARED_MARKETS = 50
     CLEARED_ORDERS = 60
     # flumine objects
+    ORDER_PACKAGE = 90
     CLOSE_MARKET = 100
     STRATEGY_RESET = 110
     CUSTOM_EVENT = 120

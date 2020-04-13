@@ -1,9 +1,10 @@
 import unittest
 from unittest import mock
 
-from flumine.execution.baseexecution import BaseExecution
+from flumine.execution.baseexecution import BaseExecution, OrderPackageType
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
+from flumine.clients.clients import ExchangeType
 
 
 class BaseExecutionTest(unittest.TestCase):
@@ -14,12 +15,13 @@ class BaseExecutionTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertIsNotNone(self.execution._thread_pool)
+        self.assertIsNone(self.execution.EXCHANGE)
 
     @mock.patch("flumine.execution.baseexecution.requests")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
     def test_handler_place(self, mock_execute_place, mock_requests):
         mock_order_package = mock.Mock()
-        mock_order_package.package_type = "PLACE"
+        mock_order_package.package_type = OrderPackageType.PLACE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
@@ -31,7 +33,7 @@ class BaseExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_cancel")
     def test_handler_cancel(self, mock_execute_cancel, mock_requests):
         mock_order_package = mock.Mock()
-        mock_order_package.package_type = "CANCEL"
+        mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
@@ -43,7 +45,7 @@ class BaseExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_replace")
     def test_handler_replace(self, mock_execute_replace, mock_requests):
         mock_order_package = mock.Mock()
-        mock_order_package.package_type = "REPLACE"
+        mock_order_package.package_type = OrderPackageType.REPLACE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
@@ -55,7 +57,7 @@ class BaseExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_update")
     def test_handler_update(self, mock_execute_update, mock_requests):
         mock_order_package = mock.Mock()
-        mock_order_package.package_type = "UPDATE"
+        mock_order_package.package_type = OrderPackageType.UPDATE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
@@ -97,6 +99,9 @@ class BetfairExecutionTest(unittest.TestCase):
         self.mock_flumine = mock.Mock()
         self.execution = BetfairExecution(self.mock_flumine)
 
+    def test_init(self):
+        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BETFAIR)
+
     def test_execute_place(self):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
@@ -118,6 +123,9 @@ class SimulatedExecutionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.execution = SimulatedExecution(self.mock_flumine)
+
+    def test_init(self):
+        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BACKTEST)
 
     def test_execute_place(self):
         with self.assertRaises(NotImplementedError):
