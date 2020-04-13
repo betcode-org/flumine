@@ -125,7 +125,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution = SimulatedExecution(self.mock_flumine)
 
     def test_init(self):
-        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BACKTEST)
+        self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
 
     def test_execute_place(self):
         with self.assertRaises(NotImplementedError):

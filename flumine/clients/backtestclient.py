@@ -9,7 +9,7 @@ class BacktestClient(BaseClient):
     Backtest betting client.
     """
 
-    EXCHANGE = ExchangeType.BACKTEST
+    EXCHANGE = ExchangeType.SIMULATED
     DISCOUNT_RATE = 0
     CURRENCY_CODE = "GBP"
 

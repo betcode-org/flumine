@@ -6,7 +6,7 @@ from ..clients.clients import ExchangeType
 
 class SimulatedExecution(BaseExecution):
 
-    EXCHANGE = ExchangeType.BACKTEST
+    EXCHANGE = ExchangeType.SIMULATED
 
     def execute_place(self, order_package, http_session: requests.Session) -> None:
         raise NotImplementedError
