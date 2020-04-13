@@ -95,7 +95,7 @@ class BaseStrategy:
         return [stream.stream_id for stream in self.streams]
 
     @property
-    def info(self):
+    def info(self) -> dict:
         return {
             "name": self.name,
             "market_filter": self.market_filter,
@@ -107,7 +107,7 @@ class BaseStrategy:
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name or self.__class__.__name__
 
     def __str__(self):
@@ -118,7 +118,7 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy):
+    def __call__(self, strategy: BaseStrategy) -> None:
         self._strategies.append(strategy)
         strategy.add()
 
