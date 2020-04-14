@@ -9,6 +9,9 @@ from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
 from .markets.market import Market
+from .execution.betfairexecution import BetfairExecution
+from .execution.simulatedexecution import SimulatedExecution
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +41,9 @@ class BaseFlumine:
         # all streams (market/order)
         self.streams = Streams(self)
 
-        # todo order execution class
-        self.simulated_execution = None  # backtesting / paper
-        self.betfair_execution = None
+        # order execution class
+        self.simulated_execution = SimulatedExecution(self)
+        self.betfair_execution = BetfairExecution(self)
 
         # logging controls (e.g. database logger)
         self._logging_controls = []

@@ -23,7 +23,8 @@ class OrderPackageType(Enum):
 class BaseOrderPackage(BaseEvent):
 
     """
-    Data structure for multiple orders, temporary to allow execution
+    Data structure for multiple orders,
+    temporary to allow execution
     """
 
     EVENT_TYPE = EventType.ORDER_PACKAGE

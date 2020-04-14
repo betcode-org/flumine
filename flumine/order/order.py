@@ -2,14 +2,19 @@ import uuid
 from enum import Enum
 
 from ..clients.clients import ExchangeType
-from .trade import Trade
 from .ordertype import BaseOrderType
 
 
 class OrderStatus(Enum):
+    PENDING = "Pending"  # pending exchange processing
+    EXECUTABLE = "Executable"  # an order that has a remaining unmatched portion
+    EXECUTION_COMPLETE = (
+        "Execution complete"
+    )  # an order that does not have any remaining unmatched portion
+    EXPIRED = (
+        "Expired"
+    )  # order is no longer available for execution due to its time in force constraint
     # Pending
-    INITIAL = "Initial"  # waiting for execution
-    PLACING = "Placing"  # waiting for response
     CANCELLING = "Cancelling"  # waiting for response
     UPDATING = "Updating"  # waiting for response
     REPLACING = "Replacing"  # waiting for response
@@ -18,7 +23,7 @@ class OrderStatus(Enum):
     OFFSET = "Offset"
     GREENING = "Greening"
     STOPPED = "Stopped"
-    Violation = "Violation"
+    VIOLATION = "Violation"
     VOIDED = "Voided"
     LAPSED = "Lapsed"
 
@@ -29,11 +34,11 @@ class BaseOrder:
 
     def __init__(
         self,
-        trade: Trade,
+        trade,
         side: str,
         order_type: BaseOrderType,
         handicap: int = 0,
-        status: OrderStatus = OrderStatus.INITIAL,
+        status: OrderStatus = OrderStatus.PENDING,
     ):
         self.id = uuid.uuid1()
         self.trade = trade

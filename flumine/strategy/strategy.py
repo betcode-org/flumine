@@ -82,8 +82,8 @@ class BaseStrategy:
         # process raceCard object
         return
 
-    def process_orders(self, market: Market, orders: CurrentOrders) -> None:
-        # process currentOrders object
+    def process_orders(self, market: Market, orders: list) -> None:
+        # process list of Order objects for strategy and Market
         return
 
     def finish(self) -> None:
