@@ -33,6 +33,15 @@ class MarketsTest(unittest.TestCase):
         mock_market.close_market.assert_called_with()
         self.assertEqual(self.markets.markets, {})
 
+    def test_get_order(self):
+        mock_market = mock.Mock()
+        mock_market.closed = False
+        mock_market.blotter = {"test": 12}
+        self.markets._markets = {"1.1": mock_market}
+
+        self.assertEqual(self.markets.get_order("1.1", "test"), 12)
+        self.assertIsNone(self.markets.get_order("1.2", "test"))
+
     def test_markets(self):
         self.assertEqual(self.markets.markets, {})
         mock_market = mock.Mock()

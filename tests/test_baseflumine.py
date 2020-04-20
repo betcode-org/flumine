@@ -88,6 +88,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_current_orders(self):
         mock_event = mock.Mock()
         mock_current_orders = mock.Mock()
+        mock_current_orders.orders = []
         mock_event.event = [mock_current_orders]
         self.base_flumine._process_current_orders(mock_event)
 

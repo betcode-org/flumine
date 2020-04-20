@@ -18,6 +18,12 @@ class Markets:
         live_market.close_market()
         return live_market
 
+    def get_order(self, market_id: str, customer_order_ref: str):
+        try:
+            return self.markets[market_id].blotter[customer_order_ref]
+        except KeyError:
+            return
+
     @property
     def markets(self) -> dict:
         return {
@@ -30,13 +36,13 @@ class Markets:
 
     @property
     def live_orders(self) -> bool:
-        for market in self.markets.values():
+        for market in self:
             if market.closed is False and market.blotter.live_orders is True:
                 return True
         return False
 
     def __iter__(self) -> Iterator[Market]:
-        return iter(self.markets)
+        return iter(self.markets.values())
 
     def __len__(self) -> int:
         return len(self.markets)

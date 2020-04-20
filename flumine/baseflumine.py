@@ -132,14 +132,12 @@ class BaseFlumine:
                 market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
-        process_current_orders(self.markets, event)
-
-        # for current_orders in event.event:
-        #     # todo process_current_orders()
-        #     print(current_orders)
-        #     # # todo get orders related to strategy only!
-        #     # for strategy in self.strategies:
-        #     #     strategy.process_orders(current_orders)
+        process_current_orders(self.markets, event)  # update state
+        for market in self.markets:
+            if market.closed is False:
+                for strategy in self.strategies:
+                    strategy_orders = market.blotter.strategy_orders(strategy)
+                    strategy.process_orders(market, strategy_orders)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

@@ -13,6 +13,11 @@ class Blotter:
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
 
+    def strategy_orders(self, strategy) -> list:
+        """Returns all orders related to a strategy.
+        """
+        return [order for order in self if order.trade.strategy == strategy]
+
     @property
     def live_orders(self) -> bool:
         for order in self._orders.values():
