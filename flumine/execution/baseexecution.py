@@ -12,9 +12,7 @@ class BaseExecution:
 
     def __init__(self, flumine, max_workers=MAX_WORKERS):
         self.flumine = flumine
-        self._thread_pool = ThreadPoolExecutor(
-            max_workers=max_workers, thread_name_prefix=self.__class__.__name__.lower()
-        )
+        self._thread_pool = ThreadPoolExecutor(max_workers=max_workers)
 
     def handler(self, order_package: BaseOrderPackage):
         """ Handles order_package, capable of place, cancel,
