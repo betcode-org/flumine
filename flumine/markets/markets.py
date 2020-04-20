@@ -24,6 +24,10 @@ class Markets:
             key: value for key, value in self._markets.items() if value.closed is False
         }
 
+    @property
+    def open_market_ids(self) -> list:
+        return list(self.markets.keys())
+
     def __iter__(self) -> Iterator[Market]:
         return iter(self.markets)
 

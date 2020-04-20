@@ -1,9 +1,10 @@
 from typing import Type, Iterator
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
+from betfairlightweight.resources import MarketBook, RaceCard
 
 from ..streams.marketstream import BaseStream, MarketStream
 from ..markets.market import Market
+from .runnercontext import RunnerContext
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -48,6 +49,7 @@ class BaseStrategy:
         self._name = name
         self.context = context
 
+        self._invested = {}  # {marketId: {selectionId: RunnerContext}}
         self.streams = []  # list of streams strategy is subscribed
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
@@ -89,6 +91,29 @@ class BaseStrategy:
     def finish(self) -> None:
         # called before flumine ends
         return
+
+    # order
+    def place_order(self, market: Market, order) -> None:
+        print(market, order)
+        if self.validate_order(market, order):
+            order.place()
+            market.blotter_market.place_order(order)
+
+    def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
+        order.cancel(size_reduction)
+        market.blotter_market.cancel_order(order)
+
+    def update_order(self, market: Market, order, new_persistence_type: str) -> None:
+        order.update(new_persistence_type)
+        market.blotter_market.update_order(order)
+
+    def replace_order(self, market: Market, order, new_price: float) -> None:
+        order.replace(new_price)
+        market.blotter_market.replace_order(order)
+
+    def validate_order(self, market: Market, order):
+        # get context
+        pass
 
     @property
     def stream_ids(self) -> list:

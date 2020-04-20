@@ -42,6 +42,15 @@ class MarketsTest(unittest.TestCase):
         self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
         self.assertEqual(self.markets.markets, {"1.1": mock_market})
 
+    def test_open_market_ids(self):
+        self.assertEqual(self.markets.open_market_ids, [])
+        mock_market = mock.Mock()
+        mock_market.closed = False
+        mock_market_two = mock.Mock()
+        mock_market_two.closed = True
+        self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
+        self.assertEqual(self.markets.open_market_ids, ["1.1"])
+
     def test_iter(self):
         self.assertEqual(len([i for i in self.markets]), 0)
 
