@@ -80,8 +80,26 @@ class BaseFlumine:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)
 
-            p = market.process_orders(self.client)
-            print(p)
+            self._process_market_orders(market)
+
+    def _process_market_orders(
+        self, market: Market
+    ) -> None:  # todo override for backtesting
+        for order_package in market.process_orders(self.client):
+            self.handler_queue.put(order_package)
+
+    def _process_order_package(self, order_package) -> None:
+        """Validate trading controls and
+        then execute.
+        """
+        for control in self._trading_controls:
+            control(order_package)
+        for control in order_package.client.trading_controls:
+            control(order_package)
+        if order_package.orders:
+            order_package.client.execution.handler(order_package)
+        else:
+            logger.warning("Empty package, not executing", extra=order_package.info)
 
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
@@ -130,6 +148,8 @@ class BaseFlumine:
 
     def __enter__(self):
         logger.info("Starting flumine")
+        # add execution to clients
+        self.client.add_execution(self)
         # login
         self.client.login()
         # add default and start all workers

@@ -108,15 +108,15 @@ class BetfairExecutionTest(unittest.TestCase):
 
     def test_execute_cancel(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_cancel(None, None)
 
     def test_execute_update(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_update(None, None)
 
     def test_execute_replace(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_replace(None, None)
 
 
 class SimulatedExecutionTest(unittest.TestCase):

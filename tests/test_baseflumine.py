@@ -42,6 +42,36 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
+    def test__process_market_orders(self):
+        mock_market = mock.Mock()
+        mock_market.process_orders.return_value = [1, 2, 3]
+        self.base_flumine._process_market_orders(mock_market)
+        mock_market.process_orders.assert_called_with(self.mock_client)
+
+    def test__process_order_package(self):
+        mock_trading_control = mock.Mock()
+        self.base_flumine._trading_controls = [mock_trading_control]
+        mock_client_trading_control = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.market_id = "1.123"
+        mock_order_package.client.trading_controls = [mock_client_trading_control]
+        self.base_flumine._process_order_package(mock_order_package)
+        mock_order_package.client.execution.handler.assert_called_with(
+            mock_order_package
+        )
+        mock_trading_control.assert_called_with(mock_order_package)
+        mock_client_trading_control.assert_called_with(mock_order_package)
+
+    def test__process_order_package_empty(self):
+        mock_client_trading_control = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.market_id = "1.123"
+        mock_order_package.client.trading_controls = [mock_client_trading_control]
+        mock_order_package.info = {}
+        mock_order_package.orders = []
+        self.base_flumine._process_order_package(mock_order_package)
+        mock_order_package.client.execution.handler.assert_not_called()
+
     @mock.patch("flumine.baseflumine.Market")
     def test__add_live_market(self, mock_market):
         mock_market_book = mock.Mock()

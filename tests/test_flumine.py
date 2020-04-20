@@ -3,6 +3,7 @@ from unittest import mock
 
 from flumine import Flumine
 from flumine.event import event
+from flumine.order.orderpackage import BaseOrderPackage
 
 
 class FlumineTest(unittest.TestCase):
@@ -10,6 +11,7 @@ class FlumineTest(unittest.TestCase):
         self.mock_trading = mock.Mock()
         self.flumine = Flumine(self.mock_trading)
 
+    @mock.patch("flumine.flumine.Flumine._process_order_package")
     @mock.patch("flumine.flumine.Flumine._process_current_orders")
     @mock.patch("flumine.flumine.Flumine._process_end_flumine")
     @mock.patch("flumine.flumine.Flumine._process_market_catalogues")
@@ -22,12 +24,14 @@ class FlumineTest(unittest.TestCase):
         mock__process_market_catalogues,
         mock__process_end_flumine,
         mock__process_current_orders,
+        mock__process_order_package,
     ):
         events = [
             event.MarketCatalogueEvent(None),
             event.MarketBookEvent(None),
             event.RawDataEvent(None),
             event.CurrentOrdersEvent(None),
+            BaseOrderPackage(None, "1.123", [], "12"),
             event.ClearedMarketsEvent(None),
             event.ClearedOrdersEvent(None),
             event.CloseMarketEvent(None),
@@ -45,6 +49,7 @@ class FlumineTest(unittest.TestCase):
         mock__process_market_catalogues.assert_called_with(events[0])
         mock__process_end_flumine.assert_called_with()
         mock__process_current_orders.assert_called_with(events[3])
+        mock__process_order_package.assert_called_with(events[4])
 
     def test__add_default_workers(self):
         self.flumine._add_default_workers()
