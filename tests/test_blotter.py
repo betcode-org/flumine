@@ -1,8 +1,7 @@
 import unittest
-import datetime
 from unittest import mock
 
-from flumine.markets.blotter import Blotter
+from flumine.markets.blotter import Blotter, OrderStatus
 
 
 class BlotterTest(unittest.TestCase):
@@ -12,6 +11,13 @@ class BlotterTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.blotter.market_id, "1.234")
         self.assertEqual(self.blotter._orders, {})
+
+    def test_live_orders(self):
+        self.assertFalse(self.blotter.live_orders)
+        mock_order = mock.Mock()
+        mock_order.status = OrderStatus.EXECUTABLE
+        self.blotter._orders = {"12345": mock_order}
+        self.assertTrue(self.blotter.live_orders)
 
     def test__contains(self):
         self.blotter._orders = {"123": "test"}

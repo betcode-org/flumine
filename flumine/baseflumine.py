@@ -11,6 +11,7 @@ from .markets.markets import Markets
 from .markets.market import Market
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
+from .order.process import process_current_orders
 
 
 logger = logging.getLogger(__name__)
@@ -131,12 +132,14 @@ class BaseFlumine:
                 market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
-        for current_orders in event.event:
-            # todo process_current_orders()
-            print(current_orders)
-            # # todo get orders related to strategy only!
-            # for strategy in self.strategies:
-            #     strategy.process_orders(current_orders)
+        process_current_orders(self.markets, event)
+
+        # for current_orders in event.event:
+        #     # todo process_current_orders()
+        #     print(current_orders)
+        #     # # todo get orders related to strategy only!
+        #     # for strategy in self.strategies:
+        #     #     strategy.process_orders(current_orders)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

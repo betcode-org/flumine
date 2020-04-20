@@ -1,5 +1,7 @@
 import logging
 
+from ..order.order import OrderStatus
+
 logger = logging.getLogger(__name__)
 
 # https://www.betfair.com/aboutUs/Betfair.Charges/#charges6
@@ -10,6 +12,13 @@ class Blotter:
     def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
+
+    @property
+    def live_orders(self) -> bool:
+        for order in self._orders.values():
+            if order.status == OrderStatus.EXECUTABLE:
+                return True
+        return False
 
     """ getters / setters """
 

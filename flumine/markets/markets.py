@@ -28,6 +28,13 @@ class Markets:
     def open_market_ids(self) -> list:
         return list(self.markets.keys())
 
+    @property
+    def live_orders(self) -> bool:
+        for market in self.markets.values():
+            if market.closed is False and market.blotter.live_orders is True:
+                return True
+        return False
+
     def __iter__(self) -> Iterator[Market]:
         return iter(self.markets)
 

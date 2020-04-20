@@ -49,13 +49,12 @@ class OrderStream(BaseStream):
                     block=True, timeout=self.streaming_timeout
                 )
             except queue.Empty:
-                continue
-                # if self.flumine.blotter.live_orders:
-                #     order_books = self._listener.snap(
-                #         market_ids=self.flumine.live_markets.open_markets()
-                #     )
-                # else:
-                #     continue
+                if self.flumine.markets.live_orders:
+                    order_books = self._listener.snap(
+                        market_ids=self.flumine.markets.open_market_ids
+                    )
+                else:
+                    continue
 
             self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 

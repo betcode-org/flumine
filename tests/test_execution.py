@@ -145,17 +145,25 @@ class BetfairExecutionTest(unittest.TestCase):
     def test__order_logger(self):
         mock_order = mock.Mock()
         mock_instruction_report = mock.Mock()
-        self.execution._order_logger(mock_order, mock_instruction_report, OrderPackageType.PLACE)
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
 
-        self.execution._order_logger(mock_order, mock_instruction_report, OrderPackageType.CANCEL)
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
         mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
 
-        self.execution._order_logger(mock_order, mock_instruction_report, OrderPackageType.UPDATE)
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.UPDATE
+        )
         mock_order.responses.updated.assert_called_with(mock_instruction_report)
 
-        self.execution._order_logger(mock_order, mock_instruction_report, OrderPackageType.REPLACE)
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.REPLACE
+        )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.replaced.assert_called_with(mock_instruction_report)
 
