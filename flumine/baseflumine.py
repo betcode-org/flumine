@@ -51,9 +51,6 @@ class BaseFlumine:
         # trading controls
         self._trading_controls = []  # todo register default controls
 
-        # finance blotter
-        self.blotter = None  # todo
-
         # workers
         self._workers = []
 
@@ -82,6 +79,9 @@ class BaseFlumine:
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)
+
+            p = market.process_orders(self.client)
+            print(p)
 
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook

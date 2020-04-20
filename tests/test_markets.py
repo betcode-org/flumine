@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market
+from flumine.markets.market import Market, OrderPackageType
 
 
 class MarketsTest(unittest.TestCase):
@@ -87,9 +87,8 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.closed)
 
     def test_place_order(self):
-        mock_blotter = []
-        self.market.blotter = mock_blotter
         mock_order = mock.Mock()
+        mock_order.id = "123"
         self.market.place_order(mock_order)
         self.assertEqual(self.market._pending_place, [mock_order])
 
@@ -120,6 +119,50 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.market.replace_order(mock_order)
         self.assertEqual(self.market._pending_replace, [mock_order])
+
+    @mock.patch("flumine.markets.market.Market._create_packages")
+    def test_process_orders(self, mock__create_packages):
+        mock_client = mock.Mock()
+        self.market._pending_place = [1]
+        self.assertEqual(
+            self.market.process_orders(mock_client), mock__create_packages().__radd__()
+        )
+        self.market._pending_place = []
+        self.market._pending_cancel = [2]
+        self.assertEqual(
+            self.market.process_orders(mock_client), mock__create_packages().__radd__()
+        )
+        self.market._pending_cancel = []
+        self.market._pending_update = [3]
+        self.assertEqual(
+            self.market.process_orders(mock_client), mock__create_packages().__radd__()
+        )
+        self.market._pending_update = []
+        self.market._pending_replace = [4]
+        self.assertEqual(
+            self.market.process_orders(mock_client), mock__create_packages().__radd__()
+        )
+
+    @mock.patch("flumine.markets.market.BetfairOrderPackage")
+    def test___create_packages(self, mock_cls):
+        mock_client = mock.Mock()
+        mock_order = mock.Mock()
+        mock_orders = [mock_order]
+        packages = self.market._create_packages(
+            mock_client, mock_orders, OrderPackageType.PLACE
+        )
+        self.assertEqual(
+            packages,
+            [
+                mock_cls(
+                    client=None,
+                    market_id=self.market.market_id,
+                    orders=mock_orders,
+                    package_type=OrderPackageType.PLACE,
+                )
+            ],
+        )
+        self.assertEqual(mock_orders, [])
 
     def test_seconds_to_start(self):
         mock_market_catalogue = mock.Mock()

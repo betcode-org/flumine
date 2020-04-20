@@ -1,7 +1,12 @@
 import datetime
+import logging
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
+from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
+from ..utils import chunks
+
+logger = logging.getLogger(__name__)
 
 
 class Market:
@@ -50,6 +55,49 @@ class Market:
 
     def replace_order(self, order) -> None:
         self._pending_replace.append(order)
+
+    # process orders
+    def process_orders(self, client) -> list:
+        packages = []
+        if self._pending_place:
+            packages += self._create_packages(
+                client, self._pending_place, OrderPackageType.PLACE
+            )
+        if self._pending_cancel:
+            packages += self._create_packages(
+                client, self._pending_cancel, OrderPackageType.CANCEL
+            )
+        if self._pending_update:
+            packages += self._create_packages(
+                client, self._pending_update, OrderPackageType.UPDATE
+            )
+        if self._pending_replace:
+            packages += self._create_packages(
+                client, self._pending_replace, OrderPackageType.REPLACE
+            )
+        if packages:
+            logger.info(
+                "%s order packages created" % len(packages),
+                extra={"order_packages": [o.info for o in packages]},
+            )
+        return packages
+
+    def _create_packages(
+        self, client, orders: list, package_type: OrderPackageType
+    ) -> list:
+        packages = []
+        _package_cls = BetfairOrderPackage
+        limit = 100  # todo
+        for chunked_orders in chunks(orders, limit):
+            order_package = _package_cls(
+                client=client,
+                market_id=self.market_id,
+                orders=chunked_orders,
+                package_type=package_type,
+            )
+            packages.append(order_package)
+        orders.clear()
+        return packages
 
     @property
     def seconds_to_start(self):
