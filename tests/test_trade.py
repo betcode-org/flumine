@@ -48,3 +48,14 @@ class TradeTest(unittest.TestCase):
             self.trade.create_order(
                 "BACK", mock_order_type, handicap=1, order=mock_order
             )
+
+    def test_info(self):
+        self.assertEqual(
+            self.trade.info,
+            {
+                "id": self.trade.id,
+                "orders": [],
+                "status": None,
+                "strategy": self.mock_strategy,
+            },
+        )

@@ -42,3 +42,12 @@ class Trade:
         order = order(trade=self, side=side, order_type=order_type, handicap=handicap)
         self.orders.append(order)
         return order
+
+    @property
+    def info(self) -> dict:
+        return {
+            "id": self.id,
+            "strategy": self.strategy,
+            "status": self.status,
+            "orders": [o.id for o in self.orders],
+        }

@@ -1,11 +1,6 @@
 import uuid
 from enum import Enum
 from typing import Iterator
-from betfairlightweight.filters import (
-    cancel_instruction,
-    update_instruction,
-    replace_instruction,
-)
 
 from ..event.event import BaseEvent, EventType, QueueType
 from ..clients.clients import ExchangeType
@@ -64,6 +59,17 @@ class BaseOrderPackage(BaseEvent):
     def orders(self) -> list:
         return [o for o in self._orders if o]
 
+    @property
+    def info(self) -> dict:
+        return {
+            "id": self.id,
+            "client": self.client,
+            "market_id": self.market_id,
+            "orders": [o.id for o in self._orders],
+            "package_type": self.package_type.value,
+            "customer_strategy_ref": self.customer_strategy_ref,
+        }
+
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)
 
@@ -81,30 +87,14 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def cancel_instructions(self):
-        return [order.create_cancel_instruction() for order in self]
         return [
-            cancel_instruction(bet_id=order.bet_id, size_reduction=order.size_reduction)
-            for order in self
-            if order.size_remaining > 0
-        ]
+            order.create_cancel_instruction() for order in self
+        ]  # if order.size_remaining > 0
 
     @property
     def update_instructions(self):
         return [order.create_update_instruction() for order in self]
-        return [
-            update_instruction(
-                bet_id=order.bet_id,
-                new_persistence_type=order.order_type.persistence_type,
-            )
-            for order in self
-            if order.size_remaining > 0
-        ]
 
     @property
     def replace_instructions(self):
         return [order.create_replace_instruction() for order in self]
-        return [
-            replace_instruction(bet_id=order.bet_id, new_price=order.new_price)
-            for order in self
-            if order.size_remaining > 0
-        ]

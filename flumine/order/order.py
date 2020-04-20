@@ -1,10 +1,14 @@
 import uuid
+import logging
 from enum import Enum
 from betfairlightweight import filters
 
 from ..clients.clients import ExchangeType
 from .ordertype import BaseOrderType, OrderTypes
+from .responses import Responses
 from ..exceptions import OrderUpdateError
+
+logger = logging.getLogger(__name__)
 
 
 class OrderStatus(Enum):
@@ -53,6 +57,22 @@ class BaseOrder:
 
         self.bet_id = None
         self._update = {}  # stores cancel/update/replace data
+        self.responses = Responses()  # raw api responses
+
+    # status
+    def _update_status(self, status: OrderStatus) -> None:
+        self.status_log.append(status)
+        self.status = status
+        logger.info("Status update: %s" % self.status, extra=self.info)
+
+    def placing(self) -> None:
+        pass  # return self._update_status(OrderStatus.PENDING)
+
+    def executable(self) -> None:
+        self._update_status(OrderStatus.EXECUTABLE)
+
+    def execution_complete(self) -> None:
+        self._update_status(OrderStatus.EXECUTION_COMPLETE)
 
     # updates
     def place(self) -> None:
@@ -96,6 +116,19 @@ class BaseOrder:
     def id_int(self) -> int:
         return self.id.time  # 18 char int used as unique customerOrderRef
 
+    @property
+    def info(self) -> dict:
+        return {
+            "market_id": self.market_id,
+            "selection_id": self.selection_id,
+            "handicap": self.handicap,
+            "bet_id": self.bet_id,
+            "id_int": self.id_int,
+            "trade": self.trade.info,
+            "status": self.status.value,
+            "status_log": ", ".join([s.value for s in self.status_log]),
+        }
+
 
 class BetfairOrder(BaseOrder):
 
@@ -103,7 +136,7 @@ class BetfairOrder(BaseOrder):
 
     # updates
     def place(self) -> None:
-        pass  # self.placing()
+        self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
