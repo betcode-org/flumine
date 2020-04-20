@@ -14,12 +14,8 @@ logger = logging.getLogger(__name__)
 class OrderStatus(Enum):
     PENDING = "Pending"  # pending exchange processing
     EXECUTABLE = "Executable"  # an order that has a remaining unmatched portion
-    EXECUTION_COMPLETE = (
-        "Execution complete"
-    )  # an order that does not have any remaining unmatched portion
-    EXPIRED = (
-        "Expired"
-    )  # order is no longer available for execution due to its time in force constraint
+    EXECUTION_COMPLETE = "Execution complete"  # an order that does not have any remaining unmatched portion
+    EXPIRED = "Expired"  # order is no longer available for execution due to its time in force constraint
     # Pending
     CANCELLING = "Cancelling"  # waiting for response
     UPDATING = "Updating"  # waiting for response
