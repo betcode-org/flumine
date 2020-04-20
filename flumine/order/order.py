@@ -39,7 +39,7 @@ class BaseOrder:
     EXCHANGE = None
 
     def __init__(self, trade, side: str, order_type: BaseOrderType, handicap: int = 0):
-        self.id = uuid.uuid1()
+        self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
         self.side = side
         self.order_type = order_type
@@ -106,17 +106,13 @@ class BaseOrder:
         return self.market_id, self.selection_id, self.handicap
 
     @property
-    def id_int(self) -> int:
-        return self.id.time  # 18 char int used as unique customerOrderRef
-
-    @property
     def info(self) -> dict:
         return {
             "market_id": self.market_id,
             "selection_id": self.selection_id,
             "handicap": self.handicap,
+            "id": self.id,
             "bet_id": self.bet_id,
-            "id_int": self.id_int,
             "trade": self.trade.info,
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
@@ -172,7 +168,7 @@ class BetfairOrder(BaseOrder):
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             return filters.place_instruction(
-                customer_order_ref=str(self.id_int),
+                customer_order_ref=self.id,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,
@@ -181,7 +177,7 @@ class BetfairOrder(BaseOrder):
             )
         elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
             return filters.place_instruction(
-                customer_order_ref=str(self.id_int),
+                customer_order_ref=self.id,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,
@@ -190,7 +186,7 @@ class BetfairOrder(BaseOrder):
             )
         elif self.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
             return filters.place_instruction(
-                customer_order_ref=str(self.id_int),
+                customer_order_ref=self.id,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,

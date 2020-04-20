@@ -98,29 +98,27 @@ class BaseStrategy:
         market_context = self._invested.get(order.market_id)
         if market_context is None:
             self._invested[order.market_id] = market_context = {}
-
         runner_context = market_context.get(order.selection_id)
         if runner_context is None:
             market_context[order.selection_id] = runner_context = RunnerContext(
                 order.selection_id
             )
-
         if self.validate_order(runner_context, order):
             runner_context.place()
             order.place()
-            market.blotter_market.place_order(order)
+            market.place_order(order)
 
     def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
         order.cancel(size_reduction)
-        market.blotter_market.cancel_order(order)
+        market.cancel_order(order)
 
     def update_order(self, market: Market, order, new_persistence_type: str) -> None:
         order.update(new_persistence_type)
-        market.blotter_market.update_order(order)
+        market.update_order(order)
 
     def replace_order(self, market: Market, order, new_price: float) -> None:
         order.replace(new_price)
-        market.blotter_market.replace_order(order)
+        market.replace_order(order)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # todo multi/count

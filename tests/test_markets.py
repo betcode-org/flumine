@@ -63,16 +63,20 @@ class MarketTest(unittest.TestCase):
         self.mock_market_book = mock.Mock()
         self.market = Market("1.234", self.mock_market_book)
 
+    def test_init(self):
+        self.assertEqual(self.market.market_id, "1.234")
+        self.assertEqual(self.market.market_book, self.mock_market_book)
+        self.assertFalse(self.market.closed)
+        self.assertEqual(self.market._pending_place, [])
+        self.assertEqual(self.market._pending_cancel, [])
+        self.assertEqual(self.market._pending_update, [])
+        self.assertEqual(self.market._pending_replace, [])
+
     def test_call(self):
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
 
         self.assertEqual(self.market.market_book, mock_market_book)
-
-    def test_init(self):
-        self.assertEqual(self.market.market_id, "1.234")
-        self.assertEqual(self.market.market_book, self.mock_market_book)
-        self.assertFalse(self.market.closed)
 
     def test_open_market(self):
         self.market.open_market()
@@ -81,6 +85,41 @@ class MarketTest(unittest.TestCase):
     def test_close_market(self):
         self.market.close_market()
         self.assertTrue(self.market.closed)
+
+    def test_place_order(self):
+        mock_blotter = []
+        self.market.blotter = mock_blotter
+        mock_order = mock.Mock()
+        self.market.place_order(mock_order)
+        self.assertEqual(self.market._pending_place, [mock_order])
+
+    def test_place_order_retry(self):
+        mock_order = mock.Mock()
+        mock_blotter = [mock_order.id]
+        self.market.blotter = mock_blotter
+        self.market.place_order(mock_order)
+        self.assertEqual(self.market._pending_place, [])
+
+    def test_cancel_order(self):
+        mock_blotter = []
+        self.market.blotter = mock_blotter
+        mock_order = mock.Mock()
+        self.market.cancel_order(mock_order)
+        self.assertEqual(self.market._pending_cancel, [mock_order])
+
+    def test_update_order(self):
+        mock_blotter = []
+        self.market.blotter = mock_blotter
+        mock_order = mock.Mock()
+        self.market.update_order(mock_order)
+        self.assertEqual(self.market._pending_update, [mock_order])
+
+    def test_replace_order(self):
+        mock_blotter = []
+        self.market.blotter = mock_blotter
+        mock_order = mock.Mock()
+        self.market.replace_order(mock_order)
+        self.assertEqual(self.market._pending_replace, [mock_order])
 
     def test_seconds_to_start(self):
         mock_market_catalogue = mock.Mock()

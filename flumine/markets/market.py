@@ -1,6 +1,8 @@
 import datetime
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
+from .blotter import Blotter
+
 
 class Market:
     def __init__(
@@ -14,6 +16,13 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
 
+        self.blotter = Blotter(market_id)
+        # pending orders
+        self._pending_place = []
+        self._pending_cancel = []
+        self._pending_update = []
+        self._pending_replace = []
+
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book
         # todo middleware?
@@ -23,6 +32,24 @@ class Market:
 
     def close_market(self) -> None:
         self.closed = True
+
+    # order
+    def place_order(self, order) -> None:
+        if order.id not in self.blotter:
+            self.blotter[order.id] = order
+            # todo log trade?
+        else:
+            return  # retry attempt so ignore?
+        self._pending_place.append(order)
+
+    def cancel_order(self, order) -> None:
+        self._pending_cancel.append(order)
+
+    def update_order(self, order) -> None:
+        self._pending_update.append(order)
+
+    def replace_order(self, order) -> None:
+        self._pending_replace.append(order)
 
     @property
     def seconds_to_start(self):

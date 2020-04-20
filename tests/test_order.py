@@ -93,9 +93,6 @@ class BaseOrderTest(unittest.TestCase):
             (self.mock_trade.market_id, self.mock_trade.selection_id, 1),
         )
 
-    def test_id_int(self):
-        self.assertEqual(self.order.id_int, self.order.id.time)
-
     def test_info(self):
         self.order.status_log = [OrderStatus.PENDING, OrderStatus.LAPSED]
         self.assertEqual(
@@ -103,7 +100,7 @@ class BaseOrderTest(unittest.TestCase):
             {
                 "bet_id": None,
                 "handicap": 1,
-                "id_int": self.order.id_int,
+                "id": self.order.id,
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
                 "status": None,
@@ -167,7 +164,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": str(self.order.id_int),
+                "customerOrderRef": self.order.id,
                 "handicap": 0,
                 "limitOrder": self.mock_order_type.place_instruction(),
                 "orderType": "LIMIT",
@@ -179,7 +176,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": str(self.order.id_int),
+                "customerOrderRef": self.order.id,
                 "handicap": 0,
                 "limitOnCloseOrder": self.mock_order_type.place_instruction(),
                 "orderType": "LIMIT_ON_CLOSE",
@@ -191,7 +188,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": str(self.order.id_int),
+                "customerOrderRef": self.order.id,
                 "handicap": 0,
                 "marketOnCloseOrder": self.mock_order_type.place_instruction(),
                 "orderType": "MARKET_ON_CLOSE",

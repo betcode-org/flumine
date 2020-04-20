@@ -126,7 +126,7 @@ class BaseStrategyTest(unittest.TestCase):
         mock_market = mock.Mock()
         self.strategy.place_order(mock_market, mock_order)
         mock_order.place.assert_called_with()
-        mock_market.blotter_market.place_order.assert_called_with(mock_order)
+        mock_market.place_order.assert_called_with(mock_order)
         self.assertIn(mock_order.market_id, self.strategy._invested)
 
     def test_cancel_order(self):
@@ -134,21 +134,21 @@ class BaseStrategyTest(unittest.TestCase):
         mock_market = mock.Mock()
         self.strategy.cancel_order(mock_market, mock_order, 0.01)
         mock_order.cancel.assert_called_with(0.01)
-        mock_market.blotter_market.cancel_order.assert_called_with(mock_order)
+        mock_market.cancel_order.assert_called_with(mock_order)
 
     def test_update_order(self):
         mock_order = mock.Mock()
         mock_market = mock.Mock()
         self.strategy.update_order(mock_market, mock_order, "PERSIST")
         mock_order.update.assert_called_with("PERSIST")
-        mock_market.blotter_market.update_order.assert_called_with(mock_order)
+        mock_market.update_order.assert_called_with(mock_order)
 
     def test_replace_order(self):
         mock_order = mock.Mock()
         mock_market = mock.Mock()
         self.strategy.replace_order(mock_market, mock_order, 1.01)
         mock_order.replace.assert_called_with(1.01)
-        mock_market.blotter_market.replace_order.assert_called_with(mock_order)
+        mock_market.replace_order.assert_called_with(mock_order)
 
     def test_validate_order(self):
         mock_order = mock.Mock()
