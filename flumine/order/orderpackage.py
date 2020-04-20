@@ -29,7 +29,12 @@ class BaseOrderPackage(BaseEvent):
     EXCHANGE = None
 
     def __init__(
-        self, client, market_id: str, orders: list, package_type: OrderPackageType
+        self,
+        client,
+        market_id: str,
+        orders: list,
+        package_type: OrderPackageType,
+        market_version: dict = None,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid1()
@@ -37,7 +42,14 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
+        self.market_version = market_version  # todo integrate
+        self.async_ = False
+
         self.customer_strategy_ref = config.hostname
+        self.place_customer_ref = uuid.uuid1()
+        self.cancel_customer_ref = uuid.uuid1()
+        self.update_customer_ref = uuid.uuid1()
+        self.replace_customer_ref = uuid.uuid1()
 
     @property
     def place_instructions(self) -> dict:

@@ -15,8 +15,13 @@ class OrderPackageTest(unittest.TestCase):
         self.mock_package_type = mock.Mock()
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
+        self.market_version = {"version": 123456}
         self.order_package = BaseOrderPackage(
-            self.mock_client, "1.234", [self.mock_order], self.mock_package_type
+            self.mock_client,
+            "1.234",
+            [self.mock_order],
+            self.mock_package_type,
+            self.market_version,
         )
 
     def test_init(self):
@@ -26,7 +31,13 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.package_type, self.mock_package_type)
         self.assertEqual(self.order_package.EVENT_TYPE, EventType.ORDER_PACKAGE)
         self.assertEqual(self.order_package.QUEUE_TYPE, QueueType.HANDLER)
+        self.assertEqual(self.order_package.market_version, self.market_version)
         self.assertIsNone(self.order_package.EXCHANGE)
+        self.assertFalse(self.order_package.async_)
+        self.assertIsNotNone(self.order_package.place_customer_ref)
+        self.assertIsNotNone(self.order_package.cancel_customer_ref)
+        self.assertIsNotNone(self.order_package.update_customer_ref)
+        self.assertIsNotNone(self.order_package.replace_customer_ref)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):
