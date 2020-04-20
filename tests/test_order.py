@@ -1,7 +1,8 @@
 import unittest
 from unittest import mock
 
-from flumine.order.order import BaseOrder, BetfairOrder, ExchangeType
+from flumine.order.order import BaseOrder, BetfairOrder, ExchangeType, OrderTypes
+from flumine.exceptions import OrderUpdateError
 
 
 class BaseOrderTest(unittest.TestCase):
@@ -24,6 +25,38 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
 
+    def test_place(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.place()
+
+    def test_cancel(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.cancel()
+
+    def test_update(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.update("PERSIST")
+
+    def test_replace(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.replace(20.0)
+
+    def test_create_place_instruction(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.create_place_instruction()
+
+    def test_create_cancel_instruction(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.create_cancel_instruction()
+
+    def test_create_update_instruction(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.create_update_instruction()
+
+    def test_create_replace_instruction(self):
+        with self.assertRaises(NotImplementedError):
+            self.order.create_replace_instruction()
+
     def test_market_id(self):
         self.assertEqual(self.order.market_id, self.mock_trade.market_id)
 
@@ -45,9 +78,110 @@ class BetfairOrderTest(unittest.TestCase):
         self.mock_trade = mock.Mock()
         self.mock_status = mock.Mock()
         self.mock_order_type = mock.Mock()
-        self.order = BetfairOrder(
-            self.mock_trade, "BACK", self.mock_order_type, self.mock_status
-        )
+        self.order = BetfairOrder(self.mock_trade, "BACK", self.mock_order_type)
 
     def test_init(self):
         self.assertEqual(self.order.EXCHANGE, ExchangeType.BETFAIR)
+
+    def test_place(self):
+        self.order.place()
+
+    def test_cancel(self):
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.cancel(0.01)
+        self.assertEqual(
+            self.order._update,
+            {"size_reduction": 0.01}
+        )
+        self.order.cancel()
+        self.assertEqual(
+            self.order._update,
+            {"size_reduction": None}
+        )
+
+    def test_update(self):
+        with self.assertRaises(OrderUpdateError):
+            self.order.update("PERSIST")
+
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.persistence_type = "LAPSE"
+        self.order.update("PERSIST")
+        self.assertEqual(
+            self.mock_order_type.persistence_type,
+            "PERSIST"
+        )
+
+        with self.assertRaises(OrderUpdateError):
+            self.order.update("PERSIST")
+
+    def test_replace(self):
+        with self.assertRaises(OrderUpdateError):
+            self.order.replace(1.01)
+
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.price = 2.02
+        self.order.replace(1.01)
+        self.assertEqual(
+            self.order._update,
+            {"new_price": 1.01}
+        )
+
+        with self.assertRaises(OrderUpdateError):
+            self.order.replace(2.02)
+
+    def test_create_place_instruction(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.assertEqual(
+            self.order.create_place_instruction(),
+            {
+                "customerOrderRef": str(self.order.id_int),
+                "handicap": 0,
+                "limitOrder": self.mock_order_type.place_instruction(),
+                "orderType": "LIMIT",
+                "selectionId": self.mock_trade.selection_id,
+                "side": "BACK",
+            },
+        )
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        self.assertEqual(
+            self.order.create_place_instruction(),
+            {
+                "customerOrderRef": str(self.order.id_int),
+                "handicap": 0,
+                "limitOnCloseOrder": self.mock_order_type.place_instruction(),
+                "orderType": "LIMIT_ON_CLOSE",
+                "selectionId": self.mock_trade.selection_id,
+                "side": "BACK",
+            },
+        )
+        self.mock_order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        self.assertEqual(
+            self.order.create_place_instruction(),
+            {
+                "customerOrderRef": str(self.order.id_int),
+                "handicap": 0,
+                "marketOnCloseOrder": self.mock_order_type.place_instruction(),
+                "orderType": "MARKET_ON_CLOSE",
+                "selectionId": self.mock_trade.selection_id,
+                "side": "BACK",
+            },
+        )
+
+    def test_create_cancel_instruction(self):
+        self.order._update = {"size_reduction": 0.02}
+        self.assertEqual(
+            self.order.create_cancel_instruction(), {"sizeReduction": 0.02}
+        )
+
+    def test_create_update_instruction(self):
+        self.mock_order_type.persistence_type = "PERSIST"
+        self.assertEqual(self.order.create_update_instruction(), {"newPersistenceType": "PERSIST"})
+
+    def test_create_replace_instruction(self):
+        self.order._update = {"new_price": 2.02}
+        self.assertEqual(
+            self.order.create_replace_instruction(), {"newPrice": 2.02}
+        )

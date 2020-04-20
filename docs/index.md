@@ -65,15 +65,15 @@ from betfairlightweight.resources import MarketBook
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self):
+    def start(self) -> None:
         print("starting strategy 'ExampleStrategy'")
 
-    def check_market_book(self, market: Market, market_book: MarketBook):
+    def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
 
-    def process_market_book(self, market: Market, market_book: MarketBook):
+    def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook object
         for runner in market_book.runners:
             if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
@@ -90,12 +90,13 @@ class ExampleStrategy(BaseStrategy):
 
     def process_orders(self, market: Market, orders: list) -> None:
         for order in orders:
-            if order.status == OrderStatus.EXECUTABLE and order.size_remaining == 2.00:
-                self.cancel_order(order, 0.02)  # reduce size
-            if order.status == OrderStatus.EXECUTABLE and order.order_type.persistence_type == 'LAPSE':
-                self.update_order(order, 'PERSIST')
-            if order.status == OrderStatus.EXECUTABLE and order.size_remaining > 0:
-                self.replace_order(order, 1.02)  # move
+            if order.status == OrderStatus.EXECUTABLE:
+                if order.size_remaining == 2.00:
+                    self.cancel_order(order, 0.02)  # reduce size to 1.98
+                if order.order_type.persistence_type == 'LAPSE':
+                    self.update_order(order, 'PERSIST')
+                if order.size_remaining > 0:
+                    self.replace_order(order, 1.02)  # move
 
 
 strategy = ExampleStrategy(

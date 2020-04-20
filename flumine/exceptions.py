@@ -18,3 +18,12 @@ class OrderError(FlumineException):
 
     def __init__(self, message):
         super(OrderError, self).__init__(message)
+
+
+class OrderUpdateError(FlumineException):
+    """Exception raised if order update
+    incorrect.
+    """
+
+    def __init__(self, message):
+        super(OrderUpdateError, self).__init__(message)

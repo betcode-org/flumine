@@ -1,8 +1,10 @@
 import uuid
 from enum import Enum
+from betfairlightweight import filters
 
 from ..clients.clients import ExchangeType
-from .ordertype import BaseOrderType
+from .ordertype import BaseOrderType, OrderTypes
+from ..exceptions import OrderUpdateError
 
 
 class OrderStatus(Enum):
@@ -50,6 +52,33 @@ class BaseOrder:
         self.status_log = [status]
 
         self.bet_id = None
+        self._update = {}  # stores cancel/update/replace data
+
+    # updates
+    def place(self) -> None:
+        raise NotImplementedError
+
+    def cancel(self, size_reduction: float = None) -> None:
+        raise NotImplementedError
+
+    def update(self, new_persistence_type: str) -> None:
+        raise NotImplementedError
+
+    def replace(self, new_price: float) -> None:
+        raise NotImplementedError
+
+    # instructions
+    def create_place_instruction(self) -> dict:
+        raise NotImplementedError
+
+    def create_cancel_instruction(self) -> dict:
+        raise NotImplementedError
+
+    def create_update_instruction(self) -> dict:
+        raise NotImplementedError
+
+    def create_replace_instruction(self) -> dict:
+        raise NotImplementedError
 
     @property
     def market_id(self) -> str:
@@ -71,3 +100,89 @@ class BaseOrder:
 class BetfairOrder(BaseOrder):
 
     EXCHANGE = ExchangeType.BETFAIR
+
+    # updates
+    def place(self) -> None:
+        pass  # self.placing()
+
+    def cancel(self, size_reduction: float = None) -> None:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            # if size_reduction and self.size_remaining - size_reduction < 0:
+            #     raise OrderUpdateError("Size reduction too large")
+            # elif self.status in FLUX_STATUS:
+            #     raise OrderUpdateError("Current status: %s" % self.status)
+            self._update["size_reduction"] = size_reduction
+            # self.cancelling()
+        else:
+            raise OrderUpdateError(
+                "Only LIMIT orders can be cancelled or partially cancelled once placed."
+            )
+
+    def update(self, new_persistence_type: str) -> None:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.order_type.persistence_type == new_persistence_type:
+                raise OrderUpdateError("Persistence types match")
+            # elif self.status in FLUX_STATUS:
+            #     raise OrderUpdateError("Current status: %s" % self.status)
+            self.order_type.persistence_type = new_persistence_type
+            # self.updating()
+        else:
+            raise OrderUpdateError("Only LIMIT orders can be updated.")
+
+    def replace(self, new_price: float) -> None:
+        if self.order_type.ORDER_TYPE in [OrderTypes.LIMIT, OrderTypes.LIMIT_ON_CLOSE]:
+            if self.order_type.price == new_price:
+                raise OrderUpdateError("Prices match")
+            # elif self.status in FLUX_STATUS:
+            #     raise OrderUpdateError("Current status: %s" % self.status)
+            self._update["new_price"] = new_price
+            # self.replacing()
+        else:
+            raise OrderUpdateError(
+                "Only LIMIT or LIMIT_ON_CLOSE orders can be replaced."
+            )
+
+    # instructions
+    def create_place_instruction(self) -> dict:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            return filters.place_instruction(
+                customer_order_ref=str(self.id_int),
+                selection_id=self.selection_id,
+                side=self.side,
+                order_type=self.order_type.ORDER_TYPE.name,
+                limit_order=self.order_type.place_instruction(),
+                handicap=self.handicap,
+            )
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
+            return filters.place_instruction(
+                customer_order_ref=str(self.id_int),
+                selection_id=self.selection_id,
+                side=self.side,
+                order_type=self.order_type.ORDER_TYPE.name,
+                limit_on_close_order=self.order_type.place_instruction(),
+                handicap=self.handicap,
+            )
+        elif self.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+            return filters.place_instruction(
+                customer_order_ref=str(self.id_int),
+                selection_id=self.selection_id,
+                side=self.side,
+                order_type=self.order_type.ORDER_TYPE.name,
+                market_on_close_order=self.order_type.place_instruction(),
+                handicap=self.handicap,
+            )
+
+    def create_cancel_instruction(self) -> dict:
+        return filters.cancel_instruction(
+            bet_id=self.bet_id, size_reduction=self._update.get("size_reduction")
+        )
+
+    def create_update_instruction(self) -> dict:
+        return filters.update_instruction(
+            bet_id=self.bet_id, new_persistence_type=self.order_type.persistence_type
+        )
+
+    def create_replace_instruction(self) -> dict:
+        return filters.replace_instruction(
+            bet_id=self.bet_id, new_price=self._update["new_price"]
+        )

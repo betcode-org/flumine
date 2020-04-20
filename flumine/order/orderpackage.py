@@ -27,6 +27,8 @@ class BaseOrderPackage(BaseEvent):
     temporary to allow execution
     """
 
+    # todo client/retry/limits/._orders->orders (violation)
+
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
     EXCHANGE = None
@@ -38,7 +40,7 @@ class BaseOrderPackage(BaseEvent):
         self.id = uuid.uuid1()
         self.client = client
         self.market_id = market_id
-        self.orders = orders
+        self._orders = orders
         self.package_type = package_type
         self.customer_strategy_ref = config.hostname
 
@@ -58,6 +60,10 @@ class BaseOrderPackage(BaseEvent):
     def replace_instructions(self) -> dict:
         raise NotImplementedError
 
+    @property
+    def orders(self) -> list:
+        return [o for o in self._orders if o]
+
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)
 
@@ -71,10 +77,11 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def place_instructions(self):
-        return [order.create_place_instructions() for order in self]
+        return [order.create_place_instruction() for order in self]
 
     @property
     def cancel_instructions(self):
+        return [order.create_cancel_instruction() for order in self]
         return [
             cancel_instruction(bet_id=order.bet_id, size_reduction=order.size_reduction)
             for order in self
@@ -83,6 +90,7 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def update_instructions(self):
+        return [order.create_update_instruction() for order in self]
         return [
             update_instruction(
                 bet_id=order.bet_id,
@@ -94,6 +102,7 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def replace_instructions(self):
+        return [order.create_replace_instruction() for order in self]
         return [
             replace_instruction(bet_id=order.bet_id, new_price=order.new_price)
             for order in self
