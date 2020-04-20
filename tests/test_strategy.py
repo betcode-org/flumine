@@ -121,6 +121,43 @@ class BaseStrategyTest(unittest.TestCase):
     def test_finish(self):
         self.strategy.finish()
 
+    def test_place_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.place_order(mock_market, mock_order)
+        mock_order.place.assert_called_with()
+        mock_market.blotter_market.place_order.assert_called_with(mock_order)
+        self.assertIn(mock_order.market_id, self.strategy._invested)
+
+    def test_cancel_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.cancel_order(mock_market, mock_order, 0.01)
+        mock_order.cancel.assert_called_with(0.01)
+        mock_market.blotter_market.cancel_order.assert_called_with(mock_order)
+
+    def test_update_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.update_order(mock_market, mock_order, "PERSIST")
+        mock_order.update.assert_called_with("PERSIST")
+        mock_market.blotter_market.update_order.assert_called_with(mock_order)
+
+    def test_replace_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.replace_order(mock_market, mock_order, 1.01)
+        mock_order.replace.assert_called_with(1.01)
+        mock_market.blotter_market.replace_order.assert_called_with(mock_order)
+
+    def test_validate_order(self):
+        mock_order = mock.Mock()
+        runner_context = mock.Mock()
+        runner_context.invested = False
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
+        runner_context.invested = True
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+
     def test_stream_ids(self):
         mock_stream = mock.Mock()
         mock_stream.stream_id = 321

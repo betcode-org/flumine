@@ -38,22 +38,15 @@ class BaseOrder:
 
     EXCHANGE = None
 
-    def __init__(
-        self,
-        trade,
-        side: str,
-        order_type: BaseOrderType,
-        handicap: int = 0,
-        status: OrderStatus = OrderStatus.PENDING,
-    ):
+    def __init__(self, trade, side: str, order_type: BaseOrderType, handicap: int = 0):
         self.id = uuid.uuid1()
         self.trade = trade
         self.side = side
         self.order_type = order_type
         self.handicap = handicap
 
-        self.status = status
-        self.status_log = [status]
+        self.status = None
+        self.status_log = []
 
         self.bet_id = None
         self._update = {}  # stores cancel/update/replace data
@@ -63,10 +56,10 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
-        logger.info("Status update: %s" % self.status, extra=self.info)
+        logger.info("Order status update: %s" % self.status.value, extra=self.info)
 
     def placing(self) -> None:
-        pass  # return self._update_status(OrderStatus.PENDING)
+        self._update_status(OrderStatus.PENDING)
 
     def executable(self) -> None:
         self._update_status(OrderStatus.EXECUTABLE)
@@ -125,7 +118,7 @@ class BaseOrder:
             "bet_id": self.bet_id,
             "id_int": self.id_int,
             "trade": self.trade.info,
-            "status": self.status.value,
+            "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
         }
 

@@ -94,8 +94,19 @@ class BaseStrategy:
 
     # order
     def place_order(self, market: Market, order) -> None:
-        print(market, order)
-        if self.validate_order(market, order):
+        # get context
+        market_context = self._invested.get(order.market_id)
+        if market_context is None:
+            self._invested[order.market_id] = market_context = {}
+
+        runner_context = market_context.get(order.selection_id)
+        if runner_context is None:
+            market_context[order.selection_id] = runner_context = RunnerContext(
+                order.selection_id
+            )
+
+        if self.validate_order(runner_context, order):
+            runner_context.place()
             order.place()
             market.blotter_market.place_order(order)
 
@@ -111,9 +122,12 @@ class BaseStrategy:
         order.replace(new_price)
         market.blotter_market.replace_order(order)
 
-    def validate_order(self, market: Market, order):
-        # get context
-        pass
+    def validate_order(self, runner_context: RunnerContext, order) -> bool:
+        # todo multi/count
+        if runner_context.invested:
+            return False
+        else:
+            return True
 
     @property
     def stream_ids(self) -> list:

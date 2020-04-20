@@ -14,11 +14,8 @@ from flumine.exceptions import OrderUpdateError
 class BaseOrderTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_trade = mock.Mock()
-        self.mock_status = OrderStatus.PENDING
         self.mock_order_type = mock.Mock()
-        self.order = BaseOrder(
-            self.mock_trade, "BACK", self.mock_order_type, 1, self.mock_status
-        )
+        self.order = BaseOrder(self.mock_trade, "BACK", self.mock_order_type, 1)
 
     def test_init(self):
         self.assertIsNotNone(self.order.id)
@@ -26,22 +23,21 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order.side, "BACK")
         self.assertEqual(self.order.order_type, self.mock_order_type)
         self.assertEqual(self.order.handicap, 1)
-        self.assertEqual(self.order.status, self.mock_status)
-        self.assertEqual(self.order.status_log, [self.mock_status])
+        self.assertIsNone(self.order.status)
+        self.assertEqual(self.order.status_log, [])
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order._update, {})
 
     def test__update_status(self):
         self.order._update_status(OrderStatus.LAPSED)
-        self.assertEqual(
-            self.order.status_log, [OrderStatus.PENDING, OrderStatus.LAPSED]
-        )
+        self.assertEqual(self.order.status_log, [OrderStatus.LAPSED])
         self.assertEqual(self.order.status, OrderStatus.LAPSED)
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
         self.order.placing()
+        mock__update_status.assert_called_with(OrderStatus.PENDING)
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_executable(self, mock__update_status):
@@ -110,7 +106,7 @@ class BaseOrderTest(unittest.TestCase):
                 "id_int": self.order.id_int,
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
-                "status": self.mock_status.value,
+                "status": None,
                 "status_log": "Pending, Lapsed",
                 "trade": self.mock_trade.info,
             },
