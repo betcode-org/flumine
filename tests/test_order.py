@@ -31,9 +31,9 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order._update, {})
 
     def test__update_status(self):
-        self.order._update_status(OrderStatus.LAPSED)
-        self.assertEqual(self.order.status_log, [OrderStatus.LAPSED])
-        self.assertEqual(self.order.status, OrderStatus.LAPSED)
+        self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
+        self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
+        self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
@@ -116,7 +116,7 @@ class BaseOrderTest(unittest.TestCase):
         )
 
     def test_info(self):
-        self.order.status_log = [OrderStatus.PENDING, OrderStatus.LAPSED]
+        self.order.status_log = [OrderStatus.PENDING, OrderStatus.EXECUTION_COMPLETE]
         self.assertEqual(
             self.order.info,
             {
@@ -126,7 +126,7 @@ class BaseOrderTest(unittest.TestCase):
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
                 "status": None,
-                "status_log": "Pending, Lapsed",
+                "status_log": "Pending, Execution complete",
                 "trade": self.mock_trade.info,
             },
         )
@@ -149,6 +149,7 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.cancelling")
     def test_cancel(self, mock_cancelling):
+        self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.cancel(12)
 
@@ -159,8 +160,15 @@ class BetfairOrderTest(unittest.TestCase):
         self.order.cancel()
         self.assertEqual(self.order._update, {"size_reduction": None})
 
+    def test_cancel_error(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
     @mock.patch("flumine.order.order.BetfairOrder.updating")
     def test_update(self, mock_updating):
+        self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
 
@@ -173,8 +181,16 @@ class BetfairOrderTest(unittest.TestCase):
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
 
+    def test_update_error(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.persistence_type = "LAPSE"
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.update("PERSIST")
+
     @mock.patch("flumine.order.order.BetfairOrder.replacing")
     def test_replace(self, mock_replacing):
+        self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.replace(1.01)
 
@@ -186,6 +202,12 @@ class BetfairOrderTest(unittest.TestCase):
 
         with self.assertRaises(OrderUpdateError):
             self.order.replace(2.02)
+
+    def test_replace_error(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.replace(1.52)
 
     def test_create_place_instruction(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT

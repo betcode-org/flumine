@@ -22,13 +22,13 @@ class OrderStatus(Enum):
     UPDATING = "Updating"  # waiting for response
     REPLACING = "Replacing"  # waiting for response
     # Completed
-    CANCELLED = "Cancelled"
-    OFFSET = "Offset"
-    GREENING = "Greening"
-    STOPPED = "Stopped"
-    VIOLATION = "Violation"
-    VOIDED = "Voided"
-    LAPSED = "Lapsed"
+    # CANCELLED = "Cancelled"
+    # OFFSET = "Offset"
+    # GREENING = "Greening"
+    # STOPPED = "Stopped"
+    # VIOLATION = "Violation"
+    # VOIDED = "Voided"
+    # LAPSED = "Lapsed"
 
 
 class BaseOrder:
@@ -143,8 +143,8 @@ class BetfairOrder(BaseOrder):
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             # if size_reduction and self.size_remaining - size_reduction < 0:
             #     raise OrderUpdateError("Size reduction too large")
-            # elif self.status in FLUX_STATUS:
-            #     raise OrderUpdateError("Current status: %s" % self.status)
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
             self._update["size_reduction"] = size_reduction
             self.cancelling()
         else:
@@ -156,8 +156,8 @@ class BetfairOrder(BaseOrder):
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if self.order_type.persistence_type == new_persistence_type:
                 raise OrderUpdateError("Persistence types match")
-            # elif self.status in FLUX_STATUS:
-            #     raise OrderUpdateError("Current status: %s" % self.status)
+            elif self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
             self.order_type.persistence_type = new_persistence_type
             self.updating()
         else:
@@ -167,8 +167,8 @@ class BetfairOrder(BaseOrder):
         if self.order_type.ORDER_TYPE in [OrderTypes.LIMIT, OrderTypes.LIMIT_ON_CLOSE]:
             if self.order_type.price == new_price:
                 raise OrderUpdateError("Prices match")
-            # elif self.status in FLUX_STATUS:
-            #     raise OrderUpdateError("Current status: %s" % self.status)
+            elif self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
             self._update["new_price"] = new_price
             self.replacing()
         else:
