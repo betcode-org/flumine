@@ -5,6 +5,7 @@ from betfairlightweight import BetfairError
 from .baseexecution import BaseExecution
 from ..clients.clients import ExchangeType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
+from ..exceptions import OrderExecutionError
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,42 @@ class BetfairExecution(BaseExecution):
     def execute_cancel(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        raise NotImplementedError
+        cancel_response = self._execution_helper(
+            self.cancel, order_package, http_session
+        )
+        if cancel_response:
+            logger.info(
+                "execute_cancel",
+                extra={**order_package.info, **{"response": cancel_response._data}},
+            )
+            order_lookup = {o.bet_id: o for o in order_package}
+            for instruction_report in cancel_response.cancel_instruction_reports:
+                # get order (can't rely on order they are returned)
+                order = order_lookup.pop(instruction_report.instruction.bet_id)
+                self._order_logger(order, instruction_report, OrderPackageType.CANCEL)
+
+                if instruction_report.status == "SUCCESS":
+                    order.execution_complete()
+                elif instruction_report.status == "FAILURE":
+                    order.executable()
+                elif instruction_report.status == "TIMEOUT":
+                    order.executable()
+
+            # reset any not returned so that they can be picked back up
+            for order in order_lookup.values():
+                order.executable()
+
+    def cancel(self, order_package, session):
+        cancel_instructions = list(order_package.cancel_instructions)  # temp copy
+        if not cancel_instructions:
+            logger.warning("Empty cancel_instructions", extra=order_package.info)
+            raise OrderExecutionError()
+        return order_package.client.betting_client.betting.cancel_orders(
+            market_id=order_package.market_id,
+            instructions=cancel_instructions,
+            customer_ref=order_package.cancel_customer_ref.hex,
+            session=session,
+        )
 
     def execute_update(
         self, order_package: BaseOrderPackage, http_session: requests.Session

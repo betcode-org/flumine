@@ -1,5 +1,6 @@
 import uuid
 import logging
+import datetime
 from enum import Enum
 from betfairlightweight import filters
 
@@ -63,6 +64,15 @@ class BaseOrder:
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
 
+    def cancelling(self) -> None:
+        self._update_status(OrderStatus.CANCELLING)
+
+    def updating(self) -> None:
+        self._update_status(OrderStatus.UPDATING)
+
+    def replacing(self) -> None:
+        self._update_status(OrderStatus.REPLACING)
+
     # updates
     def place(self) -> None:
         raise NotImplementedError
@@ -88,6 +98,12 @@ class BaseOrder:
 
     def create_replace_instruction(self) -> dict:
         raise NotImplementedError
+
+    @property
+    def elapsed_seconds(self):
+        return (
+            datetime.datetime.utcnow() - self.responses.date_time_placed
+        ).total_seconds()
 
     @property
     def market_id(self) -> str:
@@ -130,7 +146,7 @@ class BetfairOrder(BaseOrder):
             # elif self.status in FLUX_STATUS:
             #     raise OrderUpdateError("Current status: %s" % self.status)
             self._update["size_reduction"] = size_reduction
-            # self.cancelling()
+            self.cancelling()
         else:
             raise OrderUpdateError(
                 "Only LIMIT orders can be cancelled or partially cancelled once placed."
@@ -143,7 +159,7 @@ class BetfairOrder(BaseOrder):
             # elif self.status in FLUX_STATUS:
             #     raise OrderUpdateError("Current status: %s" % self.status)
             self.order_type.persistence_type = new_persistence_type
-            # self.updating()
+            self.updating()
         else:
             raise OrderUpdateError("Only LIMIT orders can be updated.")
 
@@ -154,7 +170,7 @@ class BetfairOrder(BaseOrder):
             # elif self.status in FLUX_STATUS:
             #     raise OrderUpdateError("Current status: %s" % self.status)
             self._update["new_price"] = new_price
-            # self.replacing()
+            self.replacing()
         else:
             raise OrderUpdateError(
                 "Only LIMIT or LIMIT_ON_CLOSE orders can be replaced."

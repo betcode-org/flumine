@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from unittest import mock
 
 from flumine.order.order import (
@@ -49,6 +50,21 @@ class BaseOrderTest(unittest.TestCase):
         self.order.execution_complete()
         mock__update_status.assert_called_with(OrderStatus.EXECUTION_COMPLETE)
 
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_cancelling(self, mock__update_status):
+        self.order.cancelling()
+        mock__update_status.assert_called_with(OrderStatus.CANCELLING)
+
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_updating(self, mock__update_status):
+        self.order.updating()
+        mock__update_status.assert_called_with(OrderStatus.UPDATING)
+
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_replacing(self, mock__update_status):
+        self.order.replacing()
+        mock__update_status.assert_called_with(OrderStatus.REPLACING)
+
     def test_place(self):
         with self.assertRaises(NotImplementedError):
             self.order.place()
@@ -80,6 +96,12 @@ class BaseOrderTest(unittest.TestCase):
     def test_create_replace_instruction(self):
         with self.assertRaises(NotImplementedError):
             self.order.create_replace_instruction()
+
+    def test_elapsed_seconds(self):
+        mock_responses = mock.Mock()
+        mock_responses.date_time_placed = datetime.datetime.utcnow()
+        self.order.responses = mock_responses
+        self.assertGreaterEqual(self.order.elapsed_seconds, 0)
 
     def test_market_id(self):
         self.assertEqual(self.order.market_id, self.mock_trade.market_id)
@@ -125,17 +147,20 @@ class BetfairOrderTest(unittest.TestCase):
         self.order.place()
         mock_placing.assert_called_with()
 
-    def test_cancel(self):
+    @mock.patch("flumine.order.order.BetfairOrder.cancelling")
+    def test_cancel(self, mock_cancelling):
         with self.assertRaises(OrderUpdateError):
             self.order.cancel(12)
 
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.order.cancel(0.01)
         self.assertEqual(self.order._update, {"size_reduction": 0.01})
+        mock_cancelling.assert_called_with()
         self.order.cancel()
         self.assertEqual(self.order._update, {"size_reduction": None})
 
-    def test_update(self):
+    @mock.patch("flumine.order.order.BetfairOrder.updating")
+    def test_update(self, mock_updating):
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
 
@@ -143,11 +168,13 @@ class BetfairOrderTest(unittest.TestCase):
         self.mock_order_type.persistence_type = "LAPSE"
         self.order.update("PERSIST")
         self.assertEqual(self.mock_order_type.persistence_type, "PERSIST")
+        mock_updating.assert_called_with()
 
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
 
-    def test_replace(self):
+    @mock.patch("flumine.order.order.BetfairOrder.replacing")
+    def test_replace(self, mock_replacing):
         with self.assertRaises(OrderUpdateError):
             self.order.replace(1.01)
 
@@ -155,6 +182,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.mock_order_type.price = 2.02
         self.order.replace(1.01)
         self.assertEqual(self.order._update, {"new_price": 1.01})
+        mock_replacing.assert_called_with()
 
         with self.assertRaises(OrderUpdateError):
             self.order.replace(2.02)

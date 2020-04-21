@@ -138,6 +138,7 @@ class BaseFlumine:
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     strategy.process_orders(market, strategy_orders)
+            self._process_market_orders(market)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

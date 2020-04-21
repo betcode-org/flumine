@@ -23,7 +23,7 @@ class Market:
 
         self.blotter = Blotter(market_id)
         # pending orders
-        self._pending_place = []
+        self._pending_place = []  # todo move to blotter?
         self._pending_cancel = []
         self._pending_update = []
         self._pending_replace = []

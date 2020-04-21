@@ -27,3 +27,10 @@ class OrderUpdateError(FlumineException):
 
     def __init__(self, message):
         super(OrderUpdateError, self).__init__(message)
+
+
+class OrderExecutionError(FlumineException):
+    """Exception raised error in package during
+    execution.
+    """
+    pass

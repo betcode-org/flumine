@@ -5,6 +5,7 @@ from flumine.execution.baseexecution import BaseExecution, OrderPackageType
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
 from flumine.clients.clients import ExchangeType
+from flumine.exceptions import OrderExecutionError
 
 
 class BaseExecutionTest(unittest.TestCase):
@@ -121,9 +122,33 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_order_package.client.betting_client.betting.place_orders(),
         )
 
-    def test_execute_cancel(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_cancel(None, None)
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.cancel")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_cancel(self, mock__execution_helper, mock_place):
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.info = {}
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__execution_helper.assert_called_with(
+            mock_place, mock_order_package, mock_session
+        )
+
+    def test_cancel(self):
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.cancel_instructions = [1, 2]
+        self.assertEqual(
+            self.execution.cancel(mock_order_package, mock_session),
+            mock_order_package.client.betting_client.betting.cancel_orders(),
+        )
+
+    def test_cancel_empty(self):
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.info = {}
+        mock_order_package.cancel_instructions = []
+        with self.assertRaises(OrderExecutionError):
+            self.execution.cancel(mock_order_package, mock_session)
 
     def test_execute_update(self):
         with self.assertRaises(NotImplementedError):
