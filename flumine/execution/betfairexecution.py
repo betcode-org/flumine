@@ -1,10 +1,11 @@
-import requests
 import logging
+import requests
+from typing import Callable
 from betfairlightweight import BetfairError
 
 from .baseexecution import BaseExecution
 from ..clients.clients import ExchangeType
-from ..order.orderpackage import BaseOrderPackage, OrderPackageType
+from ..order.orderpackage import BaseOrderPackage, OrderPackageType, BaseOrder
 from ..exceptions import OrderExecutionError
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ class BetfairExecution(BaseExecution):
                         },
                     )
 
-    def place(self, order_package, session):
+    def place(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.place_orders(
             market_id=order_package.market_id,
             instructions=order_package.place_instructions,
@@ -100,8 +101,11 @@ class BetfairExecution(BaseExecution):
             for order in order_lookup.values():
                 order.executable()
 
-    def cancel(self, order_package, session):
-        cancel_instructions = list(order_package.cancel_instructions)  # temp copy
+    def cancel(self, order_package: OrderPackageType, session: requests.Session):
+        # temp copy to prevent an empty list of instructions sent
+        # this can occur if order is matched during the execution
+        # cycle, resulting in all orders being cancelled!
+        cancel_instructions = list(order_package.cancel_instructions)
         if not cancel_instructions:
             logger.warning("Empty cancel_instructions", extra=order_package.info)
             raise OrderExecutionError()
@@ -115,16 +119,69 @@ class BetfairExecution(BaseExecution):
     def execute_update(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        raise NotImplementedError
+        update_response = self._execution_helper(
+            self.update, order_package, http_session
+        )
+        if update_response:
+            for (order, instruction_report) in zip(
+                order_package, update_response.update_instruction_reports
+            ):
+                self._order_logger(order, instruction_report, OrderPackageType.UPDATE)
+
+                if instruction_report.status == "SUCCESS":
+                    order.executable()
+                elif instruction_report.status == "FAILURE":
+                    order.executable()
+                elif instruction_report.status == "TIMEOUT":
+                    order.executable()
+
+    def update(self, order_package: OrderPackageType, session: requests.Session):
+        return order_package.client.betting_client.betting.update_orders(
+            market_id=order_package.market_id,
+            instructions=order_package.update_instructions,
+            customer_ref=order_package.update_customer_ref.hex,
+            session=session,
+        )
 
     def execute_replace(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        raise NotImplementedError
+        replace_response = self._execution_helper(
+            self.replace, order_package, http_session
+        )
+        if replace_response:
+            for (order, instruction_report) in zip(
+                order_package, replace_response.replace_instruction_reports
+            ):
+                # process cancel response
+                if instruction_report.cancel_instruction_reports.status == "SUCCESS":
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.REPLACE
+                    )
+                    order.execution_complete()
+                # todo else?
 
-    def _execution_helper(
+                # process place response
+                if instruction_report.place_instruction_reports.status == "SUCCESS":
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.REPLACE,
+                    )
+                    order.executable()  # todo new order?
+                # todo else?
+
+    def replace(self, order_package: OrderPackageType, session: requests.Session):
+        return order_package.client.betting_client.betting.replace_orders(
+            market_id=order_package.market_id,
+            instructions=order_package.replace_instructions,
+            customer_ref=order_package.replace_customer_ref.hex,
+            market_version=order_package.market_version,
+            async_=order_package.async_,
+            session=session,
+        )
+
+    def _execution_helper(  # todo retry!
         self,
-        trading_function,
+        trading_function: Callable,
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
@@ -145,7 +202,9 @@ class BetfairExecution(BaseExecution):
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
 
-    def _order_logger(self, order, instruction_report, package_type: OrderPackageType):
+    def _order_logger(
+        self, order: BaseOrder, instruction_report, package_type: OrderPackageType
+    ):
         if package_type == OrderPackageType.PLACE:
             order.responses.placed(instruction_report)
             order.bet_id = instruction_report.bet_id
@@ -155,9 +214,9 @@ class BetfairExecution(BaseExecution):
             order.responses.updated(instruction_report)
         elif package_type == OrderPackageType.REPLACE:
             order.responses.replaced(instruction_report)
-            order.bet_id = instruction_report.bet_id
+            order.bet_id = instruction_report.place_instruction_reports.bet_id
         # self.flumine.log_control(order)  # todo log order
 
-    def _after_execution(self, order):
+    def _after_execution(self, order: BaseOrder):
         order.executable()
         # self.flumine.handler_queue.put(PlacedOrderEvent(order))  # todo

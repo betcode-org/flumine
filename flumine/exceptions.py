@@ -33,4 +33,5 @@ class OrderExecutionError(FlumineException):
     """Exception raised error in package during
     execution.
     """
+
     pass
