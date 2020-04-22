@@ -87,7 +87,7 @@ class Market:
     ) -> list:
         packages = []
         _package_cls = BetfairOrderPackage
-        limit = 100  # todo
+        limit = _package_cls.order_limit(package_type)
         for chunked_orders in chunks(orders, limit):
             order_package = _package_cls(
                 client=client,

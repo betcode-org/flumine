@@ -1,6 +1,7 @@
 import uuid
 from enum import Enum
 from typing import Iterator
+from betfairlightweight.metadata import order_limits
 
 from ..event.event import BaseEvent, EventType, QueueType
 from ..clients.clients import ExchangeType
@@ -22,7 +23,7 @@ class BaseOrderPackage(BaseEvent):
     temporary to allow execution
     """
 
-    # todo client/retry/limits/._orders->orders (violation)
+    # todo client/retry/._orders->orders (violation)
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
@@ -65,6 +66,10 @@ class BaseOrderPackage(BaseEvent):
 
     @property
     def replace_instructions(self) -> dict:
+        raise NotImplementedError
+
+    @classmethod
+    def order_limit(cls, package_type: OrderPackageType) -> int:
         raise NotImplementedError
 
     @property
@@ -110,3 +115,14 @@ class BetfairOrderPackage(BaseOrderPackage):
     @property
     def replace_instructions(self):
         return [order.create_replace_instruction() for order in self]
+
+    @classmethod
+    def order_limit(cls, package_type: OrderPackageType) -> int:
+        if package_type == OrderPackageType.PLACE:
+            return order_limits["placeOrders"]
+        elif package_type == OrderPackageType.CANCEL:
+            return order_limits["cancelOrders"]
+        elif package_type == OrderPackageType.UPDATE:
+            return order_limits["updateOrders"]
+        elif package_type == OrderPackageType.REPLACE:
+            return order_limits["replaceOrders"]

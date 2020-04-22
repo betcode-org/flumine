@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.order.orderpackage import (
+    OrderPackageType,
     BaseOrderPackage,
     EventType,
     QueueType,
@@ -54,6 +55,10 @@ class OrderPackageTest(unittest.TestCase):
     def test_replace_instructions(self):
         with self.assertRaises(NotImplementedError):
             assert self.order_package.replace_instructions
+
+    def test_order_limit(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.order_package.order_limit(OrderPackageType.PLACE)
 
     def test_orders(self):
         self.assertEqual(self.order_package.orders, [self.mock_order])
@@ -115,3 +120,9 @@ class BetfairOrderPackageTest(unittest.TestCase):
             self.order_package.replace_instructions,
             [self.mock_order.create_replace_instruction()],
         )
+
+    def test_order_limit(self):
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.PLACE), 200)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 60)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 60)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.REPLACE), 60)
