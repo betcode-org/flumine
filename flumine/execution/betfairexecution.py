@@ -18,16 +18,14 @@ class BetfairExecution(BaseExecution):
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        place_response = self._execution_helper(self.place, order_package, http_session)
-        if place_response:
+        response = self._execution_helper(self.place, order_package, http_session)
+        if response:
             for (order, instruction_report) in zip(
-                order_package, place_response.place_instruction_reports
+                order_package, response.place_instruction_reports
             ):
-                self._order_logger(
-                    order, instruction_report, order_package.package_type
-                )
+                self._order_logger(order, instruction_report, OrderPackageType.PLACE)
                 if instruction_report.status == "SUCCESS":
-                    self._after_execution(order)
+                    order.executable()
 
                 elif instruction_report.status == "FAILURE":
                     if instruction_report.error_code == "ERROR_IN_ORDER":
@@ -57,12 +55,10 @@ class BetfairExecution(BaseExecution):
     def execute_cancel(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        cancel_response = self._execution_helper(
-            self.cancel, order_package, http_session
-        )
-        if cancel_response:
+        response = self._execution_helper(self.cancel, order_package, http_session)
+        if response:
             order_lookup = {o.bet_id: o for o in order_package}
-            for instruction_report in cancel_response.cancel_instruction_reports:
+            for instruction_report in response.cancel_instruction_reports:
                 # get order (can't rely on order they are returned)
                 order = order_lookup.pop(instruction_report.instruction.bet_id)
                 self._order_logger(order, instruction_report, OrderPackageType.CANCEL)
@@ -96,12 +92,10 @@ class BetfairExecution(BaseExecution):
     def execute_update(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        update_response = self._execution_helper(
-            self.update, order_package, http_session
-        )
-        if update_response:
-            for (order, instruction_report) in zip(
-                order_package, update_response.update_instruction_reports
+        response = self._execution_helper(self.update, order_package, http_session)
+        if response:
+            for (order, instruction_report) in zip(  # todo check this is ok
+                order_package, response.update_instruction_reports
             ):
                 self._order_logger(order, instruction_report, OrderPackageType.UPDATE)
 
@@ -123,12 +117,10 @@ class BetfairExecution(BaseExecution):
     def execute_replace(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        replace_response = self._execution_helper(
-            self.replace, order_package, http_session
-        )
-        if replace_response:
+        response = self._execution_helper(self.replace, order_package, http_session)
+        if response:
             for (order, instruction_report) in zip(
-                order_package, replace_response.replace_instruction_reports
+                order_package, response.replace_instruction_reports
             ):
                 # process cancel response
                 if instruction_report.cancel_instruction_reports.status == "SUCCESS":
@@ -206,7 +198,3 @@ class BetfairExecution(BaseExecution):
             order.responses.replaced(instruction_report)
             order.bet_id = instruction_report.place_instruction_reports.bet_id
         # self.flumine.log_control(order)  # todo log order
-
-    def _after_execution(self, order: BaseOrder):
-        order.executable()
-        # self.flumine.handler_queue.put(PlacedOrderEvent(order))  # todo
