@@ -36,6 +36,7 @@ class BaseOrderPackage(BaseEvent):
         orders: list,
         package_type: OrderPackageType,
         market_version: dict = None,
+        async_: bool = False,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid1()
@@ -43,14 +44,9 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self.market_version = market_version  # todo integrate
-        self.async_ = False
-
+        self.market_version = market_version
+        self.async_ = async_
         self.customer_strategy_ref = config.hostname
-        self.place_customer_ref = uuid.uuid1()
-        self.cancel_customer_ref = uuid.uuid1()
-        self.update_customer_ref = uuid.uuid1()
-        self.replace_customer_ref = uuid.uuid1()
 
     @property
     def place_instructions(self) -> dict:

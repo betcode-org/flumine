@@ -94,6 +94,7 @@ class Market:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
+                market_version={"version": self.market_book.version},
             )
             packages.append(order_package)
         orders.clear()

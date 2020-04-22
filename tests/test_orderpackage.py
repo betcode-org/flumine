@@ -35,10 +35,6 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.market_version, self.market_version)
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
-        self.assertIsNotNone(self.order_package.place_customer_ref)
-        self.assertIsNotNone(self.order_package.cancel_customer_ref)
-        self.assertIsNotNone(self.order_package.update_customer_ref)
-        self.assertIsNotNone(self.order_package.replace_customer_ref)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):

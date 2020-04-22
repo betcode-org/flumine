@@ -66,7 +66,7 @@ class BetfairExecution(BaseExecution):
         return order_package.client.betting_client.betting.place_orders(
             market_id=order_package.market_id,
             instructions=order_package.place_instructions,
-            customer_ref=order_package.place_customer_ref.hex,
+            customer_ref=order_package.id.hex,
             market_version=order_package.market_version,
             customer_strategy_ref=order_package.customer_strategy_ref,
             async_=order_package.async_,
@@ -112,7 +112,7 @@ class BetfairExecution(BaseExecution):
         return order_package.client.betting_client.betting.cancel_orders(
             market_id=order_package.market_id,
             instructions=cancel_instructions,
-            customer_ref=order_package.cancel_customer_ref.hex,
+            customer_ref=order_package.id.hex,
             session=session,
         )
 
@@ -139,7 +139,7 @@ class BetfairExecution(BaseExecution):
         return order_package.client.betting_client.betting.update_orders(
             market_id=order_package.market_id,
             instructions=order_package.update_instructions,
-            customer_ref=order_package.update_customer_ref.hex,
+            customer_ref=order_package.id.hex,
             session=session,
         )
 
@@ -173,7 +173,7 @@ class BetfairExecution(BaseExecution):
         return order_package.client.betting_client.betting.replace_orders(
             market_id=order_package.market_id,
             instructions=order_package.replace_instructions,
-            customer_ref=order_package.replace_customer_ref.hex,
+            customer_ref=order_package.id.hex,
             market_version=order_package.market_version,
             async_=order_package.async_,
             session=session,
