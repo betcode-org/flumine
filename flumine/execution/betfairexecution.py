@@ -20,10 +20,6 @@ class BetfairExecution(BaseExecution):
     ) -> None:
         place_response = self._execution_helper(self.place, order_package, http_session)
         if place_response:
-            logger.info(
-                "execute_place",
-                extra={**order_package.info, **{"response": place_response._data}},
-            )
             for (order, instruction_report) in zip(
                 order_package, place_response.place_instruction_reports
             ):
@@ -34,14 +30,6 @@ class BetfairExecution(BaseExecution):
                     self._after_execution(order)
 
                 elif instruction_report.status == "FAILURE":
-                    logger.warning(
-                        "execute_place FAILURE",
-                        extra={
-                            "order_id": order.id,
-                            "status": instruction_report.status,
-                            "error_code": instruction_report.error_code,
-                        },
-                    )
                     if instruction_report.error_code == "ERROR_IN_ORDER":
                         pass
                     elif instruction_report.error_code == "BET_TAKEN_OR_LAPSED":
@@ -53,14 +41,7 @@ class BetfairExecution(BaseExecution):
                         pass
 
                 elif instruction_report.status == "TIMEOUT":
-                    logger.error(
-                        "execute_place TIMEOUT",
-                        extra={
-                            "order_id": order.id,
-                            "status": instruction_report.status,
-                            "error_code": instruction_report.error_code,
-                        },
-                    )
+                    pass
 
     def place(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.place_orders(
@@ -80,10 +61,6 @@ class BetfairExecution(BaseExecution):
             self.cancel, order_package, http_session
         )
         if cancel_response:
-            logger.info(
-                "execute_cancel",
-                extra={**order_package.info, **{"response": cancel_response._data}},
-            )
             order_lookup = {o.bet_id: o for o in order_package}
             for instruction_report in cancel_response.cancel_instruction_reports:
                 # get order (can't rely on order they are returned)
@@ -198,6 +175,10 @@ class BetfairExecution(BaseExecution):
                     },
                 )
                 return
+            logger.info(
+                "execute_%s" % trading_function.__name__,
+                extra={**order_package.info, **{"response": response._data}},
+            )
             return response
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
@@ -205,6 +186,15 @@ class BetfairExecution(BaseExecution):
     def _order_logger(
         self, order: BaseOrder, instruction_report, package_type: OrderPackageType
     ):
+        logger.info(
+            "Order %s: %s" % (package_type.value, instruction_report.status),
+            extra={
+                "bet_id": order.bet_id,
+                "order_id": order.id,
+                "status": instruction_report.status,
+                "error_code": instruction_report.error_code,
+            },
+        )
         if package_type == OrderPackageType.PLACE:
             order.responses.placed(instruction_report)
             order.bet_id = instruction_report.bet_id

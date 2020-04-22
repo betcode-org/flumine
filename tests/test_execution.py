@@ -206,8 +206,10 @@ class BetfairExecutionTest(unittest.TestCase):
 
     def test__execution_helper(self):
         mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
         mock_session = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.info = {}
         self.execution._execution_helper(
             mock_trading_function, mock_order_package, mock_session
         )
