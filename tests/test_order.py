@@ -65,6 +65,16 @@ class BaseOrderTest(unittest.TestCase):
         self.order.replacing()
         mock__update_status.assert_called_with(OrderStatus.REPLACING)
 
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_lapsed(self, mock__update_status):
+        self.order.lapsed()
+        mock__update_status.assert_called_with(OrderStatus.LAPSED)
+
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_voided(self, mock__update_status):
+        self.order.voided()
+        mock__update_status.assert_called_with(OrderStatus.VOIDED)
+
     def test_place(self):
         with self.assertRaises(NotImplementedError):
             self.order.place()

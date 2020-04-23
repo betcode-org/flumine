@@ -13,22 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class OrderStatus(Enum):
-    PENDING = "Pending"  # pending exchange processing
-    EXECUTABLE = "Executable"  # an order that has a remaining unmatched portion
-    EXECUTION_COMPLETE = "Execution complete"  # an order that does not have any remaining unmatched portion
-    EXPIRED = "Expired"  # order is no longer available for execution due to its time in force constraint
     # Pending
+    PENDING = "Pending"  # pending exchange processing
     CANCELLING = "Cancelling"  # waiting for response
     UPDATING = "Updating"  # waiting for response
     REPLACING = "Replacing"  # waiting for response
     # Completed
-    # CANCELLED = "Cancelled"
-    # OFFSET = "Offset"
-    # GREENING = "Greening"
-    # STOPPED = "Stopped"
-    # VIOLATION = "Violation"
-    # VOIDED = "Voided"
-    # LAPSED = "Lapsed"
+    EXECUTABLE = "Executable"  # an order that has a remaining unmatched portion
+    EXECUTION_COMPLETE = "Execution complete"  # an order that does not have any remaining unmatched portion
+    EXPIRED = "Expired"  # order is no longer available for execution due to its time in force constraint
+    VOIDED = "Voided"
+    LAPSED = "Lapsed"
 
 
 class BaseOrder:
@@ -72,6 +67,12 @@ class BaseOrder:
 
     def replacing(self) -> None:
         self._update_status(OrderStatus.REPLACING)
+
+    def lapsed(self) -> None:
+        self._update_status(OrderStatus.LAPSED)
+
+    def voided(self) -> None:
+        self._update_status(OrderStatus.VOIDED)
 
     # updates
     def place(self) -> None:

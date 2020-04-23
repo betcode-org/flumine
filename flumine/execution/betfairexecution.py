@@ -26,19 +26,10 @@ class BetfairExecution(BaseExecution):
                 self._order_logger(order, instruction_report, OrderPackageType.PLACE)
                 if instruction_report.status == "SUCCESS":
                     order.executable()
-
                 elif instruction_report.status == "FAILURE":
-                    if instruction_report.error_code == "ERROR_IN_ORDER":
-                        pass
-                    elif instruction_report.error_code == "BET_TAKEN_OR_LAPSED":
-                        pass
-                    elif (
-                        instruction_report.error_code
-                        == "BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE"
-                    ):
-                        pass
-
+                    order.lapsed()  # todo correct?
                 elif instruction_report.status == "TIMEOUT":
+                    # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus
                     pass
 
     def place(self, order_package: OrderPackageType, session: requests.Session):
@@ -59,10 +50,9 @@ class BetfairExecution(BaseExecution):
         if response:
             order_lookup = {o.bet_id: o for o in order_package}
             for instruction_report in response.cancel_instruction_reports:
-                # get order (can't rely on order they are returned)
+                # get order (can't rely on the order they are returned)
                 order = order_lookup.pop(instruction_report.instruction.bet_id)
                 self._order_logger(order, instruction_report, OrderPackageType.CANCEL)
-
                 if instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif instruction_report.status == "FAILURE":
@@ -98,7 +88,6 @@ class BetfairExecution(BaseExecution):
                 order_package, response.update_instruction_reports
             ):
                 self._order_logger(order, instruction_report, OrderPackageType.UPDATE)
-
                 if instruction_report.status == "SUCCESS":
                     order.executable()
                 elif instruction_report.status == "FAILURE":
@@ -128,7 +117,10 @@ class BetfairExecution(BaseExecution):
                         order, instruction_report, OrderPackageType.REPLACE
                     )
                     order.execution_complete()
-                # todo else?
+                elif instruction_report.cancel_instruction_reports.status == "FAILURE":
+                    order.executable()
+                elif instruction_report.cancel_instruction_reports.status == "TIMEOUT":
+                    order.executable()
 
                 # process place response
                 if instruction_report.place_instruction_reports.status == "SUCCESS":
@@ -136,7 +128,10 @@ class BetfairExecution(BaseExecution):
                         order, instruction_report, OrderPackageType.REPLACE,
                     )
                     order.executable()  # todo new order?
-                # todo else?
+                elif instruction_report.place_instruction_reports.status == "FAILURE":
+                    pass
+                elif instruction_report.place_instruction_reports.status == "TIMEOUT":
+                    pass
 
     def replace(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.replace_orders(
