@@ -86,7 +86,7 @@ class BaseFlumine:
     def _process_market_orders(
         self, market: Market
     ) -> None:  # todo override for backtesting
-        for order_package in market.process_orders(self.client):
+        for order_package in market.blotter.process_orders(self.client):
             self.handler_queue.put(order_package)
 
     def _process_order_package(self, order_package) -> None:

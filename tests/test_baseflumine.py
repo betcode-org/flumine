@@ -44,9 +44,9 @@ class BaseFlumineTest(unittest.TestCase):
 
     def test__process_market_orders(self):
         mock_market = mock.Mock()
-        mock_market.process_orders.return_value = [1, 2, 3]
+        mock_market.blotter.process_orders.return_value = [1, 2, 3]
         self.base_flumine._process_market_orders(mock_market)
-        mock_market.process_orders.assert_called_with(self.mock_client)
+        mock_market.blotter.process_orders.assert_called_with(self.mock_client)
 
     def test__process_order_package(self):
         mock_trading_control = mock.Mock()

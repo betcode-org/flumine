@@ -105,20 +105,16 @@ class BaseStrategy:
             )
         if self.validate_order(runner_context, order):
             runner_context.place()
-            order.place()
             market.place_order(order)
 
     def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
-        order.cancel(size_reduction)
-        market.cancel_order(order)
+        market.cancel_order(order, size_reduction)
 
     def update_order(self, market: Market, order, new_persistence_type: str) -> None:
-        order.update(new_persistence_type)
-        market.update_order(order)
+        market.update_order(order, new_persistence_type)
 
     def replace_order(self, market: Market, order, new_price: float) -> None:
-        order.replace(new_price)
-        market.replace_order(order)
+        market.replace_order(order, new_price)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # todo multi/count

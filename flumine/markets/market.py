@@ -3,8 +3,6 @@ import logging
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
-from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
-from ..utils import chunks
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +18,7 @@ class Market:
         self.closed = False
         self.market_book = market_book
         self.market_catalogue = market_catalogue
-
         self.blotter = Blotter(market_id)
-        # pending orders
-        self._pending_place = []  # todo move to blotter?
-        self._pending_cancel = []
-        self._pending_update = []
-        self._pending_replace = []
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book
@@ -40,65 +32,25 @@ class Market:
 
     # order
     def place_order(self, order) -> None:
+        order.place()
         if order.id not in self.blotter:
             self.blotter[order.id] = order
             # todo log trade?
         else:
             return  # retry attempt so ignore?
-        self._pending_place.append(order)
+        self.blotter.pending_place.append(order)
 
-    def cancel_order(self, order) -> None:
-        self._pending_cancel.append(order)
+    def cancel_order(self, order, size_reduction: float = None) -> None:
+        order.cancel(size_reduction)
+        self.blotter.pending_cancel.append(order)
 
-    def update_order(self, order) -> None:
-        self._pending_update.append(order)
+    def update_order(self, order, new_persistence_type: str) -> None:
+        order.update(new_persistence_type)
+        self.blotter.pending_update.append(order)
 
-    def replace_order(self, order) -> None:
-        self._pending_replace.append(order)
-
-    # process orders
-    def process_orders(self, client) -> list:
-        packages = []
-        if self._pending_place:
-            packages += self._create_packages(
-                client, self._pending_place, OrderPackageType.PLACE
-            )
-        if self._pending_cancel:
-            packages += self._create_packages(
-                client, self._pending_cancel, OrderPackageType.CANCEL
-            )
-        if self._pending_update:
-            packages += self._create_packages(
-                client, self._pending_update, OrderPackageType.UPDATE
-            )
-        if self._pending_replace:
-            packages += self._create_packages(
-                client, self._pending_replace, OrderPackageType.REPLACE
-            )
-        if packages:
-            logger.info(
-                "%s order packages created" % len(packages),
-                extra={"order_packages": [o.info for o in packages]},
-            )
-        return packages
-
-    def _create_packages(
-        self, client, orders: list, package_type: OrderPackageType
-    ) -> list:
-        packages = []
-        _package_cls = BetfairOrderPackage
-        limit = _package_cls.order_limit(package_type)
-        for chunked_orders in chunks(orders, limit):
-            order_package = _package_cls(
-                client=client,
-                market_id=self.market_id,
-                orders=chunked_orders,
-                package_type=package_type,
-                market_version={"version": self.market_book.version},
-            )
-            packages.append(order_package)
-        orders.clear()
-        return packages
+    def replace_order(self, order, new_price: float) -> None:
+        order.replace(new_price)
+        self.blotter.pending_replace.append(order)
 
     @property
     def seconds_to_start(self):

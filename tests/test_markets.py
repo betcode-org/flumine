@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, OrderPackageType
+from flumine.markets.market import Market
 
 
 class MarketsTest(unittest.TestCase):
@@ -84,10 +84,6 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.market_id, "1.234")
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertFalse(self.market.closed)
-        self.assertEqual(self.market._pending_place, [])
-        self.assertEqual(self.market._pending_cancel, [])
-        self.assertEqual(self.market._pending_update, [])
-        self.assertEqual(self.market._pending_replace, [])
 
     def test_call(self):
         mock_market_book = mock.Mock()
@@ -107,79 +103,41 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order)
-        self.assertEqual(self.market._pending_place, [mock_order])
+        mock_order.place.assert_called_with()
+        self.assertEqual(self.market.blotter.pending_place, [mock_order])
 
     def test_place_order_retry(self):
         mock_order = mock.Mock()
-        mock_blotter = [mock_order.id]
-        self.market.blotter = mock_blotter
+        self.market.blotter._orders = {mock_order.id: mock_order}
         self.market.place_order(mock_order)
-        self.assertEqual(self.market._pending_place, [])
+        self.assertEqual(self.market.blotter.pending_place, [])
 
     def test_cancel_order(self):
-        mock_blotter = []
+        mock_blotter = mock.Mock()
+        mock_blotter.pending_cancel = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.cancel_order(mock_order)
-        self.assertEqual(self.market._pending_cancel, [mock_order])
+        self.market.cancel_order(mock_order, 0.01)
+        mock_order.cancel.assert_called_with(0.01)
+        self.assertEqual(mock_blotter.pending_cancel, [mock_order])
 
     def test_update_order(self):
-        mock_blotter = []
+        mock_blotter = mock.Mock()
+        mock_blotter.pending_update = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.update_order(mock_order)
-        self.assertEqual(self.market._pending_update, [mock_order])
+        self.market.update_order(mock_order, "PERSIST")
+        mock_order.update.assert_called_with("PERSIST")
+        self.assertEqual(mock_blotter.pending_update, [mock_order])
 
     def test_replace_order(self):
-        mock_blotter = []
+        mock_blotter = mock.Mock()
+        mock_blotter.pending_replace = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.replace_order(mock_order)
-        self.assertEqual(self.market._pending_replace, [mock_order])
-
-    @mock.patch("flumine.markets.market.Market._create_packages")
-    def test_process_orders(self, mock__create_packages):
-        mock_client = mock.Mock()
-        self.market._pending_place = [1]
-        self.assertEqual(
-            self.market.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.market._pending_place = []
-        self.market._pending_cancel = [2]
-        self.assertEqual(
-            self.market.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.market._pending_cancel = []
-        self.market._pending_update = [3]
-        self.assertEqual(
-            self.market.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.market._pending_update = []
-        self.market._pending_replace = [4]
-        self.assertEqual(
-            self.market.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-
-    @mock.patch("flumine.markets.market.BetfairOrderPackage")
-    def test___create_packages(self, mock_cls):
-        mock_client = mock.Mock()
-        mock_order = mock.Mock()
-        mock_orders = [mock_order]
-        packages = self.market._create_packages(
-            mock_client, mock_orders, OrderPackageType.PLACE
-        )
-        self.assertEqual(
-            packages,
-            [
-                mock_cls(
-                    client=None,
-                    market_id=self.market.market_id,
-                    orders=mock_orders,
-                    package_type=OrderPackageType.PLACE,
-                )
-            ],
-        )
-        self.assertEqual(mock_orders, [])
+        self.market.replace_order(mock_order, 1.01)
+        mock_order.replace.assert_called_with(1.01)
+        self.assertEqual(mock_blotter.pending_replace, [mock_order])
 
     def test_seconds_to_start(self):
         mock_market_catalogue = mock.Mock()
