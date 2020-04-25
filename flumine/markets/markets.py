@@ -18,9 +18,9 @@ class Markets:
         live_market.close_market()
         return live_market
 
-    def get_order(self, market_id: str, customer_order_ref: str):
+    def get_order(self, market_id: str, order_id: str):
         try:
-            return self.markets[market_id].blotter[customer_order_ref]
+            return self.markets[market_id].blotter[order_id]
         except KeyError:
             return
 

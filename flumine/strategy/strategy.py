@@ -5,6 +5,7 @@ from betfairlightweight.resources import MarketBook, RaceCard
 from ..streams.marketstream import BaseStream, MarketStream
 from ..markets.market import Market
 from .runnercontext import RunnerContext
+from ..utils import create_cheap_hash
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -137,11 +138,16 @@ class BaseStrategy:
             "conflate_ms": self.conflate_ms,
             "stream_ids": self.stream_ids,
             "context": self.context,
+            "name_hash": self.name_hash,
         }
 
     @property
     def name(self) -> str:
         return self._name or self.__class__.__name__
+
+    @property
+    def name_hash(self) -> str:
+        return create_cheap_hash(self.name, 13)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -158,6 +164,10 @@ class Strategies:
     def start(self) -> None:
         for s in self:
             s.start()
+
+    @property
+    def hashes(self) -> dict:
+        return {strategy.name_hash: strategy for strategy in self}
 
     def __iter__(self) -> Iterator[BaseStrategy]:
         return iter(self._strategies)

@@ -1,8 +1,10 @@
 import uuid
 from typing import Type
+from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
-from .order import BaseOrder, BetfairOrder, BaseOrderType
+from .order import BetfairOrder
+from .ordertype import BaseOrderType, LimitOrder
 from ..exceptions import OrderError
 
 
@@ -33,13 +35,35 @@ class Trade:
         side: str,
         order_type: BaseOrderType,
         handicap: int = 0,
-        order: Type[BaseOrder] = BetfairOrder,
-    ):
+        order: Type[BetfairOrder] = BetfairOrder,
+    ) -> BetfairOrder:
         if order_type.EXCHANGE != order.EXCHANGE:
             raise OrderError(
                 "Incorrect order/order_type exchange combination for trade.create_order"
             )
         order = order(trade=self, side=side, order_type=order_type, handicap=handicap)
+        self.orders.append(order)
+        return order
+
+    def create_order_from_current(
+        self, current_order: CurrentOrder, order_id: str
+    ) -> BetfairOrder:
+        if current_order.order_type == "LIMIT":
+            order_type = LimitOrder(
+                current_order.price_size.price,
+                current_order.price_size.size,
+                current_order.persistence_type,
+            )
+        else:
+            raise NotImplementedError
+        order = BetfairOrder(
+            trade=self,
+            side=current_order.side,
+            order_type=order_type,
+            handicap=current_order.handicap,
+        )
+        order.bet_id = current_order.bet_id
+        order.id = order_id
         self.orders.append(order)
         return order
 

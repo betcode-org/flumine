@@ -119,12 +119,17 @@ class BaseOrder:
         return self.market_id, self.selection_id, self.handicap
 
     @property
+    def customer_order_ref(self) -> str:
+        return "{0}-{1}".format(self.trade.strategy.name_hash, self.id)
+
+    @property
     def info(self) -> dict:
         return {
             "market_id": self.market_id,
             "selection_id": self.selection_id,
             "handicap": self.handicap,
             "id": self.id,
+            "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
             "trade": self.trade.info,
             "status": self.status.value if self.status else None,
@@ -181,7 +186,7 @@ class BetfairOrder(BaseOrder):
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             return filters.place_instruction(
-                customer_order_ref=self.id,
+                customer_order_ref=self.customer_order_ref,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,
@@ -190,7 +195,7 @@ class BetfairOrder(BaseOrder):
             )
         elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
             return filters.place_instruction(
-                customer_order_ref=self.id,
+                customer_order_ref=self.customer_order_ref,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,
@@ -199,7 +204,7 @@ class BetfairOrder(BaseOrder):
             )
         elif self.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
             return filters.place_instruction(
-                customer_order_ref=self.id,
+                customer_order_ref=self.customer_order_ref,
                 selection_id=self.selection_id,
                 side=self.side,
                 order_type=self.order_type.ORDER_TYPE.name,

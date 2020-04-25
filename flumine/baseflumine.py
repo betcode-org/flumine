@@ -132,7 +132,7 @@ class BaseFlumine:
                 market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
-        process_current_orders(self.markets, event)  # update state
+        process_current_orders(self.markets, self.strategies, event)  # update state
         for market in self.markets:
             if market.closed is False:
                 for strategy in self.strategies:

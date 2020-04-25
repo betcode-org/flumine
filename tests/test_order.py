@@ -138,6 +138,7 @@ class BaseOrderTest(unittest.TestCase):
                 "status": None,
                 "status_log": "Pending, Execution complete",
                 "trade": self.mock_trade.info,
+                "customer_order_ref": self.order.customer_order_ref,
             },
         )
 
@@ -224,7 +225,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": self.order.id,
+                "customerOrderRef": self.order.customer_order_ref,
                 "handicap": 0,
                 "limitOrder": self.mock_order_type.place_instruction(),
                 "orderType": "LIMIT",
@@ -236,7 +237,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": self.order.id,
+                "customerOrderRef": self.order.customer_order_ref,
                 "handicap": 0,
                 "limitOnCloseOrder": self.mock_order_type.place_instruction(),
                 "orderType": "LIMIT_ON_CLOSE",
@@ -248,7 +249,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.create_place_instruction(),
             {
-                "customerOrderRef": self.order.id,
+                "customerOrderRef": self.order.customer_order_ref,
                 "handicap": 0,
                 "marketOnCloseOrder": self.mock_order_type.place_instruction(),
                 "orderType": "MARKET_ON_CLOSE",

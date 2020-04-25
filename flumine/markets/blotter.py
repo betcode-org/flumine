@@ -77,7 +77,7 @@ class Blotter:
 
     """ getters / setters """
 
-    def has_order(self, customer_order_ref: str):
+    def has_order(self, customer_order_ref: str) -> bool:
         return customer_order_ref in self._orders
 
     __contains__ = has_order

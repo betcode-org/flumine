@@ -168,6 +168,7 @@ class BaseStrategyTest(unittest.TestCase):
                 "market_data_filter": self.mock_market_data_filter,
                 "market_filter": self.mock_market_filter,
                 "name": "test",
+                "name_hash": "a94a8fe5ccb19",
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,
                 "context": {"trigger": 0.123},
@@ -176,6 +177,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_name(self):
         self.assertEqual(self.strategy.name, "test")
+
+    def test_name_hash(self):
+        self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
 
     def test_str(self):
         self.assertEqual(str(self.strategy), "test")

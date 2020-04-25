@@ -1,24 +1,27 @@
 import logging
 
 from ..markets.markets import Markets
+from ..strategy.strategy import Strategies
+from ..order.trade import Trade
 from ..order.order import BaseOrder, OrderStatus
 
 logger = logging.getLogger(__name__)
 
-# todo handle fillkill/green/stop/
+"""
+Handles trade fillkill / green etc.
+Handles orphan orders by creating empty trade and order data from CurrentOrder object/
+"""
+# todo handle fillkill/green/
 
 
-def process_current_orders(markets: Markets, event):
+def process_current_orders(markets: Markets, strategies: Strategies, event):
     for current_orders in event.event:
         for current_order in current_orders.orders:
+            strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
             order = markets.get_order(
-                market_id=current_order.market_id,
-                customer_order_ref=current_order.customer_order_ref,
+                market_id=current_order.market_id, order_id=order_id,
             )
-            if order:
-                # order.update_current_status(current_order)
-                process_current_order(order)
-            else:
+            if not order:
                 logger.warning(
                     "Order %s not present in blotter" % current_order.bet_id,
                     extra={
@@ -28,9 +31,40 @@ def process_current_orders(markets: Markets, event):
                         "customer_order_ref": current_order.customer_order_ref,
                     },
                 )
+                order = create_order_from_current(markets, strategies, current_order)
+                if order:
+                    logger.info(
+                        "Order %s added to blotter" % current_order.bet_id,
+                        extra=order.info,
+                    )
+                    order.executable()  # todo correct?
+                else:
+                    continue
+
+            # order.update_current_status(current_order)
+            process_current_order(order)
 
 
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
         pass
         # print(order.status, order.status_log)
+
+
+def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
+    strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
+    # get market
+    market = markets.markets.get(current_order.market_id)
+    if market is None:
+        # todo log
+        return
+    # get strategy
+    strategy = strategies.hashes.get(strategy_name_hash)
+    if strategy is None:
+        # todo log
+        return
+    # add trade/order
+    trade = Trade(market.market_id, current_order.selection_id, strategy)
+    order = trade.create_order_from_current(current_order, order_id)
+    market.blotter[order.id] = order
+    return order
