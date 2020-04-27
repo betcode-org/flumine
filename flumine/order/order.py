@@ -113,6 +113,9 @@ class BaseOrder:
         raise NotImplementedError
 
     # currentOrder
+    def update_current_order(self, current_order):
+        self._current_order = current_order
+
     @property
     def current_order(self):
         if self._current_order:
@@ -121,11 +124,27 @@ class BaseOrder:
             return self.responses.place_response
 
     @property
+    def average_price_matched(self) -> float:
+        raise NotImplementedError
+
+    @property
     def size_matched(self) -> float:
         raise NotImplementedError
 
     @property
-    def average_price_matched(self) -> float:
+    def size_remaining(self):
+        raise NotImplementedError
+
+    @property
+    def size_cancelled(self):
+        raise NotImplementedError
+
+    @property
+    def size_lapsed(self):
+        raise NotImplementedError
+
+    @property
+    def size_voided(self):
         raise NotImplementedError
 
     @property
@@ -257,6 +276,13 @@ class BetfairOrder(BaseOrder):
 
     # currentOrder
     @property
+    def average_price_matched(self) -> float:
+        try:
+            return self.current_order.average_price_matched or 0.0
+        except AttributeError:
+            return 0.0
+
+    @property
     def size_matched(self) -> float:
         try:
             return self.current_order.size_matched or 0.0
@@ -264,8 +290,29 @@ class BetfairOrder(BaseOrder):
             return 0.0
 
     @property
-    def average_price_matched(self) -> float:
+    def size_remaining(self):
         try:
-            return self.current_order.average_price_matched or 0.0
+            return self.current_order.size_remaining or 0.0
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_cancelled(self) -> float:
+        try:
+            return self.current_order.size_cancelled or 0.0
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_lapsed(self) -> float:
+        try:
+            return self.current_order.size_lapsed or 0.0
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_voided(self) -> float:
+        try:
+            return self.current_order.size_voided or 0.0
         except AttributeError:
             return 0.0

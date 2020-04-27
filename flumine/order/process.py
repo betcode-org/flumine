@@ -41,8 +41,9 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
                 else:
                     continue
 
-            # order.update_current_status(current_order)
-            process_current_order(order)
+            if order:
+                order.update_current_order(current_order)
+                process_current_order(order)
 
 
 def process_current_order(order: BaseOrder):
