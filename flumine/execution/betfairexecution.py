@@ -54,7 +54,12 @@ class BetfairExecution(BaseExecution):
                 order = order_lookup.pop(instruction_report.instruction.bet_id)
                 self._order_logger(order, instruction_report, OrderPackageType.CANCEL)
                 if instruction_report.status == "SUCCESS":
-                    order.execution_complete()
+                    if (
+                        instruction_report.size_cancelled == order.size_remaining
+                    ):  # todo what if?
+                        order.execution_complete()
+                    else:
+                        order.executable()
                 elif instruction_report.status == "FAILURE":
                     order.executable()
                 elif instruction_report.status == "TIMEOUT":
@@ -114,7 +119,9 @@ class BetfairExecution(BaseExecution):
                 # process cancel response
                 if instruction_report.cancel_instruction_reports.status == "SUCCESS":
                     self._order_logger(
-                        order, instruction_report, OrderPackageType.CANCEL
+                        order,
+                        instruction_report.cancel_instruction_reports,
+                        OrderPackageType.CANCEL,
                     )
                     order.execution_complete()
                 elif instruction_report.cancel_instruction_reports.status == "FAILURE":
@@ -127,7 +134,9 @@ class BetfairExecution(BaseExecution):
                     # create new order
                     replacement_order = order.trade.create_order_replacement(order)
                     self._order_logger(
-                        replacement_order, instruction_report, OrderPackageType.REPLACE,
+                        replacement_order,
+                        instruction_report.place_instruction_reports,
+                        OrderPackageType.REPLACE,
                     )
                     # add to blotter
                     market = self.markets.markets[order.market_id]
@@ -196,5 +205,5 @@ class BetfairExecution(BaseExecution):
             order.responses.updated(instruction_report)
         elif package_type == OrderPackageType.REPLACE:
             order.responses.placed(instruction_report)
-            order.bet_id = instruction_report.place_instruction_reports.bet_id
+            order.bet_id = instruction_report.bet_id
         # self.flumine.log_control(order)  # todo log order

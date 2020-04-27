@@ -207,6 +207,7 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_session = mock.Mock()
         mock_order = mock.Mock()
         mock_order.bet_id = 123
+        mock_order.size_remaining = 2
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.info = {}
@@ -214,6 +215,7 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_instruction_report = mock.Mock()
         mock_instruction_report.status = "SUCCESS"
         mock_instruction_report.instruction.bet_id = 123
+        mock_instruction_report.size_cancelled = 2
         mock_report.cancel_instruction_reports = [mock_instruction_report]
         mock__execution_helper.return_value = mock_report
         self.execution.execute_cancel(mock_order_package, mock_session)
@@ -224,6 +226,35 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report, OrderPackageType.CANCEL
         )
         mock_order.execution_complete.assert_called_with()
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.cancel")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_cancel_success_partial(
+        self, mock__execution_helper, mock_cancel, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock()
+        mock_order.bet_id = 123
+        mock_order.size_remaining = 2
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_report = mock.Mock()
+        mock_instruction_report = mock.Mock()
+        mock_instruction_report.status = "SUCCESS"
+        mock_instruction_report.instruction.bet_id = 123
+        mock_instruction_report.size_cancelled = 1
+        mock_report.cancel_instruction_reports = [mock_instruction_report]
+        mock__execution_helper.return_value = mock_report
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__execution_helper.assert_called_with(
+            mock_cancel, mock_order_package, mock_session
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
+        mock_order.executable.assert_called_with()
 
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution.cancel")
@@ -461,7 +492,9 @@ class BetfairExecutionTest(unittest.TestCase):
         replacement_order.executable.assert_called_with()
         mock_market.place_order.assert_called_with(replacement_order, execute=False)
         mock__order_logger.assert_called_with(
-            replacement_order, mock_instruction_report, OrderPackageType.REPLACE
+            replacement_order,
+            mock_instruction_report.place_instruction_reports,
+            OrderPackageType.REPLACE,
         )
 
     # def test_execute_replace_failure(self):
@@ -520,9 +553,7 @@ class BetfairExecutionTest(unittest.TestCase):
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.REPLACE
         )
-        self.assertEqual(
-            mock_order.bet_id, mock_instruction_report.place_instruction_reports.bet_id
-        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
 
 
