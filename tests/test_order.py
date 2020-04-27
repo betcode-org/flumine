@@ -75,6 +75,11 @@ class BaseOrderTest(unittest.TestCase):
         self.order.voided()
         mock__update_status.assert_called_with(OrderStatus.VOIDED)
 
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_violation(self, mock__update_status):
+        self.order.violation()
+        mock__update_status.assert_called_with(OrderStatus.VIOLATION)
+
     def test_place(self):
         with self.assertRaises(NotImplementedError):
             self.order.place()

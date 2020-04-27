@@ -6,7 +6,7 @@ from betfairlightweight.metadata import order_limits
 from ..event.event import BaseEvent, EventType, QueueType
 from ..clients.clients import ExchangeType
 from .. import config
-from .order import BaseOrder
+from .order import BaseOrder, OrderStatus
 
 
 class OrderPackageType(Enum):
@@ -70,7 +70,7 @@ class BaseOrderPackage(BaseEvent):
 
     @property
     def orders(self) -> list:
-        return [o for o in self._orders if o]
+        return [o for o in self._orders if o.status == OrderStatus.PENDING]
 
     @property
     def info(self) -> dict:

@@ -24,6 +24,7 @@ class OrderStatus(Enum):
     EXPIRED = "Expired"  # order is no longer available for execution due to its time in force constraint
     VOIDED = "Voided"
     LAPSED = "Lapsed"
+    VIOLATION = "Violation"  # order never placed due to failing controls
 
 
 class BaseOrder:
@@ -73,6 +74,9 @@ class BaseOrder:
 
     def voided(self) -> None:
         self._update_status(OrderStatus.VOIDED)
+
+    def violation(self) -> None:
+        self._update_status(OrderStatus.VIOLATION)
 
     # updates
     def place(self) -> None:

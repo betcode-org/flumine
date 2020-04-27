@@ -8,6 +8,7 @@ from flumine.order.orderpackage import (
     QueueType,
     BetfairOrderPackage,
     ExchangeType,
+    OrderStatus,
 )
 
 
@@ -16,6 +17,7 @@ class OrderPackageTest(unittest.TestCase):
         self.mock_package_type = mock.Mock()
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
+        self.mock_order.status = OrderStatus.PENDING
         self.market_version = {"version": 123456}
         self.order_package = BaseOrderPackage(
             self.mock_client,
@@ -58,8 +60,12 @@ class OrderPackageTest(unittest.TestCase):
 
     def test_orders(self):
         self.assertEqual(self.order_package.orders, [self.mock_order])
-        self.order_package._orders = [None, 2, None]
-        self.assertEqual(self.order_package.orders, [2])
+        self.order_package._orders = [
+            mock.Mock(status=OrderStatus.PENDING),
+            mock.Mock(status=OrderStatus.PENDING),
+            mock.Mock(status=OrderStatus.VIOLATION),
+        ]
+        self.assertEqual(len(self.order_package.orders), 2)
 
     def test_info(self):
         self.assertEqual(
@@ -86,6 +92,7 @@ class BetfairOrderPackageTest(unittest.TestCase):
         self.mock_package_type = mock.Mock()
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
+        self.mock_order.status = OrderStatus.PENDING
         self.order_package = BetfairOrderPackage(
             self.mock_client, "1.234", [self.mock_order], self.mock_package_type
         )
