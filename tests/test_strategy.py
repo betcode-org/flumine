@@ -45,6 +45,8 @@ class BaseStrategyTest(unittest.TestCase):
             stream_class=strategy.MarketStream,
             name="test",
             context={"trigger": 0.123},
+            max_selection_exposure=1,
+            max_order_exposure=2,
         )
 
     def test_init(self):
@@ -55,6 +57,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
         self.assertEqual(self.strategy._name, "test")
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
+        self.assertEqual(self.strategy.max_selection_exposure, 1)
+        self.assertEqual(self.strategy.max_order_exposure, 2)
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()

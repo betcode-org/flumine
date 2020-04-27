@@ -2,6 +2,7 @@ import logging
 
 from ..clients.clients import ExchangeType
 from ..order.ordertype import OrderTypes
+from ..order.orderpackage import OrderPackageType
 from . import BaseControl
 from .. import utils
 
@@ -65,3 +66,43 @@ class OrderValidation(BaseControl):
             and order.order_type.liability < client.min_bsp_liability
         ):
             self._on_error(order)
+
+
+class StrategyExposure(BaseControl):
+
+    """
+    Checks exposure does not breach strategy
+    max exposure.
+    """
+
+    NAME = "STRATEGY_EXPOSURE"
+
+    def _validate(self, order_package):
+        if order_package.package_type in (
+            OrderPackageType.PLACE,
+            OrderPackageType.REPLACE,
+        ):
+            for order in order_package:
+                strategy = order.trade.strategy
+
+                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                    if order.side == "BACK":
+                        exposure = order.order_type.size
+                    else:
+                        exposure = (order.order_type.price - 1) * order.order_type.size
+                elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
+                    exposure = order.order_type.liability  # todo correct?
+                elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+                    exposure = order.order_type.liability
+                else:
+                    continue
+
+                if exposure > strategy.max_order_exposure:
+                    self._on_error(order)
+                    continue
+
+                current_selection_exposure = 0  # todo from blotter
+                if (
+                    current_selection_exposure + exposure
+                ) > strategy.max_selection_exposure:
+                    self._on_error(order)

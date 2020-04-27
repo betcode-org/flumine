@@ -14,7 +14,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(self.base_flumine.client, self.mock_client)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
-        self.assertEqual(len(self.base_flumine._trading_controls), 1)
+        self.assertEqual(len(self.base_flumine._trading_controls), 2)
         self.assertEqual(self.base_flumine._workers, [])
 
     def test_run(self):
@@ -44,9 +44,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_trading_control(self):
         mock_control = mock.Mock()
         self.base_flumine.add_trading_control(mock_control)
-        self.assertEqual(
-            len(self.base_flumine._trading_controls), 2
-        )
+        self.assertEqual(len(self.base_flumine._trading_controls), 3)
 
     def test__add_default_workers(self):
         self.base_flumine._add_default_workers()

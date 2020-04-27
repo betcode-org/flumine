@@ -14,7 +14,7 @@ from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
-from .controls.tradingcontrols import OrderValidation
+from .controls.tradingcontrols import OrderValidation, StrategyExposure
 
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class BaseFlumine:
         self._trading_controls = []
         # add default controls (processed in order)
         self.add_trading_control(OrderValidation)
-        # self.add_trading_control(StrategyExposure)
+        self.add_trading_control(StrategyExposure)
         # register default client controls (processed in order)
         self.add_client_control(MaxOrderCount)
 

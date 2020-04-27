@@ -30,6 +30,8 @@ class BaseStrategy:
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
         context: dict = None,
+        max_selection_exposure: float = 100,
+        max_order_exposure: float = 10,
     ):
         """
         Processes data from streams.
@@ -41,6 +43,8 @@ class BaseStrategy:
         :param stream_class: Can be Market or Data
         :param name: Strategy name
         :param context: Dictionary holding additional vars
+        :param max_selection_exposure: Max exposure per selection
+        :param max_order_exposure: Max exposure per order
         """
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
@@ -49,6 +53,8 @@ class BaseStrategy:
         self.stream_class = stream_class
         self._name = name
         self.context = context
+        self.max_selection_exposure = max_selection_exposure
+        self.max_order_exposure = max_order_exposure
 
         self._invested = {}  # {marketId: {selectionId: RunnerContext}}
         self.streams = []  # list of streams strategy is subscribed

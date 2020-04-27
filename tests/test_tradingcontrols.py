@@ -1,7 +1,13 @@
 import unittest
 from unittest import mock
 
-from flumine.controls.tradingcontrols import OrderValidation, OrderTypes, ExchangeType
+from flumine.controls.tradingcontrols import (
+    OrderValidation,
+    StrategyExposure,
+    OrderTypes,
+    ExchangeType,
+    OrderPackageType,
+)
 
 
 class TestOrderValidation(unittest.TestCase):
@@ -191,4 +197,53 @@ class TestOrderValidation(unittest.TestCase):
         order.side = "LAY"
         order.order_type.liability = 9.99
         self.trading_control._validate_betfair_min_size(order)
+        mock_on_error.assert_called_with(order)
+
+
+class TestStrategyExposure(unittest.TestCase):
+    def setUp(self):
+        self.mock_flumine = mock.Mock()
+        self.trading_control = StrategyExposure(self.mock_flumine)
+
+    def test_init(self):
+        self.assertEqual(self.trading_control.NAME, "STRATEGY_EXPOSURE")
+        self.assertEqual(self.trading_control.flumine, self.mock_flumine)
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_limit(self, mock_on_error):
+        order = mock.Mock()
+        order.trade.strategy.max_order_exposure = 10
+        order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order.side = "BACK"
+        order.order_type.size = 12
+        order_package = mock.Mock()
+        order_package.package_type = OrderPackageType.PLACE
+        order_package.__iter__ = mock.Mock(return_value=iter([order]))
+        self.trading_control._validate(order_package)
+        mock_on_error.assert_called_with(order)
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_limit_on_close(self, mock_on_error):
+        order = mock.Mock()
+        order.trade.strategy.max_order_exposure = 10
+        order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        order.side = "BACK"
+        order.order_type.liability = 12
+        order_package = mock.Mock()
+        order_package.package_type = OrderPackageType.PLACE
+        order_package.__iter__ = mock.Mock(return_value=iter([order]))
+        self.trading_control._validate(order_package)
+        mock_on_error.assert_called_with(order)
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_market_on_close(self, mock_on_error):
+        order = mock.Mock()
+        order.trade.strategy.max_order_exposure = 10
+        order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        order.side = "BACK"
+        order.order_type.liability = 12
+        order_package = mock.Mock()
+        order_package.package_type = OrderPackageType.PLACE
+        order_package.__iter__ = mock.Mock(return_value=iter([order]))
+        self.trading_control._validate(order_package)
         mock_on_error.assert_called_with(order)
