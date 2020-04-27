@@ -67,3 +67,15 @@ def make_prices(min_price, cutoffs):
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
+
+
+def calculate_exposure(mb: list, ml: list) -> int:
+    """Calculates exposure based on list
+    of (price, size)
+    """
+    back_exp = sum(-i[1] for i in mb)
+    back_profit = sum(i[0] * i[1] for i in mb)
+    lay_exp = sum((i[0] - 1) * -i[1] for i in ml)
+    if lay_exp:
+        lay_exp += back_profit
+    return min(round(back_exp + lay_exp, 2), 0)  # returns negative int

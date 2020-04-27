@@ -181,23 +181,23 @@ class TestOrderValidation(unittest.TestCase):
         self.trading_control._validate_betfair_min_size(order)
         mock_on_error.assert_not_called()
 
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betfair_min_size_on_error(self, mock_on_error):
-        order = mock.Mock()
-        order.client = self.mock_client
-        order.side = "BACK"
-        order.order_type.liability = 1.99
-        self.trading_control._validate_betfair_min_size(order)
-        mock_on_error.assert_called_with(order)
-
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
-        order = mock.Mock()
-        order.client = self.mock_client
-        order.side = "LAY"
-        order.order_type.liability = 9.99
-        self.trading_control._validate_betfair_min_size(order)
-        mock_on_error.assert_called_with(order)
+    # @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    # def test__validate_betfair_min_size_on_error(self, mock_on_error):
+    #     order = mock.Mock()
+    #     order.client = self.mock_client
+    #     order.side = "BACK"
+    #     order.order_type.liability = 1.99
+    #     self.trading_control._validate_betfair_min_size(order)
+    #     mock_on_error.assert_called_with(order)
+    #
+    # @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    # def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
+    #     order = mock.Mock()
+    #     order.client = self.mock_client
+    #     order.side = "LAY"
+    #     order.order_type.liability = 9.99
+    #     self.trading_control._validate_betfair_min_size(order)
+    #     mock_on_error.assert_called_with(order)
 
 
 class TestStrategyExposure(unittest.TestCase):
@@ -245,5 +245,25 @@ class TestStrategyExposure(unittest.TestCase):
         order_package = mock.Mock()
         order_package.package_type = OrderPackageType.PLACE
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
+        self.trading_control._validate(order_package)
+        mock_on_error.assert_called_with(order)
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_selection(self, mock_on_error):
+        mock_market = mock.Mock()
+        mock_market.blotter.selection_exposure.return_value = -10
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
+        order = mock.Mock()
+        order.trade.strategy.max_order_exposure = 10
+        order.trade.strategy.max_selection_exposure = 10
+        order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order.side = "BACK"
+        order.order_type.size = 2
+        order_package = mock.Mock()
+        order_package.market_id = "1.234"
+        order_package.package_type = OrderPackageType.PLACE
+        order_package.__iter__ = mock.Mock(return_value=iter([order]))
+
         self.trading_control._validate(order_package)
         mock_on_error.assert_called_with(order)

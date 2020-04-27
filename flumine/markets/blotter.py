@@ -1,7 +1,8 @@
 import logging
+from typing import Iterable
 
-from ..utils import chunks
-from ..order.order import OrderStatus
+from ..utils import chunks, calculate_exposure
+from ..order.order import BaseOrder, OrderStatus
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,22 @@ class Blotter:
                 return True
         return False
 
+    """ position """
+
+    def selection_exposure(self, strategy, lookup: tuple) -> float:
+        """Returns strategy/selection exposure,
+        max value is 0
+        """
+        mb, ml = [], []  # (price, size)
+        for order in self:
+            if order.trade.strategy == strategy and order.lookup == lookup:
+                if order.side == "BACK":
+                    mb.append((order.average_price_matched, order.size_matched))
+                else:
+                    ml.append((order.average_price_matched, order.size_matched))
+        # calc exposure
+        return calculate_exposure(mb, ml)
+
     """ getters / setters """
 
     def has_order(self, customer_order_ref: str) -> bool:
@@ -88,7 +105,7 @@ class Blotter:
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[BaseOrder]:
         return iter(self._orders.values())
 
     def __len__(self) -> int:

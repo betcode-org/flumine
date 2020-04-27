@@ -19,3 +19,26 @@ class UtilsTest(unittest.TestCase):
             utils.create_cheap_hash("test"), utils.create_cheap_hash("test"),
         )
         self.assertEqual(len(utils.create_cheap_hash("test", 16)), 16)
+
+    def test_as_dec(self):
+        utils.as_dec(2.00)
+
+    # def test_arrange(self):
+    #     utils.arange()
+
+    def test_make_prices(self):
+        utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
+
+    def test_calculate_exposure(self):
+        self.assertEqual(utils.calculate_exposure([], []), 0)
+        self.assertEqual(utils.calculate_exposure([(5.6, 2)], []), -2)
+        self.assertEqual(utils.calculate_exposure([], [(5.6, 2)]), -9.2)
+        self.assertEqual(utils.calculate_exposure([], [(5.6, 2), (5.8, 2)]), -18.8)
+        self.assertEqual(utils.calculate_exposure([(5.6, 2)], [(5.6, 2)]), 0)
+        self.assertEqual(utils.calculate_exposure([(5.6, 2), (100, 20)], [(5.6, 2)]), 0)
+        self.assertEqual(
+            utils.calculate_exposure([(5.6, 2), (100, 20)], [(10, 1000)]), -7010.80
+        )
+        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 2)]), 0)
+        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 4)]), 0)
+        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 8)]), -14)

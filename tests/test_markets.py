@@ -31,7 +31,6 @@ class MarketsTest(unittest.TestCase):
         self.markets._markets = {"1.1": mock_market}
         self.markets.close_market("1.1")
         mock_market.close_market.assert_called_with()
-        self.assertEqual(self.markets.markets, {})
 
     def test_get_order(self):
         mock_market = mock.Mock()
@@ -45,11 +44,11 @@ class MarketsTest(unittest.TestCase):
     def test_markets(self):
         self.assertEqual(self.markets.markets, {})
         mock_market = mock.Mock()
-        mock_market.closed = False
         mock_market_two = mock.Mock()
-        mock_market_two.closed = True
         self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
-        self.assertEqual(self.markets.markets, {"1.1": mock_market})
+        self.assertEqual(
+            self.markets.markets, {"1.1": mock_market, "2.1": mock_market_two}
+        )
 
     def test_open_market_ids(self):
         self.assertEqual(self.markets.open_market_ids, [])
@@ -58,7 +57,7 @@ class MarketsTest(unittest.TestCase):
         mock_market_two = mock.Mock()
         mock_market_two.closed = True
         self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
-        self.assertEqual(self.markets.open_market_ids, ["1.1"])
+        self.assertEqual(self.markets.open_market_ids, [mock_market.market_id])
 
     def test_live_orders(self):
         self.assertFalse(self.markets.live_orders)

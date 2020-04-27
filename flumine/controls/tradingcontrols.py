@@ -58,12 +58,16 @@ class OrderValidation(BaseControl):
             self._on_error(order)
 
     def _validate_betfair_min_size(self, order):
-        client = order.client
-        if order.side == "BACK" and order.order_type.liability < client.min_bet_size:
+        # todo
+        return
+        if (
+            order.side == "BACK"
+            and order.order_type.liability < self.client.min_bet_size
+        ):
             self._on_error(order)
         elif (
             order.side == "LAY"
-            and order.order_type.liability < client.min_bsp_liability
+            and order.order_type.liability < self.client.min_bsp_liability
         ):
             self._on_error(order)
 
@@ -80,7 +84,7 @@ class StrategyExposure(BaseControl):
     def _validate(self, order_package):
         if order_package.package_type in (
             OrderPackageType.PLACE,
-            OrderPackageType.REPLACE,
+            OrderPackageType.REPLACE,  # todo potential bug?
         ):
             for order in order_package:
                 strategy = order.trade.strategy
@@ -101,8 +105,11 @@ class StrategyExposure(BaseControl):
                     self._on_error(order)
                     continue
 
-                current_selection_exposure = 0  # todo from blotter
+                market = self.flumine.markets.markets[order_package.market_id]
+                current_selection_exposure = market.blotter.selection_exposure(
+                    strategy, lookup=order.lookup
+                )
                 if (
-                    current_selection_exposure + exposure
-                ) > strategy.max_selection_exposure:
+                    current_selection_exposure - exposure
+                ) < -strategy.max_selection_exposure:
                     self._on_error(order)

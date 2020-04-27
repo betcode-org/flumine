@@ -2,10 +2,11 @@ import uuid
 import logging
 import datetime
 from enum import Enum
+from typing import Union
 from betfairlightweight import filters
 
 from ..clients.clients import ExchangeType
-from .ordertype import BaseOrderType, OrderTypes
+from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 
@@ -31,7 +32,13 @@ class BaseOrder:
 
     EXCHANGE = None
 
-    def __init__(self, trade, side: str, order_type: BaseOrderType, handicap: int = 0):
+    def __init__(
+        self,
+        trade,
+        side: str,
+        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        handicap: int = 0,
+    ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
         self.side = side
