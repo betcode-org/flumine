@@ -183,6 +183,11 @@ class BaseOrder:
             "status_log": ", ".join([s.value for s in self.status_log]),
         }
 
+    def __repr__(self):
+        return "Order {0}: {1}".format(
+            self.bet_id, self.status.value if self.status else None
+        )
+
 
 class BetfairOrder(BaseOrder):
 

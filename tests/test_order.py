@@ -185,6 +185,9 @@ class BaseOrderTest(unittest.TestCase):
             },
         )
 
+    def test_repr(self):
+        self.assertEqual(repr(self.order), "Order None: None")
+
 
 class BetfairOrderTest(unittest.TestCase):
     def setUp(self) -> None:

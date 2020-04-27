@@ -49,6 +49,12 @@ class TradeTest(unittest.TestCase):
                 "BACK", mock_order_type, handicap=1, order=mock_order
             )
 
+    def test_create_order_replacement(self):
+        mock_order = mock.Mock()
+        mock_order._update = {"new_price": 12}
+        replacement_order = self.trade.create_order_replacement(mock_order)
+        self.assertEqual(self.trade.orders, [replacement_order])
+
     def test_create_order_from_current_limit(self):
         mock_current_order = mock.Mock()
         mock_current_order.order_type = "LIMIT"

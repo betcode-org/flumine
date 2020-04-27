@@ -70,7 +70,7 @@ class BaseOrderPackage(BaseEvent):
 
     @property
     def orders(self) -> list:
-        return [o for o in self._orders if o.status == OrderStatus.PENDING]
+        return [o for o in self._orders if o.status != OrderStatus.VIOLATION]
 
     @property
     def info(self) -> dict:

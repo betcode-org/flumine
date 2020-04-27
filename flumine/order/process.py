@@ -40,6 +40,10 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
                     order.executable()  # todo correct?
                 else:
                     continue
+            if order.bet_id != current_order.bet_id:  # replaceOrder handling (hacky)
+                order = markets.get_order_from_bet_id(
+                    market_id=current_order.market_id, bet_id=current_order.bet_id,
+                )
 
             if order:
                 order.update_current_order(current_order)

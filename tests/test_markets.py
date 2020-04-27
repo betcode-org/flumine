@@ -41,6 +41,17 @@ class MarketsTest(unittest.TestCase):
         self.assertEqual(self.markets.get_order("1.1", "test"), 12)
         self.assertIsNone(self.markets.get_order("1.2", "test"))
 
+    def test_get_order_from_bet_id(self):
+        mock_order = mock.Mock()
+        mock_order.bet_id = "321"
+        mock_market = mock.Mock()
+        mock_market.closed = False
+        mock_market.blotter.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        self.markets._markets = {"1.1": mock_market}
+
+        self.assertEqual(self.markets.get_order_from_bet_id("1.1", "321"), mock_order)
+        self.assertIsNone(self.markets.get_order("1.2", "test"))
+
     def test_markets(self):
         self.assertEqual(self.markets.markets, {})
         mock_market = mock.Mock()
@@ -104,6 +115,13 @@ class MarketTest(unittest.TestCase):
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with()
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
+
+    def test_place_order_not_executed(self):
+        mock_order = mock.Mock()
+        mock_order.id = "123"
+        self.market.place_order(mock_order, execute=False)
+        mock_order.place.assert_called_with()
+        self.assertEqual(self.market.blotter.pending_place, [])
 
     def test_place_order_retry(self):
         mock_order = mock.Mock()

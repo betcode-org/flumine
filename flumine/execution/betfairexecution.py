@@ -114,7 +114,7 @@ class BetfairExecution(BaseExecution):
                 # process cancel response
                 if instruction_report.cancel_instruction_reports.status == "SUCCESS":
                     self._order_logger(
-                        order, instruction_report, OrderPackageType.REPLACE
+                        order, instruction_report, OrderPackageType.CANCEL
                     )
                     order.execution_complete()
                 elif instruction_report.cancel_instruction_reports.status == "FAILURE":
@@ -124,14 +124,19 @@ class BetfairExecution(BaseExecution):
 
                 # process place response
                 if instruction_report.place_instruction_reports.status == "SUCCESS":
+                    # create new order
+                    replacement_order = order.trade.create_order_replacement(order)
                     self._order_logger(
-                        order, instruction_report, OrderPackageType.REPLACE,
+                        replacement_order, instruction_report, OrderPackageType.REPLACE,
                     )
-                    order.executable()  # todo new order?
+                    # add to blotter
+                    market = self.markets.markets[order.market_id]
+                    market.place_order(replacement_order, execute=False)
+                    replacement_order.executable()
                 elif instruction_report.place_instruction_reports.status == "FAILURE":
-                    pass
+                    pass  # todo
                 elif instruction_report.place_instruction_reports.status == "TIMEOUT":
-                    pass
+                    pass  # todo
 
     def replace(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.replace_orders(
@@ -190,6 +195,6 @@ class BetfairExecution(BaseExecution):
         elif package_type == OrderPackageType.UPDATE:
             order.responses.updated(instruction_report)
         elif package_type == OrderPackageType.REPLACE:
-            order.responses.replaced(instruction_report)
+            order.responses.placed(instruction_report)
             order.bet_id = instruction_report.place_instruction_reports.bet_id
         # self.flumine.log_control(order)  # todo log order

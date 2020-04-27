@@ -31,14 +31,15 @@ class Market:
         self.closed = True
 
     # order
-    def place_order(self, order) -> None:
+    def place_order(self, order, execute: bool = True) -> None:
         order.place()
         if order.id not in self.blotter:
             self.blotter[order.id] = order
             # todo log trade?
         else:
             return  # retry attempt so ignore?
-        self.blotter.pending_place.append(order)
+        if execute:  # handles replaceOrder
+            self.blotter.pending_place.append(order)
 
     def cancel_order(self, order, size_reduction: float = None) -> None:
         order.cancel(size_reduction)
