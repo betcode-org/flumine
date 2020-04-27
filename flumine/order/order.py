@@ -47,6 +47,7 @@ class BaseOrder:
 
         self.status = None
         self.status_log = []
+        self._current_order = None  # resources.CurrentOrder
 
         self.bet_id = None
         self._update = {}  # stores cancel/update/replace data
@@ -109,6 +110,22 @@ class BaseOrder:
         raise NotImplementedError
 
     def create_replace_instruction(self) -> dict:
+        raise NotImplementedError
+
+    # currentOrder
+    @property
+    def current_order(self):
+        if self._current_order:
+            return self._current_order
+        elif self.responses.place_response:
+            return self.responses.place_response
+
+    @property
+    def size_matched(self) -> float:
+        raise NotImplementedError
+
+    @property
+    def average_price_matched(self) -> float:
         raise NotImplementedError
 
     @property
@@ -237,3 +254,18 @@ class BetfairOrder(BaseOrder):
         return filters.replace_instruction(
             bet_id=self.bet_id, new_price=self._update["new_price"]
         )
+
+    # currentOrder
+    @property
+    def size_matched(self) -> float:
+        try:
+            return self.current_order.size_matched or 0.0
+        except AttributeError:
+            return 0.0
+
+    @property
+    def average_price_matched(self) -> float:
+        try:
+            return self.current_order.average_price_matched or 0.0
+        except AttributeError:
+            return 0.0

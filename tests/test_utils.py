@@ -31,6 +31,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_calculate_exposure(self):
         self.assertEqual(utils.calculate_exposure([], []), 0)
+        self.assertEqual(utils.calculate_exposure([(0, 0)], [(0, 0), (0, 0)]), 0)
         self.assertEqual(utils.calculate_exposure([(5.6, 2)], []), -2)
         self.assertEqual(utils.calculate_exposure([], [(5.6, 2)]), -9.2)
         self.assertEqual(utils.calculate_exposure([], [(5.6, 2), (5.8, 2)]), -18.8)

@@ -29,6 +29,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order._update, {})
+        self.assertIsNone(self.order._current_order)
 
     def test__update_status(self):
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
@@ -111,6 +112,22 @@ class BaseOrderTest(unittest.TestCase):
     def test_create_replace_instruction(self):
         with self.assertRaises(NotImplementedError):
             self.order.create_replace_instruction()
+
+    def test_current_order(self):
+        self.assertIsNone(self.order.current_order)
+        mock_responses = mock.Mock()
+        self.order.responses = mock_responses
+        self.assertEqual(self.order.current_order, mock_responses.place_response)
+        self.order._current_order = 1
+        self.assertEqual(self.order.current_order, 1)
+
+    def test_size_matched(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.order.size_matched
+
+    def test_average_price_matched(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.order.average_price_matched
 
     def test_elapsed_seconds(self):
         mock_responses = mock.Mock()
@@ -278,3 +295,17 @@ class BetfairOrderTest(unittest.TestCase):
     def test_create_replace_instruction(self):
         self.order._update = {"new_price": 2.02}
         self.assertEqual(self.order.create_replace_instruction(), {"newPrice": 2.02})
+
+    def test_size_matched(self):
+        self.assertEqual(self.order.size_matched, 0)
+        mock_current_order = mock.Mock(size_matched=10)
+        self.order._current_order = mock_current_order
+        self.assertEqual(self.order.size_matched, mock_current_order.size_matched)
+
+    def test_average_price_matched(self):
+        self.assertEqual(self.order.average_price_matched, 0)
+        mock_current_order = mock.Mock(average_price_matched=12.3)
+        self.order._current_order = mock_current_order
+        self.assertEqual(
+            self.order.average_price_matched, mock_current_order.average_price_matched
+        )
