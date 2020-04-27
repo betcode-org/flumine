@@ -1,5 +1,6 @@
 import queue
 import logging
+from typing import Type
 from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
@@ -12,6 +13,8 @@ from .markets.market import Market
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
+from .controls.clientcontrols import BaseControl, MaxOrderCount
+from .controls.tradingcontrols import OrderValidation
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +53,12 @@ class BaseFlumine:
         self._logging_controls = []
 
         # trading controls
-        self._trading_controls = []  # todo register default controls
+        self._trading_controls = []
+        # add default controls (processed in order)
+        self.add_trading_control(OrderValidation)
+        # self.add_trading_control(StrategyExposure)
+        # register default client controls (processed in order)
+        self.add_client_control(MaxOrderCount)
 
         # workers
         self._workers = []
@@ -65,6 +73,14 @@ class BaseFlumine:
 
     def add_worker(self, worker: BackgroundWorker) -> None:
         self._workers.append(worker)
+
+    def add_client_control(self, client_control: Type[BaseControl], **kwargs) -> None:
+        logger.info("Adding client control {0}".format(client_control.NAME))
+        self.client.trading_controls.append(client_control(self, self.client, **kwargs))
+
+    def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
+        logger.info("Adding trading control {0}".format(trading_control.NAME))
+        self._trading_controls.append(trading_control(self, **kwargs))
 
     def _add_default_workers(self) -> None:
         return

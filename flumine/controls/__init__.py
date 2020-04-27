@@ -23,9 +23,7 @@ class BaseControl:
     def _on_error(self, order: BaseOrder) -> None:
         order.violation()
         logger.warning(
-            "Order has violated {0} and will not be placed".format(
-                self.NAME
-            ),
+            "Order has violated {0} and will not be placed".format(self.NAME),
             extra=order.info,
         )
         # if order.flumine_order_type == "initial":

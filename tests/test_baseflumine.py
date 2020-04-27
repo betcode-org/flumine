@@ -14,7 +14,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(self.base_flumine.client, self.mock_client)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._logging_controls, [])
-        self.assertEqual(self.base_flumine._trading_controls, [])
+        self.assertEqual(len(self.base_flumine._trading_controls), 1)
         self.assertEqual(self.base_flumine._workers, [])
 
     def test_run(self):
@@ -31,6 +31,22 @@ class BaseFlumineTest(unittest.TestCase):
         mock_worker = mock.Mock()
         self.base_flumine.add_worker(mock_worker)
         self.assertEqual(len(self.base_flumine._workers), 1)
+
+    def test_add_client_control(self):
+        self.mock_client.trading_controls = []
+        mock_control = mock.Mock()
+        self.base_flumine.add_client_control(mock_control)
+        self.assertEqual(
+            self.base_flumine.client.trading_controls,
+            [mock_control(self.base_flumine, self.mock_client)],
+        )
+
+    def test_add_trading_control(self):
+        mock_control = mock.Mock()
+        self.base_flumine.add_trading_control(mock_control)
+        self.assertEqual(
+            len(self.base_flumine._trading_controls), 2
+        )
 
     def test__add_default_workers(self):
         self.base_flumine._add_default_workers()
@@ -69,8 +85,25 @@ class BaseFlumineTest(unittest.TestCase):
         mock_order_package.client.trading_controls = [mock_client_trading_control]
         mock_order_package.info = {}
         mock_order_package.orders = []
+        self.base_flumine._trading_controls = []
         self.base_flumine._process_order_package(mock_order_package)
         mock_order_package.client.execution.handler.assert_not_called()
+
+    def test__process_order_package_controls(self):
+        mock_trading_control = mock.Mock()
+        mock_client_control = mock.Mock()
+        self.base_flumine._trading_controls = [mock_trading_control]
+        mock_client_trading_control = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.market_id = "1.123"
+        mock_order_package.client.trading_controls = [mock_client_trading_control]
+        mock_order_package.info = {}
+        mock_order_package.orders = []
+        mock_order_package.client.trading_controls = [mock_client_control]
+        self.base_flumine._process_order_package(mock_order_package)
+        mock_order_package.client.execution.handler.assert_not_called()
+        mock_trading_control.assert_called_with(mock_order_package)
+        mock_client_control.assert_called_with(mock_order_package)
 
     @mock.patch("flumine.baseflumine.Market")
     def test__add_live_market(self, mock_market):

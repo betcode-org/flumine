@@ -4,6 +4,7 @@ from betfairlightweight.metadata import transaction_limit
 
 from ..order.orderpackage import OrderPackageType
 from . import BaseControl
+from ..clients.baseclient import BaseClient
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class MaxOrderCount(BaseControl):
 
     NAME = "MAX_ORDER_COUNT"
 
-    def __init__(self, flumine, client):
+    def __init__(self, flumine, client: BaseClient):
         super(MaxOrderCount, self).__init__(flumine)
         self.client = client
         self.total = 0
