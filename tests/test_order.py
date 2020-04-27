@@ -201,8 +201,13 @@ class BetfairOrderTest(unittest.TestCase):
         self.order.place()
         mock_placing.assert_called_with()
 
+    @mock.patch(
+        "flumine.order.order.BetfairOrder.size_remaining",
+        new_callable=mock.PropertyMock,
+    )
     @mock.patch("flumine.order.order.BetfairOrder.cancelling")
-    def test_cancel(self, mock_cancelling):
+    def test_cancel(self, mock_cancelling, mock_size_remaining):
+        mock_size_remaining.return_value = 20
         self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.cancel(12)
@@ -213,6 +218,21 @@ class BetfairOrderTest(unittest.TestCase):
         mock_cancelling.assert_called_with()
         self.order.cancel()
         self.assertEqual(self.order._update, {"size_reduction": None})
+
+    @mock.patch(
+        "flumine.order.order.BetfairOrder.size_remaining",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch("flumine.order.order.BetfairOrder.cancelling")
+    def test_cancel_error_size(self, mock_cancelling, mock_size_remaining):
+        mock_size_remaining.return_value = 20
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(21)
 
     def test_cancel_error(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT

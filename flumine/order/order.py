@@ -37,7 +37,7 @@ class BaseOrder:
         trade,
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
-        handicap: int = 0,
+        handicap: float = 0,
     ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
@@ -194,8 +194,8 @@ class BetfairOrder(BaseOrder):
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            # if size_reduction and self.size_remaining - size_reduction < 0:
-            #     raise OrderUpdateError("Size reduction too large")
+            if size_reduction and self.size_remaining - size_reduction < 0:
+                raise OrderUpdateError("Size reduction too large")
             if self.status != OrderStatus.EXECUTABLE:
                 raise OrderUpdateError("Current status: %s" % self.status)
             self._update["size_reduction"] = size_reduction

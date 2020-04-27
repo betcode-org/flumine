@@ -1,10 +1,10 @@
 import uuid
-from typing import Type
+from typing import Union, Type
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
 from .order import BetfairOrder
-from .ordertype import BaseOrderType, LimitOrder
+from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
 
 
@@ -33,8 +33,8 @@ class Trade:
     def create_order(
         self,
         side: str,
-        order_type: BaseOrderType,
-        handicap: int = 0,
+        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        handicap: float = 0,
         order: Type[BetfairOrder] = BetfairOrder,
     ) -> BetfairOrder:
         if order_type.EXCHANGE != order.EXCHANGE:
