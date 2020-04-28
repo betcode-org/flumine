@@ -166,6 +166,7 @@ class BaseFlumine:
         self.client.add_execution(self)
         # login
         self.client.login()
+        self.client.update_account_details()
         # add default and start all workers
         self._add_default_workers()
         for w in self._workers:

@@ -1,5 +1,6 @@
-from ..utils import create_short_uuid
+from typing import Optional
 
+from ..utils import create_short_uuid
 from .clients import ExchangeType
 
 DEFAULT_CAPITAL_BASE = 0
@@ -54,3 +55,15 @@ class BaseClient:
             self.execution = flumine.simulated_execution
         elif self.EXCHANGE == ExchangeType.BETFAIR:
             self.execution = flumine.betfair_execution
+
+    @property
+    def min_bet_size(self) -> Optional[float]:
+        raise NotImplementedError
+
+    @property
+    def min_bet_payout(self) -> Optional[float]:
+        raise NotImplementedError
+
+    @property
+    def min_bsp_liability(self) -> Optional[float]:
+        raise NotImplementedError
