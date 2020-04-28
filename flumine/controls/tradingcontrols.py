@@ -27,13 +27,14 @@ class OrderValidation(BaseControl):
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             self._validate_betfair_size(order)
             self._validate_betfair_price(order)
+            self._validate_betfair_min_size(order, OrderTypes.LIMIT)
         elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
             self._validate_betfair_price(order)
             self._validate_betfair_liability(order)
-            self._validate_betfair_min_size(order)
+            self._validate_betfair_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
         elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
             self._validate_betfair_liability(order)
-            self._validate_betfair_min_size(order)
+            self._validate_betfair_min_size(order, OrderTypes.MARKET_ON_CLOSE)
         else:
             self._on_error(order)  # unknown orderType
 
@@ -57,25 +58,32 @@ class OrderValidation(BaseControl):
         elif order.order_type.liability <= 0:
             self._on_error(order)
 
-    def _validate_betfair_min_size(self, order):
-        # todo
-        return
-        if (
-            order.side == "BACK"
-            and order.order_type.liability < self.client.min_bet_size
-        ):
-            self._on_error(order)
-        elif (
-            order.side == "LAY"
-            and order.order_type.liability < self.client.min_bsp_liability
-        ):
-            self._on_error(order)
+    def _validate_betfair_min_size(self, order, order_type):
+        client = self.flumine.client
+        if order_type == OrderTypes.LIMIT:
+            if (
+                order.order_type.size < client.min_bet_size
+                and (order.order_type.price * order.order_type.size)
+                < client.min_bet_payout
+            ):
+                self._on_error(order)
+        else:  # todo is this correct?
+            if (
+                order.side == "BACK"
+                and order.order_type.liability < client.min_bet_size
+            ):
+                self._on_error(order)
+            elif (
+                order.side == "LAY"
+                and order.order_type.liability < client.min_bsp_liability
+            ):
+                self._on_error(order)
 
 
 class StrategyExposure(BaseControl):
 
     """
-    Checks exposure does not breach strategy
+    Checks exposure does not exceed strategy
     max exposure.
     """
 
@@ -101,10 +109,12 @@ class StrategyExposure(BaseControl):
                 else:
                     continue
 
+                # per order
                 if exposure > strategy.max_order_exposure:
                     self._on_error(order)
                     continue
 
+                # per selection
                 market = self.flumine.markets.markets[order_package.market_id]
                 current_selection_exposure = market.blotter.selection_exposure(
                     strategy, lookup=order.lookup
