@@ -78,4 +78,4 @@ class Flumine(BaseFlumine):
         return "<Flumine>"
 
     def __str__(self) -> str:
-        return "<Flumine [%s]>" % self.status
+        return "<Flumine>"

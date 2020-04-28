@@ -160,10 +160,6 @@ class BaseFlumine:
         for strategy in self.strategies:
             strategy.finish()
 
-    @property
-    def status(self) -> str:
-        return "running" if self._running else "not running"
-
     def __enter__(self):
         logger.info("Starting flumine")
         # add execution to clients

@@ -56,7 +56,7 @@ class FlumineTest(unittest.TestCase):
         self.assertEqual(len(self.flumine._workers), 2)
 
     def test_str(self):
-        assert str(self.flumine) == "<Flumine [not running]>"
+        assert str(self.flumine) == "<Flumine>"
 
     def test_repr(self):
         assert repr(self.flumine) == "<Flumine>"

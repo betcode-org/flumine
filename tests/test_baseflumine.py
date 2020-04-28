@@ -126,12 +126,6 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 
-    def test_status(self):
-        self.base_flumine._running = True
-        self.assertEqual(self.base_flumine.status, "running")
-        self.base_flumine._running = False
-        self.assertEqual(self.base_flumine.status, "not running")
-
     def test_enter_exit(self):
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)

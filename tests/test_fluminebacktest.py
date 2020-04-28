@@ -50,7 +50,7 @@ class FlumineBacktestTest(unittest.TestCase):
         self.flumine._process_market_books(mock_event)
 
     def test_str(self):
-        assert str(self.flumine) == "<FlumineBacktest [not running]>"
+        assert str(self.flumine) == "<FlumineBacktest>"
 
     def test_repr(self):
         assert repr(self.flumine) == "<FlumineBacktest>"

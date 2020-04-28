@@ -68,4 +68,4 @@ class FlumineBacktest(BaseFlumine):
         return "<FlumineBacktest>"
 
     def __str__(self) -> str:
-        return "<FlumineBacktest [%s]>" % self.status
+        return "<FlumineBacktest>"
