@@ -5,6 +5,7 @@ from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
 from .datastream import DataStream
 from .historicalstream import HistoricalStream
+from .orderstream import OrderStream
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,8 @@ class Streams:
         else:
             stream = self.add_stream(strategy)
             strategy.streams.append(stream)
+
+    """ market data """
 
     def add_stream(self, strategy: BaseStrategy) -> Union[MarketStream, DataStream]:
         for stream in self:  # check if market stream already exists
@@ -61,7 +64,7 @@ class Streams:
             self._streams.append(stream)
             return stream
 
-    def add_historical_stream(self, strategy, market):
+    def add_historical_stream(self, strategy: BaseStrategy, market) -> HistoricalStream:
         for stream in self:
             if stream.market_filter == market:
                 return stream
@@ -82,6 +85,21 @@ class Streams:
             )
             self._streams.append(stream)
             return stream
+
+    """ order data """
+
+    def add_order_stream(
+        self, conflate_ms: int = None, streaming_timeout: float = 0.25
+    ) -> OrderStream:
+        stream_id = self._increment_stream_id()
+        stream = OrderStream(
+            flumine=self.flumine,
+            stream_id=stream_id,
+            conflate_ms=conflate_ms,
+            streaming_timeout=streaming_timeout,
+        )
+        self._streams.append(stream)
+        return stream
 
     def start(self) -> None:
         if not self.flumine.BACKTEST:

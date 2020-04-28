@@ -44,6 +44,15 @@ class BaseClientTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             assert self.base_client.update_account_details()
 
+    def test_add_execution(self):
+        mock_flumine = mock.Mock()
+        self.base_client.EXCHANGE = ExchangeType.SIMULATED
+        self.base_client.add_execution(mock_flumine)
+        self.assertEqual(self.base_client.execution, mock_flumine.simulated_execution)
+        self.base_client.EXCHANGE = ExchangeType.BETFAIR
+        self.base_client.add_execution(mock_flumine)
+        self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
+
 
 class BetfairClientTest(unittest.TestCase):
     def setUp(self):

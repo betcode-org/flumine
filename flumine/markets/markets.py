@@ -1,6 +1,7 @@
-from typing import Iterator
+from typing import Iterator, Optional
 
 from .market import Market
+from ..order.order import BetfairOrder
 
 
 class Markets:
@@ -18,14 +19,39 @@ class Markets:
         live_market.close_market()
         return live_market
 
+    def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
+        try:
+            return self.markets[market_id].blotter[order_id]
+        except KeyError:
+            return
+
+    def get_order_from_bet_id(
+        self, market_id: str, bet_id: str
+    ) -> Optional[BetfairOrder]:
+        blotter = self.markets[market_id].blotter
+        lookup = {order.bet_id: order for order in blotter}
+        try:
+            return lookup[bet_id]
+        except KeyError:
+            return
+
     @property
     def markets(self) -> dict:
-        return {
-            key: value for key, value in self._markets.items() if value.closed is False
-        }
+        return {key: value for key, value in self._markets.items()}
+
+    @property
+    def open_market_ids(self) -> list:
+        return [m.market_id for m in self.markets.values() if not m.closed]
+
+    @property
+    def live_orders(self) -> bool:
+        for market in self:
+            if market.closed is False and market.blotter.live_orders is True:
+                return True
+        return False
 
     def __iter__(self) -> Iterator[Market]:
-        return iter(self.markets)
+        return iter(self.markets.values())
 
     def __len__(self) -> int:
         return len(self.markets)

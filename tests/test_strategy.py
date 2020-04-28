@@ -45,6 +45,8 @@ class BaseStrategyTest(unittest.TestCase):
             stream_class=strategy.MarketStream,
             name="test",
             context={"trigger": 0.123},
+            max_selection_exposure=1,
+            max_order_exposure=2,
         )
 
     def test_init(self):
@@ -55,6 +57,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
         self.assertEqual(self.strategy._name, "test")
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
+        self.assertEqual(self.strategy.max_selection_exposure, 1)
+        self.assertEqual(self.strategy.max_order_exposure, 2)
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()
@@ -116,10 +120,43 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.process_race_card(None)
 
     def test_process_orders(self):
-        self.strategy.process_orders(None)
+        self.strategy.process_orders(None, None)
 
     def test_finish(self):
         self.strategy.finish()
+
+    def test_place_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.place_order(mock_market, mock_order)
+        mock_market.place_order.assert_called_with(mock_order)
+        self.assertIn(mock_order.market_id, self.strategy._invested)
+
+    def test_cancel_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.cancel_order(mock_market, mock_order, 0.01)
+        mock_market.cancel_order.assert_called_with(mock_order, 0.01)
+
+    def test_update_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.update_order(mock_market, mock_order, "PERSIST")
+        mock_market.update_order.assert_called_with(mock_order, "PERSIST")
+
+    def test_replace_order(self):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock()
+        self.strategy.replace_order(mock_market, mock_order, 1.01)
+        mock_market.replace_order.assert_called_with(mock_order, 1.01)
+
+    def test_validate_order(self):
+        mock_order = mock.Mock()
+        runner_context = mock.Mock()
+        runner_context.invested = False
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
+        runner_context.invested = True
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
 
     def test_stream_ids(self):
         mock_stream = mock.Mock()
@@ -135,6 +172,7 @@ class BaseStrategyTest(unittest.TestCase):
                 "market_data_filter": self.mock_market_data_filter,
                 "market_filter": self.mock_market_filter,
                 "name": "test",
+                "name_hash": "a94a8fe5ccb19",
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,
                 "context": {"trigger": 0.123},
@@ -143,6 +181,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_name(self):
         self.assertEqual(self.strategy.name, "test")
+
+    def test_name_hash(self):
+        self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
 
     def test_str(self):
         self.assertEqual(str(self.strategy), "test")

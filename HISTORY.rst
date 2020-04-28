@@ -3,6 +3,30 @@
 Release History
 ---------------
 
+1.3.0 (2020-04-28)
++++++++++++++++++++
+
+**Improvements**
+
+- BetfairExecution now live (place/cancel/update/replace)
+- Trading and Client controls now live
+- Trade/Order logic created and integrated
+- OrderPackage created for execution
+- Market class created
+- process.py created to handle order/trade logic and linking
+- Market catalogue worker added
+- Blotter created with some initial functions (selection_exposure)
+- Strategy runner_context added to handle selection investment
+- OrderStream created and integrated
+
+**Bug Fixes**
+
+- Error handling on keep_alive worker added
+
+**Libraries**
+
+- requests added as dependency
+
 1.2.0 (2020-04-06)
 +++++++++++++++++++
 

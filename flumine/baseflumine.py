@@ -1,5 +1,6 @@
 import queue
 import logging
+from typing import Type
 from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
@@ -9,6 +10,12 @@ from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
 from .markets.market import Market
+from .execution.betfairexecution import BetfairExecution
+from .execution.simulatedexecution import SimulatedExecution
+from .order.process import process_current_orders
+from .controls.clientcontrols import BaseControl, MaxOrderCount
+from .controls.tradingcontrols import OrderValidation, StrategyExposure
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,18 +45,20 @@ class BaseFlumine:
         # all streams (market/order)
         self.streams = Streams(self)
 
-        # todo order execution class
-        self.local_execution = None  # backtesting / paper
-        self.betfair_execution = None
+        # order execution class
+        self.simulated_execution = SimulatedExecution(self)
+        self.betfair_execution = BetfairExecution(self)
 
         # logging controls (e.g. database logger)
         self._logging_controls = []
 
         # trading controls
-        self._trading_controls = []  # todo register default controls
-
-        # finance blotter
-        self.blotter = None  # todo
+        self._trading_controls = []
+        # add default controls (processed in order)
+        self.add_trading_control(OrderValidation)
+        self.add_trading_control(StrategyExposure)
+        # register default client controls (processed in order)
+        self.add_client_control(MaxOrderCount)
 
         # workers
         self._workers = []
@@ -65,6 +74,14 @@ class BaseFlumine:
     def add_worker(self, worker: BackgroundWorker) -> None:
         self._workers.append(worker)
 
+    def add_client_control(self, client_control: Type[BaseControl], **kwargs) -> None:
+        logger.info("Adding client control {0}".format(client_control.NAME))
+        self.client.trading_controls.append(client_control(self, self.client, **kwargs))
+
+    def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
+        logger.info("Adding trading control {0}".format(trading_control.NAME))
+        self._trading_controls.append(trading_control(self, **kwargs))
+
     def _add_default_workers(self) -> None:
         return
 
@@ -79,6 +96,27 @@ class BaseFlumine:
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)
+
+            self._process_market_orders(market)
+
+    def _process_market_orders(
+        self, market: Market
+    ) -> None:  # todo override for backtesting
+        for order_package in market.blotter.process_orders(self.client):
+            self.handler_queue.put(order_package)
+
+    def _process_order_package(self, order_package) -> None:
+        """Validate trading controls and
+        then execute.
+        """
+        for control in self._trading_controls:
+            control(order_package)
+        for control in order_package.client.trading_controls:
+            control(order_package)
+        if order_package.orders:
+            order_package.client.execution.handler(order_package)
+        else:
+            logger.warning("Empty package, not executing", extra=order_package.info)
 
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
@@ -109,6 +147,15 @@ class BaseFlumine:
                     # todo logging control
                 market.market_catalogue = market_catalogue
 
+    def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
+        process_current_orders(self.markets, self.strategies, event)  # update state
+        for market in self.markets:
+            if market.closed is False:
+                for strategy in self.strategies:
+                    strategy_orders = market.blotter.strategy_orders(strategy)
+                    strategy.process_orders(market, strategy_orders)
+            self._process_market_orders(market)
+
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
             strategy.finish()
@@ -119,6 +166,8 @@ class BaseFlumine:
 
     def __enter__(self):
         logger.info("Starting flumine")
+        # add execution to clients
+        self.client.add_execution(self)
         # login
         self.client.login()
         # add default and start all workers
@@ -129,6 +178,8 @@ class BaseFlumine:
         # start strategies
         self.strategies.start()
         # start streams
+        if not self.BACKTEST:
+            self.streams.add_order_stream()  # todo move?
         self.streams.start()
 
         self._running = True

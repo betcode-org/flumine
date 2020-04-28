@@ -9,3 +9,29 @@ class ListenerError(FlumineException):
 
     def __int__(self, message):
         super(ListenerError, self).__init__(message)
+
+
+class OrderError(FlumineException):
+    """Exception raised if incorrect
+    order/order_type requested.
+    """
+
+    def __init__(self, message):
+        super(OrderError, self).__init__(message)
+
+
+class OrderUpdateError(FlumineException):
+    """Exception raised if order update
+    incorrect.
+    """
+
+    def __init__(self, message):
+        super(OrderUpdateError, self).__init__(message)
+
+
+class OrderExecutionError(FlumineException):
+    """Exception raised error in package during
+    execution.
+    """
+
+    pass

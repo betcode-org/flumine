@@ -3,10 +3,6 @@ import queue
 import logging
 import betfairlightweight
 from betfairlightweight import StreamListener
-from betfairlightweight import BetfairError
-from tenacity import retry, wait_exponential
-
-from ..event.event import MarketBookEvent
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +16,10 @@ class BaseStream(threading.Thread):
         self,
         flumine,
         stream_id: int,
-        market_filter: dict,
-        market_data_filter: dict,
         streaming_timeout: float,  # snaps listener if no update
         conflate_ms: int,
+        market_filter: dict = None,
+        market_data_filter: dict = None,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
         self.flumine = flumine

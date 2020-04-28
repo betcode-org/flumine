@@ -1,5 +1,6 @@
 import unittest
 from unittest import mock
+from betfairlightweight import BetfairError
 
 from flumine import worker
 
@@ -31,6 +32,30 @@ class WorkersTest(unittest.TestCase):
 
         mock_client.betting_client.session_token = 1
         mock_client.betting_client.session_expired = True
+        worker.keep_alive(mock_client)
+        mock_client.keep_alive.assert_called_with()
+
+    def test_keep_alive_failure(self):
+        mock_client = mock.Mock()
+        mock_client.betting_client.session_token = None
+        mock_response = mock.Mock()
+        mock_response.status = "FAILURE"
+        mock_client.betting_client.keep_alive.return_value = mock_response
+        worker.keep_alive(mock_client)
+        mock_client.login.assert_called_with()
+
+    def test_keep_alive_error(self):
+        mock_client = mock.Mock()
+        mock_client.betting_client.session_token = None
+        mock_client.betting_client.keep_alive.side_effect = BetfairError
+        worker.keep_alive(mock_client)
+        mock_client.login.assert_called_with()
+
+    def test_keep_alive_ka_error(self):
+        mock_client = mock.Mock()
+        mock_client.betting_client.session_token = 1
+        mock_client.betting_client.session_expired = True
+        mock_client.betting_client.keep_alive.side_effect = BetfairError
         worker.keep_alive(mock_client)
         mock_client.keep_alive.assert_called_with()
 

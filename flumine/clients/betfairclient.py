@@ -15,18 +15,18 @@ class BetfairClient(BaseClient):
 
     EXCHANGE = ExchangeType.BETFAIR
 
-    def login(self) -> None:
+    def login(self) -> resources.LoginResource:
         if self.interactive_login:
-            self.betting_client.login_interactive()
+            return self.betting_client.login_interactive()
         else:
-            self.betting_client.login()
+            return self.betting_client.login()
 
-    def keep_alive(self) -> None:
+    def keep_alive(self) -> resources.KeepAliveResource:
         if self.betting_client.session_expired:
-            self.betting_client.keep_alive()
+            return self.betting_client.keep_alive()
 
-    def logout(self) -> None:
-        self.betting_client.logout()
+    def logout(self) -> resources.LogoutResource:
+        return self.betting_client.logout()
 
     def update_account_details(self) -> None:
         # get details

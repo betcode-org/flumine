@@ -1,5 +1,7 @@
 from ..utils import create_short_uuid
 
+from .clients import ExchangeType
+
 DEFAULT_CAPITAL_BASE = 0
 DEFAULT_COMMISSION_BASE = 0.05
 
@@ -46,3 +48,9 @@ class BaseClient:
 
     def update_account_details(self) -> None:
         raise NotImplementedError
+
+    def add_execution(self, flumine) -> None:
+        if self.EXCHANGE == ExchangeType.SIMULATED:
+            self.execution = flumine.simulated_execution
+        elif self.EXCHANGE == ExchangeType.BETFAIR:
+            self.execution = flumine.betfair_execution

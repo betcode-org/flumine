@@ -1,9 +1,11 @@
 from typing import Type, Iterator
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, RaceCard, CurrentOrders
+from betfairlightweight.resources import MarketBook, RaceCard
 
 from ..streams.marketstream import BaseStream, MarketStream
 from ..markets.market import Market
+from .runnercontext import RunnerContext
+from ..utils import create_cheap_hash
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -28,6 +30,8 @@ class BaseStrategy:
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
         context: dict = None,
+        max_selection_exposure: float = 100,
+        max_order_exposure: float = 10,
     ):
         """
         Processes data from streams.
@@ -39,6 +43,8 @@ class BaseStrategy:
         :param stream_class: Can be Market or Data
         :param name: Strategy name
         :param context: Dictionary holding additional vars
+        :param max_selection_exposure: Max exposure per selection
+        :param max_order_exposure: Max exposure per order
         """
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
@@ -47,7 +53,10 @@ class BaseStrategy:
         self.stream_class = stream_class
         self._name = name
         self.context = context
+        self.max_selection_exposure = max_selection_exposure
+        self.max_order_exposure = max_order_exposure
 
+        self._invested = {}  # {marketId: {selectionId: RunnerContext}}
         self.streams = []  # list of streams strategy is subscribed
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
@@ -82,20 +91,51 @@ class BaseStrategy:
         # process raceCard object
         return
 
-    def process_orders(self, orders: CurrentOrders) -> None:
-        # process currentOrders object
+    def process_orders(self, market: Market, orders: list) -> None:
+        # process list of Order objects for strategy and Market
         return
 
     def finish(self) -> None:
         # called before flumine ends
         return
 
+    # order
+    def place_order(self, market: Market, order) -> None:
+        # get context
+        market_context = self._invested.get(order.market_id)
+        if market_context is None:
+            self._invested[order.market_id] = market_context = {}
+        runner_context = market_context.get(order.selection_id)
+        if runner_context is None:
+            market_context[order.selection_id] = runner_context = RunnerContext(
+                order.selection_id
+            )
+        if self.validate_order(runner_context, order):
+            runner_context.place()
+            market.place_order(order)
+
+    def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
+        market.cancel_order(order, size_reduction)
+
+    def update_order(self, market: Market, order, new_persistence_type: str) -> None:
+        market.update_order(order, new_persistence_type)
+
+    def replace_order(self, market: Market, order, new_price: float) -> None:
+        market.replace_order(order, new_price)
+
+    def validate_order(self, runner_context: RunnerContext, order) -> bool:
+        # todo multi/count
+        if runner_context.invested:
+            return False
+        else:
+            return True
+
     @property
     def stream_ids(self) -> list:
         return [stream.stream_id for stream in self.streams]
 
     @property
-    def info(self):
+    def info(self) -> dict:
         return {
             "name": self.name,
             "market_filter": self.market_filter,
@@ -104,11 +144,16 @@ class BaseStrategy:
             "conflate_ms": self.conflate_ms,
             "stream_ids": self.stream_ids,
             "context": self.context,
+            "name_hash": self.name_hash,
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name or self.__class__.__name__
+
+    @property
+    def name_hash(self) -> str:
+        return create_cheap_hash(self.name, 13)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -118,13 +163,17 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy):
+    def __call__(self, strategy: BaseStrategy) -> None:
         self._strategies.append(strategy)
         strategy.add()
 
     def start(self) -> None:
         for s in self:
             s.start()
+
+    @property
+    def hashes(self) -> dict:
+        return {strategy.name_hash: strategy for strategy in self}
 
     def __iter__(self) -> Iterator[BaseStrategy]:
         return iter(self._strategies)

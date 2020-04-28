@@ -25,6 +25,8 @@ Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 $ pip install flumine
 ```
 
+flumine requires Python 3.5+
+
 ## setup
 
 Get started...
@@ -45,22 +47,46 @@ Example strategy:
 
 ```python
 from flumine import BaseStrategy
+from flumine.order.trade import Trade
+from flumine.order.order import LimitOrder, OrderStatus
+from flumine.markets.market import Market
 from betfairlightweight.filters import streaming_market_filter
+from betfairlightweight.resources import MarketBook
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self):
-        # subscribe to streams
+    def start(self) -> None:
         print("starting strategy 'ExampleStrategy'")
 
-    def check_market_book(self, market, market_book):
+    def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
 
-    def process_market_book(self, market, market_book):
+    def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook object
-        print(market_book.status)
+        for runner in market_book.runners:
+            if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
+                trade = Trade(
+                    market_id=market_book.market_id, 
+                    selection_id=runner.selection_id, 
+                    strategy=self
+                )
+                order = trade.create_order(
+                    side="LAY", 
+                    order_type=LimitOrder(price=1.01, size=2.00)
+                )
+                self.place_order(market, order)
+
+    def process_orders(self, market: Market, orders: list) -> None:
+        for order in orders:
+            if order.status == OrderStatus.EXECUTABLE:
+                if order.size_remaining == 2.00:
+                    self.cancel_order(order, 0.02)  # reduce size to 1.98
+                if order.order_type.persistence_type == 'LAPSE':
+                    self.update_order(order, 'PERSIST')
+                if order.size_remaining > 0:
+                    self.replace_order(order, 1.02)  # move
 
 
 strategy = ExampleStrategy(
@@ -84,7 +110,7 @@ framework.run()
 
 - Streaming
 - Multiple strategies
-- Order execution (in development)
+- Order execution
 - Paper trading (in development)
 - Back testing (in development)
 - Analytics (in development)
@@ -94,6 +120,7 @@ framework.run()
 
 flumine relies on these libraries:
 
-* `betfairlightweight` - Betfair API support.
-* `tenacity` - Used for connection retrying (streaming).
-* `python-json-logger` - JSON logging.
+* `betfairlightweight` - Betfair API support
+* `tenacity` - Used for connection retrying (streaming)
+* `python-json-logger` - JSON logging
+* `requests` - HTTP support

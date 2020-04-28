@@ -2,24 +2,26 @@ from enum import Enum
 
 
 class EventType(Enum):
-    TERMINATOR = 0
+    TERMINATOR = "Terminator"
     # betfair objects
-    MARKET_CATALOGUE = 10
-    MARKET_BOOK = 20
-    RAW_DATA = 30
-    CURRENT_ORDERS = 40
-    CLEARED_MARKETS = 50
-    CLEARED_ORDERS = 60
+    MARKET_CATALOGUE = "MarketCatalogue"
+    MARKET_BOOK = "MarketBook"
+    RAW_DATA = "Raw streaming data"
+    CURRENT_ORDERS = "CurrentOrders"
+    CLEARED_MARKETS = "ClearedMarkets"
+    CLEARED_ORDERS = "ClearedOrders"
     # flumine objects
-    CLOSE_MARKET = 100
-    STRATEGY_RESET = 110
-    CUSTOM_EVENT = 120
-    NEW_DAY = 130
+    ORDER_PACKAGE = "Order package"
+    CLOSE_MARKET = "Closed market"
+    STRATEGY_RESET = "Strategy reset"
+    CUSTOM_EVENT = "Custom event"
+    NEW_DAY = "New day"
 
 
 class QueueType(Enum):
-    HANDLER = 10
-    ACCOUNT = 20
+    HANDLER = "Handler queue"
+    ACCOUNT = "Account queue"
+    LOGGING = "Logging queue"
 
 
 class BaseEvent:
