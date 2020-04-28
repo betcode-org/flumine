@@ -35,8 +35,8 @@ Backtesting is achieved by monkeypatching the datetime function utcnow(), this a
 ### Streams
 - Single stream (market)
 - As above but 'data' (flumine listener)
+- Order stream
 - Future work:
-    - Order stream
     - Custom stream
 
 ### Strategy

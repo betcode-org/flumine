@@ -7,6 +7,7 @@ from pythonjsonlogger import jsonlogger
 from flumine import Flumine, clients, BaseStrategy
 from flumine.order.trade import Trade
 from flumine.order.ordertype import LimitOrder
+from flumine.order.order import OrderStatus
 
 logger = logging.getLogger()
 
@@ -49,7 +50,19 @@ class ExampleStrategy(BaseStrategy):
 
     def process_orders(self, market, orders):
         for order in orders:
-            print(order.status)
+            # print(order.status, order.bet_id, order.elapsed_seconds)
+            if order.status == OrderStatus.EXECUTABLE and order.elapsed_seconds > 5:
+                # print(order.bet_id, order.average_price_matched, order.size_matched)
+                if order.size_remaining == 2.00:
+                    self.cancel_order(market, order, size_reduction=1.51)
+                # self.update_order(market, order, "PERSIST")
+                if order.order_type.price == 1.01 and order.size_remaining == 0.49:
+                    self.replace_order(market, order, 1.02)
+                # if order.order_type.price == 1.02:
+                #     self.replace_order(market, order, 1.03)
+                # if order.order_type.price == 1.03:
+                #     self.replace_order(market, order, 1.05)
+                pass
 
 
 trading = betfairlightweight.APIClient("username")
@@ -58,7 +71,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client=client)
 
 strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(market_ids=["1.170314815"]),
+    market_filter=streaming_market_filter(market_ids=["1.170345090"]),
     streaming_timeout=2,
 )
 framework.add_strategy(strategy)

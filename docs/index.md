@@ -38,6 +38,8 @@ Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
 $ pip install flumine
 ```
 
+flumine requires Python 3.5+
+
 ## setup
 
 Get started...
@@ -58,7 +60,8 @@ Example strategy:
 
 ```python
 from flumine import BaseStrategy
-from flumine.order import Trade, LimitOrder, OrderStatus
+from flumine.order.trade import Trade
+from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
 from betfairlightweight.filters import streaming_market_filter
 from betfairlightweight.resources import MarketBook
@@ -125,7 +128,7 @@ framework.run()
 
 - Streaming
 - Multiple strategies
-- Order execution (in development)
+- Order execution
 - Paper trading (in development)
 - Back testing (in development)
 - Analytics (in development)
@@ -139,13 +142,3 @@ flumine relies on these libraries:
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging
 * `requests` - HTTP support
-
-## Installation
-
-Install with pip:
-
-```shell
-$ pip install flumine
-```
-
-flumine requires Python 3.5+
