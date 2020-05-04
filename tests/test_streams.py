@@ -70,7 +70,7 @@ class StreamsTest(unittest.TestCase):
         mock_client = mock.Mock()
         mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
         self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_called_with()
+        mock_add_order_stream.assert_called_with(mock_client)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
@@ -151,7 +151,8 @@ class StreamsTest(unittest.TestCase):
     def test_add_historical_stream(self, mock_increment, mock_order_stream_class):
         conflate_ms = 500
         streaming_timeout = 0.5
-        self.streams.add_order_stream(conflate_ms, streaming_timeout)
+        mock_client = mock.Mock()
+        self.streams.add_order_stream(mock_client, conflate_ms, streaming_timeout)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_order_stream_class.assert_called_with(
@@ -159,6 +160,7 @@ class StreamsTest(unittest.TestCase):
             stream_id=mock_increment(),
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
+            client=mock_client,
         )
 
     def test_start(self):
@@ -194,8 +196,15 @@ class StreamsTest(unittest.TestCase):
 class TestBaseStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
+        self.mock_client = mock.Mock()
         self.stream = BaseStream(
-            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
+            self.mock_flumine,
+            123,
+            0.01,
+            100,
+            {"test": "me"},
+            {"please": "now"},
+            client=self.mock_client,
         )
 
     def test_init(self):
@@ -206,6 +215,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
+        self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
 
     def test_run(self):
@@ -222,10 +232,15 @@ class TestBaseStream(unittest.TestCase):
         self.stream.stop()
         mock_stream.stop.assert_called_with()
 
-    def test_trading(self):
-        self.assertEqual(
-            self.stream.betting_client, self.mock_flumine.client.betting_client
-        )
+    @mock.patch("flumine.streams.basestream.BaseStream.client")
+    def test_betting_client(self, mock_client):
+        self.assertEqual(self.stream.betting_client, mock_client.betting_client)
+
+    def test_client(self):
+        self.stream._client = 1
+        self.assertEqual(self.stream.client, 1)
+        self.stream._client = None
+        self.assertEqual(self.stream.client, self.mock_flumine.client)
 
 
 class TestMarketStream(unittest.TestCase):

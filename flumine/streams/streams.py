@@ -34,7 +34,7 @@ class Streams:
         if client.EXCHANGE == ExchangeType.SIMULATED:
             self.add_simulated_order_stream()
         elif client.EXCHANGE == ExchangeType.BETFAIR:
-            self.add_order_stream()  # client
+            self.add_order_stream(client)
 
     """ market data """
 
@@ -96,7 +96,7 @@ class Streams:
     """ order data """
 
     def add_order_stream(
-        self, conflate_ms: int = None, streaming_timeout: float = 0.25
+        self, client: BaseClient, conflate_ms: int = None, streaming_timeout: float = 0.25
     ) -> OrderStream:
         stream_id = self._increment_stream_id()
         stream = OrderStream(
@@ -104,6 +104,7 @@ class Streams:
             stream_id=stream_id,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
+            client=client,
         )
         self._streams.append(stream)
         return stream

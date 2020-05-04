@@ -20,6 +20,7 @@ class BaseStream(threading.Thread):
         conflate_ms: int,
         market_filter: dict = None,
         market_data_filter: dict = None,
+        client=None,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
         self.flumine = flumine
@@ -28,6 +29,7 @@ class BaseStream(threading.Thread):
         self.market_data_filter = market_data_filter
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
+        self._client = client
         self._stream = None
         self._output_queue = queue.Queue()
         self._listener = self.LISTENER(
@@ -51,4 +53,11 @@ class BaseStream(threading.Thread):
 
     @property
     def betting_client(self) -> betfairlightweight.APIClient:
-        return self.flumine.client.betting_client
+        return self.client.betting_client
+
+    @property
+    def client(self):
+        if self._client:
+            return self._client
+        else:
+            return self.flumine.client
