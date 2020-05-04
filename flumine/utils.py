@@ -1,6 +1,7 @@
 import uuid
 import logging
 import hashlib
+from typing import Optional
 from decimal import Decimal
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,24 @@ def make_prices(min_price, cutoffs):
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
+
+
+def get_price(data: list, level: int) -> Optional[float]:
+    try:
+        return data[level].price
+    except KeyError:
+        return
+    except IndexError:
+        return
+
+
+def get_size(data: list, level: int) -> Optional[float]:
+    try:
+        return data[level].size
+    except KeyError:
+        return
+    except IndexError:
+        return
 
 
 def calculate_exposure(mb: list, ml: list) -> int:

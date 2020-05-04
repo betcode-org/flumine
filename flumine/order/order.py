@@ -10,6 +10,7 @@ from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
+from ..backtest.simulated import Simulated
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ class BaseOrder:
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
+        self.simulated = Simulated(self)  # used in simulated execution
 
     # status
     def _update_status(self, status: OrderStatus) -> None:

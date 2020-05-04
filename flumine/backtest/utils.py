@@ -1,3 +1,6 @@
+import datetime
+
+
 class PendingPackages(list):
     """List which only returns packages
     which haven't been processed.
@@ -12,10 +15,10 @@ class SimulatedPlaceResponse:
         self,
         status: str,
         order_status: str = None,
-        bet_id: int = None,
+        bet_id: str = None,
         average_price_matched: float = None,
         size_matched: float = None,
-        placed_date: str = None,
+        placed_date: datetime = None,
         error_code: str = None,
     ):
         self.status = status

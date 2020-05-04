@@ -29,6 +29,28 @@ class UtilsTest(unittest.TestCase):
     def test_make_prices(self):
         utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
 
+    def test_get_price(self):
+        self.assertEqual(
+            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 0), 12
+        )
+        self.assertEqual(
+            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 1), 34
+        )
+        self.assertIsNone(
+            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 3)
+        )
+        self.assertIsNone(utils.get_price([], 3))
+
+    def test_get_size(self):
+        self.assertEqual(
+            utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 0), 12
+        )
+        self.assertEqual(
+            utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 1), 34
+        )
+        self.assertIsNone(utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 3))
+        self.assertIsNone(utils.get_size([], 3))
+
     def test_calculate_exposure(self):
         self.assertEqual(utils.calculate_exposure([], []), 0)
         self.assertEqual(utils.calculate_exposure([(0, 0)], [(0, 0), (0, 0)]), 0)

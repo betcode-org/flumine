@@ -94,6 +94,9 @@ class BaseFlumine:
             if not market:
                 market = self._add_live_market(market_id, market_book)
 
+            # process market
+            market(market_book)
+
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)
@@ -120,10 +123,10 @@ class BaseFlumine:
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
     ) -> Market:
-        live_market = Market(market_id, market_book)
-        self.markets.add_market(market_id, live_market)
-        logger.info("Adding: {0} to markets".format(live_market.market_id))
-        return live_market
+        market = Market(market_id, market_book)
+        self.markets.add_market(market_id, market)
+        logger.info("Adding: {0} to markets".format(market.market_id))
+        return market
 
     def _process_raw_data(self, event: event.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event

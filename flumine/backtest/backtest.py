@@ -72,6 +72,9 @@ class FlumineBacktest(BaseFlumine):
             if not market:
                 market = self._add_live_market(market_id, market_book)
 
+            # process market
+            market(market_book)
+
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)

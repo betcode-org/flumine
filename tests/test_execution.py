@@ -616,7 +616,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.place.return_value = mock_sim_resp
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
-            mock_order_package.market, 1, self.execution._bet_id
+            mock_order_package.market.market_book, 1, self.execution._bet_id
         )
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
@@ -635,7 +635,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.place.return_value = mock_sim_resp
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
-            mock_order_package.market, 1, self.execution._bet_id
+            mock_order_package.market.market_book, 1, self.execution._bet_id
         )
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type

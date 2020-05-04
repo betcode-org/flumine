@@ -38,11 +38,11 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         # todo if order_package.client.paper_trade:
         #     time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
-
+        market_book = order_package.market.market_book
         for order, instruction in zip(order_package, order_package.place_instructions):
             self._bet_id += 1
             simulated_response = order.simulated.place(
-                order_package.market, instruction, self._bet_id
+                market_book, instruction, self._bet_id
             )
             self._order_logger(order, simulated_response, order_package.package_type)
             if simulated_response.status == "SUCCESS":
