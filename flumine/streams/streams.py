@@ -96,7 +96,10 @@ class Streams:
     """ order data """
 
     def add_order_stream(
-        self, client: BaseClient, conflate_ms: int = None, streaming_timeout: float = 0.25
+        self,
+        client: BaseClient,
+        conflate_ms: int = None,
+        streaming_timeout: float = 0.25,
     ) -> OrderStream:
         stream_id = self._increment_stream_id()
         stream = OrderStream(

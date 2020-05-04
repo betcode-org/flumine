@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 
@@ -24,12 +25,17 @@ class QueueType(Enum):
     LOGGING = "Logging queue"
 
 
-class BaseEvent:
+class BaseEvent:  # todo __slots__?
     EVENT_TYPE = None
     QUEUE_TYPE = None
 
     def __init__(self, event):
+        self._time_created = datetime.datetime.utcnow()
         self.event = event
+
+    @property
+    def elapsed_seconds(self):
+        return (datetime.datetime.utcnow() - self._time_created).total_seconds()
 
     def __str__(self):
         return "<{0} [{1}]>".format(self.EVENT_TYPE.name, self.QUEUE_TYPE.name)

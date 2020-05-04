@@ -37,6 +37,8 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.market_version, self.market_version)
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
+        self.assertFalse(self.order_package.processed)
+        self.assertEqual(self.order_package.bet_delay, 0)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):

@@ -1,4 +1,5 @@
 import uuid
+import datetime
 from enum import Enum
 from typing import Iterator
 from betfairlightweight.metadata import order_limits
@@ -46,7 +47,9 @@ class BaseOrderPackage(BaseEvent):
         self.package_type = package_type
         self.market_version = market_version
         self.async_ = async_
+        self.bet_delay = 0  # used for simulated execution
         self.customer_strategy_ref = config.hostname
+        self.processed = False  # used for simulated execution
 
     @property
     def place_instructions(self) -> dict:
