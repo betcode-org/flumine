@@ -44,11 +44,28 @@ class FlumineBacktest(BaseFlumine):
 
             self._unpatch_datetime()
 
-    # def _process_market_books(self, event):
+    # todo def _process_market_books(self, event):
     #     for market_book in event.event:
     #         for strategy in self.strategies:
     #             if strategy.check_market(market_book):
     #                 strategy.process_market_book(market_book)
+
+    # todo def _process_market_orders(self, market: Market) -> None:
+    #     for order_package in market.blotter.process_orders(self.client):
+    #         self.handler_queue.put(order_package)
+
+    # todo def _process_order_package(self, order_package) -> None:
+    #     """Validate trading controls and
+    #     then execute.
+    #     """
+    #     for control in self._trading_controls:
+    #         control(order_package)
+    #     for control in order_package.client.trading_controls:
+    #         control(order_package)
+    #     if order_package.orders:
+    #         order_package.client.execution.handler(order_package)
+    #     else:
+    #         logger.warning("Empty package, not executing", extra=order_package.info)
 
     def _monkey_patch_datetime(self):
         config.current_time = datetime.datetime.utcnow()

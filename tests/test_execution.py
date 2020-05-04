@@ -94,6 +94,10 @@ class BaseExecutionTest(unittest.TestCase):
     def test_markets(self):
         self.assertEqual(self.execution.markets, self.mock_flumine.markets)
 
+    def test_shutdown(self):
+        self.execution.shutdown()
+        self.assertTrue(self.execution._thread_pool._shutdown)
+
 
 class BetfairExecutionTest(unittest.TestCase):
     def setUp(self) -> None:

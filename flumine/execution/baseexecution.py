@@ -1,7 +1,10 @@
+import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
+
+logger = logging.getLogger(__name__)
 
 MAX_WORKERS = 32
 
@@ -59,3 +62,7 @@ class BaseExecution:
     @property
     def markets(self):
         return self.flumine.markets
+
+    def shutdown(self):
+        logger.info("Shutting down Execution (%s)" % self.__class__.__name__)
+        self._thread_pool.shutdown(wait=True)

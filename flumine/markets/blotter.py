@@ -89,7 +89,6 @@ class Blotter:
                     mb.append((order.average_price_matched, order.size_matched))
                 else:
                     ml.append((order.average_price_matched, order.size_matched))
-        # calc exposure
         return calculate_exposure(mb, ml)
 
     """ getters / setters """

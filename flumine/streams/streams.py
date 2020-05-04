@@ -6,6 +6,7 @@ from .marketstream import MarketStream
 from .datastream import DataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
+from ..clients import ExchangeType, BaseClient
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,12 @@ class Streams:
         else:
             stream = self.add_stream(strategy)
             strategy.streams.append(stream)
+
+    def add_client(self, client: BaseClient) -> None:
+        if client.EXCHANGE == ExchangeType.SIMULATED:
+            pass  # todo `add_simulated_order_stream`
+        elif client.EXCHANGE == ExchangeType.BETFAIR:
+            self.add_order_stream()  # client
 
     """ market data """
 

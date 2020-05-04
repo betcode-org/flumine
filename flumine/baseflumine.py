@@ -44,6 +44,7 @@ class BaseFlumine:
 
         # all streams (market/order)
         self.streams = Streams(self)
+        self.streams.add_client(client)
 
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
@@ -99,9 +100,7 @@ class BaseFlumine:
 
             self._process_market_orders(market)
 
-    def _process_market_orders(
-        self, market: Market
-    ) -> None:  # todo override for backtesting
+    def _process_market_orders(self, market: Market) -> None:
         for order_package in market.blotter.process_orders(self.client):
             self.handler_queue.put(order_package)
 
@@ -123,10 +122,7 @@ class BaseFlumine:
     ) -> Market:
         live_market = Market(market_id, market_book)
         self.markets.add_market(market_id, live_market)
-        # self.blotter.add_market(market_id)
-        logger.info(
-            "Adding: {0} to live markets and blotter".format(live_market.market_id)
-        )
+        logger.info("Adding: {0} to markets".format(live_market.market_id))
         return live_market
 
     def _process_raw_data(self, event: event.RawDataEvent) -> None:
@@ -171,12 +167,12 @@ class BaseFlumine:
         self._add_default_workers()
         for w in self._workers:
             w.start()
-        # todo start logging controls
+        # start logging controls
+        for c in self._logging_controls:
+            c.start()
         # start strategies
         self.strategies.start()
         # start streams
-        if not self.BACKTEST:
-            self.streams.add_order_stream()  # todo move?
         self.streams.start()
 
         self._running = True
@@ -184,8 +180,14 @@ class BaseFlumine:
     def __exit__(self, *args):
         # shutdown streams
         self.streams.stop()
-        # todo shutdown thread pools
-        # todo shutdown logging controls
+        # shutdown thread pools
+        self.simulated_execution.shutdown()
+        self.betfair_execution.shutdown()
+        # shutdown logging controls
+        # todo self.log_control(event.EventType.TERMINATOR)
+        for c in self._logging_controls:
+            if c.is_alive():
+                c.join()
         # logout
         self.client.logout()
         self._running = False
