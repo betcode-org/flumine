@@ -35,9 +35,8 @@ class BaseOrderPackage(BaseEvent):
         market_id: str,
         orders: list,
         package_type: OrderPackageType,
-        market_version: int = None,
+        market,
         async_: bool = False,
-        bet_delay: float = 0,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid1()
@@ -45,9 +44,8 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self._market_version = market_version
+        self.market = market
         self.async_ = async_
-        self.bet_delay = bet_delay  # used for simulated execution
         self.customer_strategy_ref = config.hostname
         self.processed = False  # used for simulated execution
 
@@ -87,9 +85,13 @@ class BaseOrderPackage(BaseEvent):
         }
 
     @property
+    def bet_delay(self) -> float:  # used for simulated execution
+        return self.market.market_book.bet_delay
+
+    @property
     def market_version(self) -> Optional[dict]:
-        if self._market_version:
-            return {"version": self._market_version}
+        return None
+        # todo return {"version": self.market.market_book.version}
 
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)

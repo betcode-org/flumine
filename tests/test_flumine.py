@@ -31,7 +31,7 @@ class FlumineTest(unittest.TestCase):
             event.MarketBookEvent(None),
             event.RawDataEvent(None),
             event.CurrentOrdersEvent(None),
-            BaseOrderPackage(None, "1.123", [], "12"),
+            BaseOrderPackage(None, "1.123", [], "12", None),
             event.ClearedMarketsEvent(None),
             event.ClearedOrdersEvent(None),
             event.CloseMarketEvent(None),

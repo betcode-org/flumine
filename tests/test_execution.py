@@ -17,6 +17,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertIsNotNone(self.execution._thread_pool)
         self.assertIsNone(self.execution.EXCHANGE)
+        self.assertEqual(self.execution._bet_id, 100_000_000_000)
 
     @mock.patch("flumine.execution.baseexecution.requests")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
@@ -87,6 +88,31 @@ class BaseExecutionTest(unittest.TestCase):
     def test_execute_replace(self):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
+
+    def test__order_logger(self):
+        mock_order = mock.Mock()
+        mock_instruction_report = mock.Mock()
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
+        mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.UPDATE
+        )
+        mock_order.responses.updated.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.REPLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report)
 
     def test_handler_queue(self):
         self.assertEqual(self.execution.handler_queue, self.mock_flumine.handler_queue)
@@ -535,31 +561,6 @@ class BetfairExecutionTest(unittest.TestCase):
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
 
-    def test__order_logger(self):
-        mock_order = mock.Mock()
-        mock_instruction_report = mock.Mock()
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.PLACE
-        )
-        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.CANCEL
-        )
-        mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.UPDATE
-        )
-        mock_order.responses.updated.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.REPLACE
-        )
-        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
-
 
 class SimulatedExecutionTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -609,12 +610,12 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     def test_execute_cancel(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_cancel(None, None)
 
     def test_execute_update(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_update(None, None)
 
     def test_execute_replace(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_replace(None, None)

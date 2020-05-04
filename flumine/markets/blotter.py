@@ -63,8 +63,7 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                # market_version=self.market.market_book.version,
-                bet_delay=self.market.market_book.bet_delay,
+                market=self.market,
             )
             packages.append(order_package)
         orders.clear()

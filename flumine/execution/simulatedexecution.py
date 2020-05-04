@@ -33,14 +33,30 @@ class SimulatedExecution(BaseExecution):
         # else:
         func(order_package, http_session=None)
 
-    def execute_place(self, order_package, http_session: Optional[requests.Session]) -> None:
+    def execute_place(
+        self, order_package, http_session: Optional[requests.Session]
+    ) -> None:
+        # todo if order_package.client.paper_trade:
+        #     time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
+
+        for order in order_package:
+            self._bet_id += 1
+            simulated_response = order.simulated.place(order_package.market)
+            self._order_logger(order, simulated_response, order_package.package_type)
+
+            # if simulated_response.status
+
+    def execute_cancel(
+        self, order_package, http_session: Optional[requests.Session]
+    ) -> None:
         raise NotImplementedError
 
-    def execute_cancel(self, order_package, http_session: Optional[requests.Session]) -> None:
+    def execute_update(
+        self, order_package, http_session: Optional[requests.Session]
+    ) -> None:
         raise NotImplementedError
 
-    def execute_update(self, order_package, http_session: Optional[requests.Session]) -> None:
-        raise NotImplementedError
-
-    def execute_replace(self, order_package, http_session: Optional[requests.Session]) -> None:
+    def execute_replace(
+        self, order_package, http_session: Optional[requests.Session]
+    ) -> None:
         raise NotImplementedError

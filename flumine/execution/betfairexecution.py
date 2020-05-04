@@ -5,7 +5,7 @@ from betfairlightweight import BetfairError
 
 from .baseexecution import BaseExecution
 from ..clients.clients import ExchangeType
-from ..order.orderpackage import BaseOrderPackage, OrderPackageType, BaseOrder
+from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 from ..exceptions import OrderExecutionError
 
 logger = logging.getLogger(__name__)
@@ -183,27 +183,3 @@ class BetfairExecution(BaseExecution):
             return response
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
-
-    def _order_logger(
-        self, order: BaseOrder, instruction_report, package_type: OrderPackageType
-    ):
-        logger.info(
-            "Order %s: %s" % (package_type.value, instruction_report.status),
-            extra={
-                "bet_id": order.bet_id,
-                "order_id": order.id,
-                "status": instruction_report.status,
-                "error_code": instruction_report.error_code,
-            },
-        )
-        if package_type == OrderPackageType.PLACE:
-            order.responses.placed(instruction_report)
-            order.bet_id = instruction_report.bet_id
-        elif package_type == OrderPackageType.CANCEL:
-            order.responses.cancelled(instruction_report)
-        elif package_type == OrderPackageType.UPDATE:
-            order.responses.updated(instruction_report)
-        elif package_type == OrderPackageType.REPLACE:
-            order.responses.placed(instruction_report)
-            order.bet_id = instruction_report.bet_id
-        # self.flumine.log_control(order)  # todo log order
