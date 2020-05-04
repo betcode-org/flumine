@@ -10,3 +10,9 @@ from flumine.order.ordertype import LimitOrder
 
 market
 ```
+
+### Middleware
+
+__In development__
+
+Analytics / historical tick data

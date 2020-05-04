@@ -49,7 +49,7 @@ class Trade:
         """Create new order due to replace
         execution"""
         order_type = LimitOrder(
-            price=order._update["new_price"],
+            price=order.update_data["new_price"],
             size=order.order_type.size,
             persistence_type=order.order_type.persistence_type,
         )

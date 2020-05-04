@@ -14,6 +14,7 @@ class ResponsesTest(unittest.TestCase):
         self.assertEqual(self.responses.replace_responses, [])
         self.assertEqual(self.responses.cancel_responses, [])
         self.assertIsNone(self.responses.date_time_placed)
+        self.assertIsNone(self.responses.current_order)
 
     def test_placed(self):
         self.responses.placed(12)

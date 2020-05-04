@@ -89,7 +89,7 @@ class BetfairExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.update, order_package, http_session)
         if response:
-            for (order, instruction_report) in zip(  # todo check this is ok
+            for (order, instruction_report) in zip(
                 order_package, response.update_instruction_reports
             ):
                 self._order_logger(order, instruction_report, OrderPackageType.UPDATE)

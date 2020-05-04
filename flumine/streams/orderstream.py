@@ -48,7 +48,7 @@ class OrderStream(BaseStream):
                 order_books = self._output_queue.get(
                     block=True, timeout=self.streaming_timeout
                 )
-            except queue.Empty:
+            except queue.Empty:  # todo snap every 5s or so anyway
                 if self.flumine.markets.live_orders:
                     order_books = self._listener.snap(
                         market_ids=self.flumine.markets.open_market_ids

@@ -28,8 +28,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order.status_log, [])
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
-        self.assertEqual(self.order._update, {})
-        self.assertIsNone(self.order._current_order)
+        self.assertEqual(self.order.update_data, {})
 
     def test__update_status(self):
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
@@ -43,13 +42,17 @@ class BaseOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_executable(self, mock__update_status):
+        self.order.update_data = {123: 456}
         self.order.executable()
         mock__update_status.assert_called_with(OrderStatus.EXECUTABLE)
+        self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_execution_complete(self, mock__update_status):
+        self.order.update_data = {123: 456}
         self.order.execution_complete()
         mock__update_status.assert_called_with(OrderStatus.EXECUTION_COMPLETE)
+        self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_cancelling(self, mock__update_status):
@@ -68,18 +71,24 @@ class BaseOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_lapsed(self, mock__update_status):
+        self.order.update_data = {123: 456}
         self.order.lapsed()
         mock__update_status.assert_called_with(OrderStatus.LAPSED)
+        self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_voided(self, mock__update_status):
+        self.order.update_data = {123: 456}
         self.order.voided()
         mock__update_status.assert_called_with(OrderStatus.VOIDED)
+        self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_violation(self, mock__update_status):
+        self.order.update_data = {123: 456}
         self.order.violation()
         mock__update_status.assert_called_with(OrderStatus.VIOLATION)
+        self.assertEqual(self.order.update_data, {})
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):
@@ -116,14 +125,15 @@ class BaseOrderTest(unittest.TestCase):
     def test_update_current_order(self):
         mock_current_order = mock.Mock()
         self.order.update_current_order(mock_current_order)
-        self.assertEqual(self.order._current_order, mock_current_order)
+        self.assertEqual(self.order.responses.current_order, mock_current_order)
 
     def test_current_order(self):
         self.assertIsNone(self.order.current_order)
         mock_responses = mock.Mock()
+        mock_responses.current_order = None
         self.order.responses = mock_responses
         self.assertEqual(self.order.current_order, mock_responses.place_response)
-        self.order._current_order = 1
+        mock_responses.current_order = 1
         self.assertEqual(self.order.current_order, 1)
 
     def test_average_price_matched(self):
@@ -151,6 +161,7 @@ class BaseOrderTest(unittest.TestCase):
             assert self.order.size_voided
 
     def test_elapsed_seconds(self):
+        self.assertIsNone(self.order.elapsed_seconds)
         mock_responses = mock.Mock()
         mock_responses.date_time_placed = datetime.datetime.utcnow()
         self.order.responses = mock_responses
@@ -217,10 +228,10 @@ class BetfairOrderTest(unittest.TestCase):
 
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.order.cancel(0.01)
-        self.assertEqual(self.order._update, {"size_reduction": 0.01})
+        self.assertEqual(self.order.update_data, {"size_reduction": 0.01})
         mock_cancelling.assert_called_with()
         self.order.cancel()
-        self.assertEqual(self.order._update, {"size_reduction": None})
+        self.assertEqual(self.order.update_data, {"size_reduction": None})
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",
@@ -274,7 +285,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order_type.price = 2.02
         self.order.replace(1.01)
-        self.assertEqual(self.order._update, {"new_price": 1.01})
+        self.assertEqual(self.order.update_data, {"new_price": 1.01})
         mock_replacing.assert_called_with()
 
         with self.assertRaises(OrderUpdateError):
@@ -325,7 +336,7 @@ class BetfairOrderTest(unittest.TestCase):
         )
 
     def test_create_cancel_instruction(self):
-        self.order._update = {"size_reduction": 0.02}
+        self.order.update_data = {"size_reduction": 0.02}
         self.assertEqual(
             self.order.create_cancel_instruction(), {"sizeReduction": 0.02}
         )
@@ -337,13 +348,13 @@ class BetfairOrderTest(unittest.TestCase):
         )
 
     def test_create_replace_instruction(self):
-        self.order._update = {"new_price": 2.02}
+        self.order.update_data = {"new_price": 2.02}
         self.assertEqual(self.order.create_replace_instruction(), {"newPrice": 2.02})
 
     def test_average_price_matched(self):
         self.assertEqual(self.order.average_price_matched, 0)
         mock_current_order = mock.Mock(average_price_matched=12.3)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(
             self.order.average_price_matched, mock_current_order.average_price_matched
         )
@@ -351,29 +362,29 @@ class BetfairOrderTest(unittest.TestCase):
     def test_size_matched(self):
         self.assertEqual(self.order.size_matched, 0)
         mock_current_order = mock.Mock(size_matched=10)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_matched, mock_current_order.size_matched)
 
     def test_size_remaining(self):
         self.assertEqual(self.order.size_remaining, 0)
         mock_current_order = mock.Mock(size_remaining=10)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, mock_current_order.size_remaining)
 
     def test_size_cancelled(self):
         self.assertEqual(self.order.size_cancelled, 0)
         mock_current_order = mock.Mock(size_cancelled=10)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_cancelled, mock_current_order.size_cancelled)
 
     def test_size_lapsed(self):
         self.assertEqual(self.order.size_lapsed, 0)
         mock_current_order = mock.Mock(size_lapsed=10)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_lapsed, mock_current_order.size_lapsed)
 
     def test_size_voided(self):
         self.assertEqual(self.order.size_voided, 0)
         mock_current_order = mock.Mock(size_voided=10)
-        self.order._current_order = mock_current_order
+        self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_voided, mock_current_order.size_voided)

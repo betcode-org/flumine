@@ -47,33 +47,6 @@ The following functions can be overridden dependant on the strategy:
 
 `finish()` Function called when framework ends
 
-## Client
-
-Flumine uses clients to hold betting clients for example BetfairClient requires a betfairlightweight trading client, future work may allow multiple clients / different exchanges. 
-
-### Betfair Client
-
-### Backtest Client
-
-!!! tip
-    It is possible to handle a custom client within a strategy just watch out for blocking the main loop if you make any http requests.
-
-## Execution
-
-### Betfair Execution
-
-### Backtest Execution
-
-## Markets
-
-Stores latest marketBook objects.
-
-### Middleware
-
-__In development__
-
-Analytics / historical tick data
-
 ## Streams
 
 ### Market Stream

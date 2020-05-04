@@ -6,7 +6,8 @@ class Responses:
 
     def __init__(self):
         self.date_time_created = datetime.datetime.utcnow()
-        self.place_response = None
+        self.current_order = None  # resources.CurrentOrder
+        self.place_response = None  # resources.PlaceOrderInstructionReports
         self.cancel_responses = []
         self.replace_responses = []
         self.update_responses = []
