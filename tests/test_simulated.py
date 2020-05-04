@@ -206,18 +206,6 @@ class SimulatedTest(unittest.TestCase):
     # def test__process_traded(self):
     #     pass
 
-    def test_wap(self):
-        matched = [(1.5, 100), (1.6, 100)]
-        assert self.simulated._wap(matched) == (200, 1.55)
-
-    def test_wap_nothing(self):
-        matched = []
-        assert self.simulated._wap(matched) == (0, 0)
-
-    def test_wap_error(self):
-        matched = [(1.5, 0)]
-        assert self.simulated._wap(matched) == (0, 0)
-
     def test_take_sp(self):
         self.assertFalse(self.simulated.take_sp)
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
@@ -250,3 +238,9 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.size_remaining, 2)
         mock_size_matched.return_value = 1
         self.assertEqual(self.simulated.size_remaining, 1)
+
+    def test_size_remaining_non_limit(self):
+        self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        self.assertEqual(self.simulated.size_remaining, 2)
+        self.simulated.matched = [(12.02, 2)]
+        self.assertEqual(self.simulated.size_remaining, 0)

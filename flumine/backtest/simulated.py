@@ -1,9 +1,8 @@
 import datetime
-from typing import Tuple
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from .utils import SimulatedPlaceResponse
-from ..utils import get_price
+from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
 
 
@@ -16,12 +15,15 @@ class Simulated:
     def __init__(self, order):
         self.order = order
         self.matched = []
+        # self.cancelled = 0
+        # self.lapsed = 0
+        # self.voided = 0
 
     def __call__(self, market_book: MarketBook, traded: dict):
         # simulates order matching
         runner = self._get_runner(market_book)
         if self.take_sp and market_book.bsp_reconciled:
-            self._process_sp(runner)  # todo simulate limitOrder with `TAKE SP`
+            self._process_sp(runner)
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             self._process_traded(runner, traded)
@@ -103,6 +105,7 @@ class Simulated:
 
     def _process_sp(self, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
+        # todo add lapsed amounts
         actual_sp = runner.sp.actual_sp
         if actual_sp and self.size_remaining:
             _order_type = self.order.order_type
@@ -130,19 +133,6 @@ class Simulated:
         # calculate matched on MarketBook update
         pass
 
-    @staticmethod
-    def _wap(matched: list) -> Tuple[float, float]:
-        if not matched:
-            return 0, 0
-        a, b = 0, 0
-        for match in matched:
-            a += match[0] * match[1]
-            b += match[1]
-        if b == 0 or a == 0:
-            return 0, 0
-        else:
-            return round(b, 2), round(a / b, 2)
-
     @property
     def take_sp(self) -> bool:
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -159,7 +149,7 @@ class Simulated:
     @property
     def average_price_matched(self) -> float:
         if self.matched:
-            _, avg_price_matched = self._wap(self.matched)
+            _, avg_price_matched = wap(self.matched)
             return avg_price_matched
         else:
             return 0
@@ -167,11 +157,17 @@ class Simulated:
     @property
     def size_matched(self) -> float:
         if self.matched:
-            size_matched, _ = self._wap(self.matched)
+            size_matched, _ = wap(self.matched)
             return size_matched
         else:
             return 0
 
     @property
     def size_remaining(self) -> float:
-        return self.order.order_type.size - self.size_matched
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            return self.order.order_type.size - self.size_matched
+        else:
+            if self.matched:  # todo validate this handles edge cases
+                return 0
+            else:
+                return self.order.order_type.size

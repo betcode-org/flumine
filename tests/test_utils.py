@@ -65,3 +65,8 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 2)]), 0)
         self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 4)]), 0)
         self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 8)]), -14)
+
+    def test_wap(self):
+        self.assertEqual(utils.wap([(1.5, 100), (1.6, 100)]), (200, 1.55))
+        self.assertEqual(utils.wap([]), (0, 0))
+        self.assertEqual(utils.wap([(1.5, 0)]), (0, 0))

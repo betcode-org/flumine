@@ -1,7 +1,7 @@
 import uuid
 import logging
 import hashlib
-from typing import Optional
+from typing import Optional, Tuple
 from decimal import Decimal
 
 logger = logging.getLogger(__name__)
@@ -88,6 +88,7 @@ def get_size(data: list, level: int) -> Optional[float]:
         return
 
 
+# todo LRU cache?
 def calculate_exposure(mb: list, ml: list) -> int:
     """Calculates exposure based on list
     of (price, size)
@@ -98,3 +99,17 @@ def calculate_exposure(mb: list, ml: list) -> int:
     if lay_exp:
         lay_exp += back_profit
     return min(round(back_exp + lay_exp, 2), 0)  # returns negative int
+
+
+# todo LRU cache?
+def wap(matched: list) -> Tuple[float, float]:
+    if not matched:
+        return 0, 0
+    a, b = 0, 0
+    for match in matched:
+        a += match[0] * match[1]
+        b += match[1]
+    if b == 0 or a == 0:
+        return 0, 0
+    else:
+        return round(b, 2), round(a / b, 2)
