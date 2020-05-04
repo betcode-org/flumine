@@ -604,9 +604,43 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution.handler(mock_order_package)
         mock_execute_replace.assert_called_with(mock_order_package, http_session=None)
 
-    def test_execute_place(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_place_success(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.place_instructions = [1]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_place(mock_order_package, None)
+        mock_order.simulated.place.assert_called_with(
+            mock_order_package.market, 1, self.execution._bet_id
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_place_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.place_instructions = [1]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_place(mock_order_package, None)
+        mock_order.simulated.place.assert_called_with(
+            mock_order_package.market, 1, self.execution._bet_id
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.lapsed.assert_called_with()
 
     def test_execute_cancel(self):
         with self.assertRaises(NotImplementedError):

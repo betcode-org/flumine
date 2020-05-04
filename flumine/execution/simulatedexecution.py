@@ -39,12 +39,16 @@ class SimulatedExecution(BaseExecution):
         # todo if order_package.client.paper_trade:
         #     time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
 
-        for order in order_package:
+        for order, instruction in zip(order_package, order_package.place_instructions):
             self._bet_id += 1
-            simulated_response = order.simulated.place(order_package.market)
+            simulated_response = order.simulated.place(
+                order_package.market, instruction, self._bet_id
+            )
             self._order_logger(order, simulated_response, order_package.package_type)
-
-            # if simulated_response.status
+            if simulated_response.status == "SUCCESS":
+                order.executable()
+            elif simulated_response.status == "FAILURE":
+                order.lapsed()
 
     def execute_cancel(
         self, order_package, http_session: Optional[requests.Session]
