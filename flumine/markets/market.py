@@ -18,7 +18,7 @@ class Market:
         self.closed = False
         self.market_book = market_book
         self.market_catalogue = market_catalogue
-        self.blotter = Blotter(market_id)
+        self.blotter = Blotter(self)
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book

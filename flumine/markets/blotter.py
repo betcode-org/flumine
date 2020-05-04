@@ -12,8 +12,8 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
-    def __init__(self, market_id: str):
-        self.market_id = market_id
+    def __init__(self, market):
+        self.market = market
         self._orders = {}  # {Order.id: Order}
         # pending orders
         self.pending_place = []
@@ -63,7 +63,8 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                # market_version={"version": self.market_book.version},
+                # market_version=self.market.market_book.version,
+                bet_delay=self.market.market_book.bet_delay,
             )
             packages.append(order_package)
         orders.clear()
@@ -90,6 +91,10 @@ class Blotter:
                 else:
                     ml.append((order.average_price_matched, order.size_matched))
         return calculate_exposure(mb, ml)
+
+    @property
+    def market_id(self):
+        return self.market.market_id
 
     """ getters / setters """
 

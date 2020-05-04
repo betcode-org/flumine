@@ -18,13 +18,15 @@ class OrderPackageTest(unittest.TestCase):
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
         self.mock_order.status = OrderStatus.PENDING
-        self.market_version = {"version": 123456}
+        self.market_version = 123456
+        self.bet_delay = 123
         self.order_package = BaseOrderPackage(
             self.mock_client,
             "1.234",
             [self.mock_order],
             self.mock_package_type,
             self.market_version,
+            bet_delay=self.bet_delay,
         )
 
     def test_init(self):
@@ -34,11 +36,11 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.package_type, self.mock_package_type)
         self.assertEqual(self.order_package.EVENT_TYPE, EventType.ORDER_PACKAGE)
         self.assertEqual(self.order_package.QUEUE_TYPE, QueueType.HANDLER)
-        self.assertEqual(self.order_package.market_version, self.market_version)
+        self.assertEqual(self.order_package._market_version, self.market_version)
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
         self.assertFalse(self.order_package.processed)
-        self.assertEqual(self.order_package.bet_delay, 0)
+        self.assertEqual(self.order_package.bet_delay, self.bet_delay)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):
@@ -81,6 +83,13 @@ class OrderPackageTest(unittest.TestCase):
                 "customer_strategy_ref": self.order_package.customer_strategy_ref,
             },
         )
+
+    def test_market_version(self):
+        self.assertEqual(
+            self.order_package.market_version, {"version": self.order_package._market_version}
+        )
+        self.order_package._market_version = None
+        self.assertIsNone(self.order_package.market_version)
 
     def test_iter(self):
         self.assertEqual([i for i in self.order_package], self.order_package.orders)

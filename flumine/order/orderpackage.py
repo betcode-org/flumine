@@ -1,7 +1,6 @@
 import uuid
-import datetime
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
 
 from ..event.event import BaseEvent, EventType, QueueType
@@ -24,7 +23,7 @@ class BaseOrderPackage(BaseEvent):
     temporary to allow execution
     """
 
-    # todo client/retry/._orders->orders (violation)
+    # todo client/retry
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
@@ -36,8 +35,9 @@ class BaseOrderPackage(BaseEvent):
         market_id: str,
         orders: list,
         package_type: OrderPackageType,
-        market_version: dict = None,
+        market_version: int = None,
         async_: bool = False,
+        bet_delay: float = 0,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid1()
@@ -45,9 +45,9 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self.market_version = market_version
+        self._market_version = market_version
         self.async_ = async_
-        self.bet_delay = 0  # used for simulated execution
+        self.bet_delay = bet_delay  # used for simulated execution
         self.customer_strategy_ref = config.hostname
         self.processed = False  # used for simulated execution
 
@@ -86,6 +86,11 @@ class BaseOrderPackage(BaseEvent):
             "customer_strategy_ref": self.customer_strategy_ref,
         }
 
+    @property
+    def market_version(self) -> Optional[dict]:
+        if self._market_version:
+            return {"version": self._market_version}
+
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)
 
@@ -105,7 +110,7 @@ class BetfairOrderPackage(BaseOrderPackage):
     def cancel_instructions(self):
         return [
             order.create_cancel_instruction() for order in self
-        ]  # if order.size_remaining > 0
+        ]  # todo? if order.size_remaining > 0
 
     @property
     def update_instructions(self):
