@@ -8,7 +8,7 @@ from ..order.orderpackage import BaseOrderPackage, OrderPackageType, BaseOrder
 logger = logging.getLogger(__name__)
 
 MAX_WORKERS = 32
-BET_ID_START = 100_000_000_000  # simulated start betId->
+BET_ID_START = 100000000000  # simulated start betId->
 
 
 class BaseExecution:

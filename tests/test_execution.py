@@ -17,7 +17,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertIsNotNone(self.execution._thread_pool)
         self.assertIsNone(self.execution.EXCHANGE)
-        self.assertEqual(self.execution._bet_id, 100_000_000_000)
+        self.assertEqual(self.execution._bet_id, 100000000000)
 
     @mock.patch("flumine.execution.baseexecution.requests")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
