@@ -4,6 +4,8 @@ import datetime
 from ..baseflumine import BaseFlumine
 from ..event.event import MarketBookEvent
 from .. import config
+from ..clients import ExchangeType
+from ..exceptions import RunError
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,10 @@ class FlumineBacktest(BaseFlumine):
     BACKTEST = True
 
     def run(self) -> None:
+        if self.client.EXCHANGE != ExchangeType.SIMULATED:
+            raise RunError(
+                "Incorrect client provided, only a Simulated client can be used when backtesting"
+            )
         with self:
             self._monkey_patch_datetime()
 

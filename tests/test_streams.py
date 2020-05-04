@@ -58,10 +58,12 @@ class StreamsTest(unittest.TestCase):
         self.streams(mock_strategy)
         self.assertEqual(len(mock_strategy.streams), 0)
 
-    def test_add_client_simulated(self):
+    @mock.patch("flumine.streams.streams.Streams.add_simulated_order_stream")
+    def test_add_client_simulated(self, mock_add_simulated_order_stream):
         mock_client = mock.Mock()
         mock_client.EXCHANGE = streams.ExchangeType.SIMULATED
         self.streams.add_client(mock_client)
+        mock_add_simulated_order_stream.assert_called_with()
 
     @mock.patch("flumine.streams.streams.Streams.add_order_stream")
     def test_add_client_betfair(self, mock_add_order_stream):

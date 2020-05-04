@@ -32,7 +32,7 @@ class Streams:
 
     def add_client(self, client: BaseClient) -> None:
         if client.EXCHANGE == ExchangeType.SIMULATED:
-            pass  # todo `add_simulated_order_stream`
+            self.add_simulated_order_stream()
         elif client.EXCHANGE == ExchangeType.BETFAIR:
             self.add_order_stream()  # client
 
@@ -107,6 +107,9 @@ class Streams:
         )
         self._streams.append(stream)
         return stream
+
+    def add_simulated_order_stream(self):  # todo
+        return
 
     def start(self) -> None:
         if not self.flumine.BACKTEST:

@@ -3,6 +3,7 @@ from unittest import mock
 
 from flumine import FlumineBacktest
 from flumine.event import event
+from flumine.exceptions import RunError
 
 
 class FlumineBacktestTest(unittest.TestCase):
@@ -12,6 +13,13 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test_init(self):
         self.assertTrue(self.flumine.BACKTEST)
+
+    def test_run_error(self):
+        mock_client = mock.Mock()
+        mock_client.EXCHANGE = 69
+        self.flumine.client = mock_client
+        with self.assertRaises(RunError):
+            self.flumine.run()
 
     # @mock.patch("flumine.flumine.Flumine._process_end_flumine")
     # @mock.patch("flumine.flumine.Flumine._process_raw_data")
