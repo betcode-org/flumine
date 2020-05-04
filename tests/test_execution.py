@@ -569,6 +569,40 @@ class SimulatedExecutionTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
 
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
+    def test_handler_place(self, mock_execute_place):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.PLACE
+        self.execution.handler(mock_order_package)
+        mock_execute_place.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_cancel"
+    )
+    def test_handler_cancel(self, mock_execute_cancel):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
+        self.execution.handler(mock_order_package)
+        mock_execute_cancel.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_update"
+    )
+    def test_handler_update(self, mock_execute_update):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.UPDATE
+        self.execution.handler(mock_order_package)
+        mock_execute_update.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_replace"
+    )
+    def test_handler_replace(self, mock_execute_replace):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.REPLACE
+        self.execution.handler(mock_order_package)
+        mock_execute_replace.assert_called_with(mock_order_package, http_session=None)
+
     def test_execute_place(self):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)

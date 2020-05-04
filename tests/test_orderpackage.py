@@ -86,7 +86,8 @@ class OrderPackageTest(unittest.TestCase):
 
     def test_market_version(self):
         self.assertEqual(
-            self.order_package.market_version, {"version": self.order_package._market_version}
+            self.order_package.market_version,
+            {"version": self.order_package._market_version},
         )
         self.order_package._market_version = None
         self.assertIsNone(self.order_package.market_version)

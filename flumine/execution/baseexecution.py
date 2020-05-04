@@ -26,10 +26,10 @@ class BaseExecution:
             func = self.execute_place
         elif order_package.package_type == OrderPackageType.CANCEL:
             func = self.execute_cancel
-        elif order_package.package_type == OrderPackageType.REPLACE:
-            func = self.execute_replace
         elif order_package.package_type == OrderPackageType.UPDATE:
             func = self.execute_update
+        elif order_package.package_type == OrderPackageType.REPLACE:
+            func = self.execute_replace
         else:
             raise NotImplementedError()
 
