@@ -18,6 +18,10 @@ class SimulatedTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.simulated.order, self.mock_order)
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.cancelled, 0)
+        self.assertEqual(self.simulated.lapsed, 0)
+        self.assertEqual(self.simulated.voided, 0)
+        self.assertFalse(self.simulated._bsp_reconciled)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
@@ -34,7 +38,9 @@ class SimulatedTest(unittest.TestCase):
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
     @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
     @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
-    def test_call(self, mock__process_sp, mock__process_traded, _, mock__get_runner):
+    def test_call_not_re(
+        self, mock__process_sp, mock__process_traded, _, mock__get_runner
+    ):
         mock_market_book = mock.Mock()
         mock_market_book.bsp_reconciled = False
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
@@ -45,6 +51,21 @@ class SimulatedTest(unittest.TestCase):
         mock_market_book.bsp_reconciled = True
         self.simulated(mock_market_book, {})
         mock__process_sp.assert_called_with(mock__get_runner())
+        mock__process_traded.assert_not_called()
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
+    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
+    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    def test_call_bsp_reconciled(
+        self, mock__process_sp, mock__process_traded, _, mock__get_runner
+    ):
+        self.simulated._bsp_reconciled = True
+        mock_market_book = mock.Mock()
+        mock_market_book.bsp_reconciled = True
+        self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        self.simulated(mock_market_book, {})
+        mock__process_sp.assert_not_called()
         mock__process_traded.assert_not_called()
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -142,19 +163,14 @@ class SimulatedTest(unittest.TestCase):
         mock_runner.sp.actual_sp = 12.20
         self.simulated._process_sp(mock_runner)
         self.assertEqual(self.simulated.matched, [(12.2, 2.00)])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_none(self):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = None
         self.simulated._process_sp(mock_runner)
         self.assertEqual(self.simulated.matched, [])
-
-    def test__process_sp_processed(self):
-        mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = 12.20
-        self.simulated.matched = [(12.2, 2)]
-        self.simulated._process_sp(mock_runner)
-        self.assertEqual(self.simulated.matched, [(12.2, 2)])
+        self.assertFalse(self.simulated._bsp_reconciled)
 
     def test__process_sp_processed_semi(self):
         mock_runner = mock.Mock()
@@ -162,18 +178,30 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.matched = [(10.0, 1)]
         self.simulated._process_sp(mock_runner)
         self.assertEqual(self.simulated.matched, [(10.0, 1), (12.2, 1)])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
-    def test__process_sp_limit_on_close(self):
-        mock_limit_on_close_order = mock.Mock(price=10.0, size=2.00, liability=2.00)
+    def test__process_sp_limit_on_close_back(self):
+        mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(mock_runner_book)
         self.assertEqual(self.simulated.matched, [(69, 2.00)])
+        self.assertTrue(self.simulated._bsp_reconciled)
+
+    def test__process_sp_limit_on_close_back_no_match(self):
+        mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
+        mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        self.simulated.order.order_type = mock_limit_on_close_order
+        mock_runner_book = mock.Mock()
+        mock_runner_book.sp.actual_sp = 8
+        self.simulated._process_sp(mock_runner_book)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_limit_on_close_lay(self):
-        mock_limit_on_close_order = mock.Mock(price=100.0, size=2.00, liability=2.00)
+        mock_limit_on_close_order = mock.Mock(price=100.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         self.simulated.order.side = "LAY"
@@ -181,27 +209,39 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(mock_runner_book)
         self.assertEqual(self.simulated.matched, [(69, 0.03)])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
-    def test_syn_process_sp_market_on_close(self):
-        mock_limit_on_close_order = mock.Mock(size=2.00, liability=2.00)
+    def test__process_sp_limit_on_close_lay_no_match(self):
+        mock_limit_on_close_order = mock.Mock(price=60.0, liability=2.00)
+        mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        self.simulated.order.order_type = mock_limit_on_close_order
+        self.simulated.order.side = "LAY"
+        mock_runner_book = mock.Mock()
+        mock_runner_book.sp.actual_sp = 69
+        self.simulated._process_sp(mock_runner_book)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertTrue(self.simulated._bsp_reconciled)
+
+    def test__process_sp_market_on_close_back(self):
+        mock_limit_on_close_order = mock.Mock(liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
-
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(mock_runner_book)
         self.assertEqual(self.simulated.matched, [(69, 2.00)])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
-    def test_syn_process_sp_market_on_close_lay(self):
-        mock_limit_on_close_order = mock.Mock(size=2.00, liability=2.00)
+    def test__process_sp_market_on_close_lay(self):
+        mock_limit_on_close_order = mock.Mock(liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         self.simulated.order.side = "LAY"
-
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(mock_runner_book)
         self.assertEqual(self.simulated.matched, [(69, 0.03)])
+        self.assertTrue(self.simulated._bsp_reconciled)
 
     # def test__process_traded(self):
     #     pass

@@ -15,14 +15,20 @@ class Simulated:
     def __init__(self, order):
         self.order = order
         self.matched = []
-        # self.cancelled = 0
-        # self.lapsed = 0
-        # self.voided = 0
+        self.cancelled = 0.0
+        self.lapsed = 0.0
+        self.voided = 0.0
+        self._bsp_reconciled = False
+        # todo handle lapsing
 
     def __call__(self, market_book: MarketBook, traded: dict):
         # simulates order matching
         runner = self._get_runner(market_book)
-        if self.take_sp and market_book.bsp_reconciled:
+        if (
+            self._bsp_reconciled is False
+            and market_book.bsp_reconciled
+            and self.take_sp
+        ):
             self._process_sp(runner)
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -98,7 +104,7 @@ class Simulated:
                     _size_matched = _size_remaining
                 else:
                     _size_matched = avail.size
-                _matched = (avail.price, _size_matched)
+                _matched = (avail.price, round(_size_matched, 2))
                 self.matched.append(_matched)
             else:
                 break
@@ -107,17 +113,20 @@ class Simulated:
         # calculate matched on BSP reconciliation
         # todo add lapsed amounts
         actual_sp = runner.sp.actual_sp
-        if actual_sp and self.size_remaining:
+        if actual_sp:
+            self._bsp_reconciled = True
             _order_type = self.order.order_type
             if _order_type.ORDER_TYPE == OrderTypes.LIMIT:
                 size = self.size_remaining
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
                     if actual_sp < _order_type.price:
+                        # self.lapsed = _order_type.liability
                         return
                     size = _order_type.liability
                 else:
                     if actual_sp > _order_type.price:
+                        # self.lapsed = _order_type.liability
                         return
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             elif _order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
