@@ -18,9 +18,9 @@ class SimulatedTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.simulated.order, self.mock_order)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.cancelled, 0)
-        self.assertEqual(self.simulated.lapsed, 0)
-        self.assertEqual(self.simulated.voided, 0)
+        self.assertEqual(self.simulated.size_cancelled, 0)
+        self.assertEqual(self.simulated.size_lapsed, 0)
+        self.assertEqual(self.simulated.size_voided, 0)
         self.assertFalse(self.simulated._bsp_reconciled)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -83,8 +83,8 @@ class SimulatedTest(unittest.TestCase):
     def test_place_else(self):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         mock_market_book = mock.Mock()
-        with self.assertRaises(NotImplementedError):
-            self.simulated.place(mock_market_book, {}, 1)
+        self.simulated.place(mock_market_book, {}, 1)
+        self.assertEqual(self.simulated.matched, [])
 
     # def test_cancel(self):
     #     pass
@@ -280,6 +280,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.size_remaining, 1)
 
     def test_size_remaining_non_limit(self):
+        self.simulated.order.order_type.liability = 2
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.assertEqual(self.simulated.size_remaining, 2)
         self.simulated.matched = [(12.02, 2)]

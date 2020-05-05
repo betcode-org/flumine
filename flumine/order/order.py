@@ -124,8 +124,10 @@ class BaseOrder:
         self.responses.current_order = current_order
 
     @property
-    def current_order(self) -> CurrentOrder:
-        if self.responses.current_order:
+    def current_order(self) -> Union[CurrentOrder, Simulated]:
+        if self.simulated:
+            return self.simulated
+        elif self.responses.current_order:
             return self.responses.current_order
         elif self.responses.place_response:
             return self.responses.place_response

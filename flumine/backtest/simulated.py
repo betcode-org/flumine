@@ -15,9 +15,9 @@ class Simulated:
     def __init__(self, order):
         self.order = order
         self.matched = []
-        self.cancelled = 0.0
-        self.lapsed = 0.0
-        self.voided = 0.0
+        self.size_cancelled = 0.0
+        self.size_lapsed = 0.0
+        self.size_voided = 0.0
         self._bsp_reconciled = False
         # todo handle lapsing
 
@@ -66,7 +66,15 @@ class Simulated:
                 error_code=None,
             )
         else:
-            raise NotImplementedError()  # todo
+            return SimulatedPlaceResponse(
+                status="SUCCESS",
+                order_status="EXECUTABLE",
+                bet_id=str(bet_id),
+                average_price_matched=self.average_price_matched,
+                size_matched=self.size_matched,
+                placed_date=datetime.datetime.utcnow(),
+                error_code=None,
+            )
 
     def cancel(self):
         # simulates cancelOrder request->cancel->response
@@ -179,4 +187,7 @@ class Simulated:
             if self.matched:  # todo validate this handles edge cases
                 return 0
             else:
-                return self.order.order_type.size
+                return self.order.order_type.liability
+
+    def __bool__(self):
+        return False
