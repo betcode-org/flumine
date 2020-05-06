@@ -72,19 +72,23 @@ PRICES = make_prices(MIN_PRICE, CUTOFFS)
 
 def get_price(data: list, level: int) -> Optional[float]:
     try:
-        return data[level].price
+        return data[level]["price"]
     except KeyError:
         return
     except IndexError:
+        return
+    except TypeError:
         return
 
 
 def get_size(data: list, level: int) -> Optional[float]:
     try:
-        return data[level].size
+        return data[level]["size"]
     except KeyError:
         return
     except IndexError:
+        return
+    except TypeError:
         return
 
 

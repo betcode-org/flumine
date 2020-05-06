@@ -72,8 +72,8 @@ class SimulatedTest(unittest.TestCase):
     def test_place_limit(self, mock__get_runner):
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [mock.Mock(price=12, size=120)]
-        mock_runner.ex.available_to_lay = [mock.Mock(price=12, size=120)]
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
@@ -112,23 +112,21 @@ class SimulatedTest(unittest.TestCase):
         return_value="BACK",
     )
     def test__process_price_matched_back(self, mock_side):
-        self.simulated._process_price_matched(
-            12.0, 2.00, [mock.Mock(price=15, size=120)]
-        )
+        self.simulated._process_price_matched(12.0, 2.00, [{"price": 15, "size": 120}])
         self.assertEqual(self.simulated.matched, [(15, 2)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            12.0, 2.00, [mock.Mock(price=15, size=1), mock.Mock(price=12, size=1)]
+            12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 1}]
         )
         self.assertEqual(self.simulated.matched, [(15, 1), (12, 1)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            12.0, 2.00, [mock.Mock(price=15, size=1), mock.Mock(price=12, size=0.5)]
+            12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 0.5}]
         )
         self.assertEqual(self.simulated.matched, [(15, 1), (12, 0.5)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            12.0, 2.00, [mock.Mock(price=15, size=1), mock.Mock(price=11, size=0.5)]
+            12.0, 2.00, [{"price": 15, "size": 1}, {"price": 11, "size": 0.5}]
         )
         self.assertEqual(self.simulated.matched, [(15, 1)])
 
@@ -139,22 +137,22 @@ class SimulatedTest(unittest.TestCase):
     )
     def test__process_price_matched_lay(self, mock_side):
         self.simulated._process_price_matched(
-            3.0, 20.00, [mock.Mock(price=2.02, size=120)]
+            3.0, 20.00, [{"price": 2.02, "size": 120}]
         )
         self.assertEqual(self.simulated.matched, [(2.02, 20)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            3.0, 20.00, [mock.Mock(price=2.02, size=1), mock.Mock(price=3, size=20)]
+            3.0, 20.00, [{"price": 2.02, "size": 1}, {"price": 3, "size": 20}]
         )
         self.assertEqual(self.simulated.matched, [(2.02, 1), (3, 19)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            3.0, 20.00, [mock.Mock(price=2.02, size=1), mock.Mock(price=2.9, size=0.5)]
+            3.0, 20.00, [{"price": 2.02, "size": 1}, {"price": 2.9, "size": 0.5}]
         )
         self.assertEqual(self.simulated.matched, [(2.02, 1), (2.9, 0.5)])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            3.0, 20.00, [mock.Mock(price=3, size=1), mock.Mock(price=11, size=0.5)]
+            3.0, 20.00, [{"price": 3, "size": 1}, {"price": 11, "size": 0.5}]
         )
         self.assertEqual(self.simulated.matched, [(3, 1)])
 

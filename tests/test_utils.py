@@ -31,24 +31,34 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_price(self):
         self.assertEqual(
-            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 0), 12
+            utils.get_price(
+                [{"price": 12, "size": 120}, {"price": 34, "size": 120}], 0
+            ),
+            12,
         )
         self.assertEqual(
-            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 1), 34
+            utils.get_price(
+                [{"price": 12, "size": 120}, {"price": 34, "size": 120}], 1
+            ),
+            34,
         )
         self.assertIsNone(
-            utils.get_price([mock.Mock(price=12), mock.Mock(price=34)], 3)
+            utils.get_price([{"price": 12, "size": 120}, {"price": 34, "size": 120}], 3)
         )
         self.assertIsNone(utils.get_price([], 3))
 
     def test_get_size(self):
         self.assertEqual(
-            utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 0), 12
+            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 0),
+            12,
         )
         self.assertEqual(
-            utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 1), 34
+            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 1),
+            34,
         )
-        self.assertIsNone(utils.get_size([mock.Mock(size=12), mock.Mock(size=34)], 3))
+        self.assertIsNone(
+            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 3)
+        )
         self.assertIsNone(utils.get_size([], 3))
 
     def test_calculate_exposure(self):

@@ -104,16 +104,16 @@ class Simulated:
         for avail in available:
             if size_remaining == 0:
                 break
-            elif (self.side == "BACK" and price <= avail.price) or (
-                self.side == "LAY" and price >= avail.price
+            elif (self.side == "BACK" and price <= avail["price"]) or (
+                self.side == "LAY" and price >= avail["price"]
             ):
                 _size_remaining = size_remaining
-                size_remaining = max(size_remaining - avail.size, 0)
+                size_remaining = max(size_remaining - avail["size"], 0)
                 if size_remaining == 0:
                     _size_matched = _size_remaining
                 else:
-                    _size_matched = avail.size
-                _matched = (avail.price, round(_size_matched, 2))
+                    _size_matched = avail["size"]
+                _matched = (avail["price"], round(_size_matched, 2))
                 self.matched.append(_matched)
             else:
                 break
