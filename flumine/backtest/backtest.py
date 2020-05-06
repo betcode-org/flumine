@@ -10,6 +10,7 @@ from .utils import PendingPackages
 from ..event import event
 from ..markets.market import Market
 from ..order.orderpackage import OrderPackageType
+from ..order import process
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,14 @@ class FlumineBacktest(BaseFlumine):
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
                     strategy.process_market_book(market, market_book)
+
+            # process current orders
+            blotter = market.blotter
+            for order in blotter:
+                process.process_current_order(order)
+            for strategy in self.strategies:
+                strategy_orders = blotter.strategy_orders(strategy)
+                strategy.process_orders(market, strategy_orders)
 
             self._process_market_orders(market)
 

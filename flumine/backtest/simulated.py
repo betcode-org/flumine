@@ -89,6 +89,7 @@ class Simulated:
         pass
 
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:
+        # todo speed up with for loop instead of lookup?
         runner_dict = {
             (runner.selection_id, runner.handicap): runner
             for runner in market_book.runners

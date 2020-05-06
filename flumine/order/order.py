@@ -165,6 +165,7 @@ class BaseOrder:
         else:
             return
 
+    # todo cached properties?
     @property
     def market_id(self) -> str:
         return self.trade.market_id

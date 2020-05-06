@@ -96,10 +96,12 @@ class MarketTest(unittest.TestCase):
         self.assertFalse(self.market.closed)
 
     def test_call(self):
+        mock_order = mock.Mock()
+        self.market.blotter = [mock_order]
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
-
         self.assertEqual(self.market.market_book, mock_market_book)
+        mock_order.simulated.assert_called_with(mock_market_book, {})
 
     def test_open_market(self):
         self.market.open_market()
