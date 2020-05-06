@@ -105,7 +105,7 @@ class BaseStrategy:
         market_context = self._invested.get(order.market_id)
         if market_context is None:
             self._invested[order.market_id] = market_context = {}
-        runner_context = market_context.get(order.selection_id)
+        runner_context = market_context.get(order.selection_id)  # todo handicap
         if runner_context is None:
             market_context[order.selection_id] = runner_context = RunnerContext(
                 order.selection_id
@@ -129,6 +129,18 @@ class BaseStrategy:
             return False
         else:
             return True
+
+    def is_invested(
+        self, market_id: str, selection_id: int, handicap: float = None
+    ) -> bool:
+        market_context = self._invested.get(market_id)
+        if market_context is None:
+            return False
+        runner_context = market_context.get(selection_id)  # todo handicap
+        if runner_context is None:
+            return False
+        else:
+            return runner_context.invested
 
     @property
     def stream_ids(self) -> list:

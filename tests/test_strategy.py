@@ -158,6 +158,13 @@ class BaseStrategyTest(unittest.TestCase):
         runner_context.invested = True
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
 
+    def test_is_invested(self):
+        mock_context = mock.Mock(invested=True)
+        self.strategy._invested = {"2": {456: mock_context}}
+        self.assertFalse(self.strategy.is_invested("1", 123, 1.0))
+        self.assertFalse(self.strategy.is_invested("2", 123, 1.0))
+        self.assertTrue(self.strategy.is_invested("2", 456, 1.0))
+
     def test_stream_ids(self):
         mock_stream = mock.Mock()
         mock_stream.stream_id = 321
