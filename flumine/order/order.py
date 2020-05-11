@@ -47,6 +47,7 @@ class BaseOrder:
         self.order_type = order_type
         self.handicap = handicap
 
+        self.runner_status = None  # RunnerBook.status
         self.status = None
         self.status_log = []
 

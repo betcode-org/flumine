@@ -397,6 +397,41 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.assertEqual(self.simulated.size_remaining, 0)
 
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.average_price_matched",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_matched",
+        new_callable=mock.PropertyMock,
+    )
+    def test_profit_back(self, mock_size_matched, mock_average_price_matched):
+        self.assertEqual(self.simulated.profit, 0)
+        self.simulated.order.runner_status = "WINNER"
+        mock_size_matched.return_value = 2.00
+        mock_average_price_matched.return_value = 10.0
+        self.assertEqual(self.simulated.profit, 18.0)
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, -2.0)
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.average_price_matched",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_matched",
+        new_callable=mock.PropertyMock,
+    )
+    def test_profit_back(self, mock_size_matched, mock_average_price_matched):
+        self.simulated.order.side = "LAY"
+        self.assertEqual(self.simulated.profit, 0)
+        self.simulated.order.runner_status = "WINNER"
+        mock_size_matched.return_value = 2.00
+        mock_average_price_matched.return_value = 10.0
+        self.assertEqual(self.simulated.profit, -18.0)
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, 2.0)
+
     def test_bool(self):
         self.assertFalse(self.simulated)
         from flumine import config

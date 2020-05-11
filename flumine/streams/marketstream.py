@@ -4,7 +4,7 @@ from betfairlightweight import BetfairError
 from tenacity import retry, wait_exponential
 
 from .basestream import BaseStream
-from ..event.event import MarketBookEvent
+from ..events.events import MarketBookEvent
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import logging
 import queue
 from betfairlightweight import BetfairError, filters
 
-from .event.event import MarketCatalogueEvent
+from .events.events import MarketCatalogueEvent
 from .utils import chunks
 
 logger = logging.getLogger(__name__)

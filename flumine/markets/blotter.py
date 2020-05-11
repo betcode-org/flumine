@@ -76,6 +76,15 @@ class Blotter:
                 return True
         return False
 
+    def process_closed_market(self, market_book):
+        for order in self:
+            for runner in market_book.runners:
+                if (order.selection_id, order.handicap) == (
+                    runner.selection_id,
+                    runner.handicap,
+                ):
+                    order.runner_status = runner.status
+
     """ position """
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
 
-from ..event.event import BaseEvent, EventType, QueueType
+from ..events.events import BaseEvent, EventType, QueueType
 from ..clients.clients import ExchangeType
 from .. import config
 from .order import BaseOrder, OrderStatus

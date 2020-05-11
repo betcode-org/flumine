@@ -5,7 +5,7 @@ from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
-from .event import event
+from .events import events
 from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
@@ -87,9 +87,13 @@ class BaseFlumine:
     def _add_default_workers(self) -> None:
         return
 
-    def _process_market_books(self, event: event.MarketBookEvent) -> None:
+    def _process_market_books(self, event: events.MarketBookEvent) -> None:
         for market_book in event.event:
             market_id = market_book.market_id
+            if market_book.status == "CLOSED":
+                self.handler_queue.put(events.CloseMarketEvent(market_book))
+                continue
+
             market = self.markets.markets.get(market_id)
 
             if not market:
@@ -129,14 +133,14 @@ class BaseFlumine:
         logger.info("Adding: {0} to markets".format(market.market_id))
         return market
 
-    def _process_raw_data(self, event: event.RawDataEvent) -> None:
+    def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
                     strategy.process_raw_data(publish_time, datum)
 
-    def _process_market_catalogues(self, event: event.MarketCatalogueEvent) -> None:
+    def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
             market = self.markets.markets.get(market_catalogue.market_id)
             if market:
@@ -147,7 +151,7 @@ class BaseFlumine:
                     # todo logging control
                 market.market_catalogue = market_catalogue
 
-    def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
+    def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         process_current_orders(self.markets, self.strategies, event)  # update state
         for market in self.markets:
             if market.closed is False:
@@ -155,6 +159,15 @@ class BaseFlumine:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     strategy.process_orders(market, strategy_orders)
             self._process_market_orders(market)
+
+    def _process_close_market(self, event: events.CloseMarketEvent) -> None:
+        market = self.markets.markets.get(event.event.market_id)
+        market.close_market()
+        market.blotter.process_closed_market(event.event)
+
+        # todo update balance
+        # todo get cleared orders
+        # todo log closed market event
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
@@ -193,7 +206,7 @@ class BaseFlumine:
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
         # shutdown logging controls
-        # todo self.log_control(event.EventType.TERMINATOR)
+        # todo self.log_control(events.EventType.TERMINATOR)
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()

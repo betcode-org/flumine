@@ -231,5 +231,20 @@ class Simulated:
         else:
             return 0.0
 
+    @property
+    def profit(self) -> float:
+        if self.order.runner_status == "WINNER":
+            if self.side == "BACK":
+                return round((self.average_price_matched - 1) * self.size_matched, 2)
+            else:
+                return round((self.average_price_matched - 1) * -self.size_matched, 2)
+        elif self.order.runner_status == "LOSER":
+            if self.side == "BACK":
+                return -self.size_matched
+            else:
+                return self.size_matched
+        else:
+            return 0.0
+
     def __bool__(self):
         return config.simulated

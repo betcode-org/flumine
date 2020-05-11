@@ -5,6 +5,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 from .blotter import Blotter
 from .middleware import SimulatedMiddleware
 from .. import config
+from ..order.order import OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class Market:
             middleware(self.market_catalogue, self.market_book)  # todo error handling?
         # process simulated orders
         for order in self.blotter:
-            if order.simulated:
+            if order.simulated and order.status == OrderStatus.EXECUTABLE:
                 runner_analytics = self._simulated_middleware.runners.get(
                     (order.selection_id, order.handicap)
                 )

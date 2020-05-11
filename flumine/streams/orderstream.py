@@ -4,7 +4,7 @@ from betfairlightweight import BetfairError, filters
 from tenacity import retry, wait_exponential
 
 from .basestream import BaseStream
-from ..event.event import CurrentOrdersEvent
+from ..events.events import CurrentOrdersEvent
 from .. import config
 
 logger = logging.getLogger(__name__)

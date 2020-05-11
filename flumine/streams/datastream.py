@@ -5,7 +5,7 @@ from betfairlightweight import BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
 
 from .basestream import BaseStream
-from ..event.event import RawDataEvent
+from ..events.events import RawDataEvent
 from ..exceptions import ListenerError
 
 logger = logging.getLogger(__name__)

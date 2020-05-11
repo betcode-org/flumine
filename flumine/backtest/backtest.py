@@ -2,12 +2,11 @@ import logging
 import datetime
 
 from ..baseflumine import BaseFlumine
-from ..event.event import MarketBookEvent
+from ..events import events
 from .. import config
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from .utils import PendingPackages
-from ..event import event
 from ..markets.market import Market
 from ..order.orderpackage import OrderPackageType
 from ..order import process
@@ -46,7 +45,7 @@ class FlumineBacktest(BaseFlumine):
                 for event in stream_gen():
                     for market_book in event:  # todo move?
                         market_book.streaming_unique_id = stream.stream_id
-                    self._process_market_books(MarketBookEvent(event))
+                    self._process_market_books(events.MarketBookEvent(event))
 
                 self._pending_packages.clear()
 
@@ -60,7 +59,7 @@ class FlumineBacktest(BaseFlumine):
 
             self._unpatch_datetime()
 
-    def _process_market_books(self, event: event.MarketBookEvent) -> None:
+    def _process_market_books(self, event: events.MarketBookEvent) -> None:
         for market_book in event.event:
             market_id = market_book.market_id
             config.current_time = market_book.publish_time
@@ -68,8 +67,11 @@ class FlumineBacktest(BaseFlumine):
             # check if there are orders to process
             self._check_pending_packages()
 
-            market = self.markets.markets.get(market_id)
+            if market_book.status == "CLOSED":
+                self._process_close_market(event=events.CloseMarketEvent(market_book))
+                continue
 
+            market = self.markets.markets.get(market_id)
             if not market:
                 market = self._add_live_market(market_id, market_book)
 
