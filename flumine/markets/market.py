@@ -3,6 +3,7 @@ import logging
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
+from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,9 @@ class Market:
         self.market_book = market_book
         # todo middleware?
 
-        for order in self.blotter:  # todo if simulated?
-            order.simulated(self.market_book, {})
+        if config.simulated:
+            for order in self.blotter:
+                order.simulated(self.market_book, {})
 
     def open_market(self) -> None:
         self.closed = False

@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market
+from flumine.markets.market import Market, config
 
 
 class MarketsTest(unittest.TestCase):
@@ -96,12 +96,14 @@ class MarketTest(unittest.TestCase):
         self.assertFalse(self.market.closed)
 
     def test_call(self):
+        config.simulated = True
         mock_order = mock.Mock()
         self.market.blotter = [mock_order]
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
         mock_order.simulated.assert_called_with(mock_market_book, {})
+        config.simulated = False
 
     def test_open_market(self):
         self.market.open_market()

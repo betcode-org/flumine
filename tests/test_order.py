@@ -136,6 +136,10 @@ class BaseOrderTest(unittest.TestCase):
         mock_responses.current_order = 1
         self.assertEqual(self.order.current_order, 1)
 
+    def test_current_order_simulated(self):
+        self.order.simulated = True
+        self.assertTrue(self.order.current_order)
+
     def test_average_price_matched(self):
         with self.assertRaises(NotImplementedError):
             assert self.order.average_price_matched

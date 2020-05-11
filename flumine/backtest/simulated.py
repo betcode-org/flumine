@@ -19,6 +19,7 @@ class Simulated:
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
         self.size_voided = 0.0
+        self._piq = 0.0
         self._bsp_reconciled = False
         # todo handle limit lapsing
 
@@ -47,35 +48,40 @@ class Simulated:
             price = self.order.order_type.price
             size = self.order.order_type.size
             if self.order.side == "BACK":
-                # available = runner.ex.available_to_lay
                 if available_to_back >= price:
                     self._process_price_matched(
                         price, size, runner.ex.available_to_back
                     )
+                    return self._create_place_response(bet_id)
+                available = runner.ex.available_to_lay
             else:
-                # available = runner.ex.available_to_back
                 if available_to_lay <= price:
                     self._process_price_matched(price, size, runner.ex.available_to_lay)
-            # todo on top
-            return SimulatedPlaceResponse(
-                status="SUCCESS",
-                order_status="EXECUTABLE",
-                bet_id=str(bet_id),
-                average_price_matched=self.average_price_matched,
-                size_matched=self.size_matched,
-                placed_date=datetime.datetime.utcnow(),
-                error_code=None,
-            )
+                    return self._create_place_response(bet_id)
+                available = runner.ex.available_to_back
+
+            # calculate position in queue
+            for avail in available:
+                if avail["price"] == price:
+                    self._piq = avail["size"]
+                    break
+
+            return self._create_place_response(bet_id)
         else:
-            return SimulatedPlaceResponse(
-                status="SUCCESS",
-                order_status="EXECUTABLE",
-                bet_id=str(bet_id),
-                average_price_matched=self.average_price_matched,
-                size_matched=self.size_matched,
-                placed_date=datetime.datetime.utcnow(),
-                error_code=None,
-            )
+            return self._create_place_response(bet_id)
+
+    def _create_place_response(
+        self, bet_id: int, status: str = "SUCCESS", error_code: str = None
+    ) -> SimulatedPlaceResponse:
+        return SimulatedPlaceResponse(
+            status=status,
+            order_status="EXECUTABLE",  # todo?
+            bet_id=str(bet_id),
+            average_price_matched=self.average_price_matched,
+            size_matched=self.size_matched,
+            placed_date=datetime.datetime.utcnow(),
+            error_code=error_code,
+        )
 
     def cancel(self):
         # simulates cancelOrder request->cancel->response
@@ -90,7 +96,6 @@ class Simulated:
         pass
 
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:
-        # todo speed up with for loop instead of lookup?
         runner_dict = {
             (runner.selection_id, runner.handicap): runner
             for runner in market_book.runners
