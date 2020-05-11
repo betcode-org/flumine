@@ -642,9 +642,35 @@ class SimulatedExecutionTest(unittest.TestCase):
         )
         mock_order.lapsed.assert_called_with()
 
-    def test_execute_cancel(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_cancel(None, None)
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_cancel(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_order.simulated.cancel.assert_called_with()
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_cancel_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_order.simulated.cancel.assert_called_with()
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
 
     def test_execute_update(self):
         with self.assertRaises(NotImplementedError):

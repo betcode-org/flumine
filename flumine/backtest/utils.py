@@ -28,3 +28,17 @@ class SimulatedPlaceResponse:
         self.size_matched = size_matched
         self.placed_date = placed_date
         self.error_code = error_code
+
+
+class SimulatedCancelResponse:
+    def __init__(
+        self,
+        status: str,
+        size_cancelled: float = None,
+        cancelled_date: datetime = None,
+        error_code: str = None,
+    ):
+        self.status = status
+        self.size_cancelled = size_cancelled
+        self.cancelled_date = cancelled_date
+        self.error_code = error_code

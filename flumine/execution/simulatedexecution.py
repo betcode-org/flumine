@@ -53,7 +53,17 @@ class SimulatedExecution(BaseExecution):
     def execute_cancel(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        raise NotImplementedError
+        # todo if order_package.client.paper_trade:
+        #     time.sleep(self.CANCEL_LATENCY)
+        for order in order_package:
+            simulated_response = order.simulated.cancel()
+            self._order_logger(order, simulated_response, order_package.package_type)
+            if simulated_response.status == "SUCCESS":
+                order.execution_complete()
+            elif simulated_response.status == "FAILURE":
+                order.executable()
+            elif simulated_response.status == "TIMEOUT":
+                order.executable()
 
     def execute_update(
         self, order_package, http_session: Optional[requests.Session]

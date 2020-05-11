@@ -147,8 +147,17 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "dubs of the mad skint and british")
 
-    # def test_cancel(self):
-    #     pass
+    def test_cancel(self):
+        resp = self.simulated.cancel()
+        self.assertEqual(self.simulated.size_cancelled, 2.0)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.size_cancelled, 2.0)
+
+    def test_cancel_else(self):
+        self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        resp = self.simulated.cancel()
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "BET_ACTION_ERROR")
 
     # def test_update(self):
     #     pass
