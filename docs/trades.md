@@ -11,6 +11,7 @@ from flumine.order.ordertype import LimitOrder
 trade = Trade(
     market_id="1.2345678",
     selection_id=123456,
+    handicap=1.0,
     strategy=strategy
 )
 trade.orders  # []

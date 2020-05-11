@@ -83,6 +83,7 @@ class ExampleStrategy(BaseStrategy):
                 trade = Trade(
                     market_id=market_book.market_id,
                     selection_id=runner.selection_id,
+                    handicap=runner.handicap,
                     strategy=self,
                 )
                 order = trade.create_order(

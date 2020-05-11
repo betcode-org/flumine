@@ -69,7 +69,8 @@ class ExampleStrategy(BaseStrategy):
             if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
                 trade = Trade(
                     market_id=market_book.market_id, 
-                    selection_id=runner.selection_id, 
+                    selection_id=runner.selection_id,
+                    handicap=runner.handicap,
                     strategy=self
                 )
                 order = trade.create_order(
