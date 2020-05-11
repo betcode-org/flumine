@@ -56,7 +56,7 @@ class BaseStrategy:
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
 
-        self._invested = {}  # {marketId: {selectionId: RunnerContext}}
+        self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
@@ -101,15 +101,7 @@ class BaseStrategy:
 
     # order
     def place_order(self, market: Market, order) -> None:
-        # get context
-        market_context = self._invested.get(order.market_id)
-        if market_context is None:
-            self._invested[order.market_id] = market_context = {}
-        runner_context = market_context.get(order.selection_id)  # todo handicap
-        if runner_context is None:
-            market_context[order.selection_id] = runner_context = RunnerContext(
-                order.selection_id
-            )
+        runner_context = self.get_runner_context(*order.lookup)
         if self.validate_order(runner_context, order):
             runner_context.place()
             market.place_order(order)
@@ -131,16 +123,21 @@ class BaseStrategy:
             return True
 
     def is_invested(
-        self, market_id: str, selection_id: int, handicap: float = None
+        self, market_id: str, selection_id: int, handicap: float = 0
     ) -> bool:
-        market_context = self._invested.get(market_id)
-        if market_context is None:
-            return False
-        runner_context = market_context.get(selection_id)  # todo handicap
-        if runner_context is None:
-            return False
-        else:
-            return runner_context.invested
+        runner_context = self.get_runner_context(market_id, selection_id, handicap)
+        return runner_context.invested
+
+    def get_runner_context(
+        self, market_id: str, selection_id: int, handicap: float = 0
+    ) -> RunnerContext:
+        try:
+            return self._invested[(market_id, selection_id, handicap)]
+        except KeyError:
+            self._invested[
+                (market_id, selection_id, handicap)
+            ] = runner_context = RunnerContext(selection_id)
+            return runner_context
 
     @property
     def stream_ids(self) -> list:
