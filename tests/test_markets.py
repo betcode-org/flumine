@@ -96,7 +96,7 @@ class MarketTest(unittest.TestCase):
         self.assertFalse(self.market.closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
-        self.assertEqual(len(self.market._middleware), 1)
+        self.assertEqual(self.market._middleware, [])
 
     def test_call(self):
         mock_middleware = mock.Mock()

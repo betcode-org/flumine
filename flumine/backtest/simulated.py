@@ -35,8 +35,7 @@ class Simulated:
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
             # todo piq cancellations
-            traded = runner_analytics.traded_dictionary
-            self._process_traded(traded)
+            self._process_traded(runner_analytics.traded)
 
     def place(
         self, market_book: MarketBook, instruction: dict, bet_id: int

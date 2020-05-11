@@ -34,7 +34,7 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_analytics = mock.Mock()
         self.simulated(mock_market_book, mock_runner_analytics)
         mock__process_sp.assert_called_with(mock__get_runner())
-        mock__process_traded.assert_called_with(mock_runner_analytics.traded_dictionary)
+        mock__process_traded.assert_called_with(mock_runner_analytics.traded)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)

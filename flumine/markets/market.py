@@ -21,8 +21,11 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self._simulated_middleware = SimulatedMiddleware()
-        self._middleware = [self._simulated_middleware]
+        self._middleware = []
         self.blotter = Blotter(self)
+
+        if config.simulated:
+            self._middleware.append(self._simulated_middleware)
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book

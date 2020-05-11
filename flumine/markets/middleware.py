@@ -50,24 +50,24 @@ class SimulatedMiddleware:
 class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
-        self.traded_dictionary = {}
-        self._volume_dict = []  # runner.ex.traded_volume
+        self.traded = {}
+        self._traded_volume = []  # runner.ex.traded_volume
 
     def __call__(self, runner: RunnerBook):
-        self.traded_dictionary = self._calculate_traded_dict(runner)
-        self._volume_dict = runner.ex.traded_volume
+        self.traded = self._calculate_traded(runner)
+        self._traded_volume = runner.ex.traded_volume
 
-    def _calculate_traded_dict(self, runner: RunnerBook) -> dict:
-        if self._volume_dict == {}:
+    def _calculate_traded(self, runner: RunnerBook) -> dict:
+        if self._traded_volume == {}:
             return {}
-        elif self._volume_dict == runner.ex.traded_volume:
+        elif self._traded_volume == runner.ex.traded_volume:
             return {}
         else:
             c_v, p_v, traded_dictionary = {}, {}, {}
             # create dictionaries
             for i in runner.ex.traded_volume:
                 c_v[i["price"]] = i["size"]
-            for i in self._volume_dict:
+            for i in self._traded_volume:
                 p_v[i["price"]] = i["size"]
             # calculate difference
             for key in c_v.keys():
