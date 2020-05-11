@@ -15,6 +15,7 @@ from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
 from .controls.tradingcontrols import OrderValidation, StrategyExposure
+from . import config
 
 
 logger = logging.getLogger(__name__)
@@ -163,6 +164,9 @@ class BaseFlumine:
         logger.info("Starting flumine")
         # add execution to clients
         self.client.add_execution(self)
+        # simulated
+        if self.BACKTEST:
+            config.simulated = True
         # login
         self.client.login()
         self.client.update_account_details()
@@ -194,4 +198,5 @@ class BaseFlumine:
         # logout
         self.client.logout()
         self._running = False
+        config.simulated = False
         logger.info("Exiting flumine")

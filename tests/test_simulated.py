@@ -277,9 +277,25 @@ class SimulatedTest(unittest.TestCase):
         mock_size_matched.return_value = 1
         self.assertEqual(self.simulated.size_remaining, 1)
 
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_matched",
+        new_callable=mock.PropertyMock,
+    )
+    def test_size_remaining_multi(self, mock_size_matched):
+        mock_size_matched.return_value = 0.1
+        self.simulated.size_cancelled = 0.2
+        self.simulated.size_lapsed = 0.3
+        self.simulated.size_voided = 0.4
+        self.assertEqual(self.simulated.size_remaining, 1)
+
     def test_size_remaining_non_limit(self):
         self.simulated.order.order_type.liability = 2
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
-        self.assertEqual(self.simulated.size_remaining, 2)
-        self.simulated.matched = [(12.02, 2)]
         self.assertEqual(self.simulated.size_remaining, 0)
+
+    def test_bool(self):
+        self.assertFalse(self.simulated)
+        from flumine import config
+
+        config.simulated = True
+        self.assertTrue(self.simulated)

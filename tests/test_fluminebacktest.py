@@ -3,7 +3,7 @@ from unittest import mock
 
 from flumine import FlumineBacktest
 from flumine.order.orderpackage import OrderPackageType
-from flumine.event import event
+from flumine import config
 from flumine.exceptions import RunError
 
 
@@ -179,3 +179,18 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test_repr(self):
         assert repr(self.flumine) == "<FlumineBacktest>"
+
+    def test_enter_exit(self):
+        control = mock.Mock()
+        self.flumine._logging_controls = [control]
+        self.flumine.simulated_execution = mock.Mock()
+        self.flumine.betfair_execution = mock.Mock()
+        with self.flumine:
+            self.assertTrue(self.flumine._running)
+            self.assertTrue(config.simulated)
+
+        self.assertFalse(self.flumine._running)
+        self.assertFalse(config.simulated)
+        self.flumine.simulated_execution.shutdown.assert_called_with()
+        self.flumine.betfair_execution.shutdown.assert_called_with()
+        control.start.assert_called_with()

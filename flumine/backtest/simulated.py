@@ -4,6 +4,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 from .utils import SimulatedPlaceResponse
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
+from .. import config
 
 
 class Simulated:
@@ -19,7 +20,7 @@ class Simulated:
         self.size_lapsed = 0.0
         self.size_voided = 0.0
         self._bsp_reconciled = False
-        # todo handle lapsing
+        # todo handle limit lapsing
 
     def __call__(self, market_book: MarketBook, traded: dict):
         # simulates order matching
@@ -120,7 +121,6 @@ class Simulated:
 
     def _process_sp(self, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
-        # todo add lapsed amounts
         actual_sp = runner.sp.actual_sp
         if actual_sp:
             self._bsp_reconciled = True
@@ -130,12 +130,10 @@ class Simulated:
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
                     if actual_sp < _order_type.price:
-                        # self.lapsed = _order_type.liability
                         return
                     size = _order_type.liability
                 else:
                     if actual_sp > _order_type.price:
-                        # self.lapsed = _order_type.liability
                         return
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             elif _order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
@@ -183,12 +181,16 @@ class Simulated:
     @property
     def size_remaining(self) -> float:
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            return self.order.order_type.size - self.size_matched
+            return round(
+                self.order.order_type.size
+                - self.size_matched
+                - self.size_cancelled
+                - self.size_lapsed
+                - self.size_voided,
+                2,
+            )
         else:
-            if self.matched:  # todo validate this handles edge cases
-                return 0
-            else:
-                return self.order.order_type.liability
+            return 0.0
 
     def __bool__(self):
-        return False
+        return config.simulated
