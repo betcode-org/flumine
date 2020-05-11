@@ -56,6 +56,7 @@ class FlumineBacktestTest(unittest.TestCase):
     def test__process_market_books(self, mock__check_pending_packages):
         mock_event = mock.Mock()
         mock_market_book = mock.Mock()
+        mock_market_book.runners = []
         mock_event.event = [mock_market_book]
         self.flumine._process_market_books(mock_event)
         mock__check_pending_packages.assert_called_with()
@@ -194,3 +195,6 @@ class FlumineBacktestTest(unittest.TestCase):
         self.flumine.simulated_execution.shutdown.assert_called_with()
         self.flumine.betfair_execution.shutdown.assert_called_with()
         control.start.assert_called_with()
+
+    def tearDown(self) -> None:
+        config.simulated = False

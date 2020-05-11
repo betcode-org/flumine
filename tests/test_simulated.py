@@ -31,11 +31,10 @@ class SimulatedTest(unittest.TestCase):
     def test_call(self, mock__process_sp, mock__process_traded, _, mock__get_runner):
         mock_market_book = mock.Mock()
         mock_market_book.bsp_reconciled = True
-        self.simulated(mock_market_book, {})
+        mock_runner_analytics = mock.Mock()
+        self.simulated(mock_market_book, mock_runner_analytics)
         mock__process_sp.assert_called_with(mock__get_runner())
-        mock__process_traded.assert_called_with(
-            {mock__get_runner().last_price_traded: 1000000}
-        )
+        mock__process_traded.assert_called_with(mock_runner_analytics.traded_dictionary)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
@@ -336,15 +335,16 @@ class SimulatedTest(unittest.TestCase):
     def test__calculate_process_traded(self):
         self.simulated._calculate_process_traded(2.00)
         self.simulated._calculate_process_traded(2.00)
-        self.assertEqual(self.simulated.matched, [(12, 2.00)])
+        self.simulated._calculate_process_traded(2.00)
+        self.assertEqual(self.simulated.matched, [(12, 1.00), (12, 1.00)])
         self.assertEqual(self.simulated._piq, 0)
 
     def test__calculate_process_traded_piq(self):
         self.simulated._piq = 2.00
-        self.simulated._calculate_process_traded(2.00)
+        self.simulated._calculate_process_traded(4.00)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0)
-        self.simulated._calculate_process_traded(2.00)
+        self.simulated._calculate_process_traded(4.00)
         self.assertEqual(self.simulated.matched, [(12, 2.00)])
         self.assertEqual(self.simulated._piq, 0)
 

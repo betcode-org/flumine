@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, config
+from flumine.markets.market import Market
 
 
 class MarketsTest(unittest.TestCase):
@@ -88,22 +88,26 @@ class MarketsTest(unittest.TestCase):
 class MarketTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_market_book = mock.Mock()
-        self.market = Market("1.234", self.mock_market_book)
+        self.mock_market_catalogue = mock.Mock()
+        self.market = Market("1.234", self.mock_market_book, self.mock_market_catalogue)
 
     def test_init(self):
         self.assertEqual(self.market.market_id, "1.234")
-        self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertFalse(self.market.closed)
+        self.assertEqual(self.market.market_book, self.mock_market_book)
+        self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
+        self.assertEqual(len(self.market._middleware), 1)
 
     def test_call(self):
-        config.simulated = True
+        mock_middleware = mock.Mock()
+        self.market._middleware = [mock_middleware]
         mock_order = mock.Mock()
         self.market.blotter = [mock_order]
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
-        mock_order.simulated.assert_called_with(mock_market_book, {})
-        config.simulated = False
+        mock_middleware.assert_called_with(self.mock_market_catalogue, mock_market_book)
+        mock_order.simulated.assert_called_with(mock_market_book, None)
 
     def test_open_market(self):
         self.market.open_market()
@@ -167,11 +171,18 @@ class MarketTest(unittest.TestCase):
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_market_book(self):
+        self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         mock_market_book.market_definition.market_time = datetime.datetime.utcfromtimestamp(
             1
         )
         self.market.market_book = mock_market_book
+        self.assertLess(self.market.seconds_to_start, 0)
+
+    def test_seconds_to_start_market_catalogue(self):
+        self.market.market_catalogue.market_start_time = datetime.datetime.utcfromtimestamp(
+            1
+        )
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_none(self):

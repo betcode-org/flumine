@@ -23,7 +23,7 @@ class Simulated:
         self._bsp_reconciled = False
         # todo handle limit lapsing
 
-    def __call__(self, market_book: MarketBook, traded: dict):
+    def __call__(self, market_book: MarketBook, runner_analytics):
         # simulates order matching
         runner = self._get_runner(market_book)
         if (
@@ -35,9 +35,7 @@ class Simulated:
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
             # todo piq cancellations
-            # todo traded
-            traded = {runner.last_price_traded: 1_000_000}
-            # runner_traded = traded[self.order.selection_id]
+            traded = runner_analytics.traded_dictionary
             self._process_traded(traded)
 
     def place(
@@ -176,6 +174,7 @@ class Simulated:
                 self._calculate_process_traded(traded_size)
 
     def _calculate_process_traded(self, traded_size: float) -> None:
+        traded_size = traded_size / 2
         if self._piq - traded_size < 0:
             size = traded_size - self._piq
             size = round(min(self.size_remaining, size), 2)

@@ -53,6 +53,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_market_books(self):
         mock_event = mock.Mock()
         mock_market_book = mock.Mock()
+        mock_market_book.runners = []
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
