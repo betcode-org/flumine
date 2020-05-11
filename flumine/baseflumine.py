@@ -167,6 +167,8 @@ class BaseFlumine:
         # simulated
         if self.BACKTEST:
             config.simulated = True
+        else:
+            config.simulated = False
         # login
         self.client.login()
         self.client.update_account_details()
@@ -198,5 +200,4 @@ class BaseFlumine:
         # logout
         self.client.logout()
         self._running = False
-        config.simulated = False
         logger.info("Exiting flumine")

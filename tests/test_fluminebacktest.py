@@ -190,7 +190,7 @@ class FlumineBacktestTest(unittest.TestCase):
             self.assertTrue(config.simulated)
 
         self.assertFalse(self.flumine._running)
-        self.assertFalse(config.simulated)
+        self.assertTrue(config.simulated)
         self.flumine.simulated_execution.shutdown.assert_called_with()
         self.flumine.betfair_execution.shutdown.assert_called_with()
         control.start.assert_called_with()

@@ -33,8 +33,12 @@ class Simulated:
         ):
             self._process_sp(runner)
 
-        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            self._process_traded(runner, traded)
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
+            # todo piq cancellations
+            # todo traded
+            traded = {runner.last_price_traded: 1_000_000}
+            # runner_traded = traded[self.order.selection_id]
+            self._process_traded(traded)
 
     def place(
         self, market_book: MarketBook, instruction: dict, bet_id: int
@@ -150,9 +154,31 @@ class Simulated:
                 raise NotImplementedError()
             self.matched.append((actual_sp, size))
 
-    def _process_traded(self, runner: RunnerBook, traded: dict) -> None:
+    def _process_traded(self, traded: dict) -> None:
         # calculate matched on MarketBook update
-        pass
+        price = self.order.order_type.price
+        for traded_price, traded_size in traded.items():
+            if self.side == "BACK" and traded_price > price:
+                self._calculate_process_traded(traded_size)
+            elif self.side == "LAY" and traded_price < price:
+                self._calculate_process_traded(traded_size)
+            elif traded_price == price:
+                self._calculate_process_traded(traded_size)
+
+    def _calculate_process_traded(self, traded_size: float) -> None:
+        if self._piq - traded_size < 0:
+            size = traded_size - self._piq
+            size = round(min(self.size_remaining, size), 2)
+            if size:
+                self.matched.append(
+                    (
+                        self.order.order_type.price,
+                        size,
+                    )  # todo takes the worst price, i.e what was asked
+                )
+            self._piq = 0
+        else:
+            self._piq -= traded_size
 
     @property
     def take_sp(self) -> bool:

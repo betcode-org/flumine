@@ -33,7 +33,9 @@ class SimulatedTest(unittest.TestCase):
         mock_market_book.bsp_reconciled = True
         self.simulated(mock_market_book, {})
         mock__process_sp.assert_called_with(mock__get_runner())
-        mock__process_traded.assert_called_with(mock__get_runner(), {})
+        mock__process_traded.assert_called_with(
+            {mock__get_runner().last_price_traded: 1000000}
+        )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
@@ -300,8 +302,42 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [(69, 0.03)])
         self.assertTrue(self.simulated._bsp_reconciled)
 
-    # def test__process_traded(self):
-    #     pass
+    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    def test__process_traded_back(self, mock__calculate_process_traded):
+        self.simulated._process_traded({12: 120})
+        mock__calculate_process_traded.assert_called_with(120)
+
+    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    def test__process_traded_back_no(self, mock__calculate_process_traded):
+        self.simulated._process_traded({11: 120})
+        mock__calculate_process_traded.assert_not_called()
+
+    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    def test__process_traded_lay(self, mock__calculate_process_traded):
+        self.simulated.order.side = "LAY"
+        self.simulated._process_traded({12: 120})
+        mock__calculate_process_traded.assert_called_with(120)
+
+    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    def test__process_traded_lay_no(self, mock__calculate_process_traded):
+        self.simulated.order.side = "LAY"
+        self.simulated._process_traded({13: 120})
+        mock__calculate_process_traded.assert_not_called()
+
+    def test__calculate_process_traded(self):
+        self.simulated._calculate_process_traded(2.00)
+        self.simulated._calculate_process_traded(2.00)
+        self.assertEqual(self.simulated.matched, [(12, 2.00)])
+        self.assertEqual(self.simulated._piq, 0)
+
+    def test__calculate_process_traded_piq(self):
+        self.simulated._piq = 2.00
+        self.simulated._calculate_process_traded(2.00)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated._piq, 0)
+        self.simulated._calculate_process_traded(2.00)
+        self.assertEqual(self.simulated.matched, [(12, 2.00)])
+        self.assertEqual(self.simulated._piq, 0)
 
     def test_take_sp(self):
         self.assertFalse(self.simulated.take_sp)
