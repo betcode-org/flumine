@@ -92,6 +92,16 @@ def get_size(data: list, level: int) -> Optional[float]:
         return
 
 
+def price_ticks_away(price: float, n_ticks: int) -> float:
+    try:
+        price_index = PRICES.index(as_dec(price))
+        if price_index + n_ticks < 0:
+            return 1.01
+        return float(PRICES[price_index + n_ticks])
+    except IndexError:
+        return 1000
+
+
 # todo LRU cache?
 def calculate_exposure(mb: list, ml: list) -> int:
     """Calculates exposure based on list

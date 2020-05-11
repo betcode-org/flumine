@@ -2,7 +2,7 @@ import logging
 
 from ..markets.markets import Markets
 from ..strategy.strategy import Strategies
-from ..order.trade import Trade
+from ..order.trade import Trade, TradeStatus
 from ..order.order import BaseOrder, OrderStatus
 
 logger = logging.getLogger(__name__)
@@ -52,8 +52,17 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
 
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
-        pass
-        # print(order.status, order.status_log)
+        if order.size_voided:
+            order.voided()
+        elif order.size_lapsed:
+            order.lapsed()
+        elif order.size_remaining == 0:
+            order.execution_complete()
+
+    if order.status == OrderStatus.EXECUTION_COMPLETE:
+        if order.trade.status == TradeStatus.LIVE:
+            if not order.trade.offset_orders:
+                order.trade.complete()
 
 
 def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
@@ -69,7 +78,9 @@ def create_order_from_current(markets: Markets, strategies: Strategies, current_
         # todo log
         return
     # add trade/order
-    trade = Trade(market.market_id, current_order.selection_id, strategy)
+    trade = Trade(
+        market.market_id, current_order.selection_id, current_order.handicap, strategy
+    )
     order = trade.create_order_from_current(current_order, order_id)
     market.blotter[order.id] = order
     return order

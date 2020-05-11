@@ -62,8 +62,6 @@ class SimulatedExecution(BaseExecution):
                 order.execution_complete()
             elif simulated_response.status == "FAILURE":
                 order.executable()
-            elif simulated_response.status == "TIMEOUT":
-                order.executable()
 
     def execute_update(
         self, order_package, http_session: Optional[requests.Session]

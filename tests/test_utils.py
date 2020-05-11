@@ -61,6 +61,17 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertIsNone(utils.get_size([], 3))
 
+    def test_price_ticks_away(self):
+        self.assertEqual(utils.price_ticks_away(1.01, 1), 1.02)
+        self.assertEqual(utils.price_ticks_away(1.01, 5), 1.06)
+        self.assertEqual(utils.price_ticks_away(500, 1), 510)
+        self.assertEqual(utils.price_ticks_away(500, -1), 490)
+        self.assertEqual(utils.price_ticks_away(1.01, -1), 1.01)
+        self.assertEqual(utils.price_ticks_away(1.10, -10), 1.01)
+        self.assertEqual(utils.price_ticks_away(1000, 5), 1000)
+        with self.assertRaises(ValueError):
+            utils.price_ticks_away(999, -1)
+
     def test_calculate_exposure(self):
         self.assertEqual(utils.calculate_exposure([], []), 0)
         self.assertEqual(utils.calculate_exposure([(0, 0)], [(0, 0), (0, 0)]), 0)
