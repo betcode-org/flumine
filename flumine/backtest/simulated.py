@@ -165,11 +165,9 @@ class Simulated:
         # calculate matched on MarketBook update
         price = self.order.order_type.price
         for traded_price, traded_size in traded.items():
-            if self.side == "BACK" and traded_price > price:
+            if self.side == "BACK" and traded_price >= price:
                 self._calculate_process_traded(traded_size)
-            elif self.side == "LAY" and traded_price < price:
-                self._calculate_process_traded(traded_size)
-            elif traded_price == price:
+            elif self.side == "LAY" and traded_price <= price:
                 self._calculate_process_traded(traded_size)
 
     def _calculate_process_traded(self, traded_size: float) -> None:
