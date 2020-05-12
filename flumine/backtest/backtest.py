@@ -43,9 +43,10 @@ class FlumineBacktest(BaseFlumine):
                 )
 
                 for event in stream_gen():
-                    for market_book in event:  # todo move?
-                        market_book.streaming_unique_id = stream.stream_id
-                    self._process_market_books(events.MarketBookEvent(event))
+                    if event:
+                        for market_book in event:  # todo move?
+                            market_book.streaming_unique_id = stream.stream_id
+                        self._process_market_books(events.MarketBookEvent(event))
 
                 self._pending_packages.clear()
 
