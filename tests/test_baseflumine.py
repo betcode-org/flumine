@@ -125,6 +125,8 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_current_orders(mock_event)
 
     def test__process_close_market(self):
+        mock_strategy = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock()
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
@@ -135,6 +137,10 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
         mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
+        mock_strategy.check_market.assert_called_with(mock_market, mock_market_book)
+        mock_strategy.process_closed_market.assert_called_with(
+            mock_market, mock_market_book
+        )
 
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()

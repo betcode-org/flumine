@@ -95,6 +95,10 @@ class BaseStrategy:
         # process list of Order objects for strategy and Market
         return
 
+    def process_closed_market(self, market: Market, market_book: MarketBook) -> None:
+        # process marketBook after closure
+        return
+
     def finish(self) -> None:
         # called before flumine ends
         return

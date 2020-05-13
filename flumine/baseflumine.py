@@ -165,6 +165,10 @@ class BaseFlumine:
         market.close_market()
         market.blotter.process_closed_market(event.event)
 
+        for strategy in self.strategies:
+            if strategy.check_market(market, event.event):
+                strategy.process_closed_market(market, event.event)
+
         # todo update balance
         # todo get cleared orders
         # todo log closed market event
