@@ -3,6 +3,25 @@
 Release History
 ---------------
 
+1.4.0 (2020-05-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Simulated execution created (place/cancel only)
+- Backtest simulation created and integrated
+- patching added, major speed improvements
+
+**Bug Fixes**
+
+- Handicap missing from order
+- Client update account details added
+- Replace/Update `update_data` fix (now cleared)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.3.1
+
 1.3.0 (2020-04-28)
 +++++++++++++++++++
 
