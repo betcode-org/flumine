@@ -36,11 +36,12 @@ class ExampleStrategy(BaseStrategy):
             if (
                 runner.status == "ACTIVE"
                 and runner.last_price_traded
-                and runner.last_price_traded < 3
+                and runner.selection_id == 11982403
             ):
                 trade = Trade(
                     market_id=market_book.market_id,
                     selection_id=runner.selection_id,
+                    handicap=runner.handicap,
                     strategy=self,
                 )
                 order = trade.create_order(
@@ -50,14 +51,14 @@ class ExampleStrategy(BaseStrategy):
 
     def process_orders(self, market, orders):
         for order in orders:
-            # print(order.status, order.bet_id, order.elapsed_seconds)
-            if order.status == OrderStatus.EXECUTABLE and order.elapsed_seconds > 5:
-                # print(order.bet_id, order.average_price_matched, order.size_matched)
-                if order.size_remaining == 2.00:
-                    self.cancel_order(market, order, size_reduction=1.51)
+            if order.status == OrderStatus.EXECUTABLE:
+                if order.elapsed_seconds and order.elapsed_seconds > 5:
+                    # print(order.bet_id, order.average_price_matched, order.size_matched)
+                    if order.size_remaining == 2.00:
+                        self.cancel_order(market, order, size_reduction=1.51)
                 # self.update_order(market, order, "PERSIST")
-                if order.order_type.price == 1.01 and order.size_remaining == 0.49:
-                    self.replace_order(market, order, 1.02)
+                # if order.order_type.price == 1.01 and order.size_remaining == 0.49:
+                #     self.replace_order(market, order, 1.02)
                 # if order.order_type.price == 1.02:
                 #     self.replace_order(market, order, 1.03)
                 # if order.order_type.price == 1.03:
@@ -71,7 +72,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client=client)
 
 strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(market_ids=["1.170345090"]),
+    market_filter=streaming_market_filter(market_ids=["1.170378175"]),
     streaming_timeout=2,
 )
 framework.add_strategy(strategy)

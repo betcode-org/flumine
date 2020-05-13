@@ -35,19 +35,26 @@ class TestOrderValidation(unittest.TestCase):
         mock_validate_betfair_order.assert_called_with(order)
 
     @mock.patch(
+        "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_min_size"
+    )
+    @mock.patch(
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_size"
     )
     @mock.patch(
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_price"
     )
     def test__validate_betfair_order_limit(
-        self, mock__validate_betfair_price, mock__validate_betfair_size
+        self,
+        mock__validate_betfair_price,
+        mock__validate_betfair_size,
+        mock__validate_betfair_min_size,
     ):
         order = mock.Mock()
         order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.trading_control._validate_betfair_order(order)
         mock__validate_betfair_price.assert_called_with(order)
         mock__validate_betfair_size.assert_called_with(order)
+        mock__validate_betfair_min_size.assert_called_with(order, OrderTypes.LIMIT)
 
     @mock.patch(
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_price"
@@ -68,7 +75,9 @@ class TestOrderValidation(unittest.TestCase):
         order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.trading_control._validate_betfair_order(order)
         mock__validate_betfair_liability.assert_called_with(order)
-        mock__validate_betfair_min_size.assert_called_with(order)
+        mock__validate_betfair_min_size.assert_called_with(
+            order, OrderTypes.LIMIT_ON_CLOSE
+        )
         mock__validate_betfair_price.assert_called_with(order)
 
     @mock.patch(
@@ -84,7 +93,9 @@ class TestOrderValidation(unittest.TestCase):
         order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         self.trading_control._validate_betfair_order(order)
         mock__validate_betfair_liability.assert_called_with(order)
-        mock__validate_betfair_min_size.assert_called_with(order)
+        mock__validate_betfair_min_size.assert_called_with(
+            order, OrderTypes.MARKET_ON_CLOSE
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_order_unknown(self, mock_on_error):
@@ -164,40 +175,81 @@ class TestOrderValidation(unittest.TestCase):
         mock_on_error.assert_called_with(order)
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betfair_min_size(self, mock_on_error):
+    def test__validate_betfair_min_size_limit(self, mock_on_error):
+        self.mock_flumine.client.min_bet_size = 2
+        self.mock_flumine.client.min_bet_payout = 10
         order = mock.Mock()
-        order.client = self.mock_client
+        order.side = "BACK"
+        order.order_type.size = 2
+        order.order_type.price = 2
+        self.trading_control._validate_betfair_min_size(order, OrderTypes.LIMIT)
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_min_size_limit_large(self, mock_on_error):
+        self.mock_flumine.client.min_bet_size = 0.10
+        self.mock_flumine.client.min_bet_payout = 100
+        order = mock.Mock()
+        order.side = "BACK"
+        order.order_type.size = 2
+        order.order_type.price = 2
+        self.trading_control._validate_betfair_min_size(order, OrderTypes.LIMIT)
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_min_size_limit_error(self, mock_on_error):
+        self.mock_flumine.client.min_bet_size = 2
+        self.mock_flumine.client.min_bet_payout = 10
+        order = mock.Mock()
+        order.side = "BACK"
+        order.order_type.size = 1.99
+        order.order_type.price = 2
+        self.trading_control._validate_betfair_min_size(order, OrderTypes.LIMIT)
+        mock_on_error.assert_called_with(order)
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_min_size(self, mock_on_error):
+        self.mock_flumine.client.min_bet_size = 2
+        order = mock.Mock()
         order.side = "BACK"
         order.order_type.liability = 2
-        self.trading_control._validate_betfair_min_size(order)
+        self.trading_control._validate_betfair_min_size(
+            order, OrderTypes.LIMIT_ON_CLOSE
+        )
         mock_on_error.assert_not_called()
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_two(self, mock_on_error):
+        self.mock_flumine.client.min_bsp_liability = 10
         order = mock.Mock()
-        order.client = self.mock_client
         order.side = "LAY"
         order.order_type.liability = 10
-        self.trading_control._validate_betfair_min_size(order)
+        self.trading_control._validate_betfair_min_size(
+            order, OrderTypes.LIMIT_ON_CLOSE
+        )
         mock_on_error.assert_not_called()
 
-    # @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    # def test__validate_betfair_min_size_on_error(self, mock_on_error):
-    #     order = mock.Mock()
-    #     order.client = self.mock_client
-    #     order.side = "BACK"
-    #     order.order_type.liability = 1.99
-    #     self.trading_control._validate_betfair_min_size(order)
-    #     mock_on_error.assert_called_with(order)
-    #
-    # @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    # def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
-    #     order = mock.Mock()
-    #     order.client = self.mock_client
-    #     order.side = "LAY"
-    #     order.order_type.liability = 9.99
-    #     self.trading_control._validate_betfair_min_size(order)
-    #     mock_on_error.assert_called_with(order)
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_min_size_on_error(self, mock_on_error):
+        self.mock_flumine.client.min_bet_size = 2
+        order = mock.Mock()
+        order.side = "BACK"
+        order.order_type.liability = 1.99
+        self.trading_control._validate_betfair_min_size(
+            order, OrderTypes.LIMIT_ON_CLOSE
+        )
+        mock_on_error.assert_called_with(order)
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
+        self.mock_flumine.client.min_bsp_liability = 10
+        order = mock.Mock()
+        order.side = "LAY"
+        order.order_type.liability = 9.99
+        self.trading_control._validate_betfair_min_size(
+            order, OrderTypes.LIMIT_ON_CLOSE
+        )
+        mock_on_error.assert_called_with(order)
 
 
 class TestStrategyExposure(unittest.TestCase):

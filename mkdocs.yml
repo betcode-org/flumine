@@ -15,6 +15,9 @@ edit_uri: ""
 nav:
     - Introduction: 'index.md'
     - QuickStart: 'quickstart.md'
+    - Markets: 'markets.md'
+    - Clients / Execution: 'execution.md'
+    - Trades / Orders: 'trades.md'
     - Advanced Usage: 'advanced.md'
     - Design: 'design.md'
     - Help: 'help.md'

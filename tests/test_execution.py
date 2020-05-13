@@ -17,6 +17,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertIsNotNone(self.execution._thread_pool)
         self.assertIsNone(self.execution.EXCHANGE)
+        self.assertEqual(self.execution._bet_id, 100000000000)
 
     @mock.patch("flumine.execution.baseexecution.requests")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
@@ -88,11 +89,40 @@ class BaseExecutionTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
 
+    def test__order_logger(self):
+        mock_order = mock.Mock()
+        mock_instruction_report = mock.Mock()
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
+        mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.UPDATE
+        )
+        mock_order.responses.updated.assert_called_with(mock_instruction_report)
+
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.REPLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+
     def test_handler_queue(self):
         self.assertEqual(self.execution.handler_queue, self.mock_flumine.handler_queue)
 
     def test_markets(self):
         self.assertEqual(self.execution.markets, self.mock_flumine.markets)
+
+    def test_shutdown(self):
+        self.execution.shutdown()
+        self.assertTrue(self.execution._thread_pool._shutdown)
 
 
 class BetfairExecutionTest(unittest.TestCase):
@@ -531,31 +561,6 @@ class BetfairExecutionTest(unittest.TestCase):
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
 
-    def test__order_logger(self):
-        mock_order = mock.Mock()
-        mock_instruction_report = mock.Mock()
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.PLACE
-        )
-        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.CANCEL
-        )
-        mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.UPDATE
-        )
-        mock_order.responses.updated.assert_called_with(mock_instruction_report)
-
-        self.execution._order_logger(
-            mock_order, mock_instruction_report, OrderPackageType.REPLACE
-        )
-        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
-
 
 class SimulatedExecutionTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -565,18 +570,112 @@ class SimulatedExecutionTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
 
-    def test_execute_place(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
+    def test_handler_place(self, mock_execute_place):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.PLACE
+        self.execution.handler(mock_order_package)
+        mock_execute_place.assert_called_with(mock_order_package, http_session=None)
 
-    def test_execute_cancel(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_cancel"
+    )
+    def test_handler_cancel(self, mock_execute_cancel):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
+        self.execution.handler(mock_order_package)
+        mock_execute_cancel.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_update"
+    )
+    def test_handler_update(self, mock_execute_update):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.UPDATE
+        self.execution.handler(mock_order_package)
+        mock_execute_update.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch(
+        "flumine.execution.simulatedexecution.SimulatedExecution.execute_replace"
+    )
+    def test_handler_replace(self, mock_execute_replace):
+        mock_order_package = mock.Mock()
+        mock_order_package.package_type = OrderPackageType.REPLACE
+        self.execution.handler(mock_order_package)
+        mock_execute_replace.assert_called_with(mock_order_package, http_session=None)
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_place_success(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.place_instructions = [1]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_place(mock_order_package, None)
+        mock_order.simulated.place.assert_called_with(
+            mock_order_package.market.market_book, 1, self.execution._bet_id
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_place_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.place_instructions = [1]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_place(mock_order_package, None)
+        mock_order.simulated.place.assert_called_with(
+            mock_order_package.market.market_book, 1, self.execution._bet_id
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.lapsed.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_cancel(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_order.simulated.cancel.assert_called_with()
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_cancel_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_order.simulated.cancel.assert_called_with()
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
 
     def test_execute_update(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_update(None, None)
 
     def test_execute_replace(self):
         with self.assertRaises(NotImplementedError):
-            self.execution.execute_place(None, None)
+            self.execution.execute_replace(None, None)

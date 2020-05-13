@@ -1,6 +1,6 @@
 import unittest
 
-from flumine import FlumineBacktest, clients, BaseStrategy
+from flumine import FlumineBacktest, clients, BaseStrategy, config
 
 
 class IntegrationTest(unittest.TestCase):
@@ -19,3 +19,6 @@ class IntegrationTest(unittest.TestCase):
         framework.add_strategy(strategy)
 
         framework.run()
+
+    def tearDown(self) -> None:
+        config.simulated = False

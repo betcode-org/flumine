@@ -127,10 +127,11 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_place_order(self):
         mock_order = mock.Mock()
+        mock_order.lookup = ("1", 2, 3)
         mock_market = mock.Mock()
         self.strategy.place_order(mock_market, mock_order)
         mock_market.place_order.assert_called_with(mock_order)
-        self.assertIn(mock_order.market_id, self.strategy._invested)
+        self.assertIn(mock_order.lookup, self.strategy._invested)
 
     def test_cancel_order(self):
         mock_order = mock.Mock()
@@ -157,6 +158,20 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
         runner_context.invested = True
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+
+    def test_is_invested(self):
+        mock_context = mock.Mock(invested=True)
+        self.strategy._invested = {("2", 456, 1): mock_context}
+        self.assertFalse(self.strategy.is_invested("1", 123, 1.0))
+        self.assertFalse(self.strategy.is_invested("2", 123, 1.0))
+        self.assertTrue(self.strategy.is_invested("2", 456, 1.0))
+
+    def test_get_runner_context(self):
+        mock_context = mock.Mock(invested=True)
+        self.strategy._invested = {("2", 456, 0): mock_context}
+        self.assertEqual(self.strategy.get_runner_context("2", 456, 0), mock_context)
+        self.strategy.get_runner_context("2", 789, 0)
+        self.assertEqual(len(self.strategy._invested), 2)
 
     def test_stream_ids(self):
         mock_stream = mock.Mock()

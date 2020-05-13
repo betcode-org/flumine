@@ -53,6 +53,18 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
 
+    def test_min_bet_size(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.base_client.min_bet_size
+
+    def test_min_bet_payout(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.base_client.min_bet_payout
+
+    def test_min_bsp_liability(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.base_client.min_bsp_liability
+
 
 class BetfairClientTest(unittest.TestCase):
     def setUp(self):
@@ -94,6 +106,57 @@ class BetfairClientTest(unittest.TestCase):
         self.betfair_client._get_account_funds()
         self.mock_betting_client.account.get_account_funds.assert_called_with()
 
+    def test_min_bet_size(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = "GBP"
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_size, 2)
+
+    def test_min_bet_size_none(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_size, 2)
+
+    def test_min_bet_size_ac_none(self):
+        mock_account_details = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_size, 2)
+
+    def test_min_bsp_liability(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = "USD"
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bsp_liability, 20)
+
+    def test_min_bsp_liability_none(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bsp_liability, 10)
+
+    def test_min_bsp_liability_ac_none(self):
+        mock_account_details = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bsp_liability, 10)
+
+    def test_min_bet_payout(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = "GBP"
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_payout, 10)
+
+    def test_min_bet_payout_none(self):
+        mock_account_details = mock.Mock()
+        mock_account_details.currency_code = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_payout, 10)
+
+    def test_min_bet_payout_ac_none(self):
+        mock_account_details = None
+        self.betfair_client.account_details = mock_account_details
+        self.assertEqual(self.betfair_client.min_bet_payout, 10)
+
 
 class BacktestClientTest(unittest.TestCase):
     def setUp(self):
@@ -112,3 +175,15 @@ class BacktestClientTest(unittest.TestCase):
     def test_update_account_details(self, mock_account_details):
         self.backtest_client.update_account_details()
         self.assertEqual(self.backtest_client.account_details, mock_account_details())
+
+    def test_min_bet_size(self):
+        self.backtest_client.update_account_details()
+        self.assertEqual(self.backtest_client.min_bet_size, 2)
+
+    def test_min_bsp_liability(self):
+        self.backtest_client.update_account_details()
+        self.assertEqual(self.backtest_client.min_bsp_liability, 10)
+
+    def test_min_bet_payout(self):
+        self.backtest_client.update_account_details()
+        self.assertEqual(self.backtest_client.min_bet_payout, 10)

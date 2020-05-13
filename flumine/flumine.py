@@ -1,7 +1,7 @@
 import logging
 
 from .baseflumine import BaseFlumine
-from .event.event import EventType
+from .events.events import EventType
 from . import worker
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class Flumine(BaseFlumine):
                     logger.info(event)
 
                 elif event.EVENT_TYPE == EventType.CLOSE_MARKET:
-                    logger.info(event)
+                    self._process_close_market(event)
 
                 elif event.EVENT_TYPE == EventType.STRATEGY_RESET:
                     logger.info(event)
@@ -78,4 +78,4 @@ class Flumine(BaseFlumine):
         return "<Flumine>"
 
     def __str__(self) -> str:
-        return "<Flumine [%s]>" % self.status
+        return "<Flumine>"

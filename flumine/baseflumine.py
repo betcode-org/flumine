@@ -5,7 +5,7 @@ from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
-from .event import event
+from .events import events
 from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
@@ -15,6 +15,7 @@ from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
 from .controls.tradingcontrols import OrderValidation, StrategyExposure
+from . import config
 
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ class BaseFlumine:
 
         # all streams (market/order)
         self.streams = Streams(self)
+        self.streams.add_client(client)
 
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
@@ -85,13 +87,20 @@ class BaseFlumine:
     def _add_default_workers(self) -> None:
         return
 
-    def _process_market_books(self, event: event.MarketBookEvent) -> None:
+    def _process_market_books(self, event: events.MarketBookEvent) -> None:
         for market_book in event.event:
             market_id = market_book.market_id
+            if market_book.status == "CLOSED":
+                self.handler_queue.put(events.CloseMarketEvent(market_book))
+                continue
+
             market = self.markets.markets.get(market_id)
 
             if not market:
                 market = self._add_live_market(market_id, market_book)
+
+            # process market
+            market(market_book)
 
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
@@ -99,9 +108,7 @@ class BaseFlumine:
 
             self._process_market_orders(market)
 
-    def _process_market_orders(
-        self, market: Market
-    ) -> None:  # todo override for backtesting
+    def _process_market_orders(self, market: Market) -> None:
         for order_package in market.blotter.process_orders(self.client):
             self.handler_queue.put(order_package)
 
@@ -121,22 +128,19 @@ class BaseFlumine:
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
     ) -> Market:
-        live_market = Market(market_id, market_book)
-        self.markets.add_market(market_id, live_market)
-        # self.blotter.add_market(market_id)
-        logger.info(
-            "Adding: {0} to live markets and blotter".format(live_market.market_id)
-        )
-        return live_market
+        market = Market(market_id, market_book)
+        self.markets.add_market(market_id, market)
+        logger.info("Adding: {0} to markets".format(market.market_id))
+        return market
 
-    def _process_raw_data(self, event: event.RawDataEvent) -> None:
+    def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
                     strategy.process_raw_data(publish_time, datum)
 
-    def _process_market_catalogues(self, event: event.MarketCatalogueEvent) -> None:
+    def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
             market = self.markets.markets.get(market_catalogue.market_id)
             if market:
@@ -147,7 +151,7 @@ class BaseFlumine:
                     # todo logging control
                 market.market_catalogue = market_catalogue
 
-    def _process_current_orders(self, event: event.CurrentOrdersEvent) -> None:
+    def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         process_current_orders(self.markets, self.strategies, event)  # update state
         for market in self.markets:
             if market.closed is False:
@@ -156,30 +160,41 @@ class BaseFlumine:
                     strategy.process_orders(market, strategy_orders)
             self._process_market_orders(market)
 
+    def _process_close_market(self, event: events.CloseMarketEvent) -> None:
+        market = self.markets.markets.get(event.event.market_id)
+        market.close_market()
+        market.blotter.process_closed_market(event.event)
+
+        # todo update balance
+        # todo get cleared orders
+        # todo log closed market event
+
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
             strategy.finish()
-
-    @property
-    def status(self) -> str:
-        return "running" if self._running else "not running"
 
     def __enter__(self):
         logger.info("Starting flumine")
         # add execution to clients
         self.client.add_execution(self)
+        # simulated
+        if self.BACKTEST:
+            config.simulated = True
+        else:
+            config.simulated = False
         # login
         self.client.login()
+        self.client.update_account_details()
         # add default and start all workers
         self._add_default_workers()
         for w in self._workers:
             w.start()
-        # todo start logging controls
+        # start logging controls
+        for c in self._logging_controls:
+            c.start()
         # start strategies
         self.strategies.start()
         # start streams
-        if not self.BACKTEST:
-            self.streams.add_order_stream()  # todo move?
         self.streams.start()
 
         self._running = True
@@ -187,8 +202,14 @@ class BaseFlumine:
     def __exit__(self, *args):
         # shutdown streams
         self.streams.stop()
-        # todo shutdown thread pools
-        # todo shutdown logging controls
+        # shutdown thread pools
+        self.simulated_execution.shutdown()
+        self.betfair_execution.shutdown()
+        # shutdown logging controls
+        # todo self.log_control(events.EventType.TERMINATOR)
+        for c in self._logging_controls:
+            if c.is_alive():
+                c.join()
         # logout
         self.client.logout()
         self._running = False

@@ -2,13 +2,15 @@ import uuid
 import logging
 import datetime
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 from betfairlightweight import filters
+from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
+from ..backtest.simulated import Simulated
 
 logger = logging.getLogger(__name__)
 
@@ -45,13 +47,14 @@ class BaseOrder:
         self.order_type = order_type
         self.handicap = handicap
 
+        self.runner_status = None  # RunnerBook.status
         self.status = None
         self.status_log = []
-        self._current_order = None  # resources.CurrentOrder
 
         self.bet_id = None
-        self._update = {}  # stores cancel/update/replace data
+        self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
+        self.simulated = Simulated(self)  # used in simulated execution
 
     # status
     def _update_status(self, status: OrderStatus) -> None:
@@ -64,9 +67,11 @@ class BaseOrder:
 
     def executable(self) -> None:
         self._update_status(OrderStatus.EXECUTABLE)
+        self.update_data.clear()
 
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
+        self.update_data.clear()
 
     def cancelling(self) -> None:
         self._update_status(OrderStatus.CANCELLING)
@@ -79,12 +84,15 @@ class BaseOrder:
 
     def lapsed(self) -> None:
         self._update_status(OrderStatus.LAPSED)
+        self.update_data.clear()
 
     def voided(self) -> None:
         self._update_status(OrderStatus.VOIDED)
+        self.update_data.clear()
 
     def violation(self) -> None:
         self._update_status(OrderStatus.VIOLATION)
+        self.update_data.clear()
 
     # updates
     def place(self) -> None:
@@ -113,13 +121,15 @@ class BaseOrder:
         raise NotImplementedError
 
     # currentOrder
-    def update_current_order(self, current_order):
-        self._current_order = current_order
+    def update_current_order(self, current_order: CurrentOrder) -> None:
+        self.responses.current_order = current_order
 
     @property
-    def current_order(self):
-        if self._current_order:
-            return self._current_order
+    def current_order(self) -> Union[CurrentOrder, Simulated]:
+        if self.simulated:
+            return self.simulated
+        elif self.responses.current_order:
+            return self.responses.current_order
         elif self.responses.place_response:
             return self.responses.place_response
 
@@ -148,11 +158,15 @@ class BaseOrder:
         raise NotImplementedError
 
     @property
-    def elapsed_seconds(self):
-        return (
-            datetime.datetime.utcnow() - self.responses.date_time_placed
-        ).total_seconds()
+    def elapsed_seconds(self) -> Optional[float]:
+        if self.responses.date_time_placed:
+            return (
+                datetime.datetime.utcnow() - self.responses.date_time_placed
+            ).total_seconds()
+        else:
+            return
 
+    # todo cached properties?
     @property
     def market_id(self) -> str:
         return self.trade.market_id
@@ -203,7 +217,7 @@ class BetfairOrder(BaseOrder):
                 raise OrderUpdateError("Size reduction too large")
             if self.status != OrderStatus.EXECUTABLE:
                 raise OrderUpdateError("Current status: %s" % self.status)
-            self._update["size_reduction"] = size_reduction
+            self.update_data["size_reduction"] = size_reduction
             self.cancelling()
         else:
             raise OrderUpdateError(
@@ -227,7 +241,7 @@ class BetfairOrder(BaseOrder):
                 raise OrderUpdateError("Prices match")
             elif self.status != OrderStatus.EXECUTABLE:
                 raise OrderUpdateError("Current status: %s" % self.status)
-            self._update["new_price"] = new_price
+            self.update_data["new_price"] = new_price
             self.replacing()
         else:
             raise OrderUpdateError(
@@ -266,7 +280,7 @@ class BetfairOrder(BaseOrder):
 
     def create_cancel_instruction(self) -> dict:
         return filters.cancel_instruction(
-            bet_id=self.bet_id, size_reduction=self._update.get("size_reduction")
+            bet_id=self.bet_id, size_reduction=self.update_data.get("size_reduction")
         )
 
     def create_update_instruction(self) -> dict:
@@ -276,7 +290,7 @@ class BetfairOrder(BaseOrder):
 
     def create_replace_instruction(self) -> dict:
         return filters.replace_instruction(
-            bet_id=self.bet_id, new_price=self._update["new_price"]
+            bet_id=self.bet_id, new_price=self.update_data["new_price"]
         )
 
     # currentOrder

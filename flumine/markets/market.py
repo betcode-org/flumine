@@ -3,6 +3,9 @@ import logging
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
+from .middleware import SimulatedMiddleware
+from .. import config
+from ..order.order import OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +21,25 @@ class Market:
         self.closed = False
         self.market_book = market_book
         self.market_catalogue = market_catalogue
-        self.blotter = Blotter(market_id)
+        self._simulated_middleware = SimulatedMiddleware()
+        self._middleware = []
+        self.blotter = Blotter(self)
+
+        if config.simulated:
+            self._middleware.append(self._simulated_middleware)
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book
-        # todo middleware?
+        # process middleware
+        for middleware in self._middleware:
+            middleware(self.market_catalogue, self.market_book)  # todo error handling?
+        # process simulated orders
+        for order in self.blotter:
+            if order.simulated and order.status == OrderStatus.EXECUTABLE:
+                runner_analytics = self._simulated_middleware.runners.get(
+                    (order.selection_id, order.handicap)
+                )
+                order.simulated(self.market_book, runner_analytics)
 
     def open_market(self) -> None:
         self.closed = False

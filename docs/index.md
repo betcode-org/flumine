@@ -26,7 +26,7 @@ Betfair trading framework with a focus on:
 - rock-solid
 - safe
 
-Support for market and custom streaming data (order, score and custom polling data in development)
+Support for market, order and custom streaming data.
 
 [join slack group](https://betfairlightweight.herokuapp.com)
 
@@ -81,13 +81,13 @@ class ExampleStrategy(BaseStrategy):
         for runner in market_book.runners:
             if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
                 trade = Trade(
-                    market_id=market_book.market_id, 
-                    selection_id=runner.selection_id, 
-                    strategy=self
+                    market_id=market_book.market_id,
+                    selection_id=runner.selection_id,
+                    handicap=runner.handicap,
+                    strategy=self,
                 )
                 order = trade.create_order(
-                    side="LAY", 
-                    order_type=LimitOrder(price=1.01, size=2.00)
+                    side="LAY", order_type=LimitOrder(price=1.01, size=2.00)
                 )
                 self.place_order(market, order)
 
@@ -96,8 +96,8 @@ class ExampleStrategy(BaseStrategy):
             if order.status == OrderStatus.EXECUTABLE:
                 if order.size_remaining == 2.00:
                     self.cancel_order(order, 0.02)  # reduce size to 1.98
-                if order.order_type.persistence_type == 'LAPSE':
-                    self.update_order(order, 'PERSIST')
+                if order.order_type.persistence_type == "LAPSE":
+                    self.update_order(order, "PERSIST")
                 if order.size_remaining > 0:
                     self.replace_order(order, 1.02)  # move
 
@@ -129,10 +129,10 @@ framework.run()
 - Streaming
 - Multiple strategies
 - Order execution
-- Paper trading (in development)
 - Back testing (in development)
+- Paper trading (on roadmap)
 - Analytics (in development)
-- Scores / RaceCard / InPlayService (in development)
+- Scores / RaceCard / InPlayService (on roadmap)
 
 ## Dependencies
 

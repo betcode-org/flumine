@@ -53,6 +53,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_market_books(self):
         mock_event = mock.Mock()
         mock_market_book = mock.Mock()
+        mock_market_book.runners = []
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
@@ -123,19 +124,32 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_current_orders]
         self.base_flumine._process_current_orders(mock_event)
 
+    def test__process_close_market(self):
+        mock_market = mock.Mock()
+        mock_markets = mock.Mock()
+        mock_markets.markets = {"1.23": mock_market}
+        self.base_flumine.markets = mock_markets
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock(market_id="1.23")
+        mock_event.event = mock_market_book
+        self.base_flumine._process_close_market(mock_event)
+        mock_market.close_market.assert_called_with()
+        mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
+
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 
-    def test_status(self):
-        self.base_flumine._running = True
-        self.assertEqual(self.base_flumine.status, "running")
-        self.base_flumine._running = False
-        self.assertEqual(self.base_flumine.status, "not running")
-
     def test_enter_exit(self):
+        control = mock.Mock()
+        self.base_flumine._logging_controls = [control]
+        self.base_flumine.simulated_execution = mock.Mock()
+        self.base_flumine.betfair_execution = mock.Mock()
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
 
         self.assertFalse(self.base_flumine._running)
         self.mock_client.logout.assert_called_with()
+        self.base_flumine.simulated_execution.shutdown.assert_called_with()
+        self.base_flumine.betfair_execution.shutdown.assert_called_with()
+        control.start.assert_called_with()

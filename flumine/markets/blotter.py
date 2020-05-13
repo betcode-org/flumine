@@ -12,8 +12,8 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
-    def __init__(self, market_id: str):
-        self.market_id = market_id
+    def __init__(self, market):
+        self.market = market
         self._orders = {}  # {Order.id: Order}
         # pending orders
         self.pending_place = []
@@ -63,7 +63,7 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                # market_version={"version": self.market_book.version},
+                market=self.market,
             )
             packages.append(order_package)
         orders.clear()
@@ -75,6 +75,15 @@ class Blotter:
             if order.status == OrderStatus.EXECUTABLE:
                 return True
         return False
+
+    def process_closed_market(self, market_book):
+        for order in self:
+            for runner in market_book.runners:
+                if (order.selection_id, order.handicap) == (
+                    runner.selection_id,
+                    runner.handicap,
+                ):
+                    order.runner_status = runner.status
 
     """ position """
 
@@ -89,8 +98,11 @@ class Blotter:
                     mb.append((order.average_price_matched, order.size_matched))
                 else:
                     ml.append((order.average_price_matched, order.size_matched))
-        # calc exposure
         return calculate_exposure(mb, ml)
+
+    @property
+    def market_id(self):
+        return self.market.market_id
 
     """ getters / setters """
 

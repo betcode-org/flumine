@@ -1,9 +1,9 @@
 import uuid
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
 
-from ..event.event import BaseEvent, EventType, QueueType
+from ..events.events import BaseEvent, EventType, QueueType
 from ..clients.clients import ExchangeType
 from .. import config
 from .order import BaseOrder, OrderStatus
@@ -23,7 +23,7 @@ class BaseOrderPackage(BaseEvent):
     temporary to allow execution
     """
 
-    # todo client/retry/._orders->orders (violation)
+    # todo client/retry
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
@@ -35,7 +35,7 @@ class BaseOrderPackage(BaseEvent):
         market_id: str,
         orders: list,
         package_type: OrderPackageType,
-        market_version: dict = None,
+        market,
         async_: bool = False,
     ):
         super(BaseOrderPackage, self).__init__(None)
@@ -44,9 +44,10 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self.market_version = market_version
+        self.market = market
         self.async_ = async_
         self.customer_strategy_ref = config.hostname
+        self.processed = False  # used for simulated execution
 
     @property
     def place_instructions(self) -> dict:
@@ -83,6 +84,15 @@ class BaseOrderPackage(BaseEvent):
             "customer_strategy_ref": self.customer_strategy_ref,
         }
 
+    @property
+    def bet_delay(self) -> float:  # used for simulated execution
+        return self.market.market_book.bet_delay
+
+    @property
+    def market_version(self) -> Optional[dict]:
+        return None
+        # todo return {"version": self.market.market_book.version}
+
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)
 
@@ -102,7 +112,7 @@ class BetfairOrderPackage(BaseOrderPackage):
     def cancel_instructions(self):
         return [
             order.create_cancel_instruction() for order in self
-        ]  # if order.size_remaining > 0
+        ]  # todo? if order.size_remaining > 0
 
     @property
     def update_instructions(self):

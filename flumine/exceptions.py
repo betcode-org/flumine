@@ -4,6 +4,15 @@ class FlumineException(Exception):
     pass
 
 
+class RunError(FlumineException):
+    """Exception raised if error
+    in `Flumine.run()``
+    """
+
+    def __init__(self, message):
+        super(RunError, self).__init__(message)
+
+
 class ListenerError(FlumineException):
     """Error raised if error in Listener"""
 
