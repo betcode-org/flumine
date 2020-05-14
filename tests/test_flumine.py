@@ -37,7 +37,6 @@ class FlumineTest(unittest.TestCase):
             events.ClearedMarketsEvent(None),
             events.ClearedOrdersEvent(None),
             events.CloseMarketEvent(None),
-            events.StrategyResetEvent(None),
             events.CustomEvent(None),
             events.NewDayEvent(None),
             events.EventType.TERMINATOR,

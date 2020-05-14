@@ -43,9 +43,6 @@ class Flumine(BaseFlumine):
                 elif event.EVENT_TYPE == EventType.CLOSE_MARKET:
                     self._process_close_market(event)
 
-                elif event.EVENT_TYPE == EventType.STRATEGY_RESET:
-                    logger.info(event)
-
                 elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
                     logger.info(event)
 
