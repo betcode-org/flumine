@@ -16,6 +16,8 @@ class LoggingControl(Thread):
     used to send data to a database or API for further analysis.
     """
 
+    # todo handle/store errors for retry
+
     NAME = "LOGGING_CONTROL"
 
     def __init__(self, daemon: bool = True):

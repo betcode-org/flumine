@@ -15,6 +15,7 @@ from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
 from .controls.tradingcontrols import OrderValidation, StrategyExposure
+from .controls.loggingcontrols import LoggingControl
 from . import config
 
 
@@ -83,6 +84,14 @@ class BaseFlumine:
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
         self._trading_controls.append(trading_control(self, **kwargs))
+
+    def add_logging_control(self, logging_control: LoggingControl) -> None:
+        logger.info("Adding logging control {0}".format(logging_control.NAME))
+        self._logging_controls.append(logging_control)
+
+    def log_control(self, event: events.BaseEvent) -> None:
+        for logging_control in self._logging_controls:
+            logging_control.logging_queue.put(event)
 
     def _add_default_workers(self) -> None:
         return

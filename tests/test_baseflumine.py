@@ -46,6 +46,18 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.add_trading_control(mock_control)
         self.assertEqual(len(self.base_flumine._trading_controls), 3)
 
+    def test_add_logging_control(self):
+        mock_control = mock.Mock()
+        self.base_flumine.add_logging_control(mock_control)
+        self.assertEqual(len(self.base_flumine._logging_controls), 1)
+
+    def test_log_control(self):
+        mock_control = mock.Mock()
+        self.base_flumine._logging_controls.append(mock_control)
+        mock_event = mock.Mock()
+        self.base_flumine.log_control(mock_event)
+        mock_control.logging_queue.put.assert_called_with(mock_event)
+
     def test__add_default_workers(self):
         self.base_flumine._add_default_workers()
         self.assertEqual(len(self.base_flumine._workers), 0)
