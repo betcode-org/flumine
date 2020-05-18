@@ -137,7 +137,7 @@ class BaseFlumine:
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
     ) -> Market:
-        market = Market(market_id, market_book)
+        market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
         logger.info("Adding: {0} to markets".format(market.market_id))
         return market

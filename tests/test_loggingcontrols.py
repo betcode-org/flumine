@@ -109,6 +109,7 @@ class TestLoggingControl(unittest.TestCase):
         mock_event.EVENT_TYPE = EventType.TERMINATOR
         self.logging_control.process_event(mock_event)
         _end_flumine.assert_called_with(mock_event)
+        self.assertIsNone(self.logging_control.logging_queue.get())
 
     def test_process_config(self):
         self.logging_control.process_config(None)

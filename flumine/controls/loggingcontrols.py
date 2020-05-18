@@ -74,6 +74,7 @@ class LoggingControl(Thread):
 
         elif event.EVENT_TYPE == EventType.TERMINATOR:
             self._process_end_flumine(event)
+            self.logging_queue.put(None)
 
         else:
             logger.error("Unwanted item in logging control: {0}".format(event))

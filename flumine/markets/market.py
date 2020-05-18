@@ -6,6 +6,7 @@ from .blotter import Blotter
 from .middleware import SimulatedMiddleware
 from .. import config
 from ..order.order import OrderStatus
+from ..events import events
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +14,12 @@ logger = logging.getLogger(__name__)
 class Market:
     def __init__(
         self,
+        flumine,
         market_id: str,
         market_book: MarketBook,
         market_catalogue: MarketCatalogue = None,
     ):
+        self.flumine = flumine
         self.market_id = market_id
         self.closed = False
         self.market_book = market_book
@@ -52,7 +55,8 @@ class Market:
         order.place()
         if order.id not in self.blotter:
             self.blotter[order.id] = order
-            # todo log trade?
+            self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
+            self.flumine.log_control(events.OrderEvent(order))
         else:
             return  # retry attempt so ignore?
         if execute:  # handles replaceOrder
