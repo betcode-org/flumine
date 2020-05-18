@@ -81,7 +81,7 @@ class FlumineBacktest(BaseFlumine):
 
             # process middleware
             for middleware in self._market_middleware:
-                middleware(market)  # todo err handling?
+                middleware(market, market_book)  # todo err handling?
 
             # process market
             market(market_book)

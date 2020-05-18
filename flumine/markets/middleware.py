@@ -1,12 +1,12 @@
 import logging
 from collections import defaultdict
-from betfairlightweight.resources.bettingresources import RunnerBook
+from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 logger = logging.getLogger(__name__)
 
 
 class Middleware:
-    def __call__(self, market) -> None:
+    def __call__(self, market, market_book: MarketBook) -> None:
         raise NotImplementedError
 
 
@@ -22,13 +22,11 @@ class SimulatedMiddleware:
         # {marketId: {(selectionId, handicap): RunnerAnalytics}}
         self.markets = defaultdict(dict)
 
-    def __call__(self, market) -> None:
+    def __call__(self, market, market_book: MarketBook) -> None:
         market_analytics = self.markets[market.market_id]
-
-        for runner in market.market_book.runners:
+        for runner in market_book.runners:
             if runner.status == "ACTIVE":
                 self._process_runner(market_analytics, runner)
-
         market.context["simulated"] = market_analytics
 
     def _process_runner(self, market_analytics: dict, runner: RunnerBook) -> None:
@@ -50,6 +48,7 @@ class RunnerAnalytics:
     def __call__(self, runner: RunnerBook):
         self.traded = self._calculate_traded(runner)
         self._traded_volume = runner.ex.traded_volume
+        self._runner = runner
 
     def _calculate_traded(self, runner: RunnerBook) -> dict:
         if self._traded_volume == {}:

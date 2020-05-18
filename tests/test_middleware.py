@@ -10,7 +10,7 @@ class MiddlewareTest(unittest.TestCase):
 
     def test_call(self):
         with self.assertRaises(NotImplementedError):
-            self.middleware(None)
+            self.middleware(None, None)
 
 
 class SimulatedMiddlewareTest(unittest.TestCase):
@@ -23,10 +23,11 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     @mock.patch("flumine.markets.middleware.SimulatedMiddleware._process_runner")
     def test_call(self, mock__process_runner):
         mock_market = mock.Mock(context={})
+        mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
         mock_runner.status = "ACTIVE"
-        mock_market.market_book.runners = [mock_runner]
-        self.middleware(mock_market)
+        mock_market_book.runners = [mock_runner]
+        self.middleware(mock_market, mock_market_book)
         mock__process_runner.assert_called_with({}, mock_runner)
         self.assertEqual(mock_market.context, {"simulated": {}})
 
@@ -60,6 +61,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
+        self.assertEqual(self.runner_analytics._runner, mock_runner)
 
     def test__calculate_traded_dict_empty(self):
         mock_runner = mock.Mock()
