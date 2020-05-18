@@ -1,5 +1,6 @@
 import uuid
 import logging
+import collections
 from enum import Enum
 from typing import Union, Type
 from betfairlightweight.resources.bettingresources import CurrentOrder
@@ -24,6 +25,7 @@ class Trade:
         selection_id: int,
         handicap: float,
         strategy: BaseStrategy,
+        notes: collections.OrderedDict = None,
         fill_kill=None,
         offset=None,
         green=None,
@@ -34,6 +36,7 @@ class Trade:
         self.selection_id = selection_id
         self.handicap = handicap
         self.strategy = strategy
+        self.notes = notes  # trade notes (e.g. triggers/market state)
         self.fill_kill = fill_kill
         self.offset = offset
         self.green = green
@@ -109,10 +112,15 @@ class Trade:
         return order
 
     @property
+    def notes_str(self) -> str:
+        return ",".join(str(x) for x in self.notes.values())
+
+    @property
     def info(self) -> dict:
         return {
             "id": self.id,
             "strategy": self.strategy,
             "status": self.status,
             "orders": [o.id for o in self.orders],
+            "notes": self.notes_str,
         }

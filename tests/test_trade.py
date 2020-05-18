@@ -1,3 +1,4 @@
+import collections
 import unittest
 from unittest import mock
 
@@ -11,11 +12,13 @@ class TradeTest(unittest.TestCase):
         self.mock_offset = mock.Mock()
         self.mock_green = mock.Mock()
         self.mock_stop = mock.Mock()
+        self.notes = collections.OrderedDict({"trigger": 123})
         self.trade = Trade(
             "1.234",
             567,
             1.0,
             self.mock_strategy,
+            self.notes,
             self.mock_fill_kill,
             self.mock_offset,
             self.mock_green,
@@ -27,6 +30,7 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.selection_id, 567)
         self.assertEqual(self.trade.handicap, 1.0)
         self.assertEqual(self.trade.strategy, self.mock_strategy)
+        self.assertEqual(self.trade.notes, self.notes)
         self.assertEqual(self.trade.fill_kill, self.mock_fill_kill)
         self.assertEqual(self.trade.offset, self.mock_offset)
         self.assertEqual(self.trade.green, self.mock_green)
@@ -93,6 +97,10 @@ class TradeTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.trade.create_order_from_current(mock_current_order, "12345")
 
+    def test_notes_str(self):
+        self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})
+        self.assertEqual(self.trade.notes_str, "1,2,3,four")
+
     def test_info(self):
         self.assertEqual(
             self.trade.info,
@@ -101,5 +109,6 @@ class TradeTest(unittest.TestCase):
                 "orders": [],
                 "status": TradeStatus.LIVE,
                 "strategy": self.mock_strategy,
+                "notes": "123",
             },
         )
