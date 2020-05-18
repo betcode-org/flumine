@@ -182,6 +182,12 @@ class BaseFlumine:
         self.cleared_market_queue.put(market.market_id)
         self.log_control(event)
 
+    def _process_cleared_orders(self, event):
+        # todo update blotter?
+        logger.info(
+            "Market closed and cleared", extra={"market_id": event.event.market_id},
+        )
+
     def _process_cleared_markets(self, event: events.ClearedMarketsEvent):
         # todo update blotter?
         for cleared_market in event.event.orders:

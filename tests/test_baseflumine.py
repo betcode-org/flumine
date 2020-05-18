@@ -178,9 +178,14 @@ class BaseFlumineTest(unittest.TestCase):
             self.base_flumine.cleared_market_queue.get(), mock_market.market_id
         )
 
+    def test__process_cleared_orders(self):
+        mock_event = mock.Mock()
+        mock_event.event.orders = []
+        self.base_flumine._process_cleared_orders(mock_event)
+
     def test__process_cleared_markets(self):
         mock_event = mock.Mock()
-        self.base_flumine.extra = {}
+        mock_event.event.orders = []
         self.base_flumine._process_cleared_markets(mock_event)
 
     def test__process_end_flumine(self):
