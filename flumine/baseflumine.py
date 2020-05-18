@@ -37,6 +37,7 @@ class BaseFlumine:
 
         # queues
         self.handler_queue = queue.Queue()
+        self.cleared_market_queue = queue.Queue()
 
         # all markets
         self.markets = Markets()
@@ -178,9 +179,8 @@ class BaseFlumine:
             if strategy.check_market(market, event.event):
                 strategy.process_closed_market(market, event.event)
 
-        # todo update balance
-        # todo get cleared orders
-        # todo log closed market event
+        self.cleared_market_queue.put(market.market_id)
+        self.log_control(event)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

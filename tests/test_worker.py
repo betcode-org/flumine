@@ -92,3 +92,6 @@ class WorkersTest(unittest.TestCase):
         mock_flumine.log_control.assert_called_with(
             mock_events.BalanceEvent(mock_client.account_funds)
         )
+
+    # def test_poll_cleared_orders(self):
+    #     pass

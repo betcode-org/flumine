@@ -4,6 +4,7 @@ import logging
 import queue
 from betfairlightweight import BetfairError, filters
 
+from . import config
 from .events import events
 from .utils import chunks
 
@@ -29,6 +30,10 @@ class BackgroundWorker(threading.Thread):
 
     def run(self) -> None:
         time.sleep(self.start_delay)
+        logger.info(
+            "BackgroundWorker {0} starting".format(self.name),
+            extra={"name": self.name, "function": self.function},
+        )
         while self.is_alive():
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
@@ -103,3 +108,38 @@ def poll_account_balance(flumine, client) -> None:
     client.update_account_details()
     if client.account_funds:
         flumine.log_control(events.BalanceEvent(client.account_funds))
+
+
+def poll_cleared_orders(flumine, client) -> None:
+    while True:
+        market_id = flumine.cleared_market_queue.get()
+        from_record = 0
+        while True:
+            try:
+                cleared_orders = client.betting_client.betting.list_cleared_orders(
+                    bet_status="SETTLED",
+                    from_record=from_record,
+                    market_ids=[market_id],
+                    customer_strategy_refs=[config.hostname],
+                )
+            except BetfairError as e:
+                logger.error(
+                    "poll_cleared_orders error",
+                    extra={"trading_function": "list_cleared_orders", "response": e},
+                    exc_info=True,
+                )
+                flumine.cleared_market_queue.put(market_id)  # try again
+                break
+
+            logger.info(
+                "{0}: {1} cleared orders found, more available: {2}".format(
+                    market_id, len(cleared_orders.orders), cleared_orders.more_available
+                )
+            )
+            cleared_orders.market_id = market_id
+            flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders))
+            flumine.log_control(events.ClearedOrdersEvent(cleared_orders))
+
+            from_record += len(cleared_orders.orders)
+            if not cleared_orders.more_available:
+                break

@@ -79,6 +79,14 @@ class Flumine(BaseFlumine):
                 func_args=(self.client, self.markets, self.handler_queue),
             )
         )
+        self.add_worker(
+            worker.BackgroundWorker(
+                interval=10,  # restart
+                function=worker.poll_cleared_orders,
+                name="poll_cleared_orders",
+                func_args=(self, self.client),
+            )
+        )
 
     def __repr__(self) -> str:
         return "<Flumine>"
