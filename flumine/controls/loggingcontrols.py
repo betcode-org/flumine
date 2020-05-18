@@ -58,7 +58,7 @@ class LoggingControl(Thread):
             self._process_cleared_orders(event)
 
         elif event.EVENT_TYPE == EventType.CLEARED_ORDERS_META:
-            self._process_cleared_orders_meta(event)
+            self._process_cleared_orders_meta(event)  # todo
 
         elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
             self._process_cleared_markets(event)

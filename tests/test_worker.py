@@ -1,3 +1,4 @@
+import logging
 import unittest
 from unittest import mock
 from betfairlightweight import BetfairError
@@ -24,6 +25,9 @@ class BackgroundWorkerTest(unittest.TestCase):
 
 
 class WorkersTest(unittest.TestCase):
+    def setUp(self) -> None:
+        logging.disable(logging.CRITICAL)
+
     def test_keep_alive(self):
         mock_client = mock.Mock()
         mock_client.betting_client.session_token = None
@@ -93,5 +97,94 @@ class WorkersTest(unittest.TestCase):
             mock_events.BalanceEvent(mock_client.account_funds)
         )
 
-    # def test_poll_cleared_orders(self):
-    #     pass
+    # @mock.patch("flumine.worker._get_cleared_market")
+    # @mock.patch("flumine.worker._get_cleared_orders")
+    # def test_poll_cleared_orders(self, mock__get_cleared_orders, mock__get_cleared_market):
+    #     mock_flumine = mock.Mock()
+    #     mock_client = mock.Mock()
+    #
+    #     worker.poll_cleared_orders(mock_flumine, mock_client)
+    #
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_orders(self, mock_events, mock_config):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        mock_cleared_orders = mock.Mock()
+        mock_cleared_orders.orders = []
+        mock_cleared_orders.more_available = False
+        mock_betting_client.betting.list_cleared_orders.return_value = (
+            mock_cleared_orders
+        )
+
+        self.assertTrue(
+            worker._get_cleared_orders(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            from_record=0,
+            customer_strategy_refs=[mock_config.hostname],
+        )
+        mock_flumine.log_control.assert_called_with(mock_events.ClearedOrdersEvent())
+        mock_flumine.handler_queue.put.assert_called_with(
+            mock_events.ClearedOrdersEvent()
+        )
+
+    @mock.patch("flumine.worker.time.sleep")
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_orders_error(self, mock_events, mock_config, mock_sleep):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        mock_betting_client.betting.list_cleared_orders.side_effect = BetfairError
+        self.assertFalse(
+            worker._get_cleared_orders(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_sleep.assert_called_with(10)
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            from_record=0,
+            customer_strategy_refs=[mock_config.hostname],
+        )
+        mock_flumine.cleared_market_queue.put.assert_called_with("1.23")
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_market(self, mock_events, mock_config):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        self.assertTrue(
+            worker._get_cleared_market(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            group_by="MARKET",
+            customer_strategy_refs=[mock_config.hostname],
+        )
+        mock_flumine.log_control.assert_called_with(mock_events.ClearedMarketsEvent())
+        mock_flumine.handler_queue.put.assert_called_with(
+            mock_events.ClearedMarketsEvent()
+        )
+
+    @mock.patch("flumine.worker.time.sleep")
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_market_error(self, mock_events, mock_config, mock_sleep):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        mock_betting_client.betting.list_cleared_orders.side_effect = BetfairError
+        self.assertFalse(
+            worker._get_cleared_market(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_sleep.assert_called_with(10)
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            group_by="MARKET",
+            customer_strategy_refs=[mock_config.hostname],
+        )
+        mock_flumine.cleared_market_queue.put.assert_called_with("1.23")
