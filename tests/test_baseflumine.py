@@ -162,7 +162,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.markets = [mock_market]
         mock_event = mock.Mock()
         self.base_flumine._process_custom_event(mock_event)
-        mock_event.worker.callback.assert_called_with(self.base_flumine, mock_event)
+        mock_event.callback.assert_called_with(self.base_flumine, mock_event)
         mock__process_market_orders.assert_called_with(mock_market)
 
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

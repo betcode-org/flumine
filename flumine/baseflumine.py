@@ -177,11 +177,11 @@ class BaseFlumine:
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:
-            event.worker.callback(self, event)
+            event.callback(self, event)
         except Exception as e:
             logger.exception(
                 "Unknown error {0} in _process_custom_event {1}".format(
-                    e, event.worker.callback
+                    e, event.callback
                 )
             )
         for market in self.markets:

@@ -66,6 +66,11 @@ class Market:
         self.blotter.pending_replace.append(order)
 
     @property
+    def event_id(self) -> str:
+        if self.market_book:
+            return self.market_book.market_definition.event_id
+
+    @property
     def seconds_to_start(self):
         return (self.market_start_datetime - datetime.datetime.utcnow()).total_seconds()
 

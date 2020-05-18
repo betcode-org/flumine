@@ -87,9 +87,9 @@ class CustomEvent(BaseEvent):
     EVENT_TYPE = EventType.CUSTOM_EVENT
     QUEUE_TYPE = QueueType.HANDLER
 
-    def __init__(self, event, worker, *args, **kwargs):
+    def __init__(self, event, callback, *args, **kwargs):
         super(CustomEvent, self).__init__(event)
-        self.worker = worker
+        self.callback = callback
 
 
 class NewDayEvent(BaseEvent):
