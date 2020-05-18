@@ -182,6 +182,18 @@ class BaseFlumine:
         self.cleared_market_queue.put(market.market_id)
         self.log_control(event)
 
+    def _process_cleared_markets(self, event: events.ClearedMarketsEvent):
+        # todo update blotter?
+        for cleared_market in event.event.orders:
+            logger.info(
+                "Market level cleared",
+                extra={
+                    "market_id": cleared_market.market_id,
+                    "profit": cleared_market.profit,
+                    "bet_count": cleared_market.bet_count,
+                },
+            )
+
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
             strategy.finish()

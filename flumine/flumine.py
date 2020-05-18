@@ -35,7 +35,7 @@ class Flumine(BaseFlumine):
                     self._process_order_package(event)
 
                 elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
-                    logger.info(event)
+                    self._process_cleared_markets(event)
 
                 elif event.EVENT_TYPE == EventType.CLEARED_ORDERS:
                     logger.info(event)

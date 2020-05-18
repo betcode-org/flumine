@@ -111,17 +111,26 @@ def poll_account_balance(flumine, client) -> None:
 
 
 def poll_cleared_orders(flumine, client) -> None:
-    processed_orders, processed_markets = [], []
+    processed_orders, processed_markets, market_cache = [], [], []
     while True:
         market_id = flumine.cleared_market_queue.get()
         if market_id not in processed_orders:
             if _get_cleared_orders(flumine, client.betting_client, market_id):
                 processed_orders.append(market_id)
+            else:
+                time.sleep(10)
+                flumine.cleared_market_queue.put(market_id)  # try again
 
         if market_id not in processed_markets:
             time.sleep(32)  # takes ~30s for orders to be aggregated to market level
             if _get_cleared_market(flumine, client.betting_client, market_id):
                 processed_markets.append(market_id)
+            else:
+                if market_cache.count(market_id) > 7:  # give up after 7 attempts
+                    market_cache = [m for m in market_cache if m != market_id]
+                else:
+                    market_cache.append(market_id)
+                    flumine.cleared_market_queue.put(market_id)  # try again
 
 
 def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
@@ -140,8 +149,6 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
                 extra={"trading_function": "list_cleared_orders", "response": e},
                 exc_info=True,
             )
-            time.sleep(10)
-            flumine.cleared_market_queue.put(market_id)  # try again
             return False
 
         logger.info(
@@ -173,10 +180,11 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
             extra={"trading_function": "list_cleared_orders", "response": e},
             exc_info=True,
         )
-        time.sleep(10)
-        flumine.cleared_market_queue.put(market_id)  # try again
         return False
 
-    flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
-    flumine.handler_queue.put(events.ClearedMarketsEvent(cleared_markets))
-    return True
+    if cleared_markets.orders:
+        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
+        flumine.handler_queue.put(events.ClearedMarketsEvent(cleared_markets))
+        return True
+    else:
+        return False
