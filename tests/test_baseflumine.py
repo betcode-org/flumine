@@ -21,11 +21,14 @@ class BaseFlumineTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.base_flumine.run()
 
-    def test_add_strategy(self):
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test_add_strategy(self, mock_log_control, mock_events):
         mock_strategy = mock.Mock()
         self.base_flumine.add_strategy(mock_strategy)
         self.assertEqual(len(self.base_flumine.strategies), 1)
         self.assertEqual(len(self.base_flumine.streams), 1)
+        mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
 
     def test_add_worker(self):
         mock_worker = mock.Mock()
@@ -129,6 +132,22 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = (12, 12345, {})
         self.base_flumine._process_raw_data(mock_event)
 
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test__process_market_catalogue(self, mock_log_control, mock_events):
+        mock_market = mock.Mock()
+        mock_market.market_catalogue = None
+        mock_markets = mock.Mock()
+        mock_markets.markets = {"1.23": mock_market}
+        self.base_flumine.markets = mock_markets
+        mock_market_catalogue = mock.Mock()
+        mock_market_catalogue.market_id = "1.23"
+        mock_event = mock.Mock()
+        mock_event.event = [mock_market_catalogue]
+        self.base_flumine._process_market_catalogues(mock_event)
+        self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
+        mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
+
     def test__process_current_orders(self):
         mock_event = mock.Mock()
         mock_current_orders = mock.Mock()
@@ -157,7 +176,9 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 
-    def test_enter_exit(self):
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test_enter_exit(self, mock_log_control, mock_events):
         control = mock.Mock()
         self.base_flumine._logging_controls = [control]
         self.base_flumine.simulated_execution = mock.Mock()
@@ -171,3 +192,4 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.simulated_execution.shutdown.assert_called_with()
         self.base_flumine.betfair_execution.shutdown.assert_called_with()
         control.start.assert_called_with()
+        mock_log_control.assert_called_with(mock_events.TerminationEvent(None))

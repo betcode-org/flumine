@@ -26,10 +26,11 @@ class LoggingControl(Thread):
         self.cache = []
 
     def run(self) -> None:
+        logger.info("Starting logging control %s" % self.NAME)
         while True:
             event = self.logging_queue.get()
             if event is None:
-                logger.info("Shutting down LoggingControl (%s)" % self.NAME)
+                logger.info("Shutting down logging control %s" % self.NAME)
                 break
             else:
                 self.process_event(event)

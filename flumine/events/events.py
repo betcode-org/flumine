@@ -124,3 +124,11 @@ class TradeEvent(BaseEvent):
 class OrderEvent(BaseEvent):
     EVENT_TYPE = EventType.ORDER
     QUEUE_TYPE = QueueType.LOGGING
+
+
+# both
+
+
+class TerminationEvent(BaseEvent):
+    EVENT_TYPE = EventType.TERMINATOR
+    QUEUE_TYPE = QueueType.HANDLER

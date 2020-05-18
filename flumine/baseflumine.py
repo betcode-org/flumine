@@ -70,9 +70,9 @@ class BaseFlumine:
         raise NotImplementedError
 
     def add_strategy(self, strategy: BaseStrategy) -> None:
-        # create stream if required
         self.streams(strategy)  # create required streams
         self.strategies(strategy)  # store in strategies
+        self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
         self._workers.append(worker)
@@ -154,10 +154,10 @@ class BaseFlumine:
             market = self.markets.markets.get(market_catalogue.market_id)
             if market:
                 if market.market_catalogue is None:
+                    self.log_control(events.MarketEvent(market))
                     logger.info(
                         "Updated marketCatalogue for {0}".format(market.market_id)
                     )
-                    # todo logging control
                 market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
@@ -219,7 +219,7 @@ class BaseFlumine:
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
         # shutdown logging controls
-        # todo self.log_control(events.EventType.TERMINATOR)
+        self.log_control(events.TerminationEvent(None))
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()

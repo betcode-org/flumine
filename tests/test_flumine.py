@@ -39,7 +39,7 @@ class FlumineTest(unittest.TestCase):
             events.CloseMarketEvent(None),
             events.CustomEvent(None),
             events.NewDayEvent(None),
-            events.EventType.TERMINATOR,
+            events.TerminationEvent(None),
         ]
         for i in mock_events:
             self.flumine.handler_queue.put(i)
