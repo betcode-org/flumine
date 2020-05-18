@@ -36,7 +36,9 @@ class Trade:
         self.selection_id = selection_id
         self.handicap = handicap
         self.strategy = strategy
-        self.notes = notes  # trade notes (e.g. triggers/market state)
+        self.notes = (
+            notes if notes else collections.OrderedDict()
+        )  # trade notes (e.g. triggers/market state)
         self.fill_kill = fill_kill
         self.offset = offset
         self.green = green

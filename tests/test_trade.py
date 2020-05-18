@@ -100,6 +100,8 @@ class TradeTest(unittest.TestCase):
     def test_notes_str(self):
         self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})
         self.assertEqual(self.trade.notes_str, "1,2,3,four")
+        self.trade.notes = collections.OrderedDict()
+        self.assertEqual(self.trade.notes_str, "")
 
     def test_info(self):
         self.assertEqual(

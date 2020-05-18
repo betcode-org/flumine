@@ -155,6 +155,15 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_current_orders]
         self.base_flumine._process_current_orders(mock_event)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine._process_market_orders")
+    def test__process_custom_event(self, mock__process_market_orders):
+        mock_market = mock.Mock()
+        self.base_flumine.markets = [mock_market]
+        mock_event = mock.Mock()
+        self.base_flumine._process_custom_event(mock_event)
+        mock_event.worker.callback.assert_called_with(self.base_flumine, mock_event)
+        mock__process_market_orders.assert_called_with(mock_market)
+
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_close_market(self, mock_log_control):
         mock_strategy = mock.Mock()

@@ -44,7 +44,7 @@ class Flumine(BaseFlumine):
                     self._process_close_market(event)
 
                 elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
-                    logger.info(event)
+                    self._process_custom_event(event)
 
                 elif event.EVENT_TYPE == EventType.NEW_DAY:
                     logger.info(event)

@@ -170,6 +170,18 @@ class BaseFlumine:
                     strategy.process_orders(market, strategy_orders)
             self._process_market_orders(market)
 
+    def _process_custom_event(self, event: events.CustomEvent) -> None:
+        try:
+            event.worker.callback(self, event)
+        except Exception as e:
+            logger.exception(
+                "Unknown error {0} in _process_custom_event {1}".format(
+                    e, event.worker.callback
+                )
+            )
+        for market in self.markets:
+            self._process_market_orders(market)
+
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market = self.markets.markets.get(event.event.market_id)
         market.close_market()
