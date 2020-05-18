@@ -63,6 +63,15 @@ class Flumine(BaseFlumine):
         )
         self.add_worker(
             worker.BackgroundWorker(
+                start_delay=5,  # wait for login
+                interval=60,
+                function=worker.poll_account_balance,
+                name="poll_account_balance",
+                func_args=(self, self.client),
+            )
+        )
+        self.add_worker(
+            worker.BackgroundWorker(
                 start_delay=5,  # wait for streams to populate
                 interval=60,
                 function=worker.poll_market_catalogue,

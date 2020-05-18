@@ -59,8 +59,8 @@ class WorkersTest(unittest.TestCase):
         worker.keep_alive(mock_client)
         mock_client.keep_alive.assert_called_with()
 
-    @mock.patch("flumine.worker.MarketCatalogueEvent")
-    def test_poll_market_catalogue(self, mock_event):
+    @mock.patch("flumine.worker.events")
+    def test_poll_market_catalogue(self, mock_events):
         mock_client = mock.Mock()
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.234": None, "5.678": None}
@@ -80,4 +80,15 @@ class WorkersTest(unittest.TestCase):
             ],
             max_results=100,
         )
-        mock_handler_queue.put.assert_called_with(mock_event())
+        mock_handler_queue.put.assert_called_with(mock_events.MarketCatalogueEvent())
+
+    @mock.patch("flumine.worker.events")
+    def test_poll_account_balance(self, mock_events):
+        mock_client = mock.Mock()
+        mock_client.account_funds = {1: 2}
+        mock_flumine = mock.Mock()
+        worker.poll_account_balance(mock_flumine, mock_client)
+        mock_client.update_account_details.assert_called_with()
+        mock_flumine.log_control.assert_called_with(
+            mock_events.BalanceEvent(mock_client.account_funds)
+        )

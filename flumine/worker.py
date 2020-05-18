@@ -4,7 +4,7 @@ import logging
 import queue
 from betfairlightweight import BetfairError, filters
 
-from .events.events import MarketCatalogueEvent
+from .events import events
 from .utils import chunks
 
 logger = logging.getLogger(__name__)
@@ -96,4 +96,10 @@ def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
             continue
 
         if market_catalogues:
-            handler_queue.put(MarketCatalogueEvent(market_catalogues))
+            handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
+
+
+def poll_account_balance(flumine, client) -> None:
+    client.update_account_details()
+    if client.account_funds:
+        flumine.log_control(events.BalanceEvent(client.account_funds))
