@@ -11,6 +11,8 @@ class FlumineTest(unittest.TestCase):
         self.mock_trading = mock.Mock()
         self.flumine = Flumine(self.mock_trading)
 
+    @mock.patch("flumine.flumine.Flumine._process_cleared_orders")
+    @mock.patch("flumine.flumine.Flumine._process_cleared_markets")
     @mock.patch("flumine.flumine.Flumine._process_close_market")
     @mock.patch("flumine.flumine.Flumine._process_order_package")
     @mock.patch("flumine.flumine.Flumine._process_current_orders")
@@ -27,6 +29,8 @@ class FlumineTest(unittest.TestCase):
         mock__process_current_orders,
         mock__process_order_package,
         mock__process_close_market,
+        mock__process_cleared_markets,
+        mock__process_cleared_orders,
     ):
         mock_events = [
             events.MarketCatalogueEvent(None),
@@ -37,10 +41,9 @@ class FlumineTest(unittest.TestCase):
             events.ClearedMarketsEvent(None),
             events.ClearedOrdersEvent(None),
             events.CloseMarketEvent(None),
-            events.StrategyResetEvent(None),
             events.CustomEvent(None),
             events.NewDayEvent(None),
-            events.EventType.TERMINATOR,
+            events.TerminationEvent(None),
         ]
         for i in mock_events:
             self.flumine.handler_queue.put(i)
@@ -53,10 +56,12 @@ class FlumineTest(unittest.TestCase):
         mock__process_current_orders.assert_called_with(mock_events[3])
         mock__process_order_package.assert_called_with(mock_events[4])
         mock__process_close_market.assert_called_with(mock_events[7])
+        mock__process_cleared_markets.assert_called_with(mock_events[5])
+        mock__process_cleared_orders.assert_called_with(mock_events[6])
 
     def test__add_default_workers(self):
         self.flumine._add_default_workers()
-        self.assertEqual(len(self.flumine._workers), 2)
+        self.assertEqual(len(self.flumine._workers), 4)
 
     def test_str(self):
         assert str(self.flumine) == "<Flumine>"

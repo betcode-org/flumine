@@ -15,6 +15,7 @@ from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
 from .controls.tradingcontrols import OrderValidation, StrategyExposure
+from .controls.loggingcontrols import LoggingControl
 from . import config
 
 
@@ -36,6 +37,7 @@ class BaseFlumine:
 
         # queues
         self.handler_queue = queue.Queue()
+        self.cleared_market_queue = queue.Queue()
 
         # all markets
         self.markets = Markets()
@@ -69,9 +71,9 @@ class BaseFlumine:
         raise NotImplementedError
 
     def add_strategy(self, strategy: BaseStrategy) -> None:
-        # create stream if required
         self.streams(strategy)  # create required streams
         self.strategies(strategy)  # store in strategies
+        self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
         self._workers.append(worker)
@@ -83,6 +85,14 @@ class BaseFlumine:
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
         self._trading_controls.append(trading_control(self, **kwargs))
+
+    def add_logging_control(self, logging_control: LoggingControl) -> None:
+        logger.info("Adding logging control {0}".format(logging_control.NAME))
+        self._logging_controls.append(logging_control)
+
+    def log_control(self, event: events.BaseEvent) -> None:
+        for logging_control in self._logging_controls:
+            logging_control.logging_queue.put(event)
 
     def _add_default_workers(self) -> None:
         return
@@ -128,7 +138,7 @@ class BaseFlumine:
     def _add_live_market(
         self, market_id: str, market_book: resources.MarketBook
     ) -> Market:
-        market = Market(market_id, market_book)
+        market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
         logger.info("Adding: {0} to markets".format(market.market_id))
         return market
@@ -145,10 +155,10 @@ class BaseFlumine:
             market = self.markets.markets.get(market_catalogue.market_id)
             if market:
                 if market.market_catalogue is None:
+                    self.log_control(events.MarketEvent(market))
                     logger.info(
                         "Updated marketCatalogue for {0}".format(market.market_id)
                     )
-                    # todo logging control
                 market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
@@ -169,9 +179,26 @@ class BaseFlumine:
             if strategy.check_market(market, event.event):
                 strategy.process_closed_market(market, event.event)
 
-        # todo update balance
-        # todo get cleared orders
-        # todo log closed market event
+        self.cleared_market_queue.put(market.market_id)
+        self.log_control(event)
+
+    def _process_cleared_orders(self, event):
+        # todo update blotter?
+        logger.info(
+            "Market closed and cleared", extra={"market_id": event.event.market_id},
+        )
+
+    def _process_cleared_markets(self, event: events.ClearedMarketsEvent):
+        # todo update blotter?
+        for cleared_market in event.event.orders:
+            logger.info(
+                "Market level cleared",
+                extra={
+                    "market_id": cleared_market.market_id,
+                    "profit": cleared_market.profit,
+                    "bet_count": cleared_market.bet_count,
+                },
+            )
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
@@ -210,7 +237,7 @@ class BaseFlumine:
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
         # shutdown logging controls
-        # todo self.log_control(events.EventType.TERMINATOR)
+        self.log_control(events.TerminationEvent(None))
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()

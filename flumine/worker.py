@@ -4,7 +4,8 @@ import logging
 import queue
 from betfairlightweight import BetfairError, filters
 
-from .events.events import MarketCatalogueEvent
+from . import config
+from .events import events
 from .utils import chunks
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,14 @@ class BackgroundWorker(threading.Thread):
 
     def run(self) -> None:
         time.sleep(self.start_delay)
+        logger.info(
+            "BackgroundWorker {0} starting".format(self.name),
+            extra={"worker_name": self.name, "function": self.function},
+        )
         while self.is_alive():
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
-                extra={"name": self.name, "function": self.function},
+                extra={"worker_name": self.name, "function": self.function},
             )
             try:
                 self.function(*self.func_args, **self.func_kwargs)
@@ -96,4 +101,90 @@ def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
             continue
 
         if market_catalogues:
-            handler_queue.put(MarketCatalogueEvent(market_catalogues))
+            handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
+
+
+def poll_account_balance(flumine, client) -> None:
+    client.update_account_details()
+    if client.account_funds:
+        flumine.log_control(events.BalanceEvent(client.account_funds))
+
+
+def poll_cleared_orders(flumine, client) -> None:
+    processed_orders, processed_markets, market_cache = [], [], []
+    while True:
+        market_id = flumine.cleared_market_queue.get()
+        if market_id not in processed_orders:
+            if _get_cleared_orders(flumine, client.betting_client, market_id):
+                processed_orders.append(market_id)
+            else:
+                time.sleep(10)
+                flumine.cleared_market_queue.put(market_id)  # try again
+
+        if market_id not in processed_markets:
+            time.sleep(32)  # takes ~30s for orders to be aggregated to market level
+            if _get_cleared_market(flumine, client.betting_client, market_id):
+                processed_markets.append(market_id)
+            else:
+                if market_cache.count(market_id) > 7:  # give up after 7 attempts
+                    market_cache = [m for m in market_cache if m != market_id]
+                else:
+                    market_cache.append(market_id)
+                    flumine.cleared_market_queue.put(market_id)  # try again
+
+
+def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
+    from_record = 0
+    while True:
+        try:
+            cleared_orders = betting_client.betting.list_cleared_orders(
+                bet_status="SETTLED",
+                from_record=from_record,
+                market_ids=[market_id],
+                customer_strategy_refs=[config.hostname],
+            )
+        except BetfairError as e:
+            logger.error(
+                "poll_cleared_orders error",
+                extra={"trading_function": "list_cleared_orders", "response": e},
+                exc_info=True,
+            )
+            return False
+
+        logger.info(
+            "{0}: {1} cleared orders found, more available: {2}".format(
+                market_id, len(cleared_orders.orders), cleared_orders.more_available
+            )
+        )
+        cleared_orders.market_id = market_id
+        flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders))
+        flumine.log_control(events.ClearedOrdersEvent(cleared_orders))
+
+        from_record += len(cleared_orders.orders)
+        if not cleared_orders.more_available:
+            break
+    return True
+
+
+def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
+    try:
+        cleared_markets = betting_client.betting.list_cleared_orders(
+            bet_status="SETTLED",
+            market_ids=[market_id],
+            customer_strategy_refs=[config.hostname],
+            group_by="MARKET",
+        )
+    except BetfairError as e:
+        logger.error(
+            "_get_cleared_markets error",
+            extra={"trading_function": "list_cleared_orders", "response": e},
+            exc_info=True,
+        )
+        return False
+
+    if cleared_markets.orders:
+        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
+        flumine.handler_queue.put(events.ClearedMarketsEvent(cleared_markets))
+        return True
+    else:
+        return False

@@ -87,11 +87,18 @@ class MarketsTest(unittest.TestCase):
 
 class MarketTest(unittest.TestCase):
     def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
         self.mock_market_book = mock.Mock()
         self.mock_market_catalogue = mock.Mock()
-        self.market = Market("1.234", self.mock_market_book, self.mock_market_catalogue)
+        self.market = Market(
+            self.mock_flumine,
+            "1.234",
+            self.mock_market_book,
+            self.mock_market_catalogue,
+        )
 
     def test_init(self):
+        self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
@@ -124,19 +131,23 @@ class MarketTest(unittest.TestCase):
         self.market.close_market()
         self.assertTrue(self.market.closed)
 
-    def test_place_order(self):
+    @mock.patch("flumine.markets.market.events")
+    def test_place_order(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with()
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
+        self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 
-    def test_place_order_not_executed(self):
+    @mock.patch("flumine.markets.market.events")
+    def test_place_order_not_executed(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order, execute=False)
         mock_order.place.assert_called_with()
         self.assertEqual(self.market.blotter.pending_place, [])
+        self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 
     def test_place_order_retry(self):
         mock_order = mock.Mock()
