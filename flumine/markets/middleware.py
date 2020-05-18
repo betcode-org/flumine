@@ -1,21 +1,12 @@
-import datetime
 import logging
-from betfairlightweight.resources.bettingresources import (
-    MarketBook,
-    MarketCatalogue,
-    RunnerBook,
-)
-
-from .blotter import Blotter
-from .. import config
+from collections import defaultdict
+from betfairlightweight.resources.bettingresources import RunnerBook
 
 logger = logging.getLogger(__name__)
 
 
 class Middleware:
-    def __call__(
-        self, market_catalogue: MarketCatalogue, market_book: MarketBook
-    ) -> None:
+    def __call__(self, market) -> None:
         raise NotImplementedError
 
 
@@ -28,20 +19,23 @@ class SimulatedMiddleware:
     """
 
     def __init__(self):
-        self.runners = {}  # {(selectionId, handicap): RunnerAnalytics}
+        # {marketId: {(selectionId, handicap): RunnerAnalytics}}
+        self.markets = defaultdict(dict)
 
-    def __call__(
-        self, market_catalogue: MarketCatalogue, market_book: MarketBook
-    ) -> None:
-        for runner in market_book.runners:
+    def __call__(self, market) -> None:
+        market_analytics = self.markets[market.market_id]
+
+        for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
-                self._process_runner(runner)
+                self._process_runner(market_analytics, runner)
 
-    def _process_runner(self, runner: RunnerBook) -> None:
+        market.context["simulated"] = market_analytics
+
+    def _process_runner(self, market_analytics: dict, runner: RunnerBook) -> None:
         try:
-            runner_analytics = self.runners[(runner.selection_id, runner.handicap)]
+            runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
         except KeyError:
-            runner_analytics = self.runners[
+            runner_analytics = market_analytics[
                 (runner.selection_id, runner.handicap)
             ] = RunnerAnalytics(runner)
         runner_analytics(runner)

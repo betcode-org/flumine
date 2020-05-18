@@ -41,6 +41,7 @@ class BaseFlumine:
 
         # all markets
         self.markets = Markets()
+        self._market_middleware = []
 
         # all strategies
         self.strategies = Strategies()
@@ -108,6 +109,10 @@ class BaseFlumine:
 
             if not market:
                 market = self._add_live_market(market_id, market_book)
+
+            # process middleware
+            for middleware in self._market_middleware:
+                middleware(market)  # todo err handling?
 
             # process market
             market(market_book)

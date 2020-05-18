@@ -13,6 +13,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertFalse(self.base_flumine.BACKTEST)
         self.assertEqual(self.base_flumine.client, self.mock_client)
         self.assertFalse(self.base_flumine._running)
+        self.assertEqual(self.base_flumine._market_middleware, [])
         self.assertEqual(self.base_flumine._logging_controls, [])
         self.assertEqual(len(self.base_flumine._trading_controls), 2)
         self.assertEqual(self.base_flumine._workers, [])
