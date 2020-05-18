@@ -18,25 +18,27 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware = SimulatedMiddleware()
 
     def test_init(self):
-        self.assertEqual(self.middleware.runners, {})
+        self.assertEqual(self.middleware.markets, {})
 
     @mock.patch("flumine.markets.middleware.SimulatedMiddleware._process_runner")
     def test_call(self, mock__process_runner):
-        mock_market_catalogue = mock.Mock()
+        mock_market = mock.Mock(context={})
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
         mock_runner.status = "ACTIVE"
         mock_market_book.runners = [mock_runner]
-        self.middleware(mock_market_catalogue, mock_market_book)
-        mock__process_runner.assert_called_with(mock_runner)
+        self.middleware(mock_market, mock_market_book)
+        mock__process_runner.assert_called_with({}, mock_runner)
+        self.assertEqual(mock_market.context, {"simulated": {}})
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics")
     def test__process_runner(self, mock_runner_analytics):
+        market_analytics = {}
         mock_runner = mock.Mock()
-        self.middleware._process_runner(mock_runner)
-        self.assertEqual(len(self.middleware.runners), 1)
-        self.middleware._process_runner(mock_runner)
-        self.assertEqual(len(self.middleware.runners), 1)
+        self.middleware._process_runner(market_analytics, mock_runner)
+        self.assertEqual(len(market_analytics), 1)
+        self.middleware._process_runner(market_analytics, mock_runner)
+        self.assertEqual(len(market_analytics), 1)
         mock_runner_analytics.assert_called_with(mock_runner)
 
 
@@ -59,6 +61,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
+        self.assertEqual(self.runner_analytics._runner, mock_runner)
 
     def test__calculate_traded_dict_empty(self):
         mock_runner = mock.Mock()

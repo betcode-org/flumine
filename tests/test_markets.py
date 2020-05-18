@@ -103,13 +103,14 @@ class MarketTest(unittest.TestCase):
         self.assertFalse(self.market.closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
-        self.assertEqual(self.market._middleware, [])
+        self.assertEqual(self.market.context, {"simulated": {}})
 
     def test_call(self):
-        mock_middleware = mock.Mock()
-        self.market._middleware = [mock_middleware]
         mock_order = mock.Mock()
         mock_order.status = OrderStatus.EXECUTABLE
+        self.market.context["simulated"] = {
+            (mock_order.selection_id, mock_order.handicap): "test"
+        }
         mock_order_two = mock.Mock()
         mock_order_two.status = OrderStatus.PENDING
         mock_order_three = mock.Mock()
@@ -119,8 +120,7 @@ class MarketTest(unittest.TestCase):
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
-        mock_middleware.assert_called_with(self.mock_market_catalogue, mock_market_book)
-        mock_order.simulated.assert_called_with(mock_market_book, None)
+        mock_order.simulated.assert_called_with(mock_market_book, "test")
         mock_order_two.simulated.assert_not_called()
 
     def test_open_market(self):
