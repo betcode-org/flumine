@@ -2,11 +2,13 @@ import logging
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
+from ..order.order import OrderStatus
+
 logger = logging.getLogger(__name__)
 
 
 class Middleware:
-    def __call__(self, market, market_book: MarketBook) -> None:
+    def __call__(self, market) -> None:
         raise NotImplementedError
 
 
@@ -22,14 +24,26 @@ class SimulatedMiddleware:
         # {marketId: {(selectionId, handicap): RunnerAnalytics}}
         self.markets = defaultdict(dict)
 
-    def __call__(self, market, market_book: MarketBook) -> None:
+    def __call__(self, market) -> None:
         market_analytics = self.markets[market.market_id]
-        for runner in market_book.runners:
+        for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
                 self._process_runner(market_analytics, runner)
         market.context["simulated"] = market_analytics
+        # process simulated orders
+        self._process_simulated_orders(market, market_analytics)
 
-    def _process_runner(self, market_analytics: dict, runner: RunnerBook) -> None:
+    @staticmethod
+    def _process_simulated_orders(market, market_analytics: dict) -> None:
+        for order in market.blotter:
+            if order.simulated and order.status == OrderStatus.EXECUTABLE:
+                runner_analytics = market_analytics.get(
+                    (order.selection_id, order.handicap)
+                )
+                order.simulated(market.market_book, runner_analytics)
+
+    @staticmethod
+    def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
         try:
             runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
         except KeyError:

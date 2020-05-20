@@ -3,7 +3,6 @@ import logging
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
-from ..order.order import OrderStatus
 from ..events import events
 
 logger = logging.getLogger(__name__)
@@ -27,13 +26,6 @@ class Market:
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book
-        # process simulated orders
-        for order in self.blotter:
-            if order.simulated and order.status == OrderStatus.EXECUTABLE:
-                runner_analytics = self.context["simulated"].get(
-                    (order.selection_id, order.handicap)
-                )
-                order.simulated(self.market_book, runner_analytics)
 
     def open_market(self) -> None:
         self.closed = False

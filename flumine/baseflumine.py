@@ -115,12 +115,12 @@ class BaseFlumine:
             if not market:
                 market = self._add_live_market(market_id, market_book)
 
+            # process market
+            market(market_book)
+
             # process middleware
             for middleware in self._market_middleware:
                 middleware(market)  # todo err handling?
-
-            # process market
-            market(market_book)
 
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):

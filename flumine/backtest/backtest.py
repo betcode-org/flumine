@@ -79,12 +79,12 @@ class FlumineBacktest(BaseFlumine):
                 market = self._add_live_market(market_id, market_book)
                 self.log_control(events.MarketEvent(market))
 
-            # process middleware
-            for middleware in self._market_middleware:
-                middleware(market, market_book)  # todo err handling?
-
             # process market
             market(market_book)
+
+            # process middleware
+            for middleware in self._market_middleware:
+                middleware(market)  # todo err handling?
 
             for strategy in self.strategies:
                 if strategy.check_market(market, market_book):
