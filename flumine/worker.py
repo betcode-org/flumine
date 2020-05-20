@@ -19,6 +19,7 @@ class BackgroundWorker(threading.Thread):
         func_args: tuple = None,
         func_kwargs: dict = None,
         start_delay: int = 0,
+        context: dict = None,
         **kwargs
     ):
         threading.Thread.__init__(self, daemon=True, **kwargs)
@@ -27,29 +28,42 @@ class BackgroundWorker(threading.Thread):
         self.func_args = func_args if func_args is not None else []
         self.func_kwargs = func_kwargs if func_kwargs is not None else {}
         self.start_delay = start_delay
+        self.context = context or {}
 
     def run(self) -> None:
         time.sleep(self.start_delay)
         logger.info(
             "BackgroundWorker {0} starting".format(self.name),
-            extra={"worker_name": self.name, "function": self.function},
+            extra={
+                "worker_name": self.name,
+                "function": self.function,
+                "context": self.context,
+            },
         )
         while self.is_alive():
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
-                extra={"worker_name": self.name, "function": self.function},
+                extra={
+                    "worker_name": self.name,
+                    "function": self.function,
+                    "context": self.context,
+                },
             )
             try:
-                self.function(*self.func_args, **self.func_kwargs)
+                self.function(self.context, *self.func_args, **self.func_kwargs)
             except Exception as e:
                 logger.error(
                     "Error in BackgroundWorker {0}: {1}".format(self.name, e),
-                    extra={"worker_name": self.name, "function": self.function},
+                    extra={
+                        "worker_name": self.name,
+                        "function": self.function,
+                        "context": self.context,
+                    },
                 )
             time.sleep(self.interval)
 
 
-def keep_alive(client) -> None:
+def keep_alive(context: dict, client) -> None:
     """ Attempt keep alive if required or
     login if keep alive failed
     """
@@ -75,7 +89,9 @@ def keep_alive(client) -> None:
         )
 
 
-def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
+def poll_market_catalogue(
+    context: dict, client, markets, handler_queue: queue.Queue
+) -> None:
     live_markets = list(markets.markets.keys())
     for market_ids in chunks(live_markets, 100):
         try:
@@ -104,13 +120,13 @@ def poll_market_catalogue(client, markets, handler_queue: queue.Queue) -> None:
             handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
 
 
-def poll_account_balance(flumine, client) -> None:
+def poll_account_balance(context: dict, flumine, client) -> None:
     client.update_account_details()
     if client.account_funds:
         flumine.log_control(events.BalanceEvent(client.account_funds))
 
 
-def poll_cleared_orders(flumine, client) -> None:
+def poll_cleared_orders(context: dict, flumine, client) -> None:
     processed_orders, processed_markets, market_cache = [], [], []
     while True:
         market_id = flumine.cleared_market_queue.get()
