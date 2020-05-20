@@ -50,6 +50,11 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.add_trading_control(mock_control)
         self.assertEqual(len(self.base_flumine._trading_controls), 3)
 
+    def test_add_market_middleware(self):
+        mock_middleware = mock.Mock()
+        self.base_flumine.add_market_middleware(mock_middleware)
+        self.assertEqual(len(self.base_flumine._market_middleware), 1)
+
     def test_add_logging_control(self):
         mock_control = mock.Mock()
         self.base_flumine.add_logging_control(mock_control)

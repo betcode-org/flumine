@@ -10,6 +10,7 @@ from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
 from .markets.market import Market
+from .markets.middleware import Middleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
@@ -86,6 +87,10 @@ class BaseFlumine:
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
         self._trading_controls.append(trading_control(self, **kwargs))
+
+    def add_market_middleware(self, middleware: Middleware) -> None:
+        logger.info("Adding market middleware {0}".format(middleware))
+        self._market_middleware.append(middleware)
 
     def add_logging_control(self, logging_control: LoggingControl) -> None:
         logger.info("Adding logging control {0}".format(logging_control.NAME))
