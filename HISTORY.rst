@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.5.0 (2020-05-21)
++++++++++++++++++++
+
+**Improvements**
+
+- Logging control added and integrated
+- PriceRecorder example added
+- Balance polling added
+- Cleared Orders/Market polling added
+- Trade.notes added
+- Middleware moved to flumine level
+- SimulatedMiddleware refactored to handle all logic
+- Context added to worker functionality
+
 1.4.0 (2020-05-13)
 +++++++++++++++++++
 

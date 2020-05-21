@@ -14,11 +14,11 @@ class LowestLayer(BaseStrategy):
     - Order killed after 2 seconds if not matched
     """
 
-    def check_market_book(self, live_market, market_book):
+    def check_market_book(self, market, market_book):
         if market_book.status not in ["CLOSED", "SUSPENDED"] and market_book.inplay:
             return True
 
-    def process_market_book(self, live_market, market_book):
+    def process_market_book(self, market, market_book):
         # get lowest price runner
         prices = [
             (r.selection_id, r.last_price_traded)
@@ -41,7 +41,7 @@ class LowestLayer(BaseStrategy):
                 order = trade.create_order(
                     side="LAY", order_type=LimitOrder(lay, self.context["stake"]),
                 )
-                self.place_order(live_market, order)
+                self.place_order(market, order)
 
     def process_orders(self, market, orders):
         # kill order if unmatched in market for greater than 2 seconds

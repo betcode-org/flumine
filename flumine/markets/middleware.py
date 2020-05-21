@@ -1,21 +1,14 @@
-import datetime
 import logging
-from betfairlightweight.resources.bettingresources import (
-    MarketBook,
-    MarketCatalogue,
-    RunnerBook,
-)
+from collections import defaultdict
+from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
-from .blotter import Blotter
-from .. import config
+from ..order.order import OrderStatus
 
 logger = logging.getLogger(__name__)
 
 
 class Middleware:
-    def __call__(
-        self, market_catalogue: MarketCatalogue, market_book: MarketBook
-    ) -> None:
+    def __call__(self, market) -> None:
         raise NotImplementedError
 
 
@@ -28,20 +21,33 @@ class SimulatedMiddleware:
     """
 
     def __init__(self):
-        self.runners = {}  # {(selectionId, handicap): RunnerAnalytics}
+        # {marketId: {(selectionId, handicap): RunnerAnalytics}}
+        self.markets = defaultdict(dict)
 
-    def __call__(
-        self, market_catalogue: MarketCatalogue, market_book: MarketBook
-    ) -> None:
-        for runner in market_book.runners:
+    def __call__(self, market) -> None:
+        market_analytics = self.markets[market.market_id]
+        for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
-                self._process_runner(runner)
+                self._process_runner(market_analytics, runner)
+        market.context["simulated"] = market_analytics
+        # process simulated orders
+        self._process_simulated_orders(market, market_analytics)
 
-    def _process_runner(self, runner: RunnerBook) -> None:
+    @staticmethod
+    def _process_simulated_orders(market, market_analytics: dict) -> None:
+        for order in market.blotter:
+            if order.simulated and order.status == OrderStatus.EXECUTABLE:
+                runner_analytics = market_analytics.get(
+                    (order.selection_id, order.handicap)
+                )
+                order.simulated(market.market_book, runner_analytics)
+
+    @staticmethod
+    def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
         try:
-            runner_analytics = self.runners[(runner.selection_id, runner.handicap)]
+            runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
         except KeyError:
-            runner_analytics = self.runners[
+            runner_analytics = market_analytics[
                 (runner.selection_id, runner.handicap)
             ] = RunnerAnalytics(runner)
         runner_analytics(runner)
@@ -56,6 +62,7 @@ class RunnerAnalytics:
     def __call__(self, runner: RunnerBook):
         self.traded = self._calculate_traded(runner)
         self._traded_volume = runner.ex.traded_volume
+        self._runner = runner
 
     def _calculate_traded(self, runner: RunnerBook) -> dict:
         if self._traded_volume == {}:

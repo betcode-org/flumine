@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, OrderStatus
+from flumine.markets.market import Market
 
 
 class MarketsTest(unittest.TestCase):
@@ -87,34 +87,28 @@ class MarketsTest(unittest.TestCase):
 
 class MarketTest(unittest.TestCase):
     def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
         self.mock_market_book = mock.Mock()
         self.mock_market_catalogue = mock.Mock()
-        self.market = Market("1.234", self.mock_market_book, self.mock_market_catalogue)
+        self.market = Market(
+            self.mock_flumine,
+            "1.234",
+            self.mock_market_book,
+            self.mock_market_catalogue,
+        )
 
     def test_init(self):
+        self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
-        self.assertEqual(self.market._middleware, [])
+        self.assertEqual(self.market.context, {"simulated": {}})
 
     def test_call(self):
-        mock_middleware = mock.Mock()
-        self.market._middleware = [mock_middleware]
-        mock_order = mock.Mock()
-        mock_order.status = OrderStatus.EXECUTABLE
-        mock_order_two = mock.Mock()
-        mock_order_two.status = OrderStatus.PENDING
-        mock_order_three = mock.Mock()
-        mock_order_three.status = OrderStatus.EXECUTABLE
-        mock_order_three.simulated = False
-        self.market.blotter = [mock_order, mock_order_two, mock_order_three]
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
-        mock_middleware.assert_called_with(self.mock_market_catalogue, mock_market_book)
-        mock_order.simulated.assert_called_with(mock_market_book, None)
-        mock_order_two.simulated.assert_not_called()
 
     def test_open_market(self):
         self.market.open_market()
@@ -124,19 +118,23 @@ class MarketTest(unittest.TestCase):
         self.market.close_market()
         self.assertTrue(self.market.closed)
 
-    def test_place_order(self):
+    @mock.patch("flumine.markets.market.events")
+    def test_place_order(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with()
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
+        self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 
-    def test_place_order_not_executed(self):
+    @mock.patch("flumine.markets.market.events")
+    def test_place_order_not_executed(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order, execute=False)
         mock_order.place.assert_called_with()
         self.assertEqual(self.market.blotter.pending_place, [])
+        self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 
     def test_place_order_retry(self):
         mock_order = mock.Mock()
@@ -170,6 +168,13 @@ class MarketTest(unittest.TestCase):
         self.market.replace_order(mock_order, 1.01)
         mock_order.replace.assert_called_with(1.01)
         self.assertEqual(mock_blotter.pending_replace, [mock_order])
+
+    def test_event_id(self):
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.event_id, mock_market_book.market_definition.event_id
+        )
 
     def test_seconds_to_start(self):
         mock_market_catalogue = mock.Mock()

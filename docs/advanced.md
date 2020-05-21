@@ -79,7 +79,18 @@ _In development_
 
 ## Logging Controls
 
-_In development_
+Custom logging is available using the `LoggingControl` class, the base class creates debug logs and can be used as follows:
+
+```python
+from flumine.controls.loggingcontrols import LoggingControl
+
+control = LoggingControl()
+
+framework.add_logging_control(control)
+```
+
+!!! tip
+    More than one control can be added, for example a csv logger and db logger.
 
 ## Background Workers
 
