@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.5.1 (2020-05-21)
++++++++++++++++++++
+
+**Improvements**
+
+- Worker refactor to make init simpler when adding custom workers
+
 1.5.0 (2020-05-21)
 +++++++++++++++++++
 

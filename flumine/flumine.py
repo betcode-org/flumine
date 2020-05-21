@@ -55,36 +55,33 @@ class Flumine(BaseFlumine):
     def _add_default_workers(self):
         self.add_worker(
             worker.BackgroundWorker(
-                interval=1200,
-                function=worker.keep_alive,
-                name="keep_alive",
-                func_args=(self.client,),
+                self, function=worker.keep_alive, interval=1200, name="keep_alive",
             )
         )
         self.add_worker(
             worker.BackgroundWorker(
-                start_delay=5,  # wait for login
-                interval=60,
+                self,
                 function=worker.poll_account_balance,
-                name="poll_account_balance",
-                func_args=(self, self.client),
-            )
-        )
-        self.add_worker(
-            worker.BackgroundWorker(
-                start_delay=5,  # wait for streams to populate
                 interval=60,
-                function=worker.poll_market_catalogue,
-                name="poll_market_catalogue",
-                func_args=(self.client, self.markets, self.handler_queue),
+                start_delay=5,  # wait for login
+                name="poll_account_balance",
             )
         )
         self.add_worker(
             worker.BackgroundWorker(
-                interval=10,  # restart
+                self,
+                function=worker.poll_market_catalogue,
+                interval=60,
+                start_delay=5,  # wait for streams to populate
+                name="poll_market_catalogue",
+            )
+        )
+        self.add_worker(
+            worker.BackgroundWorker(
+                self,
                 function=worker.poll_cleared_orders,
+                interval=10,  # restart
                 name="poll_cleared_orders",
-                func_args=(self, self.client),
             )
         )
 
