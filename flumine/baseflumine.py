@@ -111,8 +111,7 @@ class BaseFlumine:
                 continue
 
             market = self.markets.markets.get(market_id)
-
-            if not market:
+            if market is None:
                 market = self._add_live_market(market_id, market_book)
 
             # process market
