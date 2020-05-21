@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 class BackgroundWorker(threading.Thread):
     def __init__(
         self,
-        interval: int,
+        flumine,
         function,
+        interval: int,
         func_args: tuple = None,
         func_kwargs: dict = None,
         start_delay: int = 0,
@@ -23,8 +24,9 @@ class BackgroundWorker(threading.Thread):
         **kwargs
     ):
         threading.Thread.__init__(self, daemon=True, **kwargs)
-        self.interval = interval
+        self.flumine = flumine
         self.function = function
+        self.interval = interval
         self.func_args = func_args if func_args is not None else []
         self.func_kwargs = func_kwargs if func_kwargs is not None else {}
         self.start_delay = start_delay
@@ -50,7 +52,9 @@ class BackgroundWorker(threading.Thread):
                 },
             )
             try:
-                self.function(self.context, *self.func_args, **self.func_kwargs)
+                self.function(
+                    self.context, self.flumine, *self.func_args, **self.func_kwargs
+                )
             except Exception as e:
                 logger.error(
                     "Error in BackgroundWorker {0}: {1}".format(self.name, e),
@@ -63,10 +67,11 @@ class BackgroundWorker(threading.Thread):
             time.sleep(self.interval)
 
 
-def keep_alive(context: dict, client) -> None:
+def keep_alive(context: dict, flumine) -> None:
     """ Attempt keep alive if required or
     login if keep alive failed
     """
+    client = flumine.client
     if client.betting_client.session_token:
         try:
             resp = client.keep_alive()
@@ -89,10 +94,9 @@ def keep_alive(context: dict, client) -> None:
         )
 
 
-def poll_market_catalogue(
-    context: dict, client, markets, handler_queue: queue.Queue
-) -> None:
-    live_markets = list(markets.markets.keys())
+def poll_market_catalogue(context: dict, flumine) -> None:
+    client = flumine.client
+    live_markets = list(flumine.markets.markets.keys())
     for market_ids in chunks(live_markets, 100):
         try:
             market_catalogues = client.betting_client.betting.list_market_catalogue(
@@ -117,16 +121,18 @@ def poll_market_catalogue(
             continue
 
         if market_catalogues:
-            handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
+            flumine.handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
 
 
-def poll_account_balance(context: dict, flumine, client) -> None:
+def poll_account_balance(context: dict, flumine) -> None:
+    client = flumine.client
     client.update_account_details()
     if client.account_funds:
         flumine.log_control(events.BalanceEvent(client.account_funds))
 
 
-def poll_cleared_orders(context: dict, flumine, client) -> None:
+def poll_cleared_orders(context: dict, flumine) -> None:
+    client = flumine.client
     processed_orders, processed_markets, market_cache = [], [], []
     while True:
         market_id = flumine.cleared_market_queue.get()
