@@ -59,7 +59,6 @@ class Flumine(BaseFlumine):
                 function=worker.keep_alive,
                 interval=1200,
                 name="keep_alive",
-                func_args=(self.client,),
             )
         )
         self.add_worker(
@@ -69,7 +68,6 @@ class Flumine(BaseFlumine):
                 interval=60,
                 start_delay=5,  # wait for login
                 name="poll_account_balance",
-                func_args=(self, self.client),
             )
         )
         self.add_worker(
@@ -79,7 +77,6 @@ class Flumine(BaseFlumine):
                 interval=60,
                 start_delay=5,  # wait for streams to populate
                 name="poll_market_catalogue",
-                func_args=(self.client, self.markets, self.handler_queue),
             )
         )
         self.add_worker(
@@ -88,7 +85,6 @@ class Flumine(BaseFlumine):
                 function=worker.poll_cleared_orders,
                 interval=10,  # restart
                 name="poll_cleared_orders",
-                func_args=(self, self.client),
             )
         )
 
