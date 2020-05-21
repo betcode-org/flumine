@@ -55,10 +55,7 @@ class Flumine(BaseFlumine):
     def _add_default_workers(self):
         self.add_worker(
             worker.BackgroundWorker(
-                self,
-                function=worker.keep_alive,
-                interval=1200,
-                name="keep_alive",
+                self, function=worker.keep_alive, interval=1200, name="keep_alive",
             )
         )
         self.add_worker(
