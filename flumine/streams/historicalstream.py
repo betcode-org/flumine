@@ -17,6 +17,7 @@ class HistoricalStream(BaseStream):
         pass
 
     def create_generator(self):
+        self._listener.output_queue = None
         self._listener.register_stream(0, "marketSubscription")
         stream = HistoricalGeneratorStream(
             directory=self.market_filter, listener=self._listener
