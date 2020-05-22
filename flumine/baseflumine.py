@@ -192,7 +192,14 @@ class BaseFlumine:
             self._process_market_orders(market)
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
-        market = self.markets.markets.get(event.event.market_id)
+        market_id = event.event.market_id
+        market = self.markets.markets.get(market_id)
+        if market is None:
+            logger.warning(
+                "Market %s not present when closing" % market_id,
+                extra={"market_id": market_id},
+            )
+            return
         market.close_market()
         market.blotter.process_closed_market(event.event)
 
