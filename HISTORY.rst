@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.5.3 (2020-05-22)
++++++++++++++++++++
+
+**Improvements**
+
+- Market properties added
+
+**Bug Fixes**
+
+- Memory leak in historical stream fixed (queue)
+- process_closed_market bug fix in process logic
+
 1.5.2 (2020-05-21)
 +++++++++++++++++++
 

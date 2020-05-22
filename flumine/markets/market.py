@@ -58,6 +58,11 @@ class Market:
         self.blotter.pending_replace.append(order)
 
     @property
+    def event_type_id(self) -> str:
+        if self.market_book:
+            return self.market_book.market_definition.event_type_id
+
+    @property
     def event_id(self) -> str:
         if self.market_book:
             return self.market_book.market_definition.event_id

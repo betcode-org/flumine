@@ -52,7 +52,7 @@ class BaseStrategy:
         self.conflate_ms = conflate_ms
         self.stream_class = stream_class
         self._name = name
-        self.context = context
+        self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
 
