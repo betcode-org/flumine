@@ -194,6 +194,18 @@ class BaseFlumineTest(unittest.TestCase):
             self.base_flumine.cleared_market_queue.get(), mock_market.market_id
         )
 
+    def test__process_close_market_no_market(self):
+        mock_market = mock.Mock()
+        mock_market.market_book.streaming_unique_id = 2
+        mock_markets = mock.Mock()
+        mock_markets.markets = {"1.23": mock_market}
+        self.base_flumine.markets = mock_markets
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock(market_id="1.45")
+        mock_event.event = mock_market_book
+        self.base_flumine._process_close_market(mock_event)
+        mock_market.close_market.assert_not_called()
+
     def test__process_cleared_orders(self):
         mock_event = mock.Mock()
         mock_event.event.orders = []
