@@ -169,6 +169,13 @@ class MarketTest(unittest.TestCase):
         mock_order.replace.assert_called_with(1.01)
         self.assertEqual(mock_blotter.pending_replace, [mock_order])
 
+    def test_event_type_id(self):
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.event_type_id, mock_market_book.market_definition.event_type_id
+        )
+
     def test_event_id(self):
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
