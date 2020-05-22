@@ -197,7 +197,7 @@ class BaseFlumine:
         market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:
-            if strategy.check_market(market, event.event):
+            if market.market_book.streaming_unique_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
         self.cleared_market_queue.put(market.market_id)

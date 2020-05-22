@@ -173,8 +173,10 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_close_market(self, mock_log_control):
         mock_strategy = mock.Mock()
+        mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock()
+        mock_market.market_book.streaming_unique_id = 2
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
         self.base_flumine.markets = mock_markets
@@ -184,7 +186,6 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
         mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
-        mock_strategy.check_market.assert_called_with(mock_market, mock_market_book)
         mock_strategy.process_closed_market.assert_called_with(
             mock_market, mock_market_book
         )
