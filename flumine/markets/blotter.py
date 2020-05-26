@@ -89,7 +89,9 @@ class Blotter:
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure,
-        max value is 0
+        can be positive or negative.
+            positive = profit on selection
+            negative = exposure on selection
         """
         mb, ml = [], []  # (price, size)
         for order in self:
