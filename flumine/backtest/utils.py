@@ -56,3 +56,17 @@ class SimulatedUpdateResponse:
         self.new_persistence_type = new_persistence_type
         self.updated_date = updated_date
         self.error_code = error_code
+
+
+class SimulatedReplaceResponse:
+    def __init__(
+        self,
+        status: str = None,
+        new_price: float = None,
+        updated_date: datetime = None,
+        error_code: str = None,
+    ):
+        self.status = status
+        self.new_price = new_price
+        self.updated_date = updated_date
+        self.error_code = error_code

@@ -5,6 +5,7 @@ from .utils import (
     SimulatedPlaceResponse,
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
+    SimulatedReplaceResponse,
 )
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
@@ -118,9 +119,19 @@ class Simulated:
                 status="FAILURE", error_code="BET_ACTION_ERROR",
             )
 
-    def replace(self):
+    def replace(self, new_price):
         # simulates replaceOrder request->cancel/matching->response
-        pass
+        # todo ? handle partial matches
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            return SimulatedReplaceResponse(
+                status="SUCCESS",
+                new_price=new_price,
+                updated_date=datetime.datetime.utcnow(),
+            )
+        else:
+            return SimulatedReplaceResponse(
+                status="FAILURE", error_code="BET_ACTION_ERROR",
+            )
 
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:
         runner_dict = {
