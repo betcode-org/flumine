@@ -1,7 +1,11 @@
 import datetime
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
-from .utils import SimulatedPlaceResponse, SimulatedCancelResponse
+from .utils import (
+    SimulatedPlaceResponse,
+    SimulatedCancelResponse,
+    SimulatedUpdateResponse,
+)
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
 from .. import config
@@ -98,9 +102,21 @@ class Simulated:
                 status="FAILURE", error_code="BET_ACTION_ERROR",  # todo ?
             )
 
-    def update(self):
+    def update(self, new_persistence_type):
         # simulates updateOrder request->update->response
-        pass
+        if (
+            self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
+            and self.size_remaining > 0
+        ):
+            return SimulatedUpdateResponse(
+                status="SUCCESS",
+                new_persistence_type=new_persistence_type,
+                updated_date=datetime.datetime.utcnow(),
+            )
+        else:
+            return SimulatedCancelResponse(
+                status="FAILURE", error_code="BET_ACTION_ERROR",
+            )
 
     def replace(self):
         # simulates replaceOrder request->cancel/matching->response
