@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
+from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus
 
@@ -12,7 +12,7 @@ class Middleware:
         raise NotImplementedError
 
 
-class SimulatedMiddleware:
+class SimulatedMiddleware(Middleware):
     """
     Calculates matched amounts per runner
     to be used in simulated matching.
