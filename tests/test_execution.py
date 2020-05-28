@@ -672,10 +672,70 @@ class SimulatedExecutionTest(unittest.TestCase):
         )
         mock_order.executable.assert_called_with()
 
-    def test_execute_update(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_update(None, None)
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_update(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.update_instructions = ["PERSIST"]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.update.return_value = mock_sim_resp
+        self.execution.execute_update(mock_order_package, None)
+        mock_order.simulated.update.assert_called_with("PERSIST")
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
 
-    def test_execute_replace(self):
-        with self.assertRaises(NotImplementedError):
-            self.execution.execute_replace(None, None)
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_update_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.update_instructions = ["PERSIST"]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.update.return_value = mock_sim_resp
+        self.execution.execute_update(mock_order_package, None)
+        mock_order.simulated.update.assert_called_with("PERSIST")
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_replace(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.replace_instructions = [2.03]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.replace.return_value = mock_sim_resp
+        self.execution.execute_replace(mock_order_package, None)
+        mock_order.simulated.replace.assert_called_with(2.03)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_replace_failure(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.replace_instructions = [2.03]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "FAILURE"
+        mock_order.simulated.replace.return_value = mock_sim_resp
+        self.execution.execute_replace(mock_order_package, None)
+        mock_order.simulated.replace.assert_called_with(2.03)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
