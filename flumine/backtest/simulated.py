@@ -121,7 +121,7 @@ class Simulated:
 
     def replace(self, new_price):
         # simulates replaceOrder request->cancel/matching->response
-        # todo ? handle partial matches
+        # todo logic to cancel and replace logic
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             return SimulatedReplaceResponse(
                 status="SUCCESS",
