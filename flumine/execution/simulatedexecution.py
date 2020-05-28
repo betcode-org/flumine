@@ -70,7 +70,7 @@ class SimulatedExecution(BaseExecution):
             simulated_response = order.simulated.update(instruction)
             self._order_logger(order, simulated_response, order_package.package_type)
             if simulated_response.status == "SUCCESS":
-                order.execution_complete()
+                order.executable()
             elif simulated_response.status == "FAILURE":
                 order.executable()
 
@@ -83,6 +83,6 @@ class SimulatedExecution(BaseExecution):
             simulated_response = order.simulated.replace(instruction)
             self._order_logger(order, simulated_response, order_package.package_type)
             if simulated_response.status == "SUCCESS":
-                order.execution_complete()
-            elif simulated_response.status == "FAILURE":
                 order.executable()
+            elif simulated_response.status == "FAILURE":
+                order.lapsed()

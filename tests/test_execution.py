@@ -687,7 +687,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
-        mock_order.execution_complete.assert_called_with()
+        mock_order.executable.assert_called_with()
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update_failure(self, mock__order_logger):
@@ -721,7 +721,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
-        mock_order.execution_complete.assert_called_with()
+        mock_order.executable.assert_called_with()
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
@@ -738,4 +738,4 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
-        mock_order.executable.assert_called_with()
+        mock_order.lapsed.assert_called_with()

@@ -110,9 +110,7 @@ class Simulated:
             and self.size_remaining > 0
         ):
             self.order.order_type.persistence_type = new_persistence_type
-            return SimulatedUpdateResponse(
-                status="SUCCESS", new_persistence_type=new_persistence_type,
-            )
+            return SimulatedUpdateResponse(status="SUCCESS")
         else:
             return SimulatedCancelResponse(
                 status="FAILURE", error_code="BET_ACTION_ERROR",
@@ -122,7 +120,8 @@ class Simulated:
         # simulates replaceOrder request->cancel/matching->response
         # todo logic to cancel and replace logic
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            return SimulatedReplaceResponse(status="SUCCESS", new_price=new_price)
+            self.order.order_type.price = new_price
+            return SimulatedReplaceResponse(status="SUCCESS")
         else:
             return SimulatedReplaceResponse(
                 status="FAILURE", error_code="BET_ACTION_ERROR",
