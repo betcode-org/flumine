@@ -118,32 +118,6 @@ class Simulated:
                 status="FAILURE", error_code="BET_ACTION_ERROR",
             )
 
-    def replace(self, instruction: dict):
-        # simulates replaceOrder request->cancel/matching->response
-        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            # cancel order
-            self.order.simulated.size_cancelled = self.order.simulated.size_remaining
-            cancel_instruction_report = self.cancel()
-
-            # place order
-            place_instruction_report = self._create_place_response(self.order.bet_id)
-            return SimulatedReplaceResponse(
-                status="SUCCESS",
-                cancel_instruction_report=cancel_instruction_report,
-                place_instruction_report=place_instruction_report,
-            )
-        else:
-            cancel_instruction_report = self.cancel()
-            place_instruction_report = self._create_place_response(
-                self.order.bet_id, status="FAILURE", error_code="BET_ACTION_ERROR",
-            )
-            return SimulatedReplaceResponse(
-                status="FAILURE",
-                error_code="BET_ACTION_ERROR",
-                cancel_instruction_report=cancel_instruction_report,
-                place_instruction_report=place_instruction_report,
-            )
-
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:
         runner_dict = {
             (runner.selection_id, runner.handicap): runner

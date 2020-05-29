@@ -77,33 +77,38 @@ class SimulatedExecution(BaseExecution):
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
+        market_book = order_package.market.market_book
         for order, instruction in zip(
             order_package, order_package.replace_instructions
         ):
-            simulated_response = order.simulated.replace(instruction)
-
-            if simulated_response.cancel_instruction_report.status == "SUCCESS":
+            # cancel current order
+            cancel_instruction_report = order.simulated.cancel()
+            if cancel_instruction_report.status == "SUCCESS":
                 order.execution_complete()
-            elif simulated_response.cancel_instruction_report.status == "FAILURE":
+            elif cancel_instruction_report.status == "FAILURE":
                 order.executable()
             else:
                 order.lapsed()
-
             self._order_logger(
-                order,
-                simulated_response.cancel_instruction_report,
-                order_package.package_type,
+                order, cancel_instruction_report, OrderPackageType.CANCEL,
             )
 
-            # place order
-            if simulated_response.place_instruction_report.status == "SUCCESS":
-                order.update_data = {"new_price": instruction.get("newPrice")}
-                replacement_order = order.trade.create_order_replacement(order)
+            # place new order
+            order.update_data = {"new_price": instruction.get("newPrice")}
+            replacement_order = order.trade.create_order_replacement(order)
+            self._bet_id += 1
+            place_instruction_report = replacement_order.simulated.place(
+                market_book, instruction, self._bet_id
+            )
+            if place_instruction_report.status == "SUCCESS":
                 self._order_logger(
                     replacement_order,
-                    simulated_response.place_instruction_report,
+                    place_instruction_report,
                     order_package.package_type,
                 )
+                # add to blotter
+                market = self.markets.markets[order.market_id]
+                market.place_order(replacement_order, execute=False)
                 replacement_order.executable()
-            elif simulated_response.place_instruction_report.status == "FAILURE":
+            elif place_instruction_report.status == "FAILURE":
                 order.executable()
