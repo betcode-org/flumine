@@ -70,6 +70,8 @@ class Trade:
         for order in self.orders:
             if order.status != OrderStatus.EXECUTION_COMPLETE:
                 return False
+            elif order.trade.status != TradeStatus.LIVE:
+                return False
         return True
 
     def create_order(

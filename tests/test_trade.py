@@ -63,6 +63,13 @@ class TradeTest(unittest.TestCase):
         self.trade.offset_orders = [1]
         self.assertFalse(self.trade.trade_complete)
 
+    def test_trade_complete_replace_order(self):
+        self.assertTrue(self.trade.trade_complete)
+        mock_order = mock.Mock(status=OrderStatus.EXECUTION_COMPLETE)
+        mock_order.trade.status = TradeStatus.COMPLETE
+        self.trade.orders.append(mock_order)
+        self.assertFalse(self.trade.trade_complete)
+
     def test_create_order(self):
         mock_order_type = mock.Mock()
         mock_order_type.EXCHANGE = "SYM"
