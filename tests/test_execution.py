@@ -727,8 +727,8 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
 
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called()
-        mock_replacement_order.simulated.place.assert_called()
+        mock_order.simulated.cancel.assert_called_with()
+        mock_replacement_order.simulated.place.assert_called_with()
 
         mock__order_logger.assert_has_calls(
             [
@@ -740,8 +740,8 @@ class SimulatedExecutionTest(unittest.TestCase):
                 ),
             ]
         )
-        mock_order.execution_complete.assert_called()
-        mock_replacement_order.executable.assert_called()
+        mock_order.execution_complete.assert_called_with()
+        mock_replacement_order.executable.assert_called_with()
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
@@ -762,12 +762,12 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
 
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called()
-        mock_replacement_order.simulated.place.assert_called()
+        mock_order.simulated.cancel.assert_called_with()
+        mock_replacement_order.simulated.place.assert_called_with()
 
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, OrderPackageType.CANCEL
         )
 
-        mock_order.executable.assert_called()
+        mock_order.executable.assert_called_with()
         mock_replacement_order.executable.assert_not_called()
