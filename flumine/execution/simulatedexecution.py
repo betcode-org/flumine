@@ -107,7 +107,7 @@ class SimulatedExecution(BaseExecution):
                     order_package.package_type,
                 )
                 # add to blotter
-                market = self.markets.markets[order.market_id]
+                market = order_package.market
                 market.place_order(replacement_order, execute=False)
                 replacement_order.executable()
             elif place_instruction_report.status == "FAILURE":

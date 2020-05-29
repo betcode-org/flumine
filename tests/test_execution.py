@@ -1,11 +1,12 @@
 import unittest
 from unittest import mock
+from unittest.mock import call
 
+from flumine.clients.clients import ExchangeType
+from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import BaseExecution, OrderPackageType
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
-from flumine.clients.clients import ExchangeType
-from flumine.exceptions import OrderExecutionError
 
 
 class BaseExecutionTest(unittest.TestCase):
@@ -705,55 +706,68 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
+        mock_market = mock.Mock()
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
         mock_order = mock.Mock()
+        mock_order.market_id = "1.234"
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
-        mock_order_package.replace_instructions = [2.03]
-        mock_order_package.info = {}
-
+        mock_order_package.replace_instructions = [{"newPrice": 2.03}]
         mock_replacement_order = mock.Mock()
         mock_replacement_order_package = mock.Mock()
         mock_replacement_order_package.__iter__ = mock.Mock(
-            return_value=iter([mock_replacement_order])
+            return_value=iter([mock_order])
         )
-        mock_replacement_order_package.info = {}
 
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "SUCCESS"
-        mock_sim_resp.cancel_instruction_report = mock.Mock()
-        mock_sim_resp.cancel_instruction_report.status = "SUCCESS"
-        mock_sim_resp.place_instruction_report = mock.Mock()
-        mock_sim_resp.place_instruction_report.status = "SUCCESS"
-        mock_order.simulated.replace.return_value = mock_sim_resp
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        mock_replacement_order.simulated.place.return_value = mock_sim_resp
+        mock_order.trade.create_order_replacement.return_value = mock_replacement_order
+
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.replace.assert_called_with(2.03)
-        # mock__order_logger.assert_called_with(
-        #     mock_order, mock_sim_resp.cancel_instruction_report, mock_order_package.package_type
-        # )
-        # mock__order_logger.assert_called_with(
-        #     mock_replacement_order, mock_sim_resp.place_instruction_report, mock_order_package.package_type
-        # )
-        mock_order.execution_complete.assert_called_with()
+        mock_order.simulated.cancel.assert_called()
+        mock_replacement_order.simulated.place.assert_called()
+
+        mock__order_logger.assert_has_calls(
+            [
+                call(mock_order, mock_sim_resp, OrderPackageType.CANCEL),
+                call(
+                    mock_replacement_order,
+                    mock_sim_resp,
+                    mock_order_package.package_type,
+                ),
+            ]
+        )
+        mock_order.execution_complete.assert_called()
+        mock_replacement_order.executable.assert_called()
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
         mock_order = mock.Mock()
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
-        mock_order_package.replace_instructions = [2.04]
-        mock_order_package.info = {}
+        mock_order_package.replace_instructions = [{"newPrice": 2.54}]
+        mock_replacement_order = mock.Mock()
+        mock_replacement_order_package = mock.Mock()
+        mock_replacement_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order])
+        )
 
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "FAILURE"
-        mock_sim_resp.cancel_instruction_report = mock.Mock()
-        mock_sim_resp.cancel_instruction_report.status = "FAILURE"
-        mock_sim_resp.place_instruction_report = mock.Mock()
-        mock_sim_resp.place_instruction_report.status = "FAILURE"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        mock_replacement_order.simulated.place.return_value = mock_sim_resp
+        mock_order.trade.create_order_replacement.return_value = mock_replacement_order
 
-        mock_order.simulated.replace.return_value = mock_sim_resp
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.replace.assert_called_with(2.04)
-        # mock__order_logger.assert_called_with(
-        #     mock_order, mock_sim_resp.cancel_instruction_report, mock_order_package.package_type
-        # )
-        mock_order.executable.assert_called_with()
+        mock_order.simulated.cancel.assert_called()
+        mock_replacement_order.simulated.place.assert_called()
+
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, OrderPackageType.CANCEL
+        )
+
+        mock_order.executable.assert_called()
+        mock_replacement_order.executable.assert_not_called()
