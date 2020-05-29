@@ -66,7 +66,7 @@ class TradeTest(unittest.TestCase):
     def test_trade_complete_replace_order(self):
         self.assertTrue(self.trade.trade_complete)
         mock_order = mock.Mock(status=OrderStatus.EXECUTION_COMPLETE)
-        mock_order.trade.status = TradeStatus.COMPLETE
+        self.trade.status = TradeStatus.COMPLETE
         self.trade.orders.append(mock_order)
         self.assertFalse(self.trade.trade_complete)
 
