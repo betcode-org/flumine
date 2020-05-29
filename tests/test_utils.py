@@ -61,6 +61,18 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertIsNone(utils.get_size([], 3))
 
+    def test_get_sp(self):
+        mock_runner = mock.Mock()
+        mock_runner.sp = []
+        self.assertIsNone(utils.get_sp(mock_runner))
+        mock_runner.sp = None
+        self.assertIsNone(utils.get_sp(mock_runner))
+        mock_runner = mock.Mock()
+        mock_runner.sp.actual_sp = "NaN"
+        self.assertIsNone(utils.get_sp(mock_runner))
+        mock_runner.sp.actual_sp = 12.2345
+        self.assertEqual(utils.get_sp(mock_runner), 12.2345)
+
     def test_price_ticks_away(self):
         self.assertEqual(utils.price_ticks_away(1.01, 1), 1.02)
         self.assertEqual(utils.price_ticks_away(1.01, 5), 1.06)
