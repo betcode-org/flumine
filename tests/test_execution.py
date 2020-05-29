@@ -494,8 +494,6 @@ class BetfairExecutionTest(unittest.TestCase):
     def test_execute_replace_success(
         self, mock__execution_helper, mock_replace, mock__order_logger
     ):
-        mock_market = mock.Mock()
-        self.mock_flumine.markets.markets = {"1.234": mock_market}
         mock_session = mock.Mock()
         mock_order = mock.Mock()
         mock_order.market_id = "1.234"
@@ -520,7 +518,9 @@ class BetfairExecutionTest(unittest.TestCase):
 
         replacement_order = mock_order.trade.create_order_replacement()
         replacement_order.executable.assert_called_with()
-        mock_market.place_order.assert_called_with(replacement_order, execute=False)
+        mock_order_package.market.place_order.assert_called_with(
+            replacement_order, execute=False
+        )
         mock__order_logger.assert_called_with(
             replacement_order,
             mock_instruction_report.place_instruction_reports,
