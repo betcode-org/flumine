@@ -42,3 +42,19 @@ class SimulatedCancelResponse:
         self.size_cancelled = size_cancelled
         self.cancelled_date = cancelled_date
         self.error_code = error_code
+
+
+class SimulatedUpdateResponse:
+    def __init__(
+        self, status: str = None, error_code: str = None,
+    ):
+        self.status = status
+        self.error_code = error_code
+
+
+class SimulatedReplaceResponse:
+    def __init__(
+        self, status: str = None, error_code: str = None,
+    ):
+        self.status = status
+        self.error_code = error_code

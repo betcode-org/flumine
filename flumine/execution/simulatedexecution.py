@@ -66,9 +66,23 @@ class SimulatedExecution(BaseExecution):
     def execute_update(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        raise NotImplementedError
+        for order, instruction in zip(order_package, order_package.update_instructions):
+            simulated_response = order.simulated.update(instruction)
+            self._order_logger(order, simulated_response, order_package.package_type)
+            if simulated_response.status == "SUCCESS":
+                order.executable()
+            elif simulated_response.status == "FAILURE":
+                order.executable()
 
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        raise NotImplementedError
+        for order, instruction in zip(
+            order_package, order_package.replace_instructions
+        ):
+            simulated_response = order.simulated.replace(instruction)
+            self._order_logger(order, simulated_response, order_package.package_type)
+            if simulated_response.status == "SUCCESS":
+                order.executable()
+            elif simulated_response.status == "FAILURE":
+                order.lapsed()
