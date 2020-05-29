@@ -84,11 +84,11 @@ class SimulatedExecution(BaseExecution):
             # cancel current order
             cancel_instruction_report = order.simulated.cancel()
             if cancel_instruction_report.status == "SUCCESS":
-                order.execution_complete()
+                order.execution_complete()  # todo move to after new order execution to prevent race condition?
             elif cancel_instruction_report.status == "FAILURE":
-                order.executable()
+                order.executable()  # todo do not carry out replace
             else:
-                order.lapsed()
+                order.lapsed()  # todo do not carry out replace
             self._order_logger(
                 order, cancel_instruction_report, OrderPackageType.CANCEL,
             )

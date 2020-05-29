@@ -2,7 +2,7 @@ import collections
 import unittest
 from unittest import mock
 
-from flumine.order.trade import Trade, OrderError, TradeStatus
+from flumine.order.trade import Trade, OrderError, OrderStatus, TradeStatus
 
 
 class TradeTest(unittest.TestCase):
@@ -52,6 +52,16 @@ class TradeTest(unittest.TestCase):
             self.trade.market_id, self.trade.selection_id, self.trade.handicap
         )
         runner_context.reset.assert_called_with()
+
+    def test_trade_complete(self):
+        self.assertTrue(self.trade.trade_complete)
+        mock_order = mock.Mock(status=OrderStatus.PENDING)
+        self.trade.orders.append(mock_order)
+        self.assertFalse(self.trade.trade_complete)
+
+    def test_trade_complete_offset(self):
+        self.trade.offset_orders = [1]
+        self.assertFalse(self.trade.trade_complete)
 
     def test_create_order(self):
         mock_order_type = mock.Mock()

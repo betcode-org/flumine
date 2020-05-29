@@ -6,7 +6,7 @@ from typing import Union, Type
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
-from .order import BetfairOrder
+from .order import BetfairOrder, OrderStatus
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
 
@@ -61,6 +61,16 @@ class Trade:
             self.market_id, self.selection_id, self.handicap
         )
         runner_context.reset()  # todo race condition?
+
+    @property
+    def trade_complete(self) -> bool:
+        # todo is it possible for this to be true when inbetween replace or offset place?
+        if self.offset_orders:
+            return False
+        for order in self.orders:
+            if order.status != OrderStatus.EXECUTION_COMPLETE:
+                return False
+        return True
 
     def create_order(
         self,
