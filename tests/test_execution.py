@@ -527,9 +527,6 @@ class BetfairExecutionTest(unittest.TestCase):
             OrderPackageType.REPLACE,
         )
 
-    # def test_execute_replace_failure(self):
-    #     pass
-
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution.replace")
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
     def test_execute_replace_error(self, mock__execution_helper, mock_replace):
@@ -713,29 +710,50 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [2.03]
         mock_order_package.info = {}
+
+        mock_replacement_order = mock.Mock()
+        mock_replacement_order_package = mock.Mock()
+        mock_replacement_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_replacement_order])
+        )
+        mock_replacement_order_package.info = {}
+
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "SUCCESS"
+        mock_sim_resp.cancel_instruction_report = mock.Mock()
+        mock_sim_resp.cancel_instruction_report.status = "SUCCESS"
+        mock_sim_resp.place_instruction_report = mock.Mock()
+        mock_sim_resp.place_instruction_report.status = "SUCCESS"
         mock_order.simulated.replace.return_value = mock_sim_resp
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.replace.assert_called_with(2.03)
-        mock__order_logger.assert_called_with(
-            mock_order, mock_sim_resp, mock_order_package.package_type
-        )
-        mock_order.executable.assert_called_with()
+        # mock__order_logger.assert_called_with(
+        #     mock_order, mock_sim_resp.cancel_instruction_report, mock_order_package.package_type
+        # )
+        # mock__order_logger.assert_called_with(
+        #     mock_replacement_order, mock_sim_resp.place_instruction_report, mock_order_package.package_type
+        # )
+        mock_order.execution_complete.assert_called_with()
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
         mock_order = mock.Mock()
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
-        mock_order_package.replace_instructions = [2.03]
+        mock_order_package.replace_instructions = [2.04]
         mock_order_package.info = {}
+
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "FAILURE"
+        mock_sim_resp.cancel_instruction_report = mock.Mock()
+        mock_sim_resp.cancel_instruction_report.status = "FAILURE"
+        mock_sim_resp.place_instruction_report = mock.Mock()
+        mock_sim_resp.place_instruction_report.status = "FAILURE"
+
         mock_order.simulated.replace.return_value = mock_sim_resp
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.replace.assert_called_with(2.03)
-        mock__order_logger.assert_called_with(
-            mock_order, mock_sim_resp, mock_order_package.package_type
-        )
-        mock_order.lapsed.assert_called_with()
+        mock_order.simulated.replace.assert_called_with(2.04)
+        # mock__order_logger.assert_called_with(
+        #     mock_order, mock_sim_resp.cancel_instruction_report, mock_order_package.package_type
+        # )
+        mock_order.executable.assert_called_with()

@@ -54,7 +54,13 @@ class SimulatedUpdateResponse:
 
 class SimulatedReplaceResponse:
     def __init__(
-        self, status: str = None, error_code: str = None,
+        self,
+        status: str = None,
+        error_code: str = None,
+        cancel_instruction_report: SimulatedCancelResponse = None,
+        place_instruction_report: SimulatedPlaceResponse = None,
     ):
         self.status = status
         self.error_code = error_code
+        self.cancel_instruction_report = cancel_instruction_report
+        self.place_instruction_report = place_instruction_report
