@@ -3,6 +3,7 @@ import logging
 import hashlib
 from typing import Optional, Tuple
 from decimal import Decimal
+from betfairlightweight.resources.bettingresources import RunnerBook
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,17 @@ def get_size(data: list, level: int) -> Optional[float]:
         return
     except TypeError:
         return
+
+
+def get_sp(runner: RunnerBook) -> Optional[float]:
+    if isinstance(runner.sp, list):
+        return
+    elif runner.sp is None:
+        return
+    elif runner.sp.actual_sp == "NaN":
+        return
+    else:
+        return runner.sp.actual_sp
 
 
 def price_ticks_away(price: float, n_ticks: int) -> float:

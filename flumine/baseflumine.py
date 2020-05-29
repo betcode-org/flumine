@@ -164,11 +164,13 @@ class BaseFlumine:
             market = self.markets.markets.get(market_catalogue.market_id)
             if market:
                 if market.market_catalogue is None:
+                    market.market_catalogue = market_catalogue
                     self.log_control(events.MarketEvent(market))
                     logger.info(
                         "Updated marketCatalogue for {0}".format(market.market_id)
                     )
-                market.market_catalogue = market_catalogue
+                else:
+                    market.market_catalogue = market_catalogue
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         process_current_orders(self.markets, self.strategies, event)  # update state
