@@ -103,24 +103,27 @@ class Simulated:
                 status="FAILURE", error_code="BET_ACTION_ERROR",  # todo ?
             )
 
-    def update(self, new_persistence_type):
+    def update(self, instruction: dict):
         # simulates updateOrder request->update->response
         if (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
             and self.size_remaining > 0
         ):
-            self.order.order_type.persistence_type = new_persistence_type
+            print("instruction", instruction)
+            self.order.order_type.persistence_type = instruction.get(
+                "newPersistenceType"
+            )
             return SimulatedUpdateResponse(status="SUCCESS")
         else:
             return SimulatedCancelResponse(
                 status="FAILURE", error_code="BET_ACTION_ERROR",
             )
 
-    def replace(self, new_price):
+    def replace(self, instruction: dict):
         # simulates replaceOrder request->cancel/matching->response
         # todo logic to cancel and replace logic
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            self.order.order_type.price = new_price
+            self.order.order_type.price = instruction.get("newPrice")
             return SimulatedReplaceResponse(status="SUCCESS")
         else:
             return SimulatedReplaceResponse(
