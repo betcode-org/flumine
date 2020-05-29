@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.5.5 (2020-05-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Missing Middleware inheritance
+- get_sp added
+
+**Bug Fixes**
+
+- MarketCatalogue missing from Market when logged
+
 1.5.4 (2020-05-22)
 +++++++++++++++++++
 
