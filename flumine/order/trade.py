@@ -67,9 +67,14 @@ class Trade:
         # todo is it possible for this to be true when inbetween replace or offset place?
         if self.offset_orders:
             return False
+
+        if self.status != TradeStatus.LIVE:
+            return False
+
         for order in self.orders:
             if order.status != OrderStatus.EXECUTION_COMPLETE:
                 return False
+
         return True
 
     def create_order(
