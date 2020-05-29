@@ -81,8 +81,29 @@ class SimulatedExecution(BaseExecution):
             order_package, order_package.replace_instructions
         ):
             simulated_response = order.simulated.replace(instruction)
-            self._order_logger(order, simulated_response, order_package.package_type)
-            if simulated_response.status == "SUCCESS":
+
+            if simulated_response.cancel_instruction_report.status == "SUCCESS":
+                order.execution_complete()
+            elif simulated_response.cancel_instruction_report.status == "FAILURE":
                 order.executable()
-            elif simulated_response.status == "FAILURE":
+            else:
                 order.lapsed()
+
+            self._order_logger(
+                order,
+                simulated_response.cancel_instruction_report,
+                order_package.package_type,
+            )
+
+            # place order
+            if simulated_response.place_instruction_report.status == "SUCCESS":
+                order.update_data = {"new_price": instruction.get("newPrice")}
+                replacement_order = order.trade.create_order_replacement(order)
+                self._order_logger(
+                    replacement_order,
+                    simulated_response.place_instruction_report,
+                    order_package.package_type,
+                )
+                replacement_order.executable()
+            elif simulated_response.place_instruction_report.status == "FAILURE":
+                order.executable()
