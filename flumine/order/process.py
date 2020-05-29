@@ -59,7 +59,7 @@ def process_current_order(order: BaseOrder):
         elif order.size_remaining == 0:
             order.execution_complete()
 
-    if order.trade.status == TradeStatus.LIVE and order.trade.trade_complete:
+    if order.trade.trade_complete:
         order.trade.complete()
 
 
