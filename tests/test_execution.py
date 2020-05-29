@@ -728,8 +728,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with()
-        mock_replacement_order.simulated.place.assert_called_with()
-
+        mock_replacement_order.simulated.place.assert_called_with(
+            mock_order_package.market.market_book,
+            {"newPrice": 2.03},
+            self.execution._bet_id,
+        )
         mock__order_logger.assert_has_calls(
             [
                 call(mock_order, mock_sim_resp, OrderPackageType.CANCEL),
@@ -749,6 +752,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [{"newPrice": 2.54}]
+
         mock_replacement_order = mock.Mock()
         mock_replacement_order_package = mock.Mock()
         mock_replacement_order_package.__iter__ = mock.Mock(
@@ -763,7 +767,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with()
-        mock_replacement_order.simulated.place.assert_called_with()
+        mock_replacement_order.simulated.place.assert_called_with(
+            mock_order_package.market.market_book,
+            {"newPrice": 2.54},
+            self.execution._bet_id,
+        )
 
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, OrderPackageType.CANCEL
