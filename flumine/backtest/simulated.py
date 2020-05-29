@@ -109,7 +109,6 @@ class Simulated:
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
             and self.size_remaining > 0
         ):
-            print("instruction", instruction)
             self.order.order_type.persistence_type = instruction.get(
                 "newPersistenceType"
             )
