@@ -5,7 +5,6 @@ from .utils import (
     SimulatedPlaceResponse,
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
-    SimulatedReplaceResponse,
 )
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
