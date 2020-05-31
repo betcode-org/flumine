@@ -33,12 +33,12 @@ class OrderStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error("MarketStream run error", exc_info=True)
+            logger.error("OrderStream run error", exc_info=True)
             raise
         except Exception:
-            logger.critical("MarketStream run error", exc_info=True)
+            logger.critical("OrderStream run error", exc_info=True)
             raise
-        logger.info("Stopped MarketStream {0}".format(self.stream_id))
+        logger.info("Stopped OrderStream {0}".format(self.stream_id))
 
     def handle_output(self) -> None:
         """Handles output from stream.
