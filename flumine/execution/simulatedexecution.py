@@ -72,6 +72,8 @@ class SimulatedExecution(BaseExecution):
     def execute_update(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
+        # todo if order_package.client.paper_trade:
+        #     time.sleep(self.UPDATE_LATENCY)
         for order, instruction in zip(order_package, order_package.update_instructions):
             with order.trade:
                 simulated_response = order.simulated.update(instruction)
@@ -86,6 +88,8 @@ class SimulatedExecution(BaseExecution):
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
+        # todo if order_package.client.paper_trade:
+        #     time.sleep(self.REPLACE_LATENCY)
         market_book = order_package.market.market_book
         for order, instruction in zip(
             order_package, order_package.replace_instructions
@@ -104,10 +108,10 @@ class SimulatedExecution(BaseExecution):
                 )
 
                 # place new order
+                self._bet_id += 1
                 replacement_order = order.trade.create_order_replacement(
                     order, instruction.get("newPrice")
                 )
-                self._bet_id += 1
                 place_instruction_report = replacement_order.simulated.place(
                     market_book, instruction, self._bet_id
                 )
