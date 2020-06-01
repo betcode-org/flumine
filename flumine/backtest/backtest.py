@@ -3,7 +3,7 @@ import datetime
 
 from ..baseflumine import BaseFlumine
 from ..events import events
-from .. import config
+from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from .utils import PendingPackages
@@ -87,8 +87,10 @@ class FlumineBacktest(BaseFlumine):
                 middleware(market)  # todo err handling?
 
             for strategy in self.strategies:
-                if strategy.check_market(market, market_book):
-                    strategy.process_market_book(market, market_book)
+                if utils.call_check_market(strategy.check_market, market, market_book):
+                    utils.call_process_market_book(
+                        strategy.process_market_book, market, market_book
+                    )
 
             # process current orders
             blotter = market.blotter

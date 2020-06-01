@@ -10,3 +10,5 @@ hostname = socket.gethostname()[
 process_id = os.getpid()  # process id of app
 
 current_time = None  # used for backtesting
+
+raise_errors = False  # used for call_check_market / call_process_market_book

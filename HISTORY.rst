@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.5.6 (2020-06-01)
++++++++++++++++++++
+
+**Improvements**
+
+- #186 Error handling when calling strategy functions
+- Start delay bumped on workers and name changed
+- Minor typos / cleanups
+
 1.5.5 (2020-05-29)
 +++++++++++++++++++
 

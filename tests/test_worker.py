@@ -8,7 +8,7 @@ from flumine import worker
 
 class BackgroundWorkerTest(unittest.TestCase):
     def setUp(self):
-        self.mock_function = mock.Mock()
+        self.mock_function = mock.Mock(__name__="test")
         self.mock_flumine = mock.Mock()
         self.worker = worker.BackgroundWorker(
             self.mock_flumine,
@@ -28,6 +28,7 @@ class BackgroundWorkerTest(unittest.TestCase):
         self.assertEqual(self.worker.func_kwargs, {"hello": "world"})
         self.assertEqual(self.worker.start_delay, 5)
         self.assertEqual(self.worker.context, {1: 2})
+        self.assertEqual(self.worker.name, "test")
 
     # def test_run(self):
     #     self.worker.run()
