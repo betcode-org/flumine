@@ -6,6 +6,9 @@ install:
   - travis_retry python setup.py install
   - pip install coveralls
 
+env:
+  - SKIP_INTEGRATION_TESTS=0
+
 jobs:
   include:
     - name: "Tests: python 3.5"
