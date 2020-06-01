@@ -15,7 +15,7 @@ trade = Trade(
     strategy=strategy
 )
 trade.orders  # []
-trade.status  # todo
+trade.status  # TradeStatus.LIVE
 
 order = trade.create_order(
     side="LAY",

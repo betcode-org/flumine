@@ -122,7 +122,7 @@ framework.run()
 !!! danger
     By default flumine will try and prevent coding errors which result in [flash crashes](https://en.wikipedia.org/wiki/Flash_crash) and [burnt fingers](https://www.betangel.com/forum/viewtopic.php?f=5&t=2458) but use at your own risk as per the MIT license.
     
-    Recommendation is not to remove the [trading controls](/advanced) and carry out extensive testing before executing on live markets, even then only use new strategies on an account with a small balance (transfer balance to games wallet).
+    Recommendation is not to remove the [trading controls](/advanced/#trading-controls) and carry out extensive testing before executing on live markets, even then only use new strategies on an account with a small balance (transfer balance to games wallet).
 
 ## Features
 
