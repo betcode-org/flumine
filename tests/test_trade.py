@@ -1,3 +1,4 @@
+import logging
 import collections
 import unittest
 from unittest import mock
@@ -7,6 +8,7 @@ from flumine.order.trade import Trade, OrderError, OrderStatus, TradeStatus
 
 class TradeTest(unittest.TestCase):
     def setUp(self) -> None:
+        logging.disable(logging.CRITICAL)
         self.mock_strategy = mock.Mock()
         self.mock_fill_kill = mock.Mock()
         self.mock_offset = mock.Mock()
@@ -131,3 +133,16 @@ class TradeTest(unittest.TestCase):
                 "notes": "123",
             },
         )
+
+    @mock.patch("flumine.order.trade.Trade._update_status")
+    def test_enter_exit(self, mock__update_status):
+        with self.trade:
+            mock__update_status.assert_called_with(TradeStatus.PENDING)
+        mock__update_status.assert_called_with(TradeStatus.LIVE)
+
+    @mock.patch("flumine.order.trade.Trade._update_status")
+    def test_enter_error(self, mock__update_status):
+        with self.assertRaises(ValueError):
+            with self.trade:
+                raise ValueError()
+        mock__update_status.assert_called_with(TradeStatus.PENDING)

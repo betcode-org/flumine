@@ -72,7 +72,10 @@ class Blotter:
     @property
     def live_orders(self) -> bool:
         for order in self._orders.values():
-            if order.status == OrderStatus.EXECUTABLE:
+            if (
+                order.status == OrderStatus.EXECUTABLE
+                or order.trade.trade_complete is False
+            ):
                 return True
         return False
 

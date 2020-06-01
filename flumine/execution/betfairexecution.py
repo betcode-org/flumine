@@ -23,14 +23,17 @@ class BetfairExecution(BaseExecution):
             for (order, instruction_report) in zip(
                 order_package, response.place_instruction_reports
             ):
-                self._order_logger(order, instruction_report, OrderPackageType.PLACE)
-                if instruction_report.status == "SUCCESS":
-                    order.executable()
-                elif instruction_report.status == "FAILURE":
-                    order.lapsed()  # todo correct?
-                elif instruction_report.status == "TIMEOUT":
-                    # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus
-                    pass
+                with order.trade:
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.PLACE
+                    )
+                    if instruction_report.status == "SUCCESS":
+                        order.executable()
+                    elif instruction_report.status == "FAILURE":
+                        order.lapsed()  # todo correct?
+                    elif instruction_report.status == "TIMEOUT":
+                        # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus
+                        pass
 
     def place(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.place_orders(
@@ -52,22 +55,26 @@ class BetfairExecution(BaseExecution):
             for instruction_report in response.cancel_instruction_reports:
                 # get order (can't rely on the order they are returned)
                 order = order_lookup.pop(instruction_report.instruction.bet_id)
-                self._order_logger(order, instruction_report, OrderPackageType.CANCEL)
-                if instruction_report.status == "SUCCESS":
-                    if (
-                        instruction_report.size_cancelled == order.size_remaining
-                    ):  # todo what if?
-                        order.execution_complete()
-                    else:
+                with order.trade:
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.CANCEL
+                    )
+                    if instruction_report.status == "SUCCESS":
+                        if (
+                            instruction_report.size_cancelled == order.size_remaining
+                        ):  # todo what if?
+                            order.execution_complete()
+                        else:
+                            order.executable()
+                    elif instruction_report.status == "FAILURE":
                         order.executable()
-                elif instruction_report.status == "FAILURE":
-                    order.executable()
-                elif instruction_report.status == "TIMEOUT":
-                    order.executable()
+                    elif instruction_report.status == "TIMEOUT":
+                        order.executable()
 
             # reset any not returned so that they can be picked back up
             for order in order_lookup.values():
-                order.executable()
+                with order.trade:
+                    order.executable()
 
     def cancel(self, order_package: OrderPackageType, session: requests.Session):
         # temp copy to prevent an empty list of instructions sent
@@ -92,13 +99,16 @@ class BetfairExecution(BaseExecution):
             for (order, instruction_report) in zip(
                 order_package, response.update_instruction_reports
             ):
-                self._order_logger(order, instruction_report, OrderPackageType.UPDATE)
-                if instruction_report.status == "SUCCESS":
-                    order.executable()
-                elif instruction_report.status == "FAILURE":
-                    order.executable()
-                elif instruction_report.status == "TIMEOUT":
-                    order.executable()
+                with order.trade:
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.UPDATE
+                    )
+                    if instruction_report.status == "SUCCESS":
+                        order.executable()
+                    elif instruction_report.status == "FAILURE":
+                        order.executable()
+                    elif instruction_report.status == "TIMEOUT":
+                        order.executable()
 
     def update(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.update_orders(
@@ -116,36 +126,53 @@ class BetfairExecution(BaseExecution):
             for (order, instruction_report) in zip(
                 order_package, response.replace_instruction_reports
             ):
-                # process cancel response
-                if instruction_report.cancel_instruction_reports.status == "SUCCESS":
-                    self._order_logger(
-                        order,
-                        instruction_report.cancel_instruction_reports,
-                        OrderPackageType.CANCEL,
-                    )
-                    order.execution_complete()
-                elif instruction_report.cancel_instruction_reports.status == "FAILURE":
-                    order.executable()
-                elif instruction_report.cancel_instruction_reports.status == "TIMEOUT":
-                    order.executable()
+                with order.trade:
+                    # process cancel response
+                    if (
+                        instruction_report.cancel_instruction_reports.status
+                        == "SUCCESS"
+                    ):
+                        self._order_logger(
+                            order,
+                            instruction_report.cancel_instruction_reports,
+                            OrderPackageType.CANCEL,
+                        )
+                        order.execution_complete()
+                    elif (
+                        instruction_report.cancel_instruction_reports.status
+                        == "FAILURE"
+                    ):
+                        order.executable()
+                    elif (
+                        instruction_report.cancel_instruction_reports.status
+                        == "TIMEOUT"
+                    ):
+                        order.executable()
 
-                # process place response
-                if instruction_report.place_instruction_reports.status == "SUCCESS":
-                    # create new order
-                    replacement_order = order.trade.create_order_replacement(order)
-                    self._order_logger(
-                        replacement_order,
-                        instruction_report.place_instruction_reports,
-                        OrderPackageType.REPLACE,
-                    )
-                    # add to blotter
-                    market = self.markets.markets[order.market_id]
-                    market.place_order(replacement_order, execute=False)
-                    replacement_order.executable()
-                elif instruction_report.place_instruction_reports.status == "FAILURE":
-                    pass  # todo
-                elif instruction_report.place_instruction_reports.status == "TIMEOUT":
-                    pass  # todo
+                    # process place response
+                    if instruction_report.place_instruction_reports.status == "SUCCESS":
+                        # create new order
+                        order.update_data = {
+                            "new_price": instruction_report.place_instruction_reports.instruction.limit_order.price
+                        }
+                        replacement_order = order.trade.create_order_replacement(order)
+                        self._order_logger(
+                            replacement_order,
+                            instruction_report.place_instruction_reports,
+                            OrderPackageType.REPLACE,
+                        )
+                        # add to blotter
+                        market = self.markets.markets[order.market_id]
+                        market.place_order(replacement_order, execute=False)
+                        replacement_order.executable()
+                    elif (
+                        instruction_report.place_instruction_reports.status == "FAILURE"
+                    ):
+                        pass  # todo
+                    elif (
+                        instruction_report.place_instruction_reports.status == "TIMEOUT"
+                    ):
+                        pass  # todo
 
     def replace(self, order_package: OrderPackageType, session: requests.Session):
         return order_package.client.betting_client.betting.replace_orders(

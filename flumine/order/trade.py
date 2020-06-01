@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class TradeStatus(Enum):
+    PENDING = "Pending"  # pending exchange processing
     LIVE = "Live"
     COMPLETE = "Complete"
 
@@ -64,17 +65,13 @@ class Trade:
 
     @property
     def trade_complete(self) -> bool:
-        # todo is it possible for this to be true when inbetween replace or offset place?
-        if self.offset_orders:
-            return False
-
         if self.status != TradeStatus.LIVE:
             return False
-
+        if self.offset_orders:
+            return False
         for order in self.orders:
             if order.status != OrderStatus.EXECUTION_COMPLETE:
                 return False
-
         return True
 
     def create_order(
@@ -141,3 +138,13 @@ class Trade:
             "orders": [o.id for o in self.orders],
             "notes": self.notes_str,
         }
+
+    def __enter__(self):
+        # todo raise error if already pending?
+        self._update_status(TradeStatus.PENDING)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_tb is None:
+            self._update_status(TradeStatus.LIVE)
+        else:
+            logger.critical("Trade error in %s" % self.id, exc_info=True)
