@@ -39,7 +39,7 @@ class BackgroundWorker(threading.Thread):
         logger.info(
             "BackgroundWorker {0} starting".format(self.name),
             extra={
-                "name": self.name,
+                "worker_name": self.name,
                 "function": self.function,
                 "context": self.context,
             },
@@ -48,7 +48,7 @@ class BackgroundWorker(threading.Thread):
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
                 extra={
-                    "name": self.name,
+                    "worker_name": self.name,
                     "function": self.function,
                     "context": self.context,
                 },
@@ -61,7 +61,7 @@ class BackgroundWorker(threading.Thread):
                 logger.error(
                     "Error in BackgroundWorker {0}: {1}".format(self.name, e),
                     extra={
-                        "name": self.name,
+                        "worker_name": self.name,
                         "function": self.function,
                         "context": self.context,
                     },
