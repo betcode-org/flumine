@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.5.7 (2020-06-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Sentry uses name in extra so do not override.
+
 1.5.6 (2020-06-01)
 +++++++++++++++++++
 
