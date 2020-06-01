@@ -13,6 +13,7 @@ Release History
 
 **Bug Fixes**
 
+- #163 selection exposure improvement
 - BetfairExecution replace bugfix
 
 1.5.7 (2020-06-01)
