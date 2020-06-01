@@ -104,8 +104,9 @@ class SimulatedExecution(BaseExecution):
                 )
 
                 # place new order
-                order.update_data = {"new_price": instruction.get("newPrice")}
-                replacement_order = order.trade.create_order_replacement(order)
+                replacement_order = order.trade.create_order_replacement(
+                    order, instruction.get("newPrice")
+                )
                 self._bet_id += 1
                 place_instruction_report = replacement_order.simulated.place(
                     market_book, instruction, self._bet_id

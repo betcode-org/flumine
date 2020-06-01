@@ -89,11 +89,13 @@ class Trade:
         self.orders.append(order)
         return order
 
-    def create_order_replacement(self, order: BetfairOrder) -> BetfairOrder:
+    def create_order_replacement(
+        self, order: BetfairOrder, new_price: float
+    ) -> BetfairOrder:
         """Create new order due to replace
         execution"""
         order_type = LimitOrder(
-            price=order.update_data["new_price"],
+            price=new_price,
             size=order.order_type.size,
             persistence_type=order.order_type.persistence_type,
         )

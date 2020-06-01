@@ -152,10 +152,10 @@ class BetfairExecution(BaseExecution):
                     # process place response
                     if instruction_report.place_instruction_reports.status == "SUCCESS":
                         # create new order
-                        order.update_data = {
-                            "new_price": instruction_report.place_instruction_reports.instruction.limit_order.price
-                        }
-                        replacement_order = order.trade.create_order_replacement(order)
+                        replacement_order = order.trade.create_order_replacement(
+                            order,
+                            instruction_report.place_instruction_reports.instruction.limit_order.price,
+                        )
                         self._order_logger(
                             replacement_order,
                             instruction_report.place_instruction_reports,

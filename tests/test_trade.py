@@ -92,8 +92,7 @@ class TradeTest(unittest.TestCase):
 
     def test_create_order_replacement(self):
         mock_order = mock.Mock()
-        mock_order.update_data = {"new_price": 12}
-        replacement_order = self.trade.create_order_replacement(mock_order)
+        replacement_order = self.trade.create_order_replacement(mock_order, 12)
         self.assertEqual(self.trade.orders, [replacement_order])
 
     def test_create_order_from_current_limit(self):
