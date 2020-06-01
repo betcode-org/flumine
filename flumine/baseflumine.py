@@ -17,7 +17,7 @@ from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxOrderCount
 from .controls.tradingcontrols import OrderValidation, StrategyExposure
 from .controls.loggingcontrols import LoggingControl
-from . import config
+from . import config, utils
 
 
 logger = logging.getLogger(__name__)
@@ -122,8 +122,10 @@ class BaseFlumine:
                 middleware(market)  # todo err handling?
 
             for strategy in self.strategies:
-                if strategy.check_market(market, market_book):
-                    strategy.process_market_book(market, market_book)
+                if utils.call_check_market(strategy.check_market, market, market_book):
+                    utils.call_process_market_book(
+                        strategy.process_market_book, market, market_book
+                    )
 
             self._process_market_orders(market)
 
