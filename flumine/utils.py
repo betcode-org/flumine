@@ -1,9 +1,12 @@
 import uuid
 import logging
 import hashlib
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 from decimal import Decimal
 from betfairlightweight.resources.bettingresources import RunnerBook
+
+from . import config
+from .exceptions import FlumineException
 
 logger = logging.getLogger(__name__)
 
@@ -139,3 +142,44 @@ def wap(matched: list) -> Tuple[float, float]:
         return 0, 0
     else:
         return round(b, 2), round(a / b, 2)
+
+
+def call_check_market(strategy_check_market: Callable, market, market_book) -> bool:
+    try:
+        return strategy_check_market(market, market_book)
+    except FlumineException as e:
+        logger.error(
+            "FlumineException %s in strategy_check_market %s %s"
+            % (e, strategy_check_market, market.market_id),
+            exc_info=True,
+        )
+    except Exception as e:
+        logger.critical(
+            "Unknown error %s in strategy_check_market %s %s"
+            % (e, strategy_check_market, market.market_id),
+            exc_info=True,
+        )
+        if config.raise_errors:
+            raise
+    return False
+
+
+def call_process_market_book(
+    strategy_process_market_book: Callable, market, market_book
+) -> None:
+    try:
+        strategy_process_market_book(market, market_book)
+    except FlumineException as e:
+        logger.error(
+            "FlumineException %s in strategy_process_market_book %s %s"
+            % (e, strategy_process_market_book, market.market_id),
+            exc_info=True,
+        )
+    except Exception as e:
+        logger.critical(
+            "Unknown error %s in strategy_process_market_book %s %s"
+            % (e, strategy_process_market_book, market.market_id),
+            exc_info=True,
+        )
+        if config.raise_errors:
+            raise
