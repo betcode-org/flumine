@@ -1,7 +1,7 @@
 import time
 import threading
 import logging
-import queue
+from typing import Callable
 from betfairlightweight import BetfairError, filters
 
 from . import config
@@ -15,15 +15,17 @@ class BackgroundWorker(threading.Thread):
     def __init__(
         self,
         flumine,
-        function,
+        function: Callable,
         interval: int,
         func_args: tuple = None,
         func_kwargs: dict = None,
         start_delay: int = 0,
         context: dict = None,
+        name: str = None,
         **kwargs
     ):
-        threading.Thread.__init__(self, daemon=True, **kwargs)
+        name = name or function.__name__
+        threading.Thread.__init__(self, daemon=True, name=name, **kwargs)
         self.flumine = flumine
         self.function = function
         self.interval = interval

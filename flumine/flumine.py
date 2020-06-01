@@ -54,9 +54,7 @@ class Flumine(BaseFlumine):
 
     def _add_default_workers(self):
         self.add_worker(
-            worker.BackgroundWorker(
-                self, function=worker.keep_alive, interval=1200, name="keep_alive",
-            )
+            worker.BackgroundWorker(self, function=worker.keep_alive, interval=1200,)
         )
         self.add_worker(
             worker.BackgroundWorker(
@@ -64,7 +62,6 @@ class Flumine(BaseFlumine):
                 function=worker.poll_account_balance,
                 interval=60,
                 start_delay=5,  # wait for login
-                name="poll_account_balance",
             )
         )
         self.add_worker(
@@ -73,15 +70,11 @@ class Flumine(BaseFlumine):
                 function=worker.poll_market_catalogue,
                 interval=60,
                 start_delay=5,  # wait for streams to populate
-                name="poll_market_catalogue",
             )
         )
         self.add_worker(
             worker.BackgroundWorker(
-                self,
-                function=worker.poll_cleared_orders,
-                interval=10,  # restart
-                name="poll_cleared_orders",
+                self, function=worker.poll_cleared_orders, interval=10,  # restart
             )
         )
 
