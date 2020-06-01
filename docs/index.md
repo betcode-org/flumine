@@ -129,10 +129,10 @@ framework.run()
 - Streaming
 - Multiple strategies
 - Order execution
-- Back testing (in development)
-- Paper trading (on roadmap)
+- Paper trading (in development)
+- Back testing
 - Analytics (in development)
-- Scores / RaceCard / InPlayService (on roadmap)
+- Middleware and background workers to enable Scores / RaceCard / InPlayService
 
 ## Dependencies
 
