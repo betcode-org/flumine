@@ -37,11 +37,11 @@ class Markets:
 
     @property
     def markets(self) -> dict:
-        return {key: value for key, value in self._markets.items()}
+        return self._markets
 
     @property
     def open_market_ids(self) -> list:
-        return [m.market_id for m in self.markets.values() if not m.closed]
+        return [m.market_id for m in self if not m.closed]
 
     @property
     def live_orders(self) -> bool:

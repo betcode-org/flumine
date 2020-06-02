@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.6.1 (2020-06-02)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #195 refactor to prevent RuntimeError
+
 1.6.0 (2020-06-02)
 +++++++++++++++++++
 
