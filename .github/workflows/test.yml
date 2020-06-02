@@ -1,0 +1,33 @@
+name: test
+
+on: [push, deployment]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set up Python 3.8.3
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8.3
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Black fmt
+      run: |
+        pip install -r requirements-test.txt
+        black . --check
+
+    - name: Unittest
+      run: |
+        python -m unittest discover -s tests
+        
+    - name: Coverage
+      run: |
+        coverage run -m unittest discover
+        coverage report
