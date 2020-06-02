@@ -1,12 +1,14 @@
+import logging
 import collections
 import unittest
 from unittest import mock
 
-from flumine.order.trade import Trade, OrderError, TradeStatus
+from flumine.order.trade import Trade, OrderError, OrderStatus, TradeStatus
 
 
 class TradeTest(unittest.TestCase):
     def setUp(self) -> None:
+        logging.disable(logging.CRITICAL)
         self.mock_strategy = mock.Mock()
         self.mock_fill_kill = mock.Mock()
         self.mock_offset = mock.Mock()
@@ -53,6 +55,23 @@ class TradeTest(unittest.TestCase):
         )
         runner_context.reset.assert_called_with()
 
+    def test_trade_complete(self):
+        self.assertTrue(self.trade.trade_complete)
+        mock_order = mock.Mock(status=OrderStatus.PENDING)
+        self.trade.orders.append(mock_order)
+        self.assertFalse(self.trade.trade_complete)
+
+    def test_trade_complete_offset(self):
+        self.trade.offset_orders = [1]
+        self.assertFalse(self.trade.trade_complete)
+
+    def test_trade_complete_replace_order(self):
+        self.assertTrue(self.trade.trade_complete)
+        mock_order = mock.Mock(status=OrderStatus.EXECUTION_COMPLETE)
+        self.trade.status = TradeStatus.COMPLETE
+        self.trade.orders.append(mock_order)
+        self.assertFalse(self.trade.trade_complete)
+
     def test_create_order(self):
         mock_order_type = mock.Mock()
         mock_order_type.EXCHANGE = "SYM"
@@ -73,8 +92,7 @@ class TradeTest(unittest.TestCase):
 
     def test_create_order_replacement(self):
         mock_order = mock.Mock()
-        mock_order.update_data = {"new_price": 12}
-        replacement_order = self.trade.create_order_replacement(mock_order)
+        replacement_order = self.trade.create_order_replacement(mock_order, 12)
         self.assertEqual(self.trade.orders, [replacement_order])
 
     def test_create_order_from_current_limit(self):
@@ -114,3 +132,16 @@ class TradeTest(unittest.TestCase):
                 "notes": "123",
             },
         )
+
+    @mock.patch("flumine.order.trade.Trade._update_status")
+    def test_enter_exit(self, mock__update_status):
+        with self.trade:
+            mock__update_status.assert_called_with(TradeStatus.PENDING)
+        mock__update_status.assert_called_with(TradeStatus.LIVE)
+
+    @mock.patch("flumine.order.trade.Trade._update_status")
+    def test_enter_error(self, mock__update_status):
+        with self.assertRaises(ValueError):
+            with self.trade:
+                raise ValueError()
+        mock__update_status.assert_called_with(TradeStatus.PENDING)

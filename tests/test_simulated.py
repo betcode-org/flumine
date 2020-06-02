@@ -158,11 +158,15 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "BET_ACTION_ERROR")
 
-    # def test_update(self):
-    #     pass
+    def test_update(self):
+        resp = self.simulated.update({"newPersistenceType": "PERSIST"})
+        self.assertEqual(resp.status, "SUCCESS")
 
-    # def test_replace(self):
-    #     pass
+    def test_update_else(self):
+        self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        resp = self.simulated.update({"newPersistenceType": "PERSIST"})
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "BET_ACTION_ERROR")
 
     def test__get_runner(self):
         mock_market_book = mock.Mock()

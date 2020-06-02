@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.6.0 (2020-06-02)
++++++++++++++++++++
+
+**Improvements**
+
+- #175 Update/Replace simulated handling
+- Trade context manager added
+
+**Bug Fixes**
+
+- #163 selection exposure improvement
+- BetfairExecution replace bugfix
+
 1.5.7 (2020-06-01)
 +++++++++++++++++++
 

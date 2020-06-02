@@ -123,11 +123,12 @@ def calculate_exposure(mb: list, ml: list) -> int:
     of (price, size)
     """
     back_exp = sum(-i[1] for i in mb)
-    back_profit = sum(i[0] * i[1] for i in mb)
+    back_profit = sum((i[0] - 1) * i[1] for i in mb)
     lay_exp = sum((i[0] - 1) * -i[1] for i in ml)
-    if lay_exp:
-        lay_exp += back_profit
-    return min(round(back_exp + lay_exp, 2), 0)  # returns negative int
+    lay_profit = sum(i[1] for i in ml)
+    _win = back_profit + lay_exp
+    _lose = lay_profit + back_exp
+    return round(min(_win, _lose), 2)
 
 
 # todo LRU cache?

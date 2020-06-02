@@ -75,6 +75,14 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertTrue(self.blotter.live_orders)
 
+    def test_live_orders_trade(self):
+        self.assertFalse(self.blotter.live_orders)
+        mock_order = mock.Mock()
+        mock_order.trade.trade_complete = False
+        mock_order.status = OrderStatus.EXECUTION_COMPLETE
+        self.blotter._orders = {"12345": mock_order}
+        self.assertTrue(self.blotter.live_orders)
+
     def test_process_closed_market(self):
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock(selection_id=123, handicap=0.0)

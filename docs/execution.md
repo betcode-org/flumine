@@ -11,9 +11,9 @@ When using the `BetfairClient` flumine will default to using the integrated `Bet
 
 ## Simulated
 
-The `BacktestClient` will use the `SimulatedExecution` class and can be used for backtesting or paper trading where order matching is handled locally.
+The `BacktestClient` will use the `SimulatedExecution` class and can be used for backtesting (betfair historical data) or paper trading where order matching is handled locally.
 
-In development.
+Matching is calculated using the [simulated middleware](https://github.com/liampauling/flumine/blob/master/flumine/markets/middleware.py#L15) and can be overridden if required.
 
 ## Custom
 

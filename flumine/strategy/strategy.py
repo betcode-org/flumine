@@ -87,10 +87,6 @@ class BaseStrategy:
     def process_raw_data(self, publish_time: int, datum: dict) -> None:
         return
 
-    def process_race_card(self, race_card: RaceCard) -> None:
-        # process raceCard object
-        return
-
     def process_orders(self, market: Market, orders: list) -> None:
         # process list of Order objects for strategy and Market
         return
