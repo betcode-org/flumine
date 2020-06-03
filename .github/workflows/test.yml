@@ -38,3 +38,35 @@ jobs:
         coverage report
       env:
         SKIP_INTEGRATION_TESTS: 0
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+
+    - name: Build package and docs
+      run: |
+        python setup.py sdist bdist_wheel
+        twine check dist/*
+        mkdocs build
+
+    - name: Publish
+      run: |
+        twine upload dist/*
+        mkdocs gh-deploy --force
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
