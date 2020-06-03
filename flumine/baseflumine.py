@@ -1,5 +1,6 @@
 import queue
 import logging
+import threading
 from typing import Type
 from betfairlightweight import resources
 
@@ -151,7 +152,7 @@ class BaseFlumine:
     ) -> Market:
         market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
-        logger.info("Adding: {0} to markets".format(market.market_id))
+        logger.info("Adding: {0} to markets".format(market.market_id), extra=self.info)
         return market
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
@@ -213,11 +214,15 @@ class BaseFlumine:
 
         self.cleared_market_queue.put(market.market_id)
         self.log_control(event)
+        logger.info(
+            "Market removed", extra={"market_id": market.market_id, **self.info}
+        )
 
     def _process_cleared_orders(self, event):
         # todo update blotter?
         logger.info(
-            "Market closed and cleared", extra={"market_id": event.event.market_id},
+            "Market closed and cleared",
+            extra={"market_id": event.event.market_id, **self.info},
         )
 
     def _process_cleared_markets(self, event: events.ClearedMarketsEvent):
@@ -236,8 +241,23 @@ class BaseFlumine:
         for strategy in self.strategies:
             strategy.finish()
 
+    @property
+    def info(self) -> dict:
+        return {
+            "client": self.client.info,
+            "markets": {
+                "market_count": len(self.markets),
+                "open_market_count": len(self.markets.open_market_ids),
+                "live_orders": self.markets.live_orders,
+                "markets": self.markets,
+            },
+            "streams": [s for s in self.streams],
+            "logging_controls": self._logging_controls,
+            "threads": threading.enumerate(),
+        }
+
     def __enter__(self):
-        logger.info("Starting flumine")
+        logger.info("Starting flumine", extra=self.info)
         # add execution to clients
         self.client.add_execution(self)
         # simulated
@@ -276,4 +296,4 @@ class BaseFlumine:
         # logout
         self.client.logout()
         self._running = False
-        logger.info("Exiting flumine")
+        logger.info("Exiting flumine", extra=self.info)

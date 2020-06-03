@@ -69,3 +69,13 @@ class BaseClient:
     @property
     def min_bsp_liability(self) -> Optional[float]:
         raise NotImplementedError
+
+    @property
+    def info(self) -> dict:
+        return {
+            "id": self.id,
+            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
+            "betting_client": self.betting_client,
+            "chargeable_transaction_count": self.chargeable_transaction_count,
+            "trading_controls": self.trading_controls,
+        }
