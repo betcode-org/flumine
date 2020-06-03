@@ -1,5 +1,6 @@
 import queue
 import logging
+import threading
 from typing import Type
 from betfairlightweight import resources
 
@@ -235,6 +236,21 @@ class BaseFlumine:
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
             strategy.finish()
+
+    @property
+    def info(self) -> dict:
+        return {
+            "client": self.client.info,
+            "markets": {
+                "market_count": len(self.markets),
+                "open_market_count": len(self.markets.open_market_ids),
+                "live_orders": self.markets.live_orders,
+                "markets": self.markets,
+            },
+            "streams": [s for s in self.streams],
+            "logging_controls": self._logging_controls,
+            "threads": threading.enumerate(),
+        }
 
     def __enter__(self):
         logger.info("Starting flumine")

@@ -65,6 +65,9 @@ class BaseClientTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             assert self.base_client.min_bsp_liability
 
+    def test_info(self):
+        self.assertTrue(self.base_client.info)
+
 
 class BetfairClientTest(unittest.TestCase):
     def setUp(self):

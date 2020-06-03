@@ -219,6 +219,9 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 
+    def test_info(self):
+        self.assertTrue(self.base_flumine.info)
+
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test_enter_exit(self, mock_log_control, mock_events):
