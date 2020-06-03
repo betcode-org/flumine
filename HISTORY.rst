@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.6.2 (2020-06-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #191 Github actions added for testing and deployment
+
 1.6.1 (2020-06-02)
 +++++++++++++++++++
 
