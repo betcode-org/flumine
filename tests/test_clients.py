@@ -27,6 +27,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.chargeable_transaction_count, 0)
         self.assertIsNone(self.base_client.execution)
         self.assertEqual(self.base_client.trading_controls, [])
+        self.assertTrue(self.base_client.order_stream)
 
     def test_login(self):
         with self.assertRaises(NotImplementedError):

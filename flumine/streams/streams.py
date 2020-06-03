@@ -31,10 +31,10 @@ class Streams:
             strategy.streams.append(stream)
 
     def add_client(self, client: BaseClient) -> None:
-        if client.EXCHANGE == ExchangeType.SIMULATED:
-            self.add_simulated_order_stream()
-        elif client.EXCHANGE == ExchangeType.BETFAIR:
-            self.add_order_stream(client)
+        if client.order_stream:
+            # todo if paper_trade: add_simulated_order_stream()
+            if client.EXCHANGE == ExchangeType.BETFAIR:
+                self.add_order_stream(client)
 
     """ market data """
 
