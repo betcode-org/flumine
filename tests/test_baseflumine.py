@@ -170,8 +170,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.callback.assert_called_with(self.base_flumine, mock_event)
         mock__process_market_orders.assert_called_with(mock_market)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
-    def test__process_close_market(self, mock_log_control):
+    def test__process_close_market(self, mock_log_control, mock_info):
         mock_strategy = mock.Mock()
         mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
