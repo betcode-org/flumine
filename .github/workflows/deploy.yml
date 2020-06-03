@@ -4,7 +4,6 @@ on: [push, deployment]
 
 jobs:
   deploy:
-    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
@@ -20,6 +19,16 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install -r requirements-test.txt
+
+    - name: Black fmt
+      run: |
+        black . --check
+
+    - name: Unittest
+      run: |
+        python -m unittest discover -s tests
+      env:
+        SKIP_INTEGRATION_TESTS: 0
 
     - name: Build package and docs
       run: |
