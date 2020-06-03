@@ -22,6 +22,7 @@ class BaseClient:
         commission_base: float = DEFAULT_COMMISSION_BASE,
         interactive_login: bool = False,
         id_: str = None,
+        order_stream: bool = True,
     ):
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
@@ -29,6 +30,7 @@ class BaseClient:
         self.capital_base = capital_base
         self.commission_base = commission_base
         self.interactive_login = interactive_login
+        self.order_stream = order_stream
 
         self.account_details = None
         self.account_funds = None
@@ -67,3 +69,13 @@ class BaseClient:
     @property
     def min_bsp_liability(self) -> Optional[float]:
         raise NotImplementedError
+
+    @property
+    def info(self) -> dict:
+        return {
+            "id": self.id,
+            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
+            "betting_client": self.betting_client,
+            "chargeable_transaction_count": self.chargeable_transaction_count,
+            "trading_controls": self.trading_controls,
+        }

@@ -27,6 +27,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.chargeable_transaction_count, 0)
         self.assertIsNone(self.base_client.execution)
         self.assertEqual(self.base_client.trading_controls, [])
+        self.assertTrue(self.base_client.order_stream)
 
     def test_login(self):
         with self.assertRaises(NotImplementedError):
@@ -64,6 +65,9 @@ class BaseClientTest(unittest.TestCase):
     def test_min_bsp_liability(self):
         with self.assertRaises(NotImplementedError):
             assert self.base_client.min_bsp_liability
+
+    def test_info(self):
+        self.assertTrue(self.base_client.info)
 
 
 class BetfairClientTest(unittest.TestCase):

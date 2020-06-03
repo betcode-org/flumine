@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.6.3 (2020-06-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #178 Client order stream disable/enable
+- #179 Info properties
+
+**Bug Fixes**
+
+- #191 missing git config
+
 1.6.2 (2020-06-03)
 +++++++++++++++++++
 
