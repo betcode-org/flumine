@@ -249,7 +249,7 @@ class BaseFlumine:
                 "market_count": len(self.markets),
                 "open_market_count": len(self.markets.open_market_ids),
                 "live_orders": self.markets.live_orders,
-                "markets": self.markets,
+                "markets": [m.market_id for m in self.markets],
             },
             "streams": [s for s in self.streams],
             "logging_controls": self._logging_controls,
