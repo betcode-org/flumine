@@ -39,6 +39,30 @@ jobs:
       env:
         SKIP_INTEGRATION_TESTS: 0
 
+  temp-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+
+    - name: Publish
+      run: |
+        mkdocs build
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "GitHub Action"
+        mkdocs gh-deploy --force
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
