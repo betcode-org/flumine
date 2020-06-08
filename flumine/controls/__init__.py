@@ -1,6 +1,5 @@
 import logging
 
-# from ..order.process import strategy_reset
 from ..order.orderpackage import BaseOrderPackage
 from ..order.order import BaseOrder
 
@@ -20,11 +19,9 @@ class BaseControl:
     def _validate(self, order_package: BaseOrderPackage) -> None:
         raise NotImplementedError
 
-    def _on_error(self, order: BaseOrder) -> None:
+    def _on_error(self, order: BaseOrder, error: str) -> None:
         order.violation()
         logger.warning(
             "Order has violated {0} and will not be placed".format(self.NAME),
-            extra=order.info,
+            extra={"control": self.NAME, "error": error, "order": order.info},
         )
-        # if order.flumine_order_type == "initial":
-        #     strategy_reset(order)

@@ -36,27 +36,27 @@ class OrderValidation(BaseControl):
             self._validate_betfair_liability(order)
             self._validate_betfair_min_size(order, OrderTypes.MARKET_ON_CLOSE)
         else:
-            self._on_error(order)  # unknown orderType
+            self._on_error(order, "Unknown orderType")
 
     def _validate_betfair_size(self, order):
         if order.order_type.size is None:
-            self._on_error(order)
+            self._on_error(order, "Order size is None")
         elif order.order_type.size <= 0:
-            self._on_error(order)
+            self._on_error(order, "Order size is less than 0")
         elif order.order_type.size != round(order.order_type.size, 2):
-            self._on_error(order)
+            self._on_error(order, "Order size has more than 2dp")
 
     def _validate_betfair_price(self, order):
         if order.order_type.price is None:
-            self._on_error(order)
+            self._on_error(order, "Order price is None")
         elif utils.as_dec(order.order_type.price) not in utils.PRICES:
-            self._on_error(order)
+            self._on_error(order, "Order price is not valid")
 
     def _validate_betfair_liability(self, order):
         if order.order_type.liability is None:
-            self._on_error(order)
+            self._on_error(order, "Order liability is None")
         elif order.order_type.liability <= 0:
-            self._on_error(order)
+            self._on_error(order, "Order liability is less than 0")
 
     def _validate_betfair_min_size(self, order, order_type):
         client = self.flumine.client
@@ -66,18 +66,33 @@ class OrderValidation(BaseControl):
                 and (order.order_type.price * order.order_type.size)
                 < client.min_bet_payout
             ):
-                self._on_error(order)
+                self._on_error(
+                    order,
+                    "Order size is less than min bet size ({0}) or payout ({1}) for currency".format(
+                        client.min_bet_size, client.min_bet_payout
+                    ),
+                )
         else:  # todo is this correct?
             if (
                 order.side == "BACK"
                 and order.order_type.liability < client.min_bet_size
             ):
-                self._on_error(order)
+                self._on_error(
+                    order,
+                    "Liability is less than min bet size ({0}) for currency".format(
+                        client.min_bet_size
+                    ),
+                )
             elif (
                 order.side == "LAY"
                 and order.order_type.liability < client.min_bsp_liability
             ):
-                self._on_error(order)
+                self._on_error(
+                    order,
+                    "Liability is less than min BSP payout ({0}) for currency".format(
+                        client.min_bsp_liability
+                    ),
+                )
 
 
 class StrategyExposure(BaseControl):
@@ -111,7 +126,12 @@ class StrategyExposure(BaseControl):
 
                 # per order
                 if exposure > strategy.max_order_exposure:
-                    self._on_error(order)
+                    self._on_error(
+                        order,
+                        "Order exposure ({0}) is greater than strategy.max_order_strategy ({1})".format(
+                            exposure, strategy.max_order_exposure
+                        ),
+                    )
                     continue
 
                 # per selection
@@ -122,4 +142,10 @@ class StrategyExposure(BaseControl):
                 if (
                     current_selection_exposure - exposure
                 ) < -strategy.max_selection_exposure:
-                    self._on_error(order)
+                    self._on_error(
+                        order,
+                        "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
+                            (current_selection_exposure - exposure),
+                            strategy.max_selection_exposure,
+                        ),
+                    )

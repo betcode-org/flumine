@@ -30,23 +30,17 @@ class TestBaseControl(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.control._validate(None)
 
-    # @mock.patch("flumine.controls.BaseControl.strategy_reset")
     def test_on_error(self):
         order = mock.Mock()
-        # order.flumine_order_type = "initial"
         order.info = {"hello": "world"}
-        self.control._on_error(order)
+        self.control._on_error(order, "test")
         order.violation.assert_called_with()
-        # mock_strategy_reset.assert_called_with(order)
 
-    # @mock.patch("flumine.controls.BaseControl.strategy_reset")
     def test_on_error_offset(self):
         order = mock.Mock()
-        # order.flumine_order_type = "offset"
         order.info = {"hello": "world"}
-        self.control._on_error(order)
+        self.control._on_error(order, "test")
         order.violation.assert_called_with()
-        # self.assertFalse(mock_strategy_reset.called)
 
 
 class TestMaxOrderCount(unittest.TestCase):
