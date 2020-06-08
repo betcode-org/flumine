@@ -30,6 +30,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
+        self.assertIsNone(self.order.publish_time)
 
     def test__update_status(self):
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
@@ -93,7 +94,7 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):
-            self.order.place()
+            self.order.place(123)
 
     def test_cancel(self):
         with self.assertRaises(NotImplementedError):
@@ -217,8 +218,9 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
-        self.order.place()
+        self.order.place(123)
         mock_placing.assert_called_with()
+        self.assertEqual(self.order.publish_time, 123)
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",

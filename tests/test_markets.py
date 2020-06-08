@@ -123,7 +123,7 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order)
-        mock_order.place.assert_called_with()
+        mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
         self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 
@@ -132,7 +132,7 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.id = "123"
         self.market.place_order(mock_order, execute=False)
-        mock_order.place.assert_called_with()
+        mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.assertEqual(self.market.blotter.pending_place, [])
         self.mock_flumine.log_control.assert_called_with(mock_events.OrderEvent())
 

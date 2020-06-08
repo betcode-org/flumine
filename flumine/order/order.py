@@ -55,6 +55,7 @@ class BaseOrder:
         self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
         self.simulated = Simulated(self)  # used in simulated execution
+        self.publish_time = None  # marketBook.publish_time
 
     # status
     def _update_status(self, status: OrderStatus) -> None:
@@ -95,7 +96,7 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(self) -> None:
+    def place(self, publish_time: int) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -208,7 +209,8 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(self) -> None:
+    def place(self, publish_time: int) -> None:
+        self.publish_time = publish_time
         self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:

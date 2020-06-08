@@ -207,8 +207,8 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         return False
 
     if cleared_markets.orders:
-        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
         flumine.handler_queue.put(events.ClearedMarketsEvent(cleared_markets))
+        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
         return True
     else:
         return False
