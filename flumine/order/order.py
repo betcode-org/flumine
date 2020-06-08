@@ -195,7 +195,7 @@ class BaseOrder:
             return
 
     @property
-    def seconds_to_match(self) -> Optional[float]:
+    def elapsed_seconds_executable(self) -> Optional[float]:
         if self.date_time_execution_complete and self.responses.date_time_placed:
             return (
                 self.date_time_execution_complete - self.responses.date_time_placed
