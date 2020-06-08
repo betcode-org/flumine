@@ -18,6 +18,11 @@ class TestLoggingControl(unittest.TestCase):
         self.logging_control.logging_queue.put(None)
         self.logging_control.run()
 
+    def test_run_error(self):
+        self.logging_control.logging_queue.put(1)
+        self.logging_control.logging_queue.put(None)
+        self.logging_control.run()
+
     @mock.patch("flumine.controls.loggingcontrols.LoggingControl._process_strategy")
     def test_process_event_strategy(self, mock_process_strategy):
         mock_event = mock.Mock()
