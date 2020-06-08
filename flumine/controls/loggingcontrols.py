@@ -33,7 +33,14 @@ class LoggingControl(Thread):
                 logger.info("Shutting down logging control %s" % self.NAME)
                 break
             else:
-                self.process_event(event)
+                try:
+                    self.process_event(event)
+                except Exception as e:
+                    logger.critical(
+                        "{0} exception raised in {0}".format(e, self.NAME),
+                        exc_info=True,
+                        extra={"event": event},
+                    )
 
     def process_config(self, config: config):
         logger.debug("process_config: %s" % config)

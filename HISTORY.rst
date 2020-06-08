@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.6.6 (2020-06-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Error handling added to logging control
+
+**Bug Fixes**
+
+- Incorrect event type passed to log_control
+
 1.6.5 (2020-06-08)
 +++++++++++++++++++
 

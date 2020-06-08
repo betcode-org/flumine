@@ -90,7 +90,8 @@ class BaseExecutionTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
 
-    def test__order_logger_place(self):
+    @mock.patch("flumine.execution.baseexecution.OrderEvent")
+    def test__order_logger_place(self, mock_order_event):
         mock_order = mock.Mock()
         mock_instruction_report = mock.Mock()
         self.execution._order_logger(
@@ -98,7 +99,7 @@ class BaseExecutionTest(unittest.TestCase):
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
-        self.mock_flumine.log_control.assert_called_with(mock_order)
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
     def test__order_logger_cancel(self):
         mock_order = mock.Mock()
@@ -116,7 +117,8 @@ class BaseExecutionTest(unittest.TestCase):
         )
         mock_order.responses.updated.assert_called_with(mock_instruction_report)
 
-    def test__order_logger_replace(self):
+    @mock.patch("flumine.execution.baseexecution.OrderEvent")
+    def test__order_logger_replace(self, mock_order_event):
         mock_order = mock.Mock()
         mock_instruction_report = mock.Mock()
         self.execution._order_logger(
@@ -124,7 +126,7 @@ class BaseExecutionTest(unittest.TestCase):
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
-        self.mock_flumine.log_control.assert_called_with(mock_order)
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
     def test_handler_queue(self):
         self.assertEqual(self.execution.handler_queue, self.mock_flumine.handler_queue)
