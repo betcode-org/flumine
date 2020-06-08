@@ -199,6 +199,14 @@ class BaseOrderTest(unittest.TestCase):
         self.order.responses = mock_responses
         self.assertGreaterEqual(self.order.elapsed_seconds, 0)
 
+    def test_seconds_to_match(self):
+        self.assertIsNone(self.order.seconds_to_match)
+        mock_responses = mock.Mock()
+        mock_responses.date_time_placed = datetime.datetime.utcnow()
+        self.order.responses = mock_responses
+        self.order.date_time_execution_complete = datetime.datetime.utcnow()
+        self.assertGreaterEqual(self.order.seconds_to_match, 0)
+
     def test_market_id(self):
         self.assertEqual(self.order.market_id, self.mock_trade.market_id)
 

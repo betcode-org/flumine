@@ -194,6 +194,13 @@ class BaseOrder:
         else:
             return
 
+    @property
+    def seconds_to_match(self) -> Optional[float]:
+        if self.date_time_execution_complete and self.responses.date_time_placed:
+            return (
+                self.date_time_execution_complete - self.responses.date_time_placed
+            ).total_seconds()
+
     # todo cached properties?
     @property
     def market_id(self) -> str:
