@@ -130,7 +130,7 @@ def poll_account_balance(context: dict, flumine) -> None:
     client = flumine.client
     client.update_account_details()
     if client.account_funds:
-        flumine.log_control(events.BalanceEvent(client.account_funds))
+        flumine.log_control(events.BalanceEvent(client))
 
 
 def poll_cleared_orders(context: dict, flumine) -> None:
@@ -207,8 +207,8 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         return False
 
     if cleared_markets.orders:
-        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
         flumine.handler_queue.put(events.ClearedMarketsEvent(cleared_markets))
+        flumine.log_control(events.ClearedMarketsEvent(cleared_markets))
         return True
     else:
         return False

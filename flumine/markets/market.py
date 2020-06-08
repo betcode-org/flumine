@@ -35,7 +35,7 @@ class Market:
 
     # order
     def place_order(self, order, execute: bool = True) -> None:
-        order.place()
+        order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
