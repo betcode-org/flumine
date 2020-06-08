@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.6.4 (2020-06-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Client passed in AccountBalance event
+- PublishTime added to order (MarketBook)
+- GH Actions fixed
+
 1.6.3 (2020-06-03)
 +++++++++++++++++++
 
