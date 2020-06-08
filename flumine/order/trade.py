@@ -1,5 +1,6 @@
 import uuid
 import logging
+import datetime
 import collections
 from enum import Enum
 from typing import Union, Type
@@ -48,6 +49,8 @@ class Trade:
         self.offset_orders = []  # pending offset orders once initial order has matched
         self.status_log = []
         self.status = TradeStatus.LIVE
+        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_complete = None
 
     # status
     def _update_status(self, status: TradeStatus) -> None:
@@ -57,6 +60,7 @@ class Trade:
 
     def complete(self) -> None:
         self._update_status(TradeStatus.COMPLETE)
+        self.date_time_complete = datetime.datetime.utcnow()
         # reset strategy context
         runner_context = self.strategy.get_runner_context(
             self.market_id, self.selection_id, self.handicap

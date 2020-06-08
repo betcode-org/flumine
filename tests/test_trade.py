@@ -40,6 +40,8 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
         self.assertEqual(self.trade.offset_orders, [])
+        self.assertIsNotNone(self.trade.date_time_created)
+        self.assertIsNone(self.trade.date_time_complete)
 
     def test__update_status(self):
         self.trade._update_status(TradeStatus.COMPLETE)
@@ -54,6 +56,7 @@ class TradeTest(unittest.TestCase):
             self.trade.market_id, self.trade.selection_id, self.trade.handicap
         )
         runner_context.reset.assert_called_with()
+        self.assertIsNotNone(self.trade.date_time_complete)
 
     def test_trade_complete(self):
         self.assertTrue(self.trade.trade_complete)

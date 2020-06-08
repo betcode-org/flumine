@@ -90,7 +90,7 @@ class BaseExecutionTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
 
-    def test__order_logger(self):
+    def test__order_logger_place(self):
         mock_order = mock.Mock()
         mock_instruction_report = mock.Mock()
         self.execution._order_logger(
@@ -98,28 +98,36 @@ class BaseExecutionTest(unittest.TestCase):
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
+        self.mock_flumine.log_control.assert_called_with(mock_order)
 
+    def test__order_logger_cancel(self):
+        mock_order = mock.Mock()
+        mock_instruction_report = mock.Mock()
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.CANCEL
         )
         mock_order.responses.cancelled.assert_called_with(mock_instruction_report)
 
+    def test__order_logger_update(self):
+        mock_order = mock.Mock()
+        mock_instruction_report = mock.Mock()
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.UPDATE
         )
         mock_order.responses.updated.assert_called_with(mock_instruction_report)
 
+    def test__order_logger_replace(self):
+        mock_order = mock.Mock()
+        mock_instruction_report = mock.Mock()
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.REPLACE
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
+        self.mock_flumine.log_control.assert_called_with(mock_order)
 
     def test_handler_queue(self):
         self.assertEqual(self.execution.handler_queue, self.mock_flumine.handler_queue)
-
-    def test_markets(self):
-        self.assertEqual(self.execution.markets, self.mock_flumine.markets)
 
     def test_shutdown(self):
         self.execution.shutdown()
