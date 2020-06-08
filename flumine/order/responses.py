@@ -22,7 +22,6 @@ class Responses:
 
     def replaced(self, response):
         self.replace_responses.append(response)
-        # self.date_time_placed = datetime.datetime.utcnow()  # todo?
 
     def updated(self, response):
         self.update_responses.append(response)

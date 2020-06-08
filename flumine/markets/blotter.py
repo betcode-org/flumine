@@ -2,7 +2,7 @@ import logging
 from typing import Iterable
 
 from ..utils import chunks, calculate_exposure
-from ..order.order import BaseOrder, OrderStatus
+from ..order.order import BaseOrder
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,10 @@ class Blotter:
                     runner.handicap,
                 ):
                     order.runner_status = runner.status
+
+    def process_cleared_orders(self, cleared_orders) -> list:
+        # todo update order.cleared?
+        return [order for order in self]
 
     """ position """
 

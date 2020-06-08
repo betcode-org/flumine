@@ -202,7 +202,7 @@ class BaseFlumine:
         if market is None:
             logger.warning(
                 "Market %s not present when closing" % market_id,
-                extra={"market_id": market_id},
+                extra={"market_id": market_id, **self.info},
             )
             return
         market.close_market()
@@ -219,10 +219,24 @@ class BaseFlumine:
         )
 
     def _process_cleared_orders(self, event):
-        # todo update blotter?
+        market_id = event.event.market_id
+        market = self.markets.markets.get(market_id)
+        if market is None:
+            logger.warning(
+                "Market %s not present when clearing" % market_id,
+                extra={"market_id": market_id, **self.info},
+            )
+            return
+
+        meta_orders = market.blotter.process_cleared_orders(event.event)
+        self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
         logger.info(
             "Market closed and cleared",
-            extra={"market_id": event.event.market_id, **self.info},
+            extra={
+                "market_id": market_id,
+                "order_count": len(meta_orders),
+                **self.info,
+            },
         )
 
     def _process_cleared_markets(self, event: events.ClearedMarketsEvent):

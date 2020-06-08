@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.6.7 (2020-06-08)
++++++++++++++++++++
+
+**Improvements**
+
+- #185 cleared orders meta implemented
+- Order.elapsed_seconds_executable added
+
 1.6.6 (2020-06-08)
 +++++++++++++++++++
 

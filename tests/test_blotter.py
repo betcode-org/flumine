@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.markets.blotter import Blotter, OrderStatus, OrderPackageType
+from flumine.markets.blotter import Blotter, OrderPackageType
 
 
 class BlotterTest(unittest.TestCase):
@@ -89,6 +89,10 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.blotter.process_closed_market(mock_market_book)
         self.assertEqual(mock_order.runner_status, mock_runner.status)
+
+    def test_process_cleared_orders(self):
+        mock_cleared_orders = mock.Mock()
+        self.assertEqual(self.blotter.process_cleared_orders(mock_cleared_orders), [])
 
     def test_selection_exposure(self):
         mock_strategy = mock.Mock()
