@@ -31,6 +31,8 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
         self.assertIsNone(self.order.publish_time)
+        self.assertIsNotNone(self.order.date_time_created)
+        self.assertIsNone(self.order.date_time_execution_complete)
 
     @mock.patch("flumine.order.order.BaseOrder.info")
     def test__update_status(self, mock_info):
@@ -55,6 +57,7 @@ class BaseOrderTest(unittest.TestCase):
         self.order.update_data = {123: 456}
         self.order.execution_complete()
         mock__update_status.assert_called_with(OrderStatus.EXECUTION_COMPLETE)
+        self.assertIsNotNone(self.order.date_time_execution_complete)
         self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")

@@ -57,6 +57,9 @@ class BaseOrder:
         self.simulated = Simulated(self)  # used in simulated execution
         self.publish_time = None  # marketBook.publish_time
 
+        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_execution_complete = None
+
     # status
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
@@ -72,6 +75,7 @@ class BaseOrder:
 
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
+        self.date_time_execution_complete = datetime.datetime.utcnow()
         self.update_data.clear()
 
     def cancelling(self) -> None:
