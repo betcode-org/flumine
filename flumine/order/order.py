@@ -194,6 +194,16 @@ class BaseOrder:
             "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
             "trade": self.trade.info,
+            "order_type": self.order_type.info,
+            "info": {
+                "side": self.side,
+                "size_matched": self.size_matched,
+                "size_remaining": self.size_remaining,
+                "size_cancelled": self.size_cancelled,
+                "size_lapsed": self.size_lapsed,
+                "size_voided": self.size_voided,
+                "average_price_matched": self.average_price_matched,
+            },
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
         }

@@ -23,6 +23,10 @@ class BaseOrderTypeTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.order_type.place_instruction()
 
+    def test_info(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.order_type.info
+
 
 class LimitOrderTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -53,6 +57,21 @@ class LimitOrderTest(unittest.TestCase):
             },
         )
 
+    def test_info(self):
+        self.assertEqual(
+            self.order_type.info,
+            {
+                "bet_target_size": 2,
+                "bet_target_type": "NO",
+                "min_fill_size": 34.5,
+                "order_type": "Limit",
+                "persistence_type": "PERSIST",
+                "price": 1.01,
+                "size": 2,
+                "time_in_force": "YES",
+            },
+        )
+
 
 class LimitOnCloseOrderTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -69,6 +88,12 @@ class LimitOnCloseOrderTest(unittest.TestCase):
             self.order_type.place_instruction(), {"price": 1.01, "liability": 64}
         )
 
+    def test_info(self):
+        self.assertEqual(
+            self.order_type.info,
+            {"liability": 64, "order_type": "Limit on close", "price": 1.01},
+        )
+
 
 class MarketOnCloseOrderTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -81,3 +106,8 @@ class MarketOnCloseOrderTest(unittest.TestCase):
 
     def test_place_instruction(self):
         self.assertEqual(self.order_type.place_instruction(), {"liability": 128})
+
+    def test_info(self):
+        self.assertEqual(
+            self.order_type.info, {"liability": 128, "order_type": "Market on close"}
+        )

@@ -22,6 +22,10 @@ class BaseOrderType:
     def place_instruction(self) -> dict:
         raise NotImplementedError
 
+    @property
+    def info(self):
+        raise NotImplementedError
+
 
 class LimitOrder(BaseOrderType):
 
@@ -57,6 +61,19 @@ class LimitOrder(BaseOrderType):
             bet_target_size=self.bet_target_size,
         )
 
+    @property
+    def info(self):
+        return {
+            "order_type": self.ORDER_TYPE.value,
+            "price": self.price,
+            "size": self.size,
+            "persistence_type": self.persistence_type,
+            "time_in_force": self.time_in_force,
+            "min_fill_size": self.min_fill_size,
+            "bet_target_type": self.bet_target_type,
+            "bet_target_size": self.bet_target_size,
+        }
+
 
 class LimitOnCloseOrder(BaseOrderType):
 
@@ -70,6 +87,14 @@ class LimitOnCloseOrder(BaseOrderType):
     def place_instruction(self) -> dict:
         return limit_on_close_order(liability=self.liability, price=self.price)
 
+    @property
+    def info(self):
+        return {
+            "order_type": self.ORDER_TYPE.value,
+            "liability": self.liability,
+            "price": self.price,
+        }
+
 
 class MarketOnCloseOrder(BaseOrderType):
 
@@ -81,3 +106,10 @@ class MarketOnCloseOrder(BaseOrderType):
 
     def place_instruction(self) -> dict:
         return market_on_close_order(liability=self.liability)
+
+    @property
+    def info(self):
+        return {
+            "order_type": self.ORDER_TYPE.value,
+            "liability": self.liability,
+        }
