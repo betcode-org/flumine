@@ -143,6 +143,28 @@ class BaseOrderTest(unittest.TestCase):
         self.order.simulated = True
         self.assertTrue(self.order.current_order)
 
+    def test_complete(self):
+        self.order.status = None
+        self.assertFalse(self.order.complete)
+        for s in [
+            OrderStatus.PENDING,
+            OrderStatus.CANCELLING,
+            OrderStatus.UPDATING,
+            OrderStatus.REPLACING,
+            OrderStatus.EXECUTABLE,
+        ]:
+            self.order.status = s
+            self.assertFalse(self.order.complete)
+        for s in [
+            OrderStatus.EXECUTION_COMPLETE,
+            OrderStatus.EXPIRED,
+            OrderStatus.VOIDED,
+            OrderStatus.LAPSED,
+            OrderStatus.VIOLATION,
+        ]:
+            self.order.status = s
+            self.assertTrue(self.order.complete)
+
     def test_average_price_matched(self):
         with self.assertRaises(NotImplementedError):
             assert self.order.average_price_matched

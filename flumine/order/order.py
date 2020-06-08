@@ -135,6 +135,29 @@ class BaseOrder:
             return self.responses.place_response
 
     @property
+    def complete(self) -> bool:
+        """ Returns False if order is
+        live or pending in the market"""
+        if self.status in [
+            OrderStatus.PENDING,
+            OrderStatus.CANCELLING,
+            OrderStatus.UPDATING,
+            OrderStatus.REPLACING,
+            OrderStatus.EXECUTABLE,
+        ]:
+            return False
+        elif self.status in [
+            OrderStatus.EXECUTION_COMPLETE,
+            OrderStatus.EXPIRED,
+            OrderStatus.VOIDED,
+            OrderStatus.LAPSED,
+            OrderStatus.VIOLATION,
+        ]:
+            return True
+        else:
+            return False  # default to False
+
+    @property
     def average_price_matched(self) -> float:
         raise NotImplementedError
 

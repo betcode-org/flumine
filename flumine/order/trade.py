@@ -58,7 +58,7 @@ class Trade:
         self.status = status
         logger.info("Trade status update: %s" % self.status.value, extra=self.info)
 
-    def complete(self) -> None:
+    def complete_trade(self) -> None:
         self._update_status(TradeStatus.COMPLETE)
         self.date_time_complete = datetime.datetime.utcnow()
         # reset strategy context
@@ -68,13 +68,13 @@ class Trade:
         runner_context.reset()  # todo race condition?
 
     @property
-    def trade_complete(self) -> bool:
+    def complete(self) -> bool:
         if self.status != TradeStatus.LIVE:
             return False
         if self.offset_orders:
             return False
         for order in self.orders:
-            if order.status != OrderStatus.EXECUTION_COMPLETE:
+            if not order.complete:
                 return False
         return True
 
