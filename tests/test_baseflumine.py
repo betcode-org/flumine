@@ -195,7 +195,8 @@ class BaseFlumineTest(unittest.TestCase):
             self.base_flumine.cleared_market_queue.get(), mock_market.market_id
         )
 
-    def test__process_close_market_no_market(self):
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__process_close_market_no_market(self, mock_info):
         mock_market = mock.Mock()
         mock_market.market_book.streaming_unique_id = 2
         mock_markets = mock.Mock()
@@ -207,10 +208,33 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_not_called()
 
-    def test__process_cleared_orders(self):
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__process_cleared_orders(self, mock_info, mock_log_control, mock_events):
+        mock_market = mock.Mock()
+        mock_market.blotter.process_cleared_orders.return_value = []
+        mock_markets = mock.Mock()
+        mock_markets.markets = {"1.23": mock_market}
+        self.base_flumine.markets = mock_markets
         mock_event = mock.Mock()
+        mock_event.event.market_id = "1.23"
         mock_event.event.orders = []
         self.base_flumine._process_cleared_orders(mock_event)
+        mock_market.blotter.process_cleared_orders.assert_called_with(mock_event.event)
+        mock_log_control.assert_called_with(mock_events.ClearedOrdersMetaEvent())
+
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__process_cleared_orders_no_market(self, mock_info):
+        mock_market = mock.Mock()
+        mock_markets = mock.Mock()
+        mock_markets.markets = {"1.23": mock_market}
+        self.base_flumine.markets = mock_markets
+        mock_event = mock.Mock()
+        mock_event.event.market_id = "1.24"
+        mock_event.event.orders = []
+        self.base_flumine._process_cleared_orders(mock_event)
+        mock_market.blotter.process_cleared_orders.assert_not_called()
 
     def test__process_cleared_markets(self):
         mock_event = mock.Mock()
