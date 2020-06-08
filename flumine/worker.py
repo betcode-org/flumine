@@ -130,7 +130,7 @@ def poll_account_balance(context: dict, flumine) -> None:
     client = flumine.client
     client.update_account_details()
     if client.account_funds:
-        flumine.log_control(events.BalanceEvent(client.account_funds))
+        flumine.log_control(events.BalanceEvent(client))
 
 
 def poll_cleared_orders(context: dict, flumine) -> None:
