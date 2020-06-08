@@ -60,7 +60,7 @@ class Flumine(BaseFlumine):
             worker.BackgroundWorker(
                 self,
                 function=worker.poll_account_balance,
-                interval=60,
+                interval=120,
                 start_delay=10,  # wait for login
             )
         )

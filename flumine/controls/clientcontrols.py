@@ -41,7 +41,12 @@ class MaxOrderCount(BaseControl):
             self.place_requests += len(order_package)
             if not self.safe:  # and order.flumine_order_type == "initial"
                 for order in order_package:
-                    self._on_error(order)
+                    self._on_error(
+                        order,
+                        "Max Order Count has been reached ({0}) for current hour".format(
+                            self.transaction_count
+                        ),
+                    )
         elif order_package.package_type == OrderPackageType.CANCEL:
             self.cancel_requests += len(order_package)
         elif order_package.package_type == OrderPackageType.UPDATE:

@@ -19,7 +19,7 @@ class Simulated:
 
     def __init__(self, order):
         self.order = order
-        self.matched = []
+        self.matched = []  # [(publishTime, price, size)..]
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
         self.size_voided = 0.0
@@ -35,11 +35,13 @@ class Simulated:
             and market_book.bsp_reconciled
             and self.take_sp
         ):
-            self._process_sp(runner)
+            self._process_sp(market_book.publish_time_epoch, runner)
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
             # todo piq cancellations
-            self._process_traded(runner_analytics.traded)
+            self._process_traded(
+                market_book.publish_time_epoch, runner_analytics.traded
+            )
 
     def place(
         self, market_book: MarketBook, instruction: dict, bet_id: int
@@ -55,13 +57,21 @@ class Simulated:
             if self.order.side == "BACK":
                 if available_to_back >= price:
                     self._process_price_matched(
-                        price, size, runner.ex.available_to_back
+                        market_book.publish_time_epoch,
+                        price,
+                        size,
+                        runner.ex.available_to_back,
                     )
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
                 if available_to_lay <= price:
-                    self._process_price_matched(price, size, runner.ex.available_to_lay)
+                    self._process_price_matched(
+                        market_book.publish_time_epoch,
+                        price,
+                        size,
+                        runner.ex.available_to_lay,
+                    )
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_back
 
@@ -125,7 +135,7 @@ class Simulated:
         return runner_dict.get((self.order.selection_id, self.order.handicap))
 
     def _process_price_matched(
-        self, price: float, size: float, available: list
+        self, publish_time: int, price: float, size: float, available: list
     ) -> None:
         # calculate matched on execution
         size_remaining = size
@@ -141,12 +151,12 @@ class Simulated:
                     _size_matched = _size_remaining
                 else:
                     _size_matched = avail["size"]
-                _matched = (avail["price"], round(_size_matched, 2))
+                _matched = (publish_time, avail["price"], round(_size_matched, 2))
                 self.matched.append(_matched)
             else:
                 break
 
-    def _process_sp(self, runner: RunnerBook) -> None:
+    def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
         actual_sp = runner.sp.actual_sp
         if actual_sp:
@@ -170,18 +180,18 @@ class Simulated:
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             else:
                 raise NotImplementedError()
-            self.matched.append((actual_sp, size))
+            self.matched.append((publish_time, actual_sp, size))
 
-    def _process_traded(self, traded: dict) -> None:
+    def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update
         price = self.order.order_type.price
         for traded_price, traded_size in traded.items():
             if self.side == "BACK" and traded_price >= price:
-                self._calculate_process_traded(traded_size)
+                self._calculate_process_traded(publish_time, traded_size)
             elif self.side == "LAY" and traded_price <= price:
-                self._calculate_process_traded(traded_size)
+                self._calculate_process_traded(publish_time, traded_size)
 
-    def _calculate_process_traded(self, traded_size: float) -> None:
+    def _calculate_process_traded(self, publish_time: int, traded_size: float) -> None:
         traded_size = traded_size / 2
         if self._piq - traded_size < 0:
             size = traded_size - self._piq
@@ -189,6 +199,7 @@ class Simulated:
             if size:
                 self.matched.append(
                     (
+                        publish_time,
                         self.order.order_type.price,
                         size,
                     )  # todo takes the worst price, i.e what was asked

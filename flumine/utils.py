@@ -137,8 +137,8 @@ def wap(matched: list) -> Tuple[float, float]:
         return 0, 0
     a, b = 0, 0
     for match in matched:
-        a += match[0] * match[1]
-        b += match[1]
+        a += match[1] * match[2]
+        b += match[2]
     if b == 0 or a == 0:
         return 0, 0
     else:

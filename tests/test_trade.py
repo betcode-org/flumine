@@ -40,6 +40,8 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
         self.assertEqual(self.trade.offset_orders, [])
+        self.assertIsNotNone(self.trade.date_time_created)
+        self.assertIsNone(self.trade.date_time_complete)
 
     def test__update_status(self):
         self.trade._update_status(TradeStatus.COMPLETE)
@@ -47,30 +49,31 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.status, TradeStatus.COMPLETE)
 
     @mock.patch("flumine.order.trade.Trade._update_status")
-    def test_complete(self, mock__update_status):
-        self.trade.complete()
+    def test_complete_trade(self, mock__update_status):
+        self.trade.complete_trade()
         mock__update_status.assert_called_with(TradeStatus.COMPLETE)
         runner_context = self.mock_strategy.get_runner_context(
             self.trade.market_id, self.trade.selection_id, self.trade.handicap
         )
         runner_context.reset.assert_called_with()
+        self.assertIsNotNone(self.trade.date_time_complete)
 
-    def test_trade_complete(self):
-        self.assertTrue(self.trade.trade_complete)
-        mock_order = mock.Mock(status=OrderStatus.PENDING)
+    def test_complete(self):
+        self.assertTrue(self.trade.complete)
+        mock_order = mock.Mock(complete=False)
         self.trade.orders.append(mock_order)
-        self.assertFalse(self.trade.trade_complete)
+        self.assertFalse(self.trade.complete)
 
     def test_trade_complete_offset(self):
         self.trade.offset_orders = [1]
-        self.assertFalse(self.trade.trade_complete)
+        self.assertFalse(self.trade.complete)
 
     def test_trade_complete_replace_order(self):
-        self.assertTrue(self.trade.trade_complete)
-        mock_order = mock.Mock(status=OrderStatus.EXECUTION_COMPLETE)
+        self.assertTrue(self.trade.complete)
+        mock_order = mock.Mock(complete=True)
         self.trade.status = TradeStatus.COMPLETE
         self.trade.orders.append(mock_order)
-        self.assertFalse(self.trade.trade_complete)
+        self.assertFalse(self.trade.complete)
 
     def test_create_order(self):
         mock_order_type = mock.Mock()

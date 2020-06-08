@@ -57,6 +57,9 @@ class BaseOrder:
         self.simulated = Simulated(self)  # used in simulated execution
         self.publish_time = None  # marketBook.publish_time
 
+        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_execution_complete = None
+
     # status
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
@@ -72,6 +75,7 @@ class BaseOrder:
 
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
+        self.date_time_execution_complete = datetime.datetime.utcnow()
         self.update_data.clear()
 
     def cancelling(self) -> None:
@@ -135,6 +139,29 @@ class BaseOrder:
             return self.responses.place_response
 
     @property
+    def complete(self) -> bool:
+        """ Returns False if order is
+        live or pending in the market"""
+        if self.status in [
+            OrderStatus.PENDING,
+            OrderStatus.CANCELLING,
+            OrderStatus.UPDATING,
+            OrderStatus.REPLACING,
+            OrderStatus.EXECUTABLE,
+        ]:
+            return False
+        elif self.status in [
+            OrderStatus.EXECUTION_COMPLETE,
+            OrderStatus.EXPIRED,
+            OrderStatus.VOIDED,
+            OrderStatus.LAPSED,
+            OrderStatus.VIOLATION,
+        ]:
+            return True
+        else:
+            return False  # default to False
+
+    @property
     def average_price_matched(self) -> float:
         raise NotImplementedError
 
@@ -194,6 +221,16 @@ class BaseOrder:
             "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
             "trade": self.trade.info,
+            "order_type": self.order_type.info,
+            "info": {
+                "side": self.side,
+                "size_matched": self.size_matched,
+                "size_remaining": self.size_remaining,
+                "size_cancelled": self.size_cancelled,
+                "size_lapsed": self.size_lapsed,
+                "size_voided": self.size_voided,
+                "average_price_matched": self.average_price_matched,
+            },
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
         }

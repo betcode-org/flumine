@@ -108,9 +108,11 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.calculate_exposure([(5.6, 200)], [(5.6, 100)]), -100)
 
     def test_wap(self):
-        self.assertEqual(utils.wap([(1.5, 100), (1.6, 100)]), (200, 1.55))
+        self.assertEqual(
+            utils.wap([(123456789, 1.5, 100), (123456789, 1.6, 100)]), (200, 1.55)
+        )
         self.assertEqual(utils.wap([]), (0, 0))
-        self.assertEqual(utils.wap([(1.5, 0)]), (0, 0))
+        self.assertEqual(utils.wap([(123456789, 1.5, 0)]), (0, 0))
 
     def test_call_check_market(self):
         mock_strategy_check = mock.Mock()

@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.6.5 (2020-06-08)
++++++++++++++++++++
+
+**Improvements**
+
+- #205 MarketBook publishTime added to simulated.matched / order.execution_complete time added
+- Controls error message added
+- Info properties improved
+- Order/Trade .complete refactored
+
+**Bug Fixes**
+
+- Log order moved to after execution (missing betId)
+
 1.6.4 (2020-06-08)
 +++++++++++++++++++
 

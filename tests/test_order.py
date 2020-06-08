@@ -31,8 +31,11 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
         self.assertIsNone(self.order.publish_time)
+        self.assertIsNotNone(self.order.date_time_created)
+        self.assertIsNone(self.order.date_time_execution_complete)
 
-    def test__update_status(self):
+    @mock.patch("flumine.order.order.BaseOrder.info")
+    def test__update_status(self, mock_info):
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
         self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
         self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
@@ -54,6 +57,7 @@ class BaseOrderTest(unittest.TestCase):
         self.order.update_data = {123: 456}
         self.order.execution_complete()
         mock__update_status.assert_called_with(OrderStatus.EXECUTION_COMPLETE)
+        self.assertIsNotNone(self.order.date_time_execution_complete)
         self.assertEqual(self.order.update_data, {})
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
@@ -142,6 +146,28 @@ class BaseOrderTest(unittest.TestCase):
         self.order.simulated = True
         self.assertTrue(self.order.current_order)
 
+    def test_complete(self):
+        self.order.status = None
+        self.assertFalse(self.order.complete)
+        for s in [
+            OrderStatus.PENDING,
+            OrderStatus.CANCELLING,
+            OrderStatus.UPDATING,
+            OrderStatus.REPLACING,
+            OrderStatus.EXECUTABLE,
+        ]:
+            self.order.status = s
+            self.assertFalse(self.order.complete)
+        for s in [
+            OrderStatus.EXECUTION_COMPLETE,
+            OrderStatus.EXPIRED,
+            OrderStatus.VOIDED,
+            OrderStatus.LAPSED,
+            OrderStatus.VIOLATION,
+        ]:
+            self.order.status = s
+            self.assertTrue(self.order.complete)
+
     def test_average_price_matched(self):
         with self.assertRaises(NotImplementedError):
             assert self.order.average_price_matched
@@ -183,23 +209,6 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(
             self.order.lookup,
             (self.mock_trade.market_id, self.mock_trade.selection_id, 1),
-        )
-
-    def test_info(self):
-        self.order.status_log = [OrderStatus.PENDING, OrderStatus.EXECUTION_COMPLETE]
-        self.assertEqual(
-            self.order.info,
-            {
-                "bet_id": None,
-                "handicap": 1,
-                "id": self.order.id,
-                "market_id": self.mock_trade.market_id,
-                "selection_id": self.mock_trade.selection_id,
-                "status": None,
-                "status_log": "Pending, Execution complete",
-                "trade": self.mock_trade.info,
-                "customer_order_ref": self.order.customer_order_ref,
-            },
         )
 
     def test_repr(self):
@@ -395,3 +404,30 @@ class BetfairOrderTest(unittest.TestCase):
         mock_current_order = mock.Mock(size_voided=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_voided, mock_current_order.size_voided)
+
+    def test_info(self):
+        self.order.status_log = [OrderStatus.PENDING, OrderStatus.EXECUTION_COMPLETE]
+        self.assertEqual(
+            self.order.info,
+            {
+                "bet_id": None,
+                "handicap": self.order.handicap,
+                "id": self.order.id,
+                "market_id": self.mock_trade.market_id,
+                "selection_id": self.mock_trade.selection_id,
+                "status": None,
+                "status_log": "Pending, Execution complete",
+                "trade": self.mock_trade.info,
+                "order_type": self.mock_order_type.info,
+                "info": {
+                    "side": self.order.side,
+                    "size_matched": self.order.size_matched,
+                    "size_remaining": self.order.size_remaining,
+                    "size_cancelled": self.order.size_cancelled,
+                    "size_lapsed": self.order.size_lapsed,
+                    "size_voided": self.order.size_voided,
+                    "average_price_matched": self.order.average_price_matched,
+                },
+                "customer_order_ref": self.order.customer_order_ref,
+            },
+        )

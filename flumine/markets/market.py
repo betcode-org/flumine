@@ -39,7 +39,6 @@ class Market:
         if order.id not in self.blotter:
             self.blotter[order.id] = order
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
-            self.flumine.log_control(events.OrderEvent(order))
         else:
             return  # retry attempt so ignore?
         if execute:  # handles replaceOrder

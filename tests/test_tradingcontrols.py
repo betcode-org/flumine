@@ -102,7 +102,7 @@ class TestOrderValidation(unittest.TestCase):
         order = mock.Mock()
         order.order_type.ORDER_TYPE = "RUSH"
         self.trading_control._validate_betfair_order(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Unknown orderType")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_size(self, mock_on_error):
@@ -116,21 +116,21 @@ class TestOrderValidation(unittest.TestCase):
         order = mock.Mock()
         order.order_type.size = None
         self.trading_control._validate_betfair_size(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order size is None")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_size_on_error_two(self, mock_on_error):
         order = mock.Mock()
         order.order_type.size = -1
         self.trading_control._validate_betfair_size(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order size is less than 0")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_size_on_error_three(self, mock_on_error):
         order = mock.Mock()
         order.order_type.size = 1.999
         self.trading_control._validate_betfair_size(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order size has more than 2dp")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_price(self, mock_on_error):
@@ -144,14 +144,14 @@ class TestOrderValidation(unittest.TestCase):
         order = mock.Mock()
         order.order_type.price = None
         self.trading_control._validate_betfair_price(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order price is None")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_price_on_error_two(self, mock_on_error):
         order = mock.Mock()
         order.order_type.price = -1
         self.trading_control._validate_betfair_price(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order price is not valid")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_liability(self, mock_on_error):
@@ -165,14 +165,14 @@ class TestOrderValidation(unittest.TestCase):
         order = mock.Mock()
         order.order_type.liability = None
         self.trading_control._validate_betfair_liability(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order liability is None")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_liability_on_error_two(self, mock_on_error):
         order = mock.Mock()
         order.order_type.liability = -1
         self.trading_control._validate_betfair_liability(order)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(order, "Order liability is less than 0")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_limit(self, mock_on_error):
@@ -205,7 +205,10 @@ class TestOrderValidation(unittest.TestCase):
         order.order_type.size = 1.99
         order.order_type.price = 2
         self.trading_control._validate_betfair_min_size(order, OrderTypes.LIMIT)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order,
+            "Order size is less than min bet size (2) or payout (10) for currency",
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size(self, mock_on_error):
@@ -238,7 +241,9 @@ class TestOrderValidation(unittest.TestCase):
         self.trading_control._validate_betfair_min_size(
             order, OrderTypes.LIMIT_ON_CLOSE
         )
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order, "Liability is less than min bet size (2) for currency"
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
@@ -249,7 +254,9 @@ class TestOrderValidation(unittest.TestCase):
         self.trading_control._validate_betfair_min_size(
             order, OrderTypes.LIMIT_ON_CLOSE
         )
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order, "Liability is less than min BSP payout (10) for currency"
+        )
 
 
 class TestStrategyExposure(unittest.TestCase):
@@ -272,7 +279,10 @@ class TestStrategyExposure(unittest.TestCase):
         order_package.package_type = OrderPackageType.PLACE
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
         self.trading_control._validate(order_package)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order,
+            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
@@ -285,7 +295,10 @@ class TestStrategyExposure(unittest.TestCase):
         order_package.package_type = OrderPackageType.PLACE
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
         self.trading_control._validate(order_package)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order,
+            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_market_on_close(self, mock_on_error):
@@ -298,7 +311,10 @@ class TestStrategyExposure(unittest.TestCase):
         order_package.package_type = OrderPackageType.PLACE
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
         self.trading_control._validate(order_package)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order,
+            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_selection(self, mock_on_error):
@@ -318,4 +334,7 @@ class TestStrategyExposure(unittest.TestCase):
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
 
         self.trading_control._validate(order_package)
-        mock_on_error.assert_called_with(order)
+        mock_on_error.assert_called_with(
+            order,
+            "Potential selection exposure (-12) is greater than strategy.max_selection_exposure (10)",
+        )

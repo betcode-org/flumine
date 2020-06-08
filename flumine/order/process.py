@@ -59,8 +59,8 @@ def process_current_order(order: BaseOrder):
         elif order.size_remaining == 0:
             order.execution_complete()
 
-    if order.trade.trade_complete:
-        order.trade.complete()
+    if order.trade.complete:
+        order.trade.complete_trade()
 
 
 def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
