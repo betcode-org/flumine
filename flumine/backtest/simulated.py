@@ -232,8 +232,7 @@ class Simulated:
     @property
     def size_matched(self) -> float:
         if self.matched:
-            size_matched, _ = wap(self.matched)
-            return size_matched
+            return sum(x[2] for x in self.matched)
         else:
             return 0
 
