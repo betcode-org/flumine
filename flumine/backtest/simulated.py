@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from .utils import (
@@ -223,7 +224,7 @@ class Simulated:
     def side(self) -> str:
         return self.order.side
 
-    def _update_matched(self, data):
+    def _update_matched(self, data: Tuple[int, float, float]) -> None:
         self.matched.append(data)
         self.size_matched, self.average_price_matched = wap(self.matched)
 
