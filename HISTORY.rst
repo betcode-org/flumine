@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.6.8 (2020-06-10)
++++++++++++++++++++
+
+**Improvements**
+
+- Simulated optimisations on matched size/price (@jsphon)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.4.0
+
 1.6.7 (2020-06-08)
 +++++++++++++++++++
 
