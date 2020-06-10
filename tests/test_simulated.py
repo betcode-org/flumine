@@ -264,6 +264,8 @@ class SimulatedTest(unittest.TestCase):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = 12.20
         self.simulated.matched = [(1234571, 10.0, 1)]
+        self.simulated.size_matched = 1
+        self.simulated.average_price_matched = 10.0
         self.simulated._process_sp(1234572, mock_runner)
         self.assertEqual(
             self.simulated.matched, [(1234571, 10.0, 1), (1234572, 12.2, 1)]
@@ -388,30 +390,27 @@ class SimulatedTest(unittest.TestCase):
 
     def test_average_price_matched(self):
         self.assertEqual(self.simulated.average_price_matched, 0)
-        self.simulated.matched = [(1234, 1, 2)]
+        self.simulated._update_matched((1234, 1, 2))
         self.assertEqual(self.simulated.average_price_matched, 1)
 
     def test_size_matched(self):
         self.assertEqual(self.simulated.size_matched, 0)
-        self.simulated.matched = [(4321, 1, 2)]
+        self.simulated._update_matched((4321, 1, 2))
         self.assertEqual(self.simulated.size_matched, 2)
 
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_matched",
-        new_callable=mock.PropertyMock,
-    )
-    def test_size_remaining(self, mock_size_matched):
-        mock_size_matched.return_value = 0
+    def test__update_matched(self):
+        self.simulated._update_matched((12345, 10.0, 2.64))
+        self.assertEqual(self.simulated.matched, [(12345, 10.0, 2.64)])
+        self.assertEqual(self.simulated.size_matched, 2.64)
+        self.assertEqual(self.simulated.average_price_matched, 10.0)
+
+    def test_size_remaining(self):
         self.assertEqual(self.simulated.size_remaining, 2)
-        mock_size_matched.return_value = 1
+        self.simulated._update_matched((1234, 1, 1))
         self.assertEqual(self.simulated.size_remaining, 1)
 
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_matched",
-        new_callable=mock.PropertyMock,
-    )
-    def test_size_remaining_multi(self, mock_size_matched):
-        mock_size_matched.return_value = 0.1
+    def test_size_remaining_multi(self):
+        self.simulated._update_matched((1234, 1, 0.1))
         self.simulated.size_cancelled = 0.2
         self.simulated.size_lapsed = 0.3
         self.simulated.size_voided = 0.4
@@ -422,37 +421,19 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.assertEqual(self.simulated.size_remaining, 0)
 
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.average_price_matched",
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_matched",
-        new_callable=mock.PropertyMock,
-    )
-    def test_profit_back(self, mock_size_matched, mock_average_price_matched):
+    def test_profit_back(self):
         self.assertEqual(self.simulated.profit, 0)
         self.simulated.order.runner_status = "WINNER"
-        mock_size_matched.return_value = 2.00
-        mock_average_price_matched.return_value = 10.0
+        self.simulated._update_matched((1234, 10.0, 2.0))
         self.assertEqual(self.simulated.profit, 18.0)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, -2.0)
 
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.average_price_matched",
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_matched",
-        new_callable=mock.PropertyMock,
-    )
-    def test_profit_back(self, mock_size_matched, mock_average_price_matched):
+    def test_profit_lay(self):
         self.simulated.order.side = "LAY"
         self.assertEqual(self.simulated.profit, 0)
         self.simulated.order.runner_status = "WINNER"
-        mock_size_matched.return_value = 2.00
-        mock_average_price_matched.return_value = 10.0
+        self.simulated._update_matched((1234, 10.0, 2.0))
         self.assertEqual(self.simulated.profit, -18.0)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 2.0)

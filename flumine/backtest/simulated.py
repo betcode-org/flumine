@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from .utils import (
@@ -19,6 +20,8 @@ class Simulated:
 
     def __init__(self, order):
         self.order = order
+        self.size_matched = 0
+        self.average_price_matched = 0
         self.matched = []  # [(publishTime, price, size)..]
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
@@ -152,7 +155,7 @@ class Simulated:
                 else:
                     _size_matched = avail["size"]
                 _matched = (publish_time, avail["price"], round(_size_matched, 2))
-                self.matched.append(_matched)
+                self._update_matched(_matched)
             else:
                 break
 
@@ -180,7 +183,7 @@ class Simulated:
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             else:
                 raise NotImplementedError()
-            self.matched.append((publish_time, actual_sp, size))
+            self._update_matched((publish_time, actual_sp, size))
 
     def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update
@@ -197,7 +200,7 @@ class Simulated:
             size = traded_size - self._piq
             size = round(min(self.size_remaining, size), 2)
             if size:
-                self.matched.append(
+                self._update_matched(
                     (
                         publish_time,
                         self.order.order_type.price,
@@ -221,21 +224,9 @@ class Simulated:
     def side(self) -> str:
         return self.order.side
 
-    @property
-    def average_price_matched(self) -> float:
-        if self.matched:
-            _, avg_price_matched = wap(self.matched)
-            return avg_price_matched
-        else:
-            return 0
-
-    @property
-    def size_matched(self) -> float:
-        if self.matched:
-            size_matched, _ = wap(self.matched)
-            return size_matched
-        else:
-            return 0
+    def _update_matched(self, data: Tuple[int, float, float]) -> None:
+        self.matched.append(data)
+        self.size_matched, self.average_price_matched = wap(self.matched)
 
     @property
     def size_remaining(self) -> float:
