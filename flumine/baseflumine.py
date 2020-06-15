@@ -214,9 +214,7 @@ class BaseFlumine:
 
         self.cleared_market_queue.put(market.market_id)
         self.log_control(event)
-        logger.info(
-            "Market removed", extra={"market_id": market.market_id, **self.info}
-        )
+        logger.info("Market closed", extra={"market_id": market.market_id, **self.info})
 
     def _process_cleared_orders(self, event):
         market_id = event.event.market_id
@@ -231,7 +229,7 @@ class BaseFlumine:
         meta_orders = market.blotter.process_cleared_orders(event.event)
         self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
         logger.info(
-            "Market closed and cleared",
+            "Market cleared",
             extra={
                 "market_id": market_id,
                 "order_count": len(meta_orders),
@@ -250,6 +248,16 @@ class BaseFlumine:
                     "bet_count": cleared_market.bet_count,
                 },
             )
+
+        # check for markets that have been closed for x seconds
+        closed_markets = [
+            m.market_id
+            for m in self.markets
+            if m.elapsed_seconds_closed and m.elapsed_seconds_closed > 3600
+        ]
+        for market_id in closed_markets:
+            logger.info("Removing market %s" % market_id)
+            self.markets.remove_market(market_id)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:
