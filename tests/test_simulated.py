@@ -78,12 +78,13 @@ class SimulatedTest(unittest.TestCase):
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_back(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        resp = self.simulated.place(mock_market_book, {}, 1)
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
@@ -92,6 +93,7 @@ class SimulatedTest(unittest.TestCase):
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_back_unmatched(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
@@ -102,21 +104,35 @@ class SimulatedTest(unittest.TestCase):
             {"price": 15, "size": 32},
         ]
         mock__get_runner.return_value = mock_runner
-        resp = self.simulated.place(mock_market_book, {}, 1)
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 22)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_back_bpe(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=False)
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 15, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 16, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE")
+        self.assertEqual(self.simulated.matched, [])
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_lay(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        resp = self.simulated.place(mock_market_book, {}, 1)
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
@@ -125,6 +141,7 @@ class SimulatedTest(unittest.TestCase):
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_lay_unmatched(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
@@ -136,16 +153,31 @@ class SimulatedTest(unittest.TestCase):
         ]
         mock_runner.ex.available_to_lay = [{"price": 15, "size": 32}]
         mock__get_runner.return_value = mock_runner
-        resp = self.simulated.place(mock_market_book, {}, 1)
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 22)
 
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_lay_bpe(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=False)
+        self.simulated.order.side = "LAY"
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 10.5, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE")
+        self.assertEqual(self.simulated.matched, [])
+
     def test_place_else(self):
+        mock_client = mock.Mock(best_price_execution=True)
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         mock_market_book = mock.Mock()
-        self.simulated.place(mock_market_book, {}, 1)
+        self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(self.simulated.matched, [])
 
     def test__create_place_response(self):

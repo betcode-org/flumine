@@ -3,7 +3,7 @@ import logging
 import hashlib
 from typing import Optional, Tuple, Callable
 from decimal import Decimal
-from betfairlightweight.resources.bettingresources import RunnerBook
+from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from . import config
 from .exceptions import FlumineException
@@ -145,7 +145,9 @@ def wap(matched: list) -> Tuple[float, float]:
         return round(b, 2), round(a / b, 2)
 
 
-def call_check_market(strategy_check_market: Callable, market, market_book) -> bool:
+def call_check_market(
+    strategy_check_market: Callable, market, market_book: MarketBook
+) -> bool:
     try:
         return strategy_check_market(market, market_book)
     except FlumineException as e:
@@ -166,7 +168,7 @@ def call_check_market(strategy_check_market: Callable, market, market_book) -> b
 
 
 def call_process_market_book(
-    strategy_process_market_book: Callable, market, market_book
+    strategy_process_market_book: Callable, market, market_book: MarketBook
 ) -> None:
     try:
         strategy_process_market_book(market, market_book)
@@ -184,3 +186,14 @@ def call_process_market_book(
         )
         if config.raise_errors:
             raise
+
+
+def get_runner_book(market_book: MarketBook, selection_id: int, handicap=0):
+    """Returns runner book based on selection id.
+    """
+    for runner_book in market_book.runners:
+        if (
+            runner_book.selection_id == selection_id
+            and runner_book.handicap == handicap
+        ):
+            return runner_book

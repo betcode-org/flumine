@@ -47,10 +47,10 @@ class Simulated:
             )
 
     def place(
-        self, market_book: MarketBook, instruction: dict, bet_id: int
+        self, client, market_book: MarketBook, instruction: dict, bet_id: int
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
-        # todo instruction/fillkill/timeInForce/BPE etc
+        # todo instruction/fillkill/timeInForce etc
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             runner = self._get_runner(market_book)
             available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
@@ -58,7 +58,13 @@ class Simulated:
             price = self.order.order_type.price
             size = self.order.order_type.size
             if self.order.side == "BACK":
-                if available_to_back >= price:
+                if not client.best_price_execution and available_to_back > price:
+                    return self._create_place_response(
+                        bet_id,
+                        status="FAILURE",
+                        error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
+                    )
+                elif available_to_back >= price:
                     self._process_price_matched(
                         market_book.publish_time_epoch,
                         price,
@@ -68,7 +74,13 @@ class Simulated:
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
-                if available_to_lay <= price:
+                if not client.best_price_execution and available_to_lay < price:
+                    return self._create_place_response(
+                        bet_id,
+                        status="FAILURE",
+                        error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
+                    )
+                elif available_to_lay <= price:
                     self._process_price_matched(
                         market_book.publish_time_epoch,
                         price,

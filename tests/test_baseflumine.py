@@ -241,6 +241,16 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event.orders = []
         self.base_flumine._process_cleared_markets(mock_event)
 
+    def test__process_cleared_markets_closed(self):
+        self.base_flumine.markets._markets = {
+            "123": mock.Mock(market_id="123", elapsed_seconds_closed=25),
+            "456": mock.Mock(market_id="456", elapsed_seconds_closed=3601),
+        }
+        mock_event = mock.Mock()
+        mock_event.event.orders = []
+        self.base_flumine._process_cleared_markets(mock_event)
+        self.assertEqual(len(self.base_flumine.markets._markets), 1)
+
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
 

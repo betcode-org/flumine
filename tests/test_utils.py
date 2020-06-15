@@ -177,3 +177,9 @@ class UtilsTest(unittest.TestCase):
         mock_market_book = mock.Mock()
         with self.assertRaises(ZeroDivisionError):
             utils.call_process_market_book(mock_strategy, mock_market, mock_market_book)
+
+    def test_get_runner_book(self):
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock(selection_id=123, handicap=0)
+        mock_market_book.runners = [mock_runner]
+        self.assertEqual(utils.get_runner_book(mock_market_book, 123), mock_runner)

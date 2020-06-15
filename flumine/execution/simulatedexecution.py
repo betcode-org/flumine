@@ -43,7 +43,7 @@ class SimulatedExecution(BaseExecution):
             with order.trade:
                 self._bet_id += 1
                 simulated_response = order.simulated.place(
-                    market_book, instruction, self._bet_id
+                    order_package.client, market_book, instruction, self._bet_id
                 )
                 self._order_logger(
                     order, simulated_response, order_package.package_type
@@ -113,7 +113,7 @@ class SimulatedExecution(BaseExecution):
                     order, instruction.get("newPrice")
                 )
                 place_instruction_report = replacement_order.simulated.place(
-                    market_book, instruction, self._bet_id
+                    order_package.client, market_book, instruction, self._bet_id
                 )
                 if place_instruction_report.status == "SUCCESS":
                     self._order_logger(

@@ -32,6 +32,12 @@ class MarketsTest(unittest.TestCase):
         self.markets.close_market("1.1")
         mock_market.close_market.assert_called_with()
 
+    def test_remove_market(self):
+        mock_market = mock.Mock()
+        self.markets._markets = {"1.1": mock_market}
+        self.markets.remove_market("1.1")
+        self.assertEqual(self.markets._markets, {})
+
     def test_get_order(self):
         mock_market = mock.Mock()
         mock_market.closed = False
@@ -101,6 +107,7 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
+        self.assertIsNone(self.market.date_time_closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
         self.assertEqual(self.market.context, {"simulated": {}})
@@ -117,15 +124,18 @@ class MarketTest(unittest.TestCase):
     def test_close_market(self):
         self.market.close_market()
         self.assertTrue(self.market.closed)
+        self.assertIsNotNone(self.market.date_time_closed)
 
     @mock.patch("flumine.markets.market.events")
     def test_place_order(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
+        mock_order.trade.market_notes = None
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
+        mock_order.trade.update_market_notes.assert_called_with(self.market.market_book)
 
     @mock.patch("flumine.markets.market.events")
     def test_place_order_not_executed(self, mock_events):
@@ -208,3 +218,9 @@ class MarketTest(unittest.TestCase):
         self.market.market_book = None
         self.market.market_catalogue = None
         self.assertLess(self.market.seconds_to_start, 0)
+
+    def test_elapsed_seconds_closed(self):
+        self.assertIsNone(self.market.elapsed_seconds_closed)
+        self.market.closed = True
+        self.market.date_time_closed = datetime.datetime.utcnow()
+        self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)

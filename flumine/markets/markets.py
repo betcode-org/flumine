@@ -19,6 +19,9 @@ class Markets:
         live_market.close_market()
         return live_market
 
+    def remove_market(self, market_id: str) -> None:
+        del self._markets[market_id]
+
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
         try:
             return self.markets[market_id].blotter[order_id]

@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Optional
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
@@ -19,6 +20,7 @@ class Market:
         self.flumine = flumine
         self.market_id = market_id
         self.closed = False
+        self.date_time_closed = None
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
@@ -32,12 +34,15 @@ class Market:
 
     def close_market(self) -> None:
         self.closed = True
+        self.date_time_closed = datetime.datetime.utcnow()
 
     # order
     def place_order(self, order, execute: bool = True) -> None:
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
+            if order.trade.market_notes is None:
+                order.trade.update_market_notes(self.market_book)
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
         else:
             return  # retry attempt so ignore?
@@ -69,6 +74,11 @@ class Market:
     @property
     def seconds_to_start(self):
         return (self.market_start_datetime - datetime.datetime.utcnow()).total_seconds()
+
+    @property
+    def elapsed_seconds_closed(self) -> Optional[float]:
+        if self.closed and self.date_time_closed:
+            return (datetime.datetime.utcnow() - self.date_time_closed).total_seconds()
 
     @property
     def market_start_datetime(self):
