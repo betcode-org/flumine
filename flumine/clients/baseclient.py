@@ -23,6 +23,7 @@ class BaseClient:
         interactive_login: bool = False,
         id_: str = None,
         order_stream: bool = True,
+        best_price_execution: bool = True,
     ):
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
@@ -31,6 +32,7 @@ class BaseClient:
         self.commission_base = commission_base
         self.interactive_login = interactive_login
         self.order_stream = order_stream
+        self.best_price_execution = best_price_execution
 
         self.account_details = None
         self.account_funds = None
@@ -78,4 +80,6 @@ class BaseClient:
             "betting_client": self.betting_client,
             "chargeable_transaction_count": self.chargeable_transaction_count,
             "trading_controls": self.trading_controls,
+            "order_stream": self.order_stream,
+            "best_price_execution": self.best_price_execution,
         }
