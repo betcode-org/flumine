@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.7.0 (2020-06-15)
++++++++++++++++++++
+
+**Improvements**
+
+- market_notes added to Trade
+- market removed after closed for 3600 seconds
+- client.best_price_execution handling added
+
 1.6.8 (2020-06-10)
 +++++++++++++++++++
 
