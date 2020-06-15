@@ -4,12 +4,13 @@ import datetime
 import collections
 from enum import Enum
 from typing import Union, Type
-from betfairlightweight.resources.bettingresources import CurrentOrder
+from betfairlightweight.resources.bettingresources import MarketBook, CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
-from .order import BetfairOrder, OrderStatus
+from .order import BetfairOrder
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
+from ..utils import get_price, get_runner_book
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class Trade:
         self.notes = (
             notes if notes else collections.OrderedDict()
         )  # trade notes (e.g. triggers/market state)
+        self.market_notes = None  # back,lay,lpt (initial order only)
         self.fill_kill = fill_kill
         self.offset = offset
         self.green = green
@@ -51,6 +53,15 @@ class Trade:
         self.status = TradeStatus.LIVE
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_complete = None
+
+    def update_market_notes(self, market_book: MarketBook) -> None:
+        runner = get_runner_book(market_book, self.selection_id)
+        if runner:
+            self.market_notes = "{0},{1},{2}".format(
+                get_price(runner.ex.available_to_back, 0),
+                get_price(runner.ex.available_to_lay, 0),
+                runner.last_price_traded,
+            )
 
     # status
     def _update_status(self, status: TradeStatus) -> None:
@@ -143,6 +154,7 @@ class Trade:
             "status": self.status,
             "orders": [o.id for o in self.orders],
             "notes": self.notes_str,
+            "market_notes": self.market_notes,
         }
 
     def __enter__(self):

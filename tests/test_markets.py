@@ -122,10 +122,12 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_events):
         mock_order = mock.Mock()
         mock_order.id = "123"
+        mock_order.trade.market_notes = None
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
+        mock_order.trade.update_market_notes.assert_called_with(self.market.market_book)
 
     @mock.patch("flumine.markets.market.events")
     def test_place_order_not_executed(self, mock_events):

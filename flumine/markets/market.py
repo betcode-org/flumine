@@ -38,6 +38,8 @@ class Market:
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
+            if order.trade.market_notes is None:
+                order.trade.update_market_notes(self.market_book)
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
         else:
             return  # retry attempt so ignore?

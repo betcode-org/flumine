@@ -3,7 +3,8 @@ import collections
 import unittest
 from unittest import mock
 
-from flumine.order.trade import Trade, OrderError, OrderStatus, TradeStatus
+from flumine.order.order import OrderStatus
+from flumine.order.trade import Trade, OrderError, TradeStatus
 
 
 class TradeTest(unittest.TestCase):
@@ -42,6 +43,17 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.offset_orders, [])
         self.assertIsNotNone(self.trade.date_time_created)
         self.assertIsNone(self.trade.date_time_complete)
+        self.assertIsNone(self.trade.market_notes)
+
+    @mock.patch("flumine.order.trade.get_price", return_value=1.01)
+    def test_update_market_notes(self, mock_get_price):
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock(
+            selection_id=self.trade.selection_id, handicap=0, last_price_traded=5
+        )
+        mock_market_book.runners = [mock_runner]
+        self.trade.update_market_notes(mock_market_book)
+        self.assertEqual(self.trade.market_notes, "1.01,1.01,5")
 
     def test__update_status(self):
         self.trade._update_status(TradeStatus.COMPLETE)
@@ -133,6 +145,7 @@ class TradeTest(unittest.TestCase):
                 "status": TradeStatus.LIVE,
                 "strategy": self.mock_strategy,
                 "notes": "123",
+                "market_notes": None,
             },
         )
 
