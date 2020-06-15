@@ -20,11 +20,14 @@ class Streams:
     def __call__(self, strategy: BaseStrategy) -> None:
         if self.flumine.BACKTEST:
             markets = strategy.market_filter.get("markets")
+            listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets is None:
                 logging.warning("No markets found for strategy {0}".format(strategy))
             else:
                 for market in markets:
-                    stream = self.add_historical_stream(strategy, market)
+                    stream = self.add_historical_stream(
+                        strategy, market, **listener_kwargs
+                    )
                     strategy.streams.append(stream)
         else:
             stream = self.add_stream(strategy)
@@ -71,7 +74,9 @@ class Streams:
             self._streams.append(stream)
             return stream
 
-    def add_historical_stream(self, strategy: BaseStrategy, market) -> HistoricalStream:
+    def add_historical_stream(
+        self, strategy: BaseStrategy, market, **listener_kwargs
+    ) -> HistoricalStream:
         for stream in self:
             if stream.market_filter == market:
                 return stream
@@ -89,6 +94,8 @@ class Streams:
                 market_data_filter=strategy.market_data_filter,
                 streaming_timeout=strategy.streaming_timeout,
                 conflate_ms=strategy.conflate_ms,
+                output_queue=None,
+                **listener_kwargs,
             )
             self._streams.append(stream)
             return stream
