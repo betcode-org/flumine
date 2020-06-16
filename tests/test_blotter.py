@@ -70,17 +70,15 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(mock_orders, [])
 
     def test_live_orders(self):
-        self.assertFalse(self.blotter.live_orders)
+        self.assertEqual(list(self.blotter.live_orders), [])
         mock_order = mock.Mock(complete=False)
-        self.blotter._orders = {"12345": mock_order}
-        self.assertTrue(self.blotter.live_orders)
+        self.blotter._live_orders = [mock_order]
+        self.assertEqual(list(self.blotter.live_orders), [mock_order])
 
-    def test_live_orders_trade(self):
-        self.assertFalse(self.blotter.live_orders)
-        mock_order = mock.Mock()
-        mock_order.trade.complete = False
-        self.blotter._orders = {"12345": mock_order}
-        self.assertTrue(self.blotter.live_orders)
+    def test_has_live_orders(self):
+        self.assertFalse(self.blotter.has_live_orders)
+        self.blotter._live_orders = [mock.Mock()]
+        self.assertTrue(self.blotter.has_live_orders)
 
     def test_process_closed_market(self):
         mock_market_book = mock.Mock()

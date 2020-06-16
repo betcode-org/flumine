@@ -94,7 +94,7 @@ class FlumineBacktest(BaseFlumine):
 
             # process current orders
             blotter = market.blotter
-            for order in blotter.live_orders_iter():
+            for order in blotter.live_orders:
                 process.process_current_order(order)
                 if order.trade.status.value == "Complete":
                     blotter.complete_order(order)

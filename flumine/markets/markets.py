@@ -49,7 +49,7 @@ class Markets:
     @property
     def live_orders(self) -> bool:
         for market in self:
-            if market.closed is False and market.blotter.live_orders is True:
+            if market.closed is False and market.blotter.has_live_orders:
                 return True
         return False
 

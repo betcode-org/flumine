@@ -71,14 +71,12 @@ class Blotter:
         return packages
 
     @property
-    def live_orders(self) -> bool:
-        for order in self._orders.values():
-            if order.complete is False or order.trade.complete is False:
-                return True
-        return False
-
-    def live_orders_iter(self):
+    def live_orders(self):
         return iter(self._live_orders)
+
+    @property
+    def has_live_orders(self):
+        return bool(self._live_orders)
 
     def process_closed_market(self, market_book):
         for order in self:

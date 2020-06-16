@@ -35,7 +35,7 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
-        for order in market.blotter:
+        for order in market.blotter.live_orders:
             if order.simulated and order.status == OrderStatus.EXECUTABLE:
                 runner_analytics = market_analytics.get(
                     (order.selection_id, order.handicap)
