@@ -16,6 +16,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter.pending_cancel, [])
         self.assertEqual(self.blotter.pending_update, [])
         self.assertEqual(self.blotter.pending_replace, [])
+        self.assertEqual(self.blotter._live_orders, [])
 
     def test_strategy_orders(self):
         mock_order = mock.Mock()
@@ -127,6 +128,10 @@ class BlotterTest(unittest.TestCase):
     def test_market_id(self):
         self.assertEqual(self.blotter.market_id, self.mock_market.market_id)
 
+    def test_complete_order(self):
+        self.blotter._live_orders = ["test"]
+        self.blotter.complete_order("test")
+
     def test__contains(self):
         self.blotter._orders = {"123": "test"}
         self.assertIn("123", self.blotter)
@@ -135,6 +140,7 @@ class BlotterTest(unittest.TestCase):
     def test__setitem(self):
         self.blotter["123"] = "test"
         self.assertEqual(self.blotter._orders, {"123": "test"})
+        self.assertEqual(self.blotter._live_orders, ["test"])
 
     def test__getitem(self):
         self.blotter._orders = {"12345": "test", "54321": "test2"}
