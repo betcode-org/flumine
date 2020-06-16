@@ -99,7 +99,11 @@ class Blotter:
         """
         mb, ml = [], []  # (price, size)
         for order in self:
-            if order.trade.strategy == strategy and order.lookup == lookup:
+            if (
+                order.trade.strategy == strategy
+                and order.size_matched
+                and order.lookup == lookup
+            ):
                 if order.side == "BACK":
                     mb.append((order.average_price_matched, order.size_matched))
                 else:

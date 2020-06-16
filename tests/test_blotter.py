@@ -105,12 +105,23 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
         )
         self.blotter._orders = {"12345": mock_order}
-
         self.assertEqual(
-            self.blotter.selection_exposure(
-                mock_strategy, (self.blotter.market_id, 123, 0)
-            ),
-            -2,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), -2,
+        )
+
+    def test_selection_exposure_no_match(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=0.0,
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), 0,
         )
 
     def test_market_id(self):
