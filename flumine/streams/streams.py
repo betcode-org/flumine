@@ -94,7 +94,7 @@ class Streams:
                 market_data_filter=strategy.market_data_filter,
                 streaming_timeout=strategy.streaming_timeout,
                 conflate_ms=strategy.conflate_ms,
-                output_queue=None,
+                output_queue=False,
                 **listener_kwargs,
             )
             self._streams.append(stream)

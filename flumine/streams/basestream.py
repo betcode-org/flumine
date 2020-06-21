@@ -21,7 +21,7 @@ class BaseStream(threading.Thread):
         market_filter: dict = None,
         market_data_filter: dict = None,
         client=None,
-        output_queue=queue.Queue(),
+        output_queue: bool = True,
         **listener_kwargs,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
@@ -33,7 +33,7 @@ class BaseStream(threading.Thread):
         self.conflate_ms = conflate_ms
         self._client = client
         self._stream = None
-        self._output_queue = output_queue
+        self._output_queue = queue.Queue() if output_queue else None
         self._listener = self.LISTENER(
             output_queue=self._output_queue,
             max_latency=self.MAX_LATENCY,

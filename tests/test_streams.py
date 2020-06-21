@@ -137,7 +137,7 @@ class StreamsTest(unittest.TestCase):
             market_data_filter=mock_strategy.market_data_filter,
             streaming_timeout=mock_strategy.streaming_timeout,
             conflate_ms=mock_strategy.conflate_ms,
-            output_queue=None,
+            output_queue=False,
             inplay=True,
         )
 
@@ -213,6 +213,7 @@ class TestBaseStream(unittest.TestCase):
             {"test": "me"},
             {"please": "now"},
             client=self.mock_client,
+            output_queue=False,
         )
 
     def test_init(self):
@@ -225,6 +226,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertIsNone(self.stream._stream)
         self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
+        self.assertIsNone(self.stream._output_queue)
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
