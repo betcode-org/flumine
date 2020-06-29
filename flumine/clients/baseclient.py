@@ -1,4 +1,5 @@
 from typing import Optional
+from betfairlightweight.metadata import transaction_limit as betfair_transaction_limit
 
 from ..utils import create_short_uuid
 from .clients import ExchangeType
@@ -17,7 +18,7 @@ class BaseClient:
     def __init__(
         self,
         betting_client=None,
-        transaction_limit: int = 1000,
+        transaction_limit: Optional[int] = betfair_transaction_limit,
         capital_base: int = DEFAULT_CAPITAL_BASE,
         commission_base: float = DEFAULT_COMMISSION_BASE,
         interactive_login: bool = False,
