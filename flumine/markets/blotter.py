@@ -134,7 +134,7 @@ class Blotter:
         return self._orders[customer_order_ref]
 
     def __iter__(self) -> Iterable[BaseOrder]:
-        return iter(self._orders.values())
+        return iter(list(self._orders.values()))
 
     def __len__(self) -> int:
         return len(self._orders)

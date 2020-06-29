@@ -54,7 +54,7 @@ class Markets:
         return False
 
     def __iter__(self) -> Iterator[Market]:
-        return iter(self.markets.values())
+        return iter(list(self.markets.values()))
 
     def __len__(self) -> int:
         return len(self.markets)
