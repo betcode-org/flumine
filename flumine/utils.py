@@ -118,10 +118,12 @@ def price_ticks_away(price: float, n_ticks: int) -> float:
 
 
 # todo LRU cache?
-def calculate_exposure(mb: list, ml: list) -> int:
+def calculate_exposure(mb: list, ml: list) -> float:
     """Calculates exposure based on list
     of (price, size)
     """
+    if not mb and not ml:
+        return 0.0
     back_exp = sum(-i[1] for i in mb)
     back_profit = sum((i[0] - 1) * i[1] for i in mb)
     lay_exp = sum((i[0] - 1) * -i[1] for i in ml)

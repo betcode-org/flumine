@@ -16,6 +16,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter.pending_cancel, [])
         self.assertEqual(self.blotter.pending_update, [])
         self.assertEqual(self.blotter.pending_replace, [])
+        self.assertEqual(self.blotter._live_orders, [])
 
     def test_strategy_orders(self):
         mock_order = mock.Mock()
@@ -69,17 +70,15 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(mock_orders, [])
 
     def test_live_orders(self):
-        self.assertFalse(self.blotter.live_orders)
+        self.assertEqual(list(self.blotter.live_orders), [])
         mock_order = mock.Mock(complete=False)
-        self.blotter._orders = {"12345": mock_order}
-        self.assertTrue(self.blotter.live_orders)
+        self.blotter._live_orders = [mock_order]
+        self.assertEqual(list(self.blotter.live_orders), [mock_order])
 
-    def test_live_orders_trade(self):
-        self.assertFalse(self.blotter.live_orders)
-        mock_order = mock.Mock()
-        mock_order.trade.complete = False
-        self.blotter._orders = {"12345": mock_order}
-        self.assertTrue(self.blotter.live_orders)
+    def test_has_live_orders(self):
+        self.assertFalse(self.blotter.has_live_orders)
+        self.blotter._live_orders = [mock.Mock()]
+        self.assertTrue(self.blotter.has_live_orders)
 
     def test_process_closed_market(self):
         mock_market_book = mock.Mock()
@@ -105,16 +104,31 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
         )
         self.blotter._orders = {"12345": mock_order}
-
         self.assertEqual(
-            self.blotter.selection_exposure(
-                mock_strategy, (self.blotter.market_id, 123, 0)
-            ),
-            -2,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), -2,
+        )
+
+    def test_selection_exposure_no_match(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=0.0,
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), 0,
         )
 
     def test_market_id(self):
         self.assertEqual(self.blotter.market_id, self.mock_market.market_id)
+
+    def test_complete_order(self):
+        self.blotter._live_orders = ["test"]
+        self.blotter.complete_order("test")
 
     def test__contains(self):
         self.blotter._orders = {"123": "test"}
@@ -124,6 +138,7 @@ class BlotterTest(unittest.TestCase):
     def test__setitem(self):
         self.blotter["123"] = "test"
         self.assertEqual(self.blotter._orders, {"123": "test"})
+        self.assertEqual(self.blotter._live_orders, ["test"])
 
     def test__getitem(self):
         self.blotter._orders = {"12345": "test", "54321": "test2"}

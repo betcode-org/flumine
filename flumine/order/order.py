@@ -55,6 +55,7 @@ class BaseOrder:
         self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
         self.simulated = Simulated(self)  # used in simulated execution
+        self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
 
         self.date_time_created = datetime.datetime.utcnow()
@@ -131,7 +132,7 @@ class BaseOrder:
 
     @property
     def current_order(self) -> Union[CurrentOrder, Simulated]:
-        if self.simulated:
+        if self._simulated:
             return self.simulated
         elif self.responses.current_order:
             return self.responses.current_order

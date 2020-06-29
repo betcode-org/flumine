@@ -15,6 +15,7 @@ class Blotter:
     def __init__(self, market):
         self.market = market
         self._orders = {}  # {Order.id: Order}
+        self._live_orders = []  # cached list of live orders
         # pending orders
         self.pending_place = []
         self.pending_cancel = []
@@ -70,11 +71,12 @@ class Blotter:
         return packages
 
     @property
-    def live_orders(self) -> bool:
-        for order in self._orders.values():
-            if order.complete is False or order.trade.complete is False:
-                return True
-        return False
+    def live_orders(self):
+        return iter(self._live_orders)
+
+    @property
+    def has_live_orders(self):
+        return bool(self._live_orders)
 
     def process_closed_market(self, market_book):
         for order in self:
@@ -99,7 +101,11 @@ class Blotter:
         """
         mb, ml = [], []  # (price, size)
         for order in self:
-            if order.trade.strategy == strategy and order.lookup == lookup:
+            if (
+                order.trade.strategy == strategy
+                and order.size_matched
+                and order.lookup == lookup
+            ):
                 if order.side == "BACK":
                     mb.append((order.average_price_matched, order.size_matched))
                 else:
@@ -112,6 +118,9 @@ class Blotter:
 
     """ getters / setters """
 
+    def complete_order(self, order) -> None:
+        self._live_orders.remove(order)
+
     def has_order(self, customer_order_ref: str) -> bool:
         return customer_order_ref in self._orders
 
@@ -119,6 +128,7 @@ class Blotter:
 
     def __setitem__(self, customer_order_ref: str, order) -> None:
         self._orders[customer_order_ref] = order
+        self._live_orders.append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]

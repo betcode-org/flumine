@@ -80,9 +80,11 @@ class MarketsTest(unittest.TestCase):
         self.assertFalse(self.markets.live_orders)
         mock_market = mock.Mock()
         mock_market.closed = False
-        mock_market.blotter.live_orders = True
+        mock_market.blotter.has_live_orders = True
         self.markets._markets = {"1.234": mock_market}
         self.assertTrue(self.markets.live_orders)
+        mock_market.blotter.has_live_orders = False
+        self.assertFalse(self.markets.live_orders)
 
     def test_iter(self):
         self.assertEqual(len([i for i in self.markets]), 0)

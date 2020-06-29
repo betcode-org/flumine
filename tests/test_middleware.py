@@ -50,8 +50,12 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_order_two.status = OrderStatus.PENDING
         mock_order_three = mock.Mock()
         mock_order_three.status = OrderStatus.EXECUTABLE
-        mock_order_three.simulated = False
-        mock_market.blotter = [mock_order, mock_order_two, mock_order_three]
+        mock_order_three._simulated = False
+        mock_market.blotter.live_orders = [
+            mock_order,
+            mock_order_two,
+            mock_order_three,
+        ]
         mock_market_analytics = {(mock_order.selection_id, mock_order.handicap): "test"}
         mock_market.market_book = mock_market_book
         self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
