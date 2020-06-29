@@ -181,6 +181,21 @@ class MarketTest(unittest.TestCase):
         mock_order.replace.assert_called_with(1.01)
         self.assertEqual(mock_blotter.pending_replace, [mock_order])
 
+    def test_event(self):
+        mock_market_book = mock.Mock()
+        mock_market_book.market_definition = mock.Mock(event_id=12)
+        self.market.market_book = mock_market_book
+
+        self.market.flumine.markets = []
+        self.assertEqual(self.market.event, {})
+
+        m_one = mock.Mock(market_type=1, event_id=12)
+        m_two = mock.Mock(market_type=2, event_id=12)
+        m_three = mock.Mock(market_type=3, event_id=123)
+        m_four = mock.Mock(market_type=1, event_id=12)
+        self.market.flumine.markets = [m_one, m_two, m_three, m_four]
+        self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
+
     def test_event_type_id(self):
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
@@ -193,6 +208,13 @@ class MarketTest(unittest.TestCase):
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.event_id, mock_market_book.market_definition.event_id
+        )
+
+    def test_market_type(self):
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.market_type, mock_market_book.market_definition.market_type
         )
 
     def test_seconds_to_start(self):

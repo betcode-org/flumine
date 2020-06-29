@@ -1,6 +1,7 @@
 import datetime
 import logging
 from typing import Optional
+from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
@@ -62,6 +63,14 @@ class Market:
         self.blotter.pending_replace.append(order)
 
     @property
+    def event(self) -> dict:
+        event = defaultdict(list)
+        for market in self.flumine.markets:
+            if market.event_id == self.event_id:
+                event[market.market_type].append(market)
+        return event
+
+    @property
     def event_type_id(self) -> str:
         if self.market_book:
             return self.market_book.market_definition.event_type_id
@@ -70,6 +79,11 @@ class Market:
     def event_id(self) -> str:
         if self.market_book:
             return self.market_book.market_definition.event_id
+
+    @property
+    def market_type(self) -> str:
+        if self.market_book:
+            return self.market_book.market_definition.market_type
 
     @property
     def seconds_to_start(self):
