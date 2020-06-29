@@ -7,7 +7,6 @@ from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from .utils import PendingPackages
-from ..markets.market import Market
 from ..order.orderpackage import OrderPackageType
 from ..order import process
 from ..markets.middleware import SimulatedMiddleware
@@ -94,17 +93,20 @@ class FlumineBacktest(BaseFlumine):
 
             # process current orders
             blotter = market.blotter
-            for order in blotter:
+            for order in blotter.live_orders:
                 process.process_current_order(order)
+                if order.trade.status.value == "Complete":
+                    blotter.complete_order(order)
             for strategy in self.strategies:
                 strategy_orders = blotter.strategy_orders(strategy)
                 strategy.process_orders(market, strategy_orders)
 
-            self._process_market_orders(market)
+            self._process_market_orders()
 
-    def _process_market_orders(self, market: Market) -> None:
-        for order_package in market.blotter.process_orders(self.client):
-            self._pending_packages.append(order_package)
+    def _process_market_orders(self) -> None:
+        for market in self.markets:
+            for order_package in market.blotter.process_orders(self.client):
+                self._pending_packages.append(order_package)
 
     def _process_order_package(self, order_package) -> None:
         """Validate trading controls and

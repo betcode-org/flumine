@@ -55,7 +55,7 @@ class OrderStream(BaseStream):
                     )
                 else:
                     continue
-
-            self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
+            if order_books:
+                self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 
         logger.info("Stopped output_thread (OrderStream {0})".format(self.stream_id))

@@ -3,6 +3,24 @@
 Release History
 ---------------
 
+1.8.0 (2020-06-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Custom historical listener/stream added
+- Large order count (per market) optimisations
+- #203 client transaction count
+- #224 multi market processing
+
+**Bug Fixes**
+
+- #221 RuntimeError: market/order looping
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.5.0
+
 1.7.0 (2020-06-15)
 +++++++++++++++++++
 

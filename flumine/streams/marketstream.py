@@ -50,6 +50,7 @@ class MarketStream(BaseStream):
                 market_books = self._listener.snap(
                     market_ids=self.flumine.markets.open_market_ids
                 )
-            self.flumine.handler_queue.put(MarketBookEvent(market_books))
+            if market_books:
+                self.flumine.handler_queue.put(MarketBookEvent(market_books))
 
         logger.info("Stopped output_thread (MarketStream {0})".format(self.stream_id))

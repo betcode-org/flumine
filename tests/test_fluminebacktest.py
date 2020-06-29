@@ -66,7 +66,9 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_order_package = mock.Mock()
         mock_market = mock.Mock()
         mock_market.blotter.process_orders.return_value = [mock_order_package]
-        self.flumine._process_market_orders(mock_market)
+        self.flumine.markets = [mock_market]
+        self.flumine._process_market_orders()
+        mock_market.blotter.process_orders.assert_called_with(self.flumine.client)
         self.assertEqual(self.flumine._pending_packages, [mock_order_package])
 
     @mock.patch("flumine.backtest.backtest.BaseFlumine._process_order_package")

@@ -33,6 +33,8 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.publish_time)
         self.assertIsNotNone(self.order.date_time_created)
         self.assertIsNone(self.order.date_time_execution_complete)
+        self.assertFalse(self.order.simulated)
+        self.assertFalse(self.order._simulated)
 
     @mock.patch("flumine.order.order.BaseOrder.info")
     def test__update_status(self, mock_info):
@@ -142,9 +144,12 @@ class BaseOrderTest(unittest.TestCase):
         mock_responses.current_order = 1
         self.assertEqual(self.order.current_order, 1)
 
-    def test_current_order_simulated(self):
-        self.order.simulated = True
-        self.assertTrue(self.order.current_order)
+    @mock.patch("flumine.backtest.simulated.config")
+    def test_current_order_simulated(self, mock_config):
+        mock_config.simulated = True
+        order = BaseOrder(mock.Mock(), "", mock.Mock())
+        self.assertTrue(order.simulated)
+        self.assertTrue(order._simulated)
 
     def test_complete(self):
         self.order.status = None

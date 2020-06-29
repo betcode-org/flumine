@@ -1,6 +1,6 @@
 from typing import Type, Iterator
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, RaceCard
+from betfairlightweight.resources import MarketBook
 
 from ..streams.marketstream import BaseStream, MarketStream
 from ..markets.market import Market

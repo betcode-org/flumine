@@ -65,6 +65,7 @@ class BackgroundWorker(threading.Thread):
                         "function": self.function,
                         "context": self.context,
                     },
+                    exc_info=True,
                 )
             time.sleep(self.interval)
 

@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Optional
 from betfairlightweight.metadata import transaction_limit
 
 from ..order.orderpackage import OrderPackageType
@@ -31,9 +32,8 @@ class MaxOrderCount(BaseControl):
         self._next_hour = None
         self._set_next_hour()
         self.transaction_count = 0
-        self.transaction_limit = self.client.transaction_limit
 
-    def _validate(self, order_package):
+    def _validate(self, order_package) -> None:
         self._check_hour()
         self.total += 1
         if order_package.package_type == OrderPackageType.PLACE:
@@ -54,7 +54,7 @@ class MaxOrderCount(BaseControl):
         elif order_package.package_type == OrderPackageType.REPLACE:
             self.replace_requests += len(order_package)
 
-    def _check_hour(self):
+    def _check_hour(self) -> None:
         if datetime.datetime.utcnow() > self._next_hour:
             logger.info(
                 "Execution new hour",
@@ -74,7 +74,7 @@ class MaxOrderCount(BaseControl):
                 )
             self.transaction_count = 0
 
-    def _check_transaction_count(self, transaction_count):
+    def _check_transaction_count(self, transaction_count: int) -> None:
         self.transaction_count += transaction_count
         if self.transaction_count > self.transaction_limit:
             logger.error(
@@ -86,16 +86,18 @@ class MaxOrderCount(BaseControl):
                 },
             )
 
-    def _set_next_hour(self):
+    def _set_next_hour(self) -> None:
         now = datetime.datetime.utcnow()
         self._next_hour = (now + datetime.timedelta(hours=1)).replace(
             minute=0, second=0, microsecond=0
         )
 
     @property
-    def safe(self):
+    def safe(self) -> bool:
         self._check_hour()
-        if self.transaction_count < self.transaction_limit:
+        if self.transaction_limit is None:
+            return True
+        elif self.transaction_count < self.transaction_limit:
             return True
         else:
             logger.error(
@@ -106,3 +108,8 @@ class MaxOrderCount(BaseControl):
                     "client": self.client,
                 },
             )
+            return False
+
+    @property
+    def transaction_limit(self) -> Optional[int]:
+        return self.client.transaction_limit
