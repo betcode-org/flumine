@@ -11,6 +11,7 @@ Release History
 - Custom historical listener/stream added
 - Large order count (per market) optimisations
 - #203 client transaction count
+- #224 multi market processing
 
 **Bug Fixes**
 
