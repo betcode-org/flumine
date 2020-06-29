@@ -431,7 +431,7 @@ class TestStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
 
-    def test_snap(self):
+    def test_snap_inplay(self):
         # inPlay
         self.stream = historicalstream.Stream(
             mock.Mock(inplay=True, seconds_to_start=None)
@@ -461,8 +461,33 @@ class TestStream(unittest.TestCase):
         }
         self.assertEqual(len(self.stream.snap()), 0)
 
+    def test_snap_seconds_to_start(self):
         # secondsToStart
-        # todo
+        self.stream = historicalstream.Stream(
+            mock.Mock(inplay=None, seconds_to_start=600)
+        )
+        self.stream._caches = {
+            "1.123": mock.Mock(
+                publish_time=123,
+                market_definition={
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "marketTime": 456,
+                },
+            )
+        }
+        self.assertEqual(len(self.stream.snap()), 1)
+        self.stream._caches = {
+            "1.123": mock.Mock(
+                publish_time=123,
+                market_definition={
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "marketTime": 1234567,
+                },
+            )
+        }
+        self.assertEqual(len(self.stream.snap()), 0)
 
 
 class TestHistoricListener(unittest.TestCase):
