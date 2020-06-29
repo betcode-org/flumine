@@ -128,11 +128,12 @@ class BaseFlumine:
                         strategy.process_market_book, market, market_book
                     )
 
-            self._process_market_orders(market)
+            self._process_market_orders()
 
-    def _process_market_orders(self, market: Market) -> None:
-        for order_package in market.blotter.process_orders(self.client):
-            self.handler_queue.put(order_package)
+    def _process_market_orders(self) -> None:
+        for market in self.markets:
+            for order_package in market.blotter.process_orders(self.client):
+                self.handler_queue.put(order_package)
 
     def _process_order_package(self, order_package) -> None:
         """Validate trading controls and
@@ -182,7 +183,7 @@ class BaseFlumine:
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     strategy.process_orders(market, strategy_orders)
-            self._process_market_orders(market)
+        self._process_market_orders()
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:
@@ -193,8 +194,7 @@ class BaseFlumine:
                     e, event.callback
                 )
             )
-        for market in self.markets:
-            self._process_market_orders(market)
+        self._process_market_orders()
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_id = event.event.market_id
