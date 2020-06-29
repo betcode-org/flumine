@@ -155,4 +155,6 @@ class TestMaxOrderCount(unittest.TestCase):
         mock_check_hour.assert_called_with()
 
     def test_transaction_limit(self):
-        self.assertEqual(self.trading_control.transaction_limit, self.mock_client.transaction_limit)
+        self.assertEqual(
+            self.trading_control.transaction_limit, self.mock_client.transaction_limit
+        )
