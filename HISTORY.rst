@@ -3,13 +3,18 @@
 Release History
 ---------------
 
-1.*.* (2020-06-29)
+1.8.0 (2020-06-29)
 +++++++++++++++++++
 
 **Improvements**
 
 - Custom historical listener/stream added
 - Large order count (per market) optimisations
+- #203 client transaction count
+
+**Bug Fixes**
+
+- #221 RuntimeError: market/order looping
 
 **Libraries**
 
