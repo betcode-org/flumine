@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.*.* (2020-06-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Custom historical listener/stream added
+- Large order count (per market) optimisations
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.5.0
+
 1.7.0 (2020-06-15)
 +++++++++++++++++++
 
