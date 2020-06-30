@@ -95,7 +95,7 @@ class WorkersTest(unittest.TestCase):
                 "MARKET_START_TIME",
                 "MARKET_DESCRIPTION",
             ],
-            max_results=100,
+            max_results=25,
         )
         mock_flumine.handler_queue.put.assert_called_with(
             mock_events.MarketCatalogueEvent()

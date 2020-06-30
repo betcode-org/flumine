@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.8.1 (2020-06-30)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Reduce MC count (debugging seg fault)
+
 1.8.0 (2020-06-29)
 +++++++++++++++++++
 
