@@ -100,11 +100,11 @@ def keep_alive(context: dict, flumine) -> None:
 def poll_market_catalogue(context: dict, flumine) -> None:
     client = flumine.client
     live_markets = list(flumine.markets.markets.keys())
-    for market_ids in chunks(live_markets, 100):
+    for market_ids in chunks(live_markets, 25):
         try:
             market_catalogues = client.betting_client.betting.list_market_catalogue(
                 filter=filters.market_filter(market_ids=market_ids),
-                max_results=100,
+                max_results=25,
                 market_projection=[
                     "COMPETITION",
                     "EVENT",
