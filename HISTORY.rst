@@ -341,7 +341,7 @@ Release History
 **Improvements**
 
 - black fmt
-- _async renamed to async_ to match bflw
+- _async renamed to `async_` to match bflw
 - py3.7 added to travis
 - #28 readme update
 
