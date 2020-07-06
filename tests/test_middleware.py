@@ -84,15 +84,19 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, self.mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, {})
+        self.assertIsNone(self.runner_analytics.middle)
 
+    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
-    def test_call(self, mock__calculate_traded):
+    def test_call(self, mock__calculate_traded, mock__calculate_middle):
         mock_runner = mock.Mock()
         self.runner_analytics(mock_runner)
         mock__calculate_traded.assert_called_with(mock_runner)
+        mock__calculate_middle.assert_called_with(self.mock_runner)
         self.assertEqual(
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
+        self.assertEqual(self.runner_analytics.middle, mock__calculate_middle())
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
         self.assertEqual(self.runner_analytics._runner, mock_runner)
 
@@ -126,3 +130,15 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(
             self.runner_analytics._calculate_traded(mock_runner), {1.01: 39.0, 10: 32},
         )
+
+    def test__calculate_middle(self):
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = []
+        mock_runner.ex.available_to_lay = []
+        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 500.5)
+        mock_runner.ex.available_to_back = [{"price": 2.00}]
+        mock_runner.ex.available_to_lay = [{"price": 2.02}]
+        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 2.01)
+        mock_runner.ex.available_to_back = [{"price": 10.00}]
+        mock_runner.ex.available_to_lay = [{"price": 15.5}]
+        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 12.75)

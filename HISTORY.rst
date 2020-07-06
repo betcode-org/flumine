@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
--
+- Previous 'middle' added to simulated
 
 **Bug Fixes**
 

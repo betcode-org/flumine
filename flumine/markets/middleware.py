@@ -3,6 +3,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus
+from ..utils import get_price
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +58,11 @@ class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
         self.traded = {}
+        self.middle = None  # middle of odds at last event
         self._traded_volume = runner.ex.traded_volume
 
     def __call__(self, runner: RunnerBook):
+        self.middle = self._calculate_middle(self._runner)  # use last event
         self.traded = self._calculate_traded(runner)
         self._traded_volume = runner.ex.traded_volume
         self._runner = runner
@@ -68,7 +71,7 @@ class RunnerAnalytics:
         if self._traded_volume == runner.ex.traded_volume:
             return {}
         else:
-            c_v, p_v, traded_dictionary = {}, {}, {}
+            c_v, p_v, traded = {}, {}, {}
             # create dictionaries
             for i in runner.ex.traded_volume:
                 c_v[i["price"]] = i["size"]
@@ -82,5 +85,11 @@ class RunnerAnalytics:
                     new_value = float(c_v[key])
                 if new_value > 0:
                     new_value = round(new_value, 2)
-                    traded_dictionary[key] = new_value
-            return traded_dictionary
+                    traded[key] = new_value
+            return traded
+
+    @staticmethod
+    def _calculate_middle(runner: RunnerBook) -> float:
+        back = get_price(runner.ex.available_to_back, 0) or 0
+        lay = get_price(runner.ex.available_to_lay, 0) or 1001
+        return (float(back) + float(lay)) / 2
