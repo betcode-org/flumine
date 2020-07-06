@@ -57,12 +57,14 @@ class SimulatedMiddleware(Middleware):
 class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
-        self.traded = {}
+        self.traded = {}  # price: size traded since last event
         self.middle = None  # middle of odds at last event
+        self.matched = 0  # amount matched since last event
         self._traded_volume = runner.ex.traded_volume
 
     def __call__(self, runner: RunnerBook):
         self.middle = self._calculate_middle(self._runner)  # use last event
+        self.matched = self._calculate_matched(runner)
         self.traded = self._calculate_traded(runner)
         self._traded_volume = runner.ex.traded_volume
         self._runner = runner
@@ -76,7 +78,7 @@ class RunnerAnalytics:
             for i in runner.ex.traded_volume:
                 c_v[i["price"]] = i["size"]
             for i in self._traded_volume:
-                p_v[i["price"]] = i["size"]
+                p_v[i["price"]] = i["size"]  # todo cache from previous run?
             # calculate difference
             for key in c_v.keys():
                 if key in p_v:
@@ -93,3 +95,10 @@ class RunnerAnalytics:
         back = get_price(runner.ex.available_to_back, 0) or 0
         lay = get_price(runner.ex.available_to_lay, 0) or 1001
         return (float(back) + float(lay)) / 2
+
+    def _calculate_matched(self, runner: RunnerBook) -> float:
+        prev_total_matched = self._runner.total_matched or 0
+        total_matched = (
+            runner.total_matched or prev_total_matched
+        )  # handles non-runner -> 0
+        return round(total_matched - prev_total_matched, 2)

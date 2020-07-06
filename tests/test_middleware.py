@@ -84,19 +84,25 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, self.mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, {})
+        self.assertEqual(self.runner_analytics.matched, 0)
         self.assertIsNone(self.runner_analytics.middle)
 
+    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
-    def test_call(self, mock__calculate_traded, mock__calculate_middle):
+    def test_call(
+        self, mock__calculate_traded, mock__calculate_middle, mock__calculate_matched
+    ):
         mock_runner = mock.Mock()
         self.runner_analytics(mock_runner)
         mock__calculate_traded.assert_called_with(mock_runner)
         mock__calculate_middle.assert_called_with(self.mock_runner)
+        mock__calculate_matched.assert_called_with(mock_runner)
         self.assertEqual(
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.middle, mock__calculate_middle())
+        self.assertEqual(self.runner_analytics.matched, mock__calculate_matched())
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
         self.assertEqual(self.runner_analytics._runner, mock_runner)
 
@@ -142,3 +148,17 @@ class RunnerAnalyticsTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 10.00}]
         mock_runner.ex.available_to_lay = [{"price": 15.5}]
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 12.75)
+
+    def test__calculate_matched(self):
+        self.runner_analytics._runner.total_matched = 12344
+        mock_runner = mock.Mock(total_matched=12345)
+        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 1)
+        self.runner_analytics._runner = mock_runner
+        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)
+
+    def test__calculate_matched_runner_removal(self):
+        self.runner_analytics._runner.total_matched = 12344
+        mock_runner = mock.Mock(total_matched=0)
+        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)
+        self.runner_analytics._runner = mock_runner
+        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)

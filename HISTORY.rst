@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
-- Previous 'middle' added to simulated
+- Previous 'middle' and 'matched' added to simulated
 
 **Bug Fixes**
 
