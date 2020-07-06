@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.8.2 (2020-07-06)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+- Simulated bug fix on when data is not recorded from the beginning
+- Client control 'None' bug fix
+
 1.8.1 (2020-06-30)
 +++++++++++++++++++
 

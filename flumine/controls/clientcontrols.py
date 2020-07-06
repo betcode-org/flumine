@@ -76,7 +76,7 @@ class MaxOrderCount(BaseControl):
 
     def _check_transaction_count(self, transaction_count: int) -> None:
         self.transaction_count += transaction_count
-        if self.transaction_count > self.transaction_limit:
+        if self.transaction_limit and self.transaction_count > self.transaction_limit:
             logger.error(
                 "Transaction limit reached",
                 extra={

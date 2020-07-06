@@ -57,7 +57,7 @@ class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
         self.traded = {}
-        self._traded_volume = []  # runner.ex.traded_volume
+        self._traded_volume = runner.ex.traded_volume
 
     def __call__(self, runner: RunnerBook):
         self.traded = self._calculate_traded(runner)
@@ -65,9 +65,7 @@ class RunnerAnalytics:
         self._runner = runner
 
     def _calculate_traded(self, runner: RunnerBook) -> dict:
-        if self._traded_volume == {}:
-            return {}
-        elif self._traded_volume == runner.ex.traded_volume:
+        if self._traded_volume == runner.ex.traded_volume:
             return {}
         else:
             c_v, p_v, traded_dictionary = {}, {}, {}

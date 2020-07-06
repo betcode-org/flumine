@@ -80,7 +80,9 @@ class RunnerAnalyticsTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.runner_analytics._runner, self.mock_runner)
-        self.assertEqual(self.runner_analytics._traded_volume, [])
+        self.assertEqual(
+            self.runner_analytics._traded_volume, self.mock_runner.ex.traded_volume
+        )
         self.assertEqual(self.runner_analytics.traded, {})
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
@@ -95,6 +97,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(self.runner_analytics._runner, mock_runner)
 
     def test__calculate_traded_dict_empty(self):
+        self.runner_analytics._traded_volume = []
         mock_runner = mock.Mock()
         mock_runner.ex.traded_volume = []
         self.assertEqual(self.runner_analytics._calculate_traded(mock_runner), {})
