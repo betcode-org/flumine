@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.8.2 (2020-07-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Previous 'middle' and 'matched' added to simulated
+
+**Bug Fixes**
+
+- Simulated bug fix on when data is not recorded from the beginning
+- Client control 'None' bug fix
+
 1.8.1 (2020-06-30)
 +++++++++++++++++++
 
@@ -329,7 +341,7 @@ Release History
 **Improvements**
 
 - black fmt
-- _async renamed to async_ to match bflw
+- _async renamed to `async_` to match bflw
 - py3.7 added to travis
 - #28 readme update
 
