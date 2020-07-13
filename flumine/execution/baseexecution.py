@@ -17,14 +17,17 @@ class BaseExecution:
 
     def __init__(self, flumine, max_workers=MAX_WORKERS):
         self.flumine = flumine
-        self._thread_pool = ThreadPoolExecutor(max_workers=max_workers)
+        self._max_workers = max_workers
+        self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)
         self._bet_id = BET_ID_START
+        self._sessions = []
+        self._sessions_created = 0
 
     def handler(self, order_package: BaseOrderPackage):
         """ Handles order_package, capable of place, cancel,
         replace and update.
         """
-        http_session = requests.Session()  # todo keep
+        http_session = self._get_http_session()
         if order_package.package_type == OrderPackageType.PLACE:
             func = self.execute_place
         elif order_package.package_type == OrderPackageType.CANCEL:
@@ -57,6 +60,22 @@ class BaseExecution:
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
         raise NotImplementedError
+
+    def _get_http_session(self) -> requests.Session:
+        while self._sessions:
+            try:
+                return self._sessions.pop()
+            except IndexError:
+                continue
+        logger.info(
+            "New requests.Session created",
+            extra={"sessions_created": self._sessions_created},
+        )
+        return requests.Session()
+
+    def _return_http_session(self, http_session: requests.Session) -> None:
+        if len(self._sessions) < self._max_workers:
+            self._sessions.append(http_session)
 
     def _order_logger(
         self, order: BaseOrder, instruction_report, package_type: OrderPackageType

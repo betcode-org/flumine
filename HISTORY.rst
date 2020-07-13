@@ -8,6 +8,7 @@ Release History
 
 **Improvements**
 
+- #201 requests session kept and reused to reduce latency
 - Logging improvements
 
 **Bug Fixes**

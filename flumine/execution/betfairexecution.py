@@ -203,11 +203,18 @@ class BetfairExecution(BaseExecution):
                         "order_package": order_package.info,
                     },
                 )
-                return
+                return  # session not returned on purpose
             logger.info(
                 "execute_%s" % trading_function.__name__,
-                extra={**order_package.info, **{"response": response._data}},
+                extra={
+                    "trading_function": trading_function.__name__,
+                    "elapsed_time": response.elapsed_time,
+                    "response": response._data,
+                    "order_package": order_package.info,
+                },
             )
+            self._return_http_session(http_session)
             return response
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
+            self._return_http_session(http_session)
