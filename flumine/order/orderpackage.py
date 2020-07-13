@@ -82,6 +82,8 @@ class BaseOrderPackage(BaseEvent):
             "orders": [o.id for o in self._orders],
             "package_type": self.package_type.value,
             "customer_strategy_ref": self.customer_strategy_ref,
+            "bet_delay": self.bet_delay,
+            "market_version": self.market_version,
         }
 
     @property

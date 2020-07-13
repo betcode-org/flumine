@@ -78,6 +78,8 @@ class OrderPackageTest(unittest.TestCase):
                 "orders": [self.mock_order.id],
                 "package_type": self.order_package.package_type.value,
                 "customer_strategy_ref": self.order_package.customer_strategy_ref,
+                "bet_delay": self.order_package.bet_delay,
+                "market_version": self.order_package.market_version,
             },
         )
 
