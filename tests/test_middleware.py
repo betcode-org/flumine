@@ -17,6 +17,14 @@ class MiddlewareTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.middleware(None)
 
+    def test_add_market(self):
+        mock_market = mock.Mock()
+        self.assertIsNone(self.middleware.add_market(mock_market))
+
+    def test_remove_market(self):
+        mock_market = mock.Mock()
+        self.assertIsNone(self.middleware.remove_market(mock_market))
+
 
 class SimulatedMiddlewareTest(unittest.TestCase):
     def setUp(self) -> None:

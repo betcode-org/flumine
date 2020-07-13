@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #201 requests session kept and reused to reduce latency
+- Middleware add/remove market functions added and integrated
 - Logging improvements
 
 **Bug Fixes**

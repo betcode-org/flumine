@@ -128,11 +128,25 @@ class BaseFlumineTest(unittest.TestCase):
 
     @mock.patch("flumine.baseflumine.Market")
     def test__add_market(self, mock_market):
+        mock_middleware = mock.Mock()
+        self.base_flumine._market_middleware = [mock_middleware]
         mock_market_book = mock.Mock()
         self.assertEqual(
             self.base_flumine._add_market("1.234", mock_market_book), mock_market()
         )
         self.assertEqual(len(self.base_flumine.markets._markets), 1)
+        mock_middleware.add_market.assert_called_with(mock_market())
+
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__remove_market(self, _):
+        mock_markets = mock.Mock()
+        self.base_flumine.markets = mock_markets
+        mock_middleware = mock.Mock()
+        self.base_flumine._market_middleware = [mock_middleware]
+        mock_market = mock.Mock()
+        self.base_flumine._remove_market(mock_market)
+        mock_markets.remove_market.assert_called_with(mock_market.market_id)
+        mock_middleware.remove_market.assert_called_with(mock_market)
 
     def test__process_raw_data(self):
         mock_event = mock.Mock()

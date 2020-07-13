@@ -150,10 +150,18 @@ class BaseFlumine:
             logger.warning("Empty package, not executing", extra=order_package.info)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
+        logger.info("Adding: {0} to markets".format(market_id), extra=self.info)
         market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
-        logger.info("Adding: {0} to markets".format(market.market_id), extra=self.info)
+        for middleware in self._market_middleware:
+            middleware.add_market(market)
         return market
+
+    def _remove_market(self, market: Market) -> None:
+        logger.info("Removing market {0}".format(market.market_id), extra=self.info)
+        for middleware in self._market_middleware:
+            middleware.remove_market(market)
+        self.markets.remove_market(market.market_id)
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
@@ -250,13 +258,12 @@ class BaseFlumine:
 
         # check for markets that have been closed for x seconds
         closed_markets = [
-            m.market_id
+            m
             for m in self.markets
             if m.elapsed_seconds_closed and m.elapsed_seconds_closed > 3600
         ]
-        for market_id in closed_markets:
-            logger.info("Removing market %s" % market_id)
-            self.markets.remove_market(market_id)
+        for market in closed_markets:
+            self._remove_market(market)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

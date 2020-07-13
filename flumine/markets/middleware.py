@@ -12,6 +12,12 @@ class Middleware:
     def __call__(self, market) -> None:
         raise NotImplementedError
 
+    def add_market(self, market) -> None:
+        pass
+
+    def remove_market(self, market) -> None:
+        pass
+
 
 class SimulatedMiddleware(Middleware):
     """
