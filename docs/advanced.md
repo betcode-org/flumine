@@ -158,6 +158,7 @@ Flumine will catch all errors that occur in `strategy.check_market` and `strateg
 jsonlogger is used to log extra detail, see below for a typical setup:
 
 ```python
+import time
 import logging
 from pythonjsonlogger import jsonlogger
 

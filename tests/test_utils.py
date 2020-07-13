@@ -31,7 +31,15 @@ class UtilsTest(unittest.TestCase):
     #     utils.arange()
 
     def test_make_prices(self):
-        utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
+        prices = utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
+        self.assertEqual(len(prices), 350)
+
+    def test_get_nearest_price(self):
+        self.assertEqual(utils.get_nearest_price(1.011), 1.01)
+        self.assertEqual(utils.get_nearest_price(0), 1.01)
+        self.assertEqual(utils.get_nearest_price(1001), 1000)
+        self.assertEqual(utils.get_nearest_price(2.01), 2.02)
+        self.assertEqual(utils.get_nearest_price(2.0099), 2.00)
 
     def test_get_price(self):
         self.assertEqual(

@@ -17,6 +17,14 @@ class MiddlewareTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.middleware(None)
 
+    def test_add_market(self):
+        mock_market = mock.Mock()
+        self.assertIsNone(self.middleware.add_market(mock_market))
+
+    def test_remove_market(self):
+        mock_market = mock.Mock()
+        self.assertIsNone(self.middleware.remove_market(mock_market))
+
 
 class SimulatedMiddlewareTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -40,6 +48,13 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock__process_runner.assert_called_with({}, mock_runner)
         self.assertEqual(mock_market.context, {"simulated": {}})
         mock__process_simulated_orders.assert_called_with(mock_market, {})
+
+    def test_remove_market(self):
+        mock_market = mock.Mock(market_id="1.23")
+        self.middleware.markets = {mock_market.market_id: []}
+        self.middleware.remove_market(mock_market)
+        self.middleware.remove_market(mock_market)
+        self.assertEqual(self.middleware.markets, {})
 
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()

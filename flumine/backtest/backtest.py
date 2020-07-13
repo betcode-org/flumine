@@ -75,7 +75,7 @@ class FlumineBacktest(BaseFlumine):
 
             market = self.markets.markets.get(market_id)
             if market is None:
-                market = self._add_live_market(market_id, market_book)
+                market = self._add_market(market_id, market_book)
                 self.log_control(events.MarketEvent(market))
 
             # process market

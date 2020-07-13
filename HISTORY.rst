@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.9.0 (2020-07-13)
++++++++++++++++++++
+
+**Improvements**
+
+- #201 requests session kept and reused to reduce latency
+- Middleware add/remove market functions added and integrated into Simulated
+- Logging improvements
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.6.0
+
 1.8.2 (2020-07-06)
 +++++++++++++++++++
 

@@ -2,7 +2,7 @@ import uuid
 import logging
 import hashlib
 from typing import Optional, Tuple, Callable
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from . import config
@@ -72,6 +72,19 @@ def make_prices(min_price, cutoffs):
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
+
+
+def get_nearest_price(price, cutoffs=CUTOFFS):
+    if price <= MIN_PRICE:
+        return MIN_PRICE
+    if price > MAX_PRICE:
+        return MAX_PRICE
+    price = as_dec(price)
+    for cutoff, step in cutoffs:
+        if price < cutoff:
+            break
+    step = as_dec(step)
+    return float((price * step).quantize(2, ROUND_HALF_UP) / step)
 
 
 def get_price(data: list, level: int) -> Optional[float]:

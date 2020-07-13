@@ -12,6 +12,12 @@ class Middleware:
     def __call__(self, market) -> None:
         raise NotImplementedError
 
+    def add_market(self, market) -> None:
+        pass
+
+    def remove_market(self, market) -> None:
+        pass
+
 
 class SimulatedMiddleware(Middleware):
     """
@@ -33,6 +39,12 @@ class SimulatedMiddleware(Middleware):
         market.context["simulated"] = market_analytics
         # process simulated orders
         self._process_simulated_orders(market, market_analytics)
+
+    def remove_market(self, market) -> None:
+        try:
+            del self.markets[market.market_id]
+        except KeyError:
+            pass
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
