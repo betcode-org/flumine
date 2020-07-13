@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 from unittest.mock import call
 
+from betfairlightweight import BetfairError
 from flumine.clients.clients import ExchangeType
 from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import BaseExecution, OrderPackageType
@@ -12,61 +13,68 @@ from flumine.execution.simulatedexecution import SimulatedExecution
 class BaseExecutionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.execution = BaseExecution(self.mock_flumine)
+        self.execution = BaseExecution(self.mock_flumine, max_workers=2)
 
     def test_init(self):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
+        self.assertEqual(self.execution._max_workers, 2)
         self.assertIsNotNone(self.execution._thread_pool)
         self.assertIsNone(self.execution.EXCHANGE)
         self.assertEqual(self.execution._bet_id, 100000000000)
+        self.assertEqual(self.execution._sessions, [])
+        self.assertEqual(self.execution._sessions_created, 0)
 
-    @mock.patch("flumine.execution.baseexecution.requests")
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._get_http_session")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
-    def test_handler_place(self, mock_execute_place, mock_requests):
+    def test_handler_place(self, mock_execute_place, mock__get_http_session):
         mock_order_package = mock.Mock()
         mock_order_package.package_type = OrderPackageType.PLACE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
-            mock_execute_place, mock_order_package, mock_requests.Session()
+            mock_execute_place, mock_order_package, mock__get_http_session()
         )
+        mock__get_http_session.assert_called_with()
 
-    @mock.patch("flumine.execution.baseexecution.requests")
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._get_http_session")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_cancel")
-    def test_handler_cancel(self, mock_execute_cancel, mock_requests):
+    def test_handler_cancel(self, mock_execute_cancel, mock__get_http_session):
         mock_order_package = mock.Mock()
         mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
-            mock_execute_cancel, mock_order_package, mock_requests.Session()
+            mock_execute_cancel, mock_order_package, mock__get_http_session()
         )
+        mock__get_http_session.assert_called_with()
 
-    @mock.patch("flumine.execution.baseexecution.requests")
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._get_http_session")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_replace")
-    def test_handler_replace(self, mock_execute_replace, mock_requests):
+    def test_handler_replace(self, mock_execute_replace, mock__get_http_session):
         mock_order_package = mock.Mock()
         mock_order_package.package_type = OrderPackageType.REPLACE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
-            mock_execute_replace, mock_order_package, mock_requests.Session()
+            mock_execute_replace, mock_order_package, mock__get_http_session()
         )
+        mock__get_http_session.assert_called_with()
 
-    @mock.patch("flumine.execution.baseexecution.requests")
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._get_http_session")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_update")
-    def test_handler_update(self, mock_execute_update, mock_requests):
+    def test_handler_update(self, mock_execute_update, mock__get_http_session):
         mock_order_package = mock.Mock()
         mock_order_package.package_type = OrderPackageType.UPDATE
         mock_thread_pool = mock.Mock()
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
-            mock_execute_update, mock_order_package, mock_requests.Session()
+            mock_execute_update, mock_order_package, mock__get_http_session()
         )
+        mock__get_http_session.assert_called_with()
 
     def test_handler_unknown(self):
         mock_order_package = mock.Mock()
@@ -89,6 +97,20 @@ class BaseExecutionTest(unittest.TestCase):
     def test_execute_replace(self):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
+
+    @mock.patch("flumine.execution.baseexecution.requests")
+    def test__get_http_session(self, mock_requests):
+        self.execution._sessions = [1, 2]
+        self.assertEqual(self.execution._get_http_session(), 2)
+        self.assertEqual(self.execution._get_http_session(), 1)
+        self.assertEqual(self.execution._get_http_session(), mock_requests.Session())
+
+    def test__return_http_session(self):
+        self.execution._return_http_session(1)
+        self.assertEqual(self.execution._sessions, [1])
+        self.execution._return_http_session(2)
+        self.execution._return_http_session(3)
+        self.assertEqual(self.execution._sessions, [1, 2])
 
     @mock.patch("flumine.execution.baseexecution.OrderEvent")
     def test__order_logger_place(self, mock_order_event):
@@ -606,7 +628,10 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_order_package.client.betting_client.betting.replace_orders(),
         )
 
-    def test__execution_helper(self):
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper(self, mock__return_http_session):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
         mock_session = mock.Mock()
@@ -616,6 +641,40 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_trading_function, mock_order_package, mock_session
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_called_with(mock_session)
+
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_empty(self, mock__return_http_session):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock(orders=[])
+        mock_order_package.info = {}
+        self.execution._execution_helper(
+            mock_trading_function, mock_order_package, mock_session
+        )
+        mock_trading_function.assert_not_called()
+        mock__return_http_session.assert_called_with(mock_session)
+
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_error(self, mock__return_http_session):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_trading_function.side_effect = BetfairError()
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.info = {}
+        self.assertIsNone(
+            self.execution._execution_helper(
+                mock_trading_function, mock_order_package, mock_session
+            )
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_not_called()
 
 
 class SimulatedExecutionTest(unittest.TestCase):
