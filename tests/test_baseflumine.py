@@ -127,10 +127,10 @@ class BaseFlumineTest(unittest.TestCase):
         mock_client_control.assert_called_with(mock_order_package)
 
     @mock.patch("flumine.baseflumine.Market")
-    def test__add_live_market(self, mock_market):
+    def test__add_market(self, mock_market):
         mock_market_book = mock.Mock()
         self.assertEqual(
-            self.base_flumine._add_live_market("1.234", mock_market_book), mock_market()
+            self.base_flumine._add_market("1.234", mock_market_book), mock_market()
         )
         self.assertEqual(len(self.base_flumine.markets._markets), 1)
 

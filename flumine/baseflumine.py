@@ -114,7 +114,7 @@ class BaseFlumine:
 
             market = self.markets.markets.get(market_id)
             if market is None:
-                market = self._add_live_market(market_id, market_book)
+                market = self._add_market(market_id, market_book)
 
             # process market
             market(market_book)
@@ -149,7 +149,7 @@ class BaseFlumine:
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
 
-    def _add_live_market(
+    def _add_market(
         self, market_id: str, market_book: resources.MarketBook
     ) -> Market:
         market = Market(self, market_id, market_book)
