@@ -658,16 +658,20 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.assert_not_called()
         mock__return_http_session.assert_called_with(mock_session)
 
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler_queue")
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
     )
-    def test__execution_helper_error(self, mock__return_http_session):
+    def test__execution_helper_error(
+        self, mock__return_http_session, mock_handler_queue
+    ):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
         mock_trading_function.side_effect = BetfairError()
         mock_session = mock.Mock()
         mock_order_package = mock.Mock()
         mock_order_package.info = {}
+        mock_order_package.retry.return_value = True
         self.assertIsNone(
             self.execution._execution_helper(
                 mock_trading_function, mock_order_package, mock_session
@@ -675,6 +679,30 @@ class BetfairExecutionTest(unittest.TestCase):
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
         mock__return_http_session.assert_not_called()
+        mock_handler_queue.put.assert_called_with(mock_order_package)
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler_queue")
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_error_no_retry(
+        self, mock__return_http_session, mock_handler_queue
+    ):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_trading_function.side_effect = BetfairError()
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.info = {}
+        mock_order_package.retry.return_value = False
+        self.assertIsNone(
+            self.execution._execution_helper(
+                mock_trading_function, mock_order_package, mock_session
+            )
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_not_called()
+        mock_handler_queue.put.assert_not_called()
 
 
 class SimulatedExecutionTest(unittest.TestCase):

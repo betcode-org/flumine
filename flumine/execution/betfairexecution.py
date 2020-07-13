@@ -185,7 +185,7 @@ class BetfairExecution(BaseExecution):
             session=session,
         )
 
-    def _execution_helper(  # todo retry!
+    def _execution_helper(
         self,
         trading_function: Callable,
         order_package: BaseOrderPackage,
@@ -203,6 +203,8 @@ class BetfairExecution(BaseExecution):
                         "order_package": order_package.info,
                     },
                 )
+                if order_package.retry():
+                    self.handler_queue.put(order_package)
                 return  # session not returned on purpose
             logger.info(
                 "execute_%s" % trading_function.__name__,
