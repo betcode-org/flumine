@@ -9,12 +9,8 @@ Release History
 **Improvements**
 
 - #201 requests session kept and reused to reduce latency
-- Middleware add/remove market functions added and integrated
+- Middleware add/remove market functions added and integrated into Simulated
 - Logging improvements
-
-**Bug Fixes**
-
--
 
 **Libraries**
 

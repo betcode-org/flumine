@@ -40,6 +40,12 @@ class SimulatedMiddleware(Middleware):
         # process simulated orders
         self._process_simulated_orders(market, market_analytics)
 
+    def remove_market(self, market) -> None:
+        try:
+            del self.markets[market.market_id]
+        except KeyError:
+            pass
+
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
         for order in market.blotter.live_orders:

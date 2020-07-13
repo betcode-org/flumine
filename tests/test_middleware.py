@@ -49,6 +49,13 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(mock_market.context, {"simulated": {}})
         mock__process_simulated_orders.assert_called_with(mock_market, {})
 
+    def test_remove_market(self):
+        mock_market = mock.Mock(market_id="1.23")
+        self.middleware.markets = {mock_market.market_id: []}
+        self.middleware.remove_market(mock_market)
+        self.middleware.remove_market(mock_market)
+        self.assertEqual(self.middleware.markets, {})
+
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()
         mock_order = mock.Mock()
