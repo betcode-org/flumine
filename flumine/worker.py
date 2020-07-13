@@ -35,15 +35,19 @@ class BackgroundWorker(threading.Thread):
         self.context = context or {}
 
     def run(self) -> None:
-        time.sleep(self.start_delay)
         logger.info(
             "BackgroundWorker {0} starting".format(self.name),
             extra={
                 "worker_name": self.name,
                 "function": self.function,
                 "context": self.context,
+                "start_delay": self.start_delay,
+                "interval": self.interval,
+                "func_args": self.func_args,
+                "func_kwargs": self.func_kwargs,
             },
         )
+        time.sleep(self.start_delay)
         while self.is_alive():
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
