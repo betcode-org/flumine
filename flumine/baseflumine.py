@@ -149,9 +149,7 @@ class BaseFlumine:
         else:
             logger.warning("Empty package, not executing", extra=order_package.info)
 
-    def _add_market(
-        self, market_id: str, market_book: resources.MarketBook
-    ) -> Market:
+    def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
         market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
         logger.info("Adding: {0} to markets".format(market.market_id), extra=self.info)
