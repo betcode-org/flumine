@@ -1,4 +1,5 @@
 import uuid
+import time
 from enum import Enum
 from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
@@ -17,13 +18,10 @@ class OrderPackageType(Enum):
 
 
 class BaseOrderPackage(BaseEvent):
-
     """
     Data structure for multiple orders,
     temporary to allow execution
     """
-
-    # todo client/retry
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
@@ -48,6 +46,16 @@ class BaseOrderPackage(BaseEvent):
         self.async_ = async_
         self.customer_strategy_ref = config.hostname
         self.processed = False  # used for simulated execution
+        self._retry = True
+        self._max_retries = 3  # will retry 3 times
+        self._retry_count = 0
+
+    def retry(self):
+        if self._retry and self._retry_count < self._max_retries:
+            time.sleep(self._retry_count)  # back-off
+            self._retry_count += 1
+            return True
+        return False
 
     @property
     def place_instructions(self) -> dict:
@@ -84,6 +92,8 @@ class BaseOrderPackage(BaseEvent):
             "customer_strategy_ref": self.customer_strategy_ref,
             "bet_delay": self.bet_delay,
             "market_version": self.market_version,
+            "retry": self._retry,
+            "retry_count": self._retry_count,
         }
 
     @property
