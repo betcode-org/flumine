@@ -205,7 +205,9 @@ class BetfairExecution(BaseExecution):
                 )
                 if order_package.retry():
                     self.handler_queue.put(order_package)
-                return  # session not returned on purpose
+
+                self._return_http_session(http_session, err=True)
+                return
             logger.info(
                 "execute_%s" % trading_function.__name__,
                 extra={

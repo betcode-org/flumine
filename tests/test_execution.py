@@ -104,13 +104,26 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution._get_http_session(), 2)
         self.assertEqual(self.execution._get_http_session(), 1)
         self.assertEqual(self.execution._get_http_session(), mock_requests.Session())
+        self.assertEqual(self.execution._sessions_created, 1)
 
     def test__return_http_session(self):
-        self.execution._return_http_session(1)
-        self.assertEqual(self.execution._sessions, [1])
-        self.execution._return_http_session(2)
-        self.execution._return_http_session(3)
-        self.assertEqual(self.execution._sessions, [1, 2])
+        mock_session = mock.Mock()
+        self.execution._return_http_session(mock_session)
+        self.assertEqual(self.execution._sessions, [mock_session])
+        self.execution._return_http_session(mock_session)
+        self.execution._return_http_session(mock_session)
+        self.assertEqual(self.execution._sessions, [mock_session, mock_session])
+
+    def test__return_http_session_close(self):
+        self.execution._sessions = [1, 2]
+        mock_session = mock.Mock()
+        self.execution._return_http_session(mock_session)
+        mock_session.close.assert_called_with()
+
+    def test__return_http_session_err_close(self):
+        mock_session = mock.Mock()
+        self.execution._return_http_session(mock_session, err=True)
+        mock_session.close.assert_called_with()
 
     @mock.patch("flumine.execution.baseexecution.OrderEvent")
     def test__order_logger_place(self, mock_order_event):
@@ -678,7 +691,7 @@ class BetfairExecutionTest(unittest.TestCase):
             )
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
-        mock__return_http_session.assert_not_called()
+        mock__return_http_session.assert_called_with(mock_session, err=True)
         mock_handler_queue.put.assert_called_with(mock_order_package)
 
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler_queue")
@@ -701,7 +714,7 @@ class BetfairExecutionTest(unittest.TestCase):
             )
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
-        mock__return_http_session.assert_not_called()
+        mock__return_http_session.assert_called_with(mock_session, err=True)
         mock_handler_queue.put.assert_not_called()
 
 
