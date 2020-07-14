@@ -202,6 +202,7 @@ class BetfairExecution(BaseExecution):
                         "response": e,
                         "order_package": order_package.info,
                     },
+                    exc_info=True,
                 )
                 if order_package.retry():
                     self.handler_queue.put(order_package)
