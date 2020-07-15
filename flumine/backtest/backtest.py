@@ -77,6 +77,8 @@ class FlumineBacktest(BaseFlumine):
             if market is None:
                 market = self._add_market(market_id, market_book)
                 self.log_control(events.MarketEvent(market))
+            elif market.closed:
+                self.markets.add_market(market_id, market)
 
             # process market
             market(market_book)
