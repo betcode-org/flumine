@@ -38,6 +38,25 @@ class OrderPackageTest(unittest.TestCase):
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
         self.assertFalse(self.order_package.processed)
+        self.assertTrue(self.order_package._retry)
+        self.assertEqual(self.order_package._max_retries, 3)
+        self.assertEqual(self.order_package._retry_count, 0)
+
+    def test_retry(self):
+        self.assertTrue(self.order_package.retry())
+        self.assertEqual(self.order_package._retry_count, 1)
+
+    @mock.patch("flumine.order.orderpackage.time")
+    def test_retry_false_count(self, mock_time):
+        self.assertTrue(self.order_package.retry())
+        self.assertEqual(self.order_package._retry_count, 1)
+        self.assertTrue(self.order_package.retry())
+        self.assertEqual(self.order_package._retry_count, 2)
+        self.assertTrue(self.order_package.retry())
+        self.assertEqual(self.order_package._retry_count, 3)
+        self.assertFalse(self.order_package.retry())
+        self.assertEqual(self.order_package._retry_count, 3)
+        mock_time.sleep.assert_called()
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):
@@ -78,6 +97,10 @@ class OrderPackageTest(unittest.TestCase):
                 "orders": [self.mock_order.id],
                 "package_type": self.order_package.package_type.value,
                 "customer_strategy_ref": self.order_package.customer_strategy_ref,
+                "bet_delay": self.order_package.bet_delay,
+                "market_version": self.order_package.market_version,
+                "retry": self.order_package._retry,
+                "retry_count": self.order_package._retry_count,
             },
         )
 

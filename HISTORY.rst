@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.9.1 (2020-07-15)
++++++++++++++++++++
+
+**Improvements**
+
+- #184 package retry on error (limited to 3 with back-off)
+- requests.Session now closed and deleted
+
 1.9.0 (2020-07-13)
 +++++++++++++++++++
 

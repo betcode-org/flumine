@@ -67,14 +67,20 @@ class BaseExecution:
                 return self._sessions.pop()
             except IndexError:
                 continue
+        self._sessions_created += 1
         logger.info(
             "New requests.Session created",
             extra={"sessions_created": self._sessions_created},
         )
         return requests.Session()
 
-    def _return_http_session(self, http_session: requests.Session) -> None:
-        if len(self._sessions) < self._max_workers:
+    def _return_http_session(
+        self, http_session: requests.Session, err: bool = False
+    ) -> None:
+        if err or len(self._sessions) >= self._max_workers:
+            http_session.close()
+            del http_session
+        else:
             self._sessions.append(http_session)
 
     def _order_logger(
