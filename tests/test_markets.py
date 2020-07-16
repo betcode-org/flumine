@@ -137,7 +137,7 @@ class MarketTest(unittest.TestCase):
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.assertEqual(self.market.blotter.pending_place, [mock_order])
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
-        mock_order.trade.update_market_notes.assert_called_with(self.market.market_book)
+        mock_order.trade.update_market_notes.assert_called_with(self.market)
 
     @mock.patch("flumine.markets.market.events")
     def test_place_order_not_executed(self, mock_events):

@@ -3,7 +3,6 @@ import collections
 import unittest
 from unittest import mock
 
-from flumine.order.order import OrderStatus
 from flumine.order.trade import Trade, OrderError, TradeStatus
 
 
@@ -14,7 +13,6 @@ class TradeTest(unittest.TestCase):
         self.mock_fill_kill = mock.Mock()
         self.mock_offset = mock.Mock()
         self.mock_green = mock.Mock()
-        self.mock_stop = mock.Mock()
         self.notes = collections.OrderedDict({"trigger": 123})
         self.trade = Trade(
             "1.234",
@@ -25,7 +23,6 @@ class TradeTest(unittest.TestCase):
             self.mock_fill_kill,
             self.mock_offset,
             self.mock_green,
-            self.mock_stop,
         )
 
     def test_init(self):
@@ -37,7 +34,6 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.fill_kill, self.mock_fill_kill)
         self.assertEqual(self.trade.offset, self.mock_offset)
         self.assertEqual(self.trade.green, self.mock_green)
-        self.assertEqual(self.trade.stop, self.mock_stop)
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
         self.assertEqual(self.trade.offset_orders, [])
@@ -52,7 +48,8 @@ class TradeTest(unittest.TestCase):
             selection_id=self.trade.selection_id, handicap=0, last_price_traded=5
         )
         mock_market_book.runners = [mock_runner]
-        self.trade.update_market_notes(mock_market_book)
+        mock_market = mock.Mock(market_book=mock_market_book)
+        self.trade.update_market_notes(mock_market)
         self.assertEqual(self.trade.market_notes, "1.01,1.01,5")
 
     def test__update_status(self):
