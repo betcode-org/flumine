@@ -41,16 +41,11 @@ class TradeTest(unittest.TestCase):
         self.assertIsNone(self.trade.date_time_complete)
         self.assertIsNone(self.trade.market_notes)
 
-    @mock.patch("flumine.order.trade.get_price", return_value=1.01)
-    def test_update_market_notes(self, mock_get_price):
-        mock_market_book = mock.Mock()
-        mock_runner = mock.Mock(
-            selection_id=self.trade.selection_id, handicap=0, last_price_traded=5
-        )
-        mock_market_book.runners = [mock_runner]
-        mock_market = mock.Mock(market_book=mock_market_book)
+    @mock.patch("flumine.order.trade.get_market_notes")
+    def test_update_market_notes(self, mock_get_market_notes):
+        mock_market = mock.Mock()
         self.trade.update_market_notes(mock_market)
-        self.assertEqual(self.trade.market_notes, "1.01,1.01,5")
+        self.assertEqual(self.trade.market_notes, mock_get_market_notes())
 
     def test__update_status(self):
         self.trade._update_status(TradeStatus.COMPLETE)

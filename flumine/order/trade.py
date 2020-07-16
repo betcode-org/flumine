@@ -10,7 +10,7 @@ from ..strategy.strategy import BaseStrategy
 from .order import BetfairOrder
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
-from ..utils import get_price, get_runner_book
+from ..utils import get_market_notes
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,7 @@ class Trade:
         self.date_time_complete = None
 
     def update_market_notes(self, market) -> None:
-        runner = get_runner_book(market.market_book, self.selection_id)
-        if runner:
-            self.market_notes = "{0},{1},{2}".format(
-                get_price(runner.ex.available_to_back, 0),
-                get_price(runner.ex.available_to_lay, 0),
-                runner.last_price_traded,
-            )
+        self.market_notes = get_market_notes(market, self.selection_id)
 
     # status
     def _update_status(self, status: TradeStatus) -> None:
