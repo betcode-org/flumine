@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.9.2 (2020-07-16)
++++++++++++++++++++
+
+**Improvements**
+
+- update_market_notes refactor and move to utils to make patching easier
+
+**Bug Fixes**
+
+- Market.closed now updated when reopened + logging improvements
+
 1.9.1 (2020-07-15)
 +++++++++++++++++++
 
