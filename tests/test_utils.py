@@ -191,3 +191,11 @@ class UtilsTest(unittest.TestCase):
         mock_runner = mock.Mock(selection_id=123, handicap=0)
         mock_market_book.runners = [mock_runner]
         self.assertEqual(utils.get_runner_book(mock_market_book, 123), mock_runner)
+
+    @mock.patch("flumine.utils.get_price", return_value=1.01)
+    def test_get_market_notes(self, mock_get_price):
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock(selection_id=123, handicap=0, last_price_traded=5)
+        mock_market_book.runners = [mock_runner]
+        mock_market = mock.Mock(market_book=mock_market_book)
+        self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")

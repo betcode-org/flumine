@@ -4,13 +4,13 @@ import datetime
 import collections
 from enum import Enum
 from typing import Union, Type
-from betfairlightweight.resources.bettingresources import MarketBook, CurrentOrder
+from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
 from .order import BetfairOrder
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
-from ..utils import get_price, get_runner_book
+from ..utils import get_market_notes
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ class Trade:
         fill_kill=None,
         offset=None,
         green=None,
-        stop=None,
     ):
         self.id = uuid.uuid1()
         self.market_id = market_id
@@ -42,11 +41,10 @@ class Trade:
         self.notes = (
             notes if notes else collections.OrderedDict()
         )  # trade notes (e.g. triggers/market state)
-        self.market_notes = None  # back,lay,lpt (initial order only)
-        self.fill_kill = fill_kill
-        self.offset = offset
-        self.green = green
-        self.stop = stop
+        self.market_notes = None  # back,lay,lpt
+        self.fill_kill = fill_kill  # todo
+        self.offset = offset  # todo
+        self.green = green  # todo
         self.orders = []  # all orders linked to trade
         self.offset_orders = []  # pending offset orders once initial order has matched
         self.status_log = []
@@ -54,14 +52,8 @@ class Trade:
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_complete = None
 
-    def update_market_notes(self, market_book: MarketBook) -> None:
-        runner = get_runner_book(market_book, self.selection_id)
-        if runner:
-            self.market_notes = "{0},{1},{2}".format(
-                get_price(runner.ex.available_to_back, 0),
-                get_price(runner.ex.available_to_lay, 0),
-                runner.last_price_traded,
-            )
+    def update_market_notes(self, market) -> None:
+        self.market_notes = get_market_notes(market, self.selection_id)
 
     # status
     def _update_status(self, status: TradeStatus) -> None:

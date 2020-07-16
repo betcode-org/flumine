@@ -32,10 +32,21 @@ class Market:
 
     def open_market(self) -> None:
         self.closed = False
+        logger.info(
+            "Market {0} opened".format(self.market_id),
+            extra={"market_id": self.market_id},
+        )
 
     def close_market(self) -> None:
         self.closed = True
         self.date_time_closed = datetime.datetime.utcnow()
+        logger.info(
+            "Market {0} closed".format(self.market_id),
+            extra={
+                "market_id": self.market_id,
+                "date_time_closed": self.date_time_closed,
+            },
+        )
 
     # order
     def place_order(self, order, execute: bool = True) -> None:
@@ -43,7 +54,7 @@ class Market:
         if order.id not in self.blotter:
             self.blotter[order.id] = order
             if order.trade.market_notes is None:
-                order.trade.update_market_notes(self.market_book)
+                order.trade.update_market_notes(self)
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
         else:
             return  # retry attempt so ignore?

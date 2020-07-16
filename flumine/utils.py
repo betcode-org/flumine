@@ -203,7 +203,9 @@ def call_process_market_book(
             raise
 
 
-def get_runner_book(market_book: MarketBook, selection_id: int, handicap=0):
+def get_runner_book(
+    market_book: MarketBook, selection_id: int, handicap=0
+) -> Optional[RunnerBook]:
     """Returns runner book based on selection id.
     """
     for runner_book in market_book.runners:
@@ -212,3 +214,16 @@ def get_runner_book(market_book: MarketBook, selection_id: int, handicap=0):
             and runner_book.handicap == handicap
         ):
             return runner_book
+
+
+def get_market_notes(market, selection_id: int) -> Optional[str]:
+    """Returns a string of notes for a runner,
+    currently 'back,lay,last_price_traded'
+    """
+    runner = get_runner_book(market.market_book, selection_id)
+    if runner:
+        return "{0},{1},{2}".format(
+            get_price(runner.ex.available_to_back, 0),
+            get_price(runner.ex.available_to_lay, 0),
+            runner.last_price_traded,
+        )
