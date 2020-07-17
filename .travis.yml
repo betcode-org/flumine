@@ -11,10 +11,6 @@ env:
 
 jobs:
   include:
-    - name: "Tests: python 3.5"
-      python: 3.5
-      script:
-        - coverage run --source=flumine setup.py test
     - name: "Tests: python 3.6"
       python: 3.6
       script:

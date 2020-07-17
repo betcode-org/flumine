@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.9.3 (2020-07-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Move remove_markets logic to process_closed_markets (previously not called if no orders)
+- Travis remove py3.5
+
 1.9.2 (2020-07-16)
 +++++++++++++++++++
 
