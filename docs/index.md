@@ -30,7 +30,7 @@ Support for market, order and custom streaming data.
 
 [join slack group](https://betfairlightweight.herokuapp.com)
 
-Currently tested on Python 3.5, 3.6, 3.7 and 3.8.
+Currently tested on Python 3.6, 3.7 and 3.8.
 
 ## installation
 
