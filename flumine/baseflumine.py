@@ -229,7 +229,7 @@ class BaseFlumine:
         closed_markets = [
             m
             for m in self.markets
-            if m.elapsed_seconds_closed and m.elapsed_seconds_closed > 3600
+            if m.closed and m.elapsed_seconds_closed and m.elapsed_seconds_closed > 3600
         ]
         for market in closed_markets:
             self._remove_market(market)
