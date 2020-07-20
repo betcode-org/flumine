@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.10.1 (2020-07-20)
++++++++++++++++++++
+
+**Bug Fixes**
+
+-Add middleware moved to init, Simulated needs to be the first middleware
+
 1.10.0 (2020-07-20)
 +++++++++++++++++++
 
