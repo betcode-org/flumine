@@ -50,7 +50,7 @@ class BaseStrategyTest(unittest.TestCase):
             context={"trigger": 0.123},
             max_selection_exposure=1,
             max_order_exposure=2,
-            client=self.mock_client
+            client=self.mock_client,
         )
 
     def test_init(self):

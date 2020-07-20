@@ -1,10 +1,10 @@
 import unittest
 from unittest import mock
 
-from flumine.streams import streams, datastream
+from flumine.streams import streams, datastream, historicalstream
 from flumine.streams.basestream import BaseStream
+from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.exceptions import ListenerError
-from flumine.streams import historicalstream
 
 
 class StreamsTest(unittest.TestCase):
@@ -569,8 +569,20 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
 
+    def test_current_orders(self):
+        current_orders = CurrentOrders([1])
+        self.assertEqual(current_orders.orders, [1])
+        self.assertFalse(current_orders.more_available)
+
     # def test_run(self):
     #     pass
-    #
-    # def test_handle_output(self):
-    #     pass
+
+    def test__get_current_orders(self):
+        mock_market = mock.Mock(closed=False)
+        order_one = mock.Mock(simulated=True)
+        order_one.trade.client = self.stream.client
+        order_two = mock.Mock(simulated=True)
+        order_three = mock.Mock(simulated=True)
+        mock_market.blotter = [order_one, order_two, order_three]
+        self.stream.flumine.markets = [mock_market, mock.Mock(closed=True)]
+        self.assertEqual(self.stream._get_current_orders(), [order_one])

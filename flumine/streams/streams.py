@@ -126,7 +126,7 @@ class Streams:
         client: BaseClient,
         conflate_ms: int = None,
         streaming_timeout: float = 0.25,
-    ):
+    ) -> SimulatedOrderStream:
         logger.warning(
             "Client {0} now paper trading".format(client.betting_client.username)
         )

@@ -13,8 +13,11 @@ class SimulatedTest(unittest.TestCase):
         mock_client = mock.Mock(paper_trade=False)
         mock_trade = mock.Mock(client=mock_client)
         self.mock_order = mock.Mock(
-            selection_id=1234, handicap=1, side="BACK", order_type=self.mock_order_type,
-            trade=mock_trade
+            selection_id=1234,
+            handicap=1,
+            side="BACK",
+            order_type=self.mock_order_type,
+            trade=mock_trade,
         )
         self.simulated = simulated.Simulated(self.mock_order)
 
