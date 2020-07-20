@@ -26,21 +26,38 @@ class SimulatedMiddleware(Middleware):
     """
     Calculates matched amounts per runner
     to be used in simulated matching.
-    # todo runner removal fucks everything
     # todo currency fluctuations fucks everything
     """
 
     def __init__(self):
         # {marketId: {(selectionId, handicap): RunnerAnalytics}}
         self.markets = defaultdict(dict)
+        self._runner_removals = []
 
     def __call__(self, market) -> None:
-        runner_removals = []
-
         market_analytics = self.markets[market.market_id]
+        runner_removals = []  # [(selectionId, handicap, adjustmentFactor)..]
         for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
                 self._process_runner(market_analytics, runner)
+            elif runner.status == "REMOVED":
+                _removal = (
+                    runner.selection_id,
+                    runner.handicap,
+                    runner.adjustment_factor,
+                )
+                if _removal not in self._runner_removals:
+                    logger.warning(
+                        "Runner {0} ({2}) removed from market {3}".format(
+                            *_removal, market.market_id
+                        )
+                    )
+                    self._runner_removals.append(_removal)
+                    runner_removals.append(_removal)
+
+        for _removal in runner_removals:
+            self._process_runner_removal(market, *_removal)
+
         market.context["simulated"] = market_analytics
         # process simulated orders
         self._process_simulated_orders(market, market_analytics)
@@ -52,11 +69,19 @@ class SimulatedMiddleware(Middleware):
             pass
 
     def _process_runner_removal(
-        self, market, removal_selection_id: int, removal_adjustment_factor: float
+        self,
+        market,
+        removal_selection_id: int,
+        removal_handicap: int,
+        removal_adjustment_factor: float,
     ) -> None:
         for order in market.blotter:
             if order.simulated:
-                if order.selection_id == removal_selection_id:
+                if order.lookup == (
+                    market.market_id,
+                    removal_selection_id,
+                    removal_handicap,
+                ):
                     # cancel and void order
                     order.simulated.size_matched = 0
                     order.simulated.average_price_matched = 0
@@ -67,7 +92,8 @@ class SimulatedMiddleware(Middleware):
                         # todo cancel if not PERSIST
                         # todo does a market version bump occur if withdrawal is below the limit?
                         pass
-                    if removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR:  # todo place market
+                    if removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR:
+                        # todo place market
                         for match in order.simulated.matched:
                             match[1] = round(
                                 match[1] * (1 - (removal_adjustment_factor / 100)), 2

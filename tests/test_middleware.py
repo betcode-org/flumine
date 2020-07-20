@@ -34,6 +34,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.middleware.markets, {})
+        self.assertEqual(self.middleware._runner_removals, [])
         self.assertEqual(WIN_MINIMUM_ADJUSTMENT_FACTOR, 2.5)
         self.assertEqual(PLACE_MINIMUM_ADJUSTMENT_FACTOR, 0)
 
@@ -44,14 +45,45 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     def test_call(self, mock__process_runner, mock__process_simulated_orders):
         mock_market = mock.Mock(context={})
         mock_market_book = mock.Mock()
-        mock_runner = mock.Mock()
-        mock_runner.status = "ACTIVE"
+        mock_runner = mock.Mock(status="ACTIVE")
         mock_market_book.runners = [mock_runner]
         mock_market.market_book = mock_market_book
         self.middleware(mock_market)
         mock__process_runner.assert_called_with({}, mock_runner)
         self.assertEqual(mock_market.context, {"simulated": {}})
         mock__process_simulated_orders.assert_called_with(mock_market, {})
+
+    @mock.patch(
+        "flumine.markets.middleware.SimulatedMiddleware._process_simulated_orders"
+    )
+    @mock.patch(
+        "flumine.markets.middleware.SimulatedMiddleware._process_runner_removal"
+    )
+    def test_call_non_runner(
+        self, mock__process_runner_removal, mock__process_simulated_orders
+    ):
+        mock_market = mock.Mock(context={})
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock(status="REMOVED")
+        mock_market_book.runners = [mock_runner]
+        mock_market.market_book = mock_market_book
+        self.middleware(mock_market)
+        self.assertEqual(
+            self.middleware._runner_removals,
+            [
+                (
+                    mock_runner.selection_id,
+                    mock_runner.handicap,
+                    mock_runner.adjustment_factor,
+                )
+            ],
+        )
+        mock__process_runner_removal.assert_called_with(
+            mock_market,
+            mock_runner.selection_id,
+            mock_runner.handicap,
+            mock_runner.adjustment_factor,
+        )
 
     def test_remove_market(self):
         mock_market = mock.Mock(market_id="1.23")
@@ -68,7 +100,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_simulated_two.__bool__.return_value = False
         mock_order_two = mock.Mock(simulated=mock_simulated_two)
         mock_market = mock.Mock(blotter=[mock_order, mock_order_two])
-        self.middleware._process_runner_removal(mock_market, 12345, 16.2)
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
         self.assertEqual(mock_order.simulated.matched, [[123, 7.21, 10]])
         self.assertEqual(mock_order_two.simulated.matched, [[123, 8.6, 10]])
 
@@ -77,16 +109,16 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_simulated.__bool__.return_value = True
         mock_order = mock.Mock(simulated=mock_simulated)
         mock_market = mock.Mock(blotter=[mock_order])
-        self.middleware._process_runner_removal(mock_market, 12345, 2.4)
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 2.4)
         self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
 
     def test__process_runner_removal_void(self):
         mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
         mock_simulated.__bool__.return_value = True
-        mock_order = mock.Mock(simulated=mock_simulated, selection_id=12345)
+        mock_order = mock.Mock(lookup=("1.23", 12345, 0), simulated=mock_simulated)
         mock_order.order_type.size = 10
-        mock_market = mock.Mock(blotter=[mock_order])
-        self.middleware._process_runner_removal(mock_market, 12345, 16.2)
+        mock_market = mock.Mock(market_id="1.23", blotter=[mock_order])
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
         self.assertEqual(mock_order.simulated.size_matched, 0)
         self.assertEqual(mock_order.simulated.average_price_matched, 0)
         self.assertEqual(mock_order.simulated.matched, [])
