@@ -6,6 +6,8 @@ from flumine.markets.middleware import (
     SimulatedMiddleware,
     RunnerAnalytics,
     OrderStatus,
+    WIN_MINIMUM_ADJUSTMENT_FACTOR,
+    PLACE_MINIMUM_ADJUSTMENT_FACTOR,
 )
 
 
@@ -32,6 +34,8 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.middleware.markets, {})
+        self.assertEqual(WIN_MINIMUM_ADJUSTMENT_FACTOR, 2.5)
+        self.assertEqual(PLACE_MINIMUM_ADJUSTMENT_FACTOR, 0)
 
     @mock.patch(
         "flumine.markets.middleware.SimulatedMiddleware._process_simulated_orders"
@@ -55,6 +59,38 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware.remove_market(mock_market)
         self.middleware.remove_market(mock_market)
         self.assertEqual(self.middleware.markets, {})
+
+    def test__process_runner_removal(self):
+        mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(simulated=mock_simulated)
+        mock_simulated_two = mock.MagicMock(matched=[[123, 8.6, 10]])
+        mock_simulated_two.__bool__.return_value = False
+        mock_order_two = mock.Mock(simulated=mock_simulated_two)
+        mock_market = mock.Mock(blotter=[mock_order, mock_order_two])
+        self.middleware._process_runner_removal(mock_market, 12345, 16.2)
+        self.assertEqual(mock_order.simulated.matched, [[123, 7.21, 10]])
+        self.assertEqual(mock_order_two.simulated.matched, [[123, 8.6, 10]])
+
+    def test__process_runner_removal_under_limit(self):
+        mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(simulated=mock_simulated)
+        mock_market = mock.Mock(blotter=[mock_order])
+        self.middleware._process_runner_removal(mock_market, 12345, 2.4)
+        self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
+
+    def test__process_runner_removal_void(self):
+        mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(simulated=mock_simulated, selection_id=12345)
+        mock_order.order_type.size = 10
+        mock_market = mock.Mock(blotter=[mock_order])
+        self.middleware._process_runner_removal(mock_market, 12345, 16.2)
+        self.assertEqual(mock_order.simulated.size_matched, 0)
+        self.assertEqual(mock_order.simulated.average_price_matched, 0)
+        self.assertEqual(mock_order.simulated.matched, [])
+        self.assertEqual(mock_order.simulated.size_voided, 10)
 
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()

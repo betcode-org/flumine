@@ -7,6 +7,9 @@ from ..utils import get_price
 
 logger = logging.getLogger(__name__)
 
+WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
+PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+
 
 class Middleware:
     def __call__(self, market) -> None:
@@ -32,6 +35,8 @@ class SimulatedMiddleware(Middleware):
         self.markets = defaultdict(dict)
 
     def __call__(self, market) -> None:
+        runner_removals = []
+
         market_analytics = self.markets[market.market_id]
         for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
@@ -45,6 +50,28 @@ class SimulatedMiddleware(Middleware):
             del self.markets[market.market_id]
         except KeyError:
             pass
+
+    def _process_runner_removal(
+        self, market, removal_selection_id: int, removal_adjustment_factor: float
+    ) -> None:
+        for order in market.blotter:
+            if order.simulated:
+                if order.selection_id == removal_selection_id:
+                    # cancel and void order
+                    order.simulated.size_matched = 0
+                    order.simulated.average_price_matched = 0
+                    order.simulated.matched = []
+                    order.simulated.size_voided = order.order_type.size
+                else:
+                    if order.status == OrderStatus.EXECUTABLE:
+                        # todo cancel if not PERSIST
+                        # todo does a market version bump occur if withdrawal is below the limit?
+                        pass
+                    if removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR:  # todo place market
+                        for match in order.simulated.matched:
+                            match[1] = round(
+                                match[1] * (1 - (removal_adjustment_factor / 100)), 2
+                            )
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
