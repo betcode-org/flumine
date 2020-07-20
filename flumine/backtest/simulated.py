@@ -1,3 +1,4 @@
+import logging
 import datetime
 from typing import Tuple
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
@@ -10,6 +11,8 @@ from .utils import (
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
 from .. import config
+
+logger = logging.getLogger(__name__)
 
 
 class Simulated:
@@ -96,6 +99,7 @@ class Simulated:
                     self._piq = avail["size"]
                     break
 
+            logger.debug("Simulated order {0} PIQ: {1}".format(self.order.id, self._piq))
             return self._create_place_response(bet_id)
         else:
             return self._create_place_response(bet_id)
@@ -201,6 +205,7 @@ class Simulated:
         # calculate matched on MarketBook update
         price = self.order.order_type.price
         for traded_price, traded_size in traded.items():
+            logger.debug("Simulated order {0} traded: {1} - {2}".format(self.order.id, traded_price, traded_size))
             if self.side == "BACK" and traded_price >= price:
                 self._calculate_process_traded(publish_time, traded_size)
             elif self.side == "LAY" and traded_price <= price:
@@ -222,6 +227,7 @@ class Simulated:
             self._piq = 0
         else:
             self._piq -= traded_size
+            logger.debug("Simulated order {0} PIQ: {1}".format(self.order.id, self._piq))
 
     @property
     def take_sp(self) -> bool:
@@ -237,6 +243,7 @@ class Simulated:
         return self.order.side
 
     def _update_matched(self, data: Tuple[int, float, float]) -> None:
+        logger.debug("Simulated order {0} matched: {1}".format(self.order.id, data))
         self.matched.append(data)
         self.size_matched, self.average_price_matched = wap(self.matched)
 
