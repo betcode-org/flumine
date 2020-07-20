@@ -11,7 +11,7 @@ from .worker import BackgroundWorker
 from .clients.baseclient import BaseClient
 from .markets.markets import Markets
 from .markets.market import Market
-from .markets.middleware import Middleware
+from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
@@ -296,6 +296,9 @@ class BaseFlumine:
             config.simulated = True
         else:
             config.simulated = False
+        # middleware
+        if self.BACKTEST or self.client.paper_trade:
+            self.add_market_middleware(SimulatedMiddleware())
         # login
         self.client.login()
         self.client.update_account_details()

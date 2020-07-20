@@ -9,7 +9,6 @@ from ..exceptions import RunError
 from .utils import PendingPackages
 from ..order.orderpackage import OrderPackageType
 from ..order import process
-from ..markets.middleware import SimulatedMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ class FlumineBacktest(BaseFlumine):
     def __init__(self, client):
         super(FlumineBacktest, self).__init__(client)
         self._pending_packages = PendingPackages()
-        self._market_middleware.append(SimulatedMiddleware())
 
     def run(self) -> None:
         if self.client.EXCHANGE != ExchangeType.SIMULATED:

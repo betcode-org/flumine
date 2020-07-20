@@ -10,6 +10,7 @@ Release History
 
 - #180 client paper trade now implemented
 - #193 initial work on multi client implementation
+- #192 simulation improvements with handling on runner removal
 
 **Bug Fixes**
 

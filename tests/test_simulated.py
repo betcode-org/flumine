@@ -94,7 +94,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
-            self.simulated.matched, [(mock_market_book.publish_time_epoch, 12, 2)]
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -142,7 +142,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
-            self.simulated.matched, [(mock_market_book.publish_time_epoch, 12, 2)]
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -236,22 +236,22 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_price_matched(
             1234567, 12.0, 2.00, [{"price": 15, "size": 120}]
         )
-        self.assertEqual(self.simulated.matched, [(1234567, 15, 2)])
+        self.assertEqual(self.simulated.matched, [[1234567, 15, 2]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234568, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 1}]
         )
-        self.assertEqual(self.simulated.matched, [(1234568, 15, 1), (1234568, 12, 1)])
+        self.assertEqual(self.simulated.matched, [[1234568, 15, 1], [1234568, 12, 1]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234569, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 0.5}]
         )
-        self.assertEqual(self.simulated.matched, [(1234569, 15, 1), (1234569, 12, 0.5)])
+        self.assertEqual(self.simulated.matched, [[1234569, 15, 1], [1234569, 12, 0.5]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234570, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 11, "size": 0.5}]
         )
-        self.assertEqual(self.simulated.matched, [(1234570, 15, 1)])
+        self.assertEqual(self.simulated.matched, [[1234570, 15, 1]])
 
     @mock.patch(
         "flumine.backtest.simulated.Simulated.side",
@@ -262,12 +262,12 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_price_matched(
             1234571, 3.0, 20.00, [{"price": 2.02, "size": 120}]
         )
-        self.assertEqual(self.simulated.matched, [(1234571, 2.02, 20)])
+        self.assertEqual(self.simulated.matched, [[1234571, 2.02, 20]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234571, 3.0, 20.00, [{"price": 2.02, "size": 1}, {"price": 3, "size": 20}]
         )
-        self.assertEqual(self.simulated.matched, [(1234571, 2.02, 1), (1234571, 3, 19)])
+        self.assertEqual(self.simulated.matched, [[1234571, 2.02, 1], [1234571, 3, 19]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234571,
@@ -276,19 +276,19 @@ class SimulatedTest(unittest.TestCase):
             [{"price": 2.02, "size": 1}, {"price": 2.9, "size": 0.5}],
         )
         self.assertEqual(
-            self.simulated.matched, [(1234571, 2.02, 1), (1234571, 2.9, 0.5)]
+            self.simulated.matched, [[1234571, 2.02, 1], [1234571, 2.9, 0.5]]
         )
         self.simulated.matched = []
         self.simulated._process_price_matched(
             1234571, 3.0, 20.00, [{"price": 3, "size": 1}, {"price": 11, "size": 0.5}]
         )
-        self.assertEqual(self.simulated.matched, [(1234571, 3, 1)])
+        self.assertEqual(self.simulated.matched, [[1234571, 3, 1]])
 
     def test__process_sp(self):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = 12.20
         self.simulated._process_sp(1234571, mock_runner)
-        self.assertEqual(self.simulated.matched, [(1234571, 12.2, 2.00)])
+        self.assertEqual(self.simulated.matched, [[1234571, 12.2, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_none(self):
@@ -301,12 +301,12 @@ class SimulatedTest(unittest.TestCase):
     def test__process_sp_processed_semi(self):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = 12.20
-        self.simulated.matched = [(1234571, 10.0, 1)]
+        self.simulated.matched = [[1234571, 10.0, 1]]
         self.simulated.size_matched = 1
         self.simulated.average_price_matched = 10.0
         self.simulated._process_sp(1234572, mock_runner)
         self.assertEqual(
-            self.simulated.matched, [(1234571, 10.0, 1), (1234572, 12.2, 1)]
+            self.simulated.matched, [[1234571, 10.0, 1], [1234572, 12.2, 1]]
         )
         self.assertTrue(self.simulated._bsp_reconciled)
 
@@ -317,7 +317,7 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234573, mock_runner_book)
-        self.assertEqual(self.simulated.matched, [(1234573, 69, 2.00)])
+        self.assertEqual(self.simulated.matched, [[1234573, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_limit_on_close_back_no_match(self):
@@ -338,7 +338,7 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234575, mock_runner_book)
-        self.assertEqual(self.simulated.matched, [(1234575, 69, 0.03)])
+        self.assertEqual(self.simulated.matched, [[1234575, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_limit_on_close_lay_no_match(self):
@@ -359,7 +359,7 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234577, mock_runner_book)
-        self.assertEqual(self.simulated.matched, [(1234577, 69, 2.00)])
+        self.assertEqual(self.simulated.matched, [[1234577, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
 
     def test__process_sp_market_on_close_lay(self):
@@ -370,7 +370,7 @@ class SimulatedTest(unittest.TestCase):
         mock_runner_book = mock.Mock()
         mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234578, mock_runner_book)
-        self.assertEqual(self.simulated.matched, [(1234578, 69, 0.03)])
+        self.assertEqual(self.simulated.matched, [[1234578, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
 
     @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
@@ -400,7 +400,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._calculate_process_traded(1234583, 2.00)
         self.simulated._calculate_process_traded(1234584, 2.00)
         self.assertEqual(
-            self.simulated.matched, [(1234582, 12, 1.00), (1234583, 12, 1.00)]
+            self.simulated.matched, [[1234582, 12, 1.00], [1234583, 12, 1.00]]
         )
         self.assertEqual(self.simulated._piq, 0)
 
@@ -410,7 +410,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0)
         self.simulated._calculate_process_traded(1234586, 4.00)
-        self.assertEqual(self.simulated.matched, [(1234586, 12, 2.00)])
+        self.assertEqual(self.simulated.matched, [[1234586, 12, 2.00]])
         self.assertEqual(self.simulated._piq, 0)
 
     def test_take_sp(self):
@@ -428,27 +428,27 @@ class SimulatedTest(unittest.TestCase):
 
     def test_average_price_matched(self):
         self.assertEqual(self.simulated.average_price_matched, 0)
-        self.simulated._update_matched((1234, 1, 2))
+        self.simulated._update_matched([1234, 1, 2])
         self.assertEqual(self.simulated.average_price_matched, 1)
 
     def test_size_matched(self):
         self.assertEqual(self.simulated.size_matched, 0)
-        self.simulated._update_matched((4321, 1, 2))
+        self.simulated._update_matched([4321, 1, 2])
         self.assertEqual(self.simulated.size_matched, 2)
 
     def test__update_matched(self):
-        self.simulated._update_matched((12345, 10.0, 2.64))
-        self.assertEqual(self.simulated.matched, [(12345, 10.0, 2.64)])
+        self.simulated._update_matched([12345, 10.0, 2.64])
+        self.assertEqual(self.simulated.matched, [[12345, 10.0, 2.64]])
         self.assertEqual(self.simulated.size_matched, 2.64)
         self.assertEqual(self.simulated.average_price_matched, 10.0)
 
     def test_size_remaining(self):
         self.assertEqual(self.simulated.size_remaining, 2)
-        self.simulated._update_matched((1234, 1, 1))
+        self.simulated._update_matched([1234, 1, 1])
         self.assertEqual(self.simulated.size_remaining, 1)
 
     def test_size_remaining_multi(self):
-        self.simulated._update_matched((1234, 1, 0.1))
+        self.simulated._update_matched([1234, 1, 0.1])
         self.simulated.size_cancelled = 0.2
         self.simulated.size_lapsed = 0.3
         self.simulated.size_voided = 0.4
@@ -462,7 +462,7 @@ class SimulatedTest(unittest.TestCase):
     def test_profit_back(self):
         self.assertEqual(self.simulated.profit, 0)
         self.simulated.order.runner_status = "WINNER"
-        self.simulated._update_matched((1234, 10.0, 2.0))
+        self.simulated._update_matched([1234, 10.0, 2.0])
         self.assertEqual(self.simulated.profit, 18.0)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, -2.0)
@@ -471,7 +471,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         self.assertEqual(self.simulated.profit, 0)
         self.simulated.order.runner_status = "WINNER"
-        self.simulated._update_matched((1234, 10.0, 2.0))
+        self.simulated._update_matched([1234, 10.0, 2.0])
         self.assertEqual(self.simulated.profit, -18.0)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 2.0)
