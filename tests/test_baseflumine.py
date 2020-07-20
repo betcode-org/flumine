@@ -6,7 +6,7 @@ from flumine.baseflumine import BaseFlumine
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock()
+        self.mock_client = mock.Mock(paper_trade=False)
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
@@ -26,7 +26,8 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test_add_strategy(self, mock_log_control, mock_events):
         mock_strategy = mock.Mock()
-        self.base_flumine.add_strategy(mock_strategy)
+        mock_client = mock.Mock()
+        self.base_flumine.add_strategy(mock_strategy, mock_client)
         self.assertEqual(len(self.base_flumine.strategies), 1)
         self.assertEqual(len(self.base_flumine.streams), 1)
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))

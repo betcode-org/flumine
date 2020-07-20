@@ -25,7 +25,7 @@ Currently tested on Python 3.6, 3.7 and 3.8.
 $ pip install flumine
 ```
 
-flumine requires Python 3.5+
+flumine requires Python 3.6+
 
 ## setup
 
@@ -112,7 +112,7 @@ framework.run()
 - Streaming
 - Multiple strategies
 - Order execution
-- Paper trading (in development)
+- Paper trading
 - Back testing
 - Analytics (in development)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService

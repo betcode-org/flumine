@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.10.0 (2020-07-20)
++++++++++++++++++++
+
+**Improvements**
+
+- #180 client paper trade now implemented
+- #193 initial work on multi client implementation
+- #192 simulation improvements with handling on runner removal
+
 1.9.3 (2020-07-17)
 +++++++++++++++++++
 

@@ -1,5 +1,6 @@
+import logging
 import datetime
-from typing import Tuple
+from typing import List
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from .utils import (
@@ -10,6 +11,8 @@ from .utils import (
 from ..utils import get_price, wap
 from ..order.ordertype import OrderTypes
 from .. import config
+
+logger = logging.getLogger(__name__)
 
 
 class Simulated:
@@ -22,7 +25,7 @@ class Simulated:
         self.order = order
         self.size_matched = 0
         self.average_price_matched = 0
-        self.matched = []  # [(publishTime, price, size)..]
+        self.matched = []  # [[publishTime, price, size]..]
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
         self.size_voided = 0.0
@@ -96,6 +99,9 @@ class Simulated:
                     self._piq = avail["size"]
                     break
 
+            logger.debug(
+                "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
+            )
             return self._create_place_response(bet_id)
         else:
             return self._create_place_response(bet_id)
@@ -166,7 +172,7 @@ class Simulated:
                     _size_matched = _size_remaining
                 else:
                     _size_matched = avail["size"]
-                _matched = (publish_time, avail["price"], round(_size_matched, 2))
+                _matched = [publish_time, avail["price"], round(_size_matched, 2)]
                 self._update_matched(_matched)
             else:
                 break
@@ -195,12 +201,17 @@ class Simulated:
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             else:
                 raise NotImplementedError()
-            self._update_matched((publish_time, actual_sp, size))
+            self._update_matched([publish_time, actual_sp, size])
 
     def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update
         price = self.order.order_type.price
         for traded_price, traded_size in traded.items():
+            logger.debug(
+                "Simulated order {0} traded: {1} - {2}".format(
+                    self.order.id, traded_price, traded_size
+                )
+            )
             if self.side == "BACK" and traded_price >= price:
                 self._calculate_process_traded(publish_time, traded_size)
             elif self.side == "LAY" and traded_price <= price:
@@ -213,15 +224,18 @@ class Simulated:
             size = round(min(self.size_remaining, size), 2)
             if size:
                 self._update_matched(
-                    (
+                    [
                         publish_time,
                         self.order.order_type.price,
                         size,
-                    )  # todo takes the worst price, i.e what was asked
+                    ]  # todo takes the worst price, i.e what was asked
                 )
             self._piq = 0
         else:
             self._piq -= traded_size
+            logger.debug(
+                "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
+            )
 
     @property
     def take_sp(self) -> bool:
@@ -236,7 +250,8 @@ class Simulated:
     def side(self) -> str:
         return self.order.side
 
-    def _update_matched(self, data: Tuple[int, float, float]) -> None:
+    def _update_matched(self, data: List) -> None:
+        logger.debug("Simulated order {0} matched: {1}".format(self.order.id, data))
         self.matched.append(data)
         self.size_matched, self.average_price_matched = wap(self.matched)
 
@@ -270,4 +285,4 @@ class Simulated:
             return 0.0
 
     def __bool__(self):
-        return config.simulated
+        return config.simulated or self.order.trade.client.paper_trade

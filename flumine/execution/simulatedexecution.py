@@ -1,3 +1,4 @@
+import time
 import requests
 from typing import Optional
 
@@ -28,16 +29,16 @@ class SimulatedExecution(BaseExecution):
         else:
             raise NotImplementedError()
 
-        # todo if order_package.client.paper_trade:
-        #     self._thread_pool.submit(func, order_package, None)
-        # else:
-        func(order_package, http_session=None)
+        if order_package.client.paper_trade:
+            self._thread_pool.submit(func, order_package, None)
+        else:
+            func(order_package, http_session=None)
 
     def execute_place(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        # todo if order_package.client.paper_trade:
-        #     time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
+        if order_package.client.paper_trade:
+            time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
         market_book = order_package.market.market_book
         for order, instruction in zip(order_package, order_package.place_instructions):
             with order.trade:
@@ -56,8 +57,8 @@ class SimulatedExecution(BaseExecution):
     def execute_cancel(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        # todo if order_package.client.paper_trade:
-        #     time.sleep(self.CANCEL_LATENCY)
+        if order_package.client.paper_trade:
+            time.sleep(self.CANCEL_LATENCY)
         for order in order_package:
             with order.trade:
                 simulated_response = order.simulated.cancel()
@@ -72,8 +73,8 @@ class SimulatedExecution(BaseExecution):
     def execute_update(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        # todo if order_package.client.paper_trade:
-        #     time.sleep(self.UPDATE_LATENCY)
+        if order_package.client.paper_trade:
+            time.sleep(self.UPDATE_LATENCY)
         for order, instruction in zip(order_package, order_package.update_instructions):
             with order.trade:
                 simulated_response = order.simulated.update(instruction)
@@ -88,8 +89,10 @@ class SimulatedExecution(BaseExecution):
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        # todo if order_package.client.paper_trade:
-        #     time.sleep(self.REPLACE_LATENCY)
+        if (
+            order_package.client.paper_trade
+        ):  # todo should the cancel happen without a delay?
+            time.sleep(order_package.bet_delay + self.REPLACE_LATENCY)
         market_book = order_package.market.market_book
         for order, instruction in zip(
             order_package, order_package.replace_instructions
