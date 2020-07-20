@@ -727,8 +727,21 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
+    def test_handler_paper_trade(self, mock_execute_place):
+        mock_thread_pool = mock.Mock()
+        self.execution._thread_pool = mock_thread_pool
+        mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = True
+        mock_order_package.package_type = OrderPackageType.PLACE
+        self.execution.handler(mock_order_package)
+        mock_thread_pool.submit.assert_called_with(
+            mock_execute_place, mock_order_package, None
+        )
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
     def test_handler_place(self, mock_execute_place):
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.package_type = OrderPackageType.PLACE
         self.execution.handler(mock_order_package)
         mock_execute_place.assert_called_with(mock_order_package, http_session=None)
@@ -738,6 +751,7 @@ class SimulatedExecutionTest(unittest.TestCase):
     )
     def test_handler_cancel(self, mock_execute_cancel):
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
         self.execution.handler(mock_order_package)
         mock_execute_cancel.assert_called_with(mock_order_package, http_session=None)
@@ -747,6 +761,7 @@ class SimulatedExecutionTest(unittest.TestCase):
     )
     def test_handler_update(self, mock_execute_update):
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.package_type = OrderPackageType.UPDATE
         self.execution.handler(mock_order_package)
         mock_execute_update.assert_called_with(mock_order_package, http_session=None)
@@ -756,6 +771,7 @@ class SimulatedExecutionTest(unittest.TestCase):
     )
     def test_handler_replace(self, mock_execute_replace):
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.package_type = OrderPackageType.REPLACE
         self.execution.handler(mock_order_package)
         mock_execute_replace.assert_called_with(mock_order_package, http_session=None)
@@ -766,6 +782,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.place_instructions = [1]
         mock_order_package.info = {}
@@ -792,6 +809,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.place_instructions = [1]
         mock_order_package.info = {}
@@ -812,12 +830,21 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 
+    @mock.patch("flumine.execution.simulatedexecution.time")
+    def test_execute_place_paper_trade(self, mock_time):
+        mock_order_package = mock.Mock(place_instructions=[], bet_delay=1)
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
+        mock_order_package.client.paper_trade = True
+        self.execution.execute_place(mock_order_package, None)
+        mock_time.sleep.assert_called_with(self.execution.PLACE_LATENCY + 1)
+
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel(self, mock__order_logger):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "SUCCESS"
@@ -837,6 +864,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "FAILURE"
@@ -850,12 +878,21 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 
+    @mock.patch("flumine.execution.simulatedexecution.time")
+    def test_execute_cancel_paper_trade(self, mock_time):
+        mock_order_package = mock.Mock(bet_delay=1)
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
+        mock_order_package.client.paper_trade = True
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_time.sleep.assert_called_with(self.execution.CANCEL_LATENCY)
+
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update(self, mock__order_logger):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.update_instructions = ["PERSIST"]
         mock_order_package.info = {}
@@ -877,6 +914,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.update_instructions = ["PERSIST"]
         mock_order_package.info = {}
@@ -892,6 +930,14 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 
+    @mock.patch("flumine.execution.simulatedexecution.time")
+    def test_execute_update_paper_trade(self, mock_time):
+        mock_order_package = mock.Mock(update_instructions=[], bet_delay=1)
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
+        mock_order_package.client.paper_trade = True
+        self.execution.execute_update(mock_order_package, None)
+        mock_time.sleep.assert_called_with(self.execution.UPDATE_LATENCY)
+
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
         mock_market = mock.Mock()
@@ -901,6 +947,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__exit__ = mock.Mock()
         mock_order.market_id = "1.234"
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [{"newPrice": 2.03}]
         mock_replacement_order = mock.Mock()
@@ -942,6 +989,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [{"newPrice": 2.54}]
         mock_replacement_order = mock.Mock()
@@ -969,3 +1017,11 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_replacement_order.executable.assert_not_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.simulatedexecution.time")
+    def test_execute_replace_paper_trade(self, mock_time):
+        mock_order_package = mock.Mock(replace_instructions=[], bet_delay=1)
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
+        mock_order_package.client.paper_trade = True
+        self.execution.execute_replace(mock_order_package, None)
+        mock_time.sleep.assert_called_with(self.execution.REPLACE_LATENCY + 1)
