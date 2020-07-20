@@ -37,6 +37,7 @@ The Flumine class can be adapted by overriding the following functions:
 - `context` Dictionary object where any extra data can be stored here such as triggers
 - `max_selection_exposure` Max exposure per selection (including new order), note this does __not__ handle reduction in exposure due to laying another runner
 - `max_order_exposure` Max exposure per order
+- `client` Strategy client, half implemented when flumine will be migrated to multi clients
 
 ### Functions
 
