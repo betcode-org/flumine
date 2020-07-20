@@ -18,6 +18,24 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(len(self.base_flumine._trading_controls), 2)
         self.assertEqual(self.base_flumine._workers, [])
 
+    @mock.patch("flumine.baseflumine.SimulatedMiddleware")
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
+    def test_init_backtest(self, mock_add_market_middleware, mock_SimulatedMiddleware):
+        BaseFlumine.BACKTEST = True
+        mock_client = mock.Mock(paper_trade=False)
+        BaseFlumine(mock_client)
+        mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
+        BaseFlumine.BACKTEST = False
+
+    @mock.patch("flumine.baseflumine.SimulatedMiddleware")
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
+    def test_init_paper_trade(
+        self, mock_add_market_middleware, mock_SimulatedMiddleware
+    ):
+        mock_client = mock.Mock(paper_trade=True)
+        BaseFlumine(mock_client)
+        mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
+
     def test_run(self):
         with self.assertRaises(NotImplementedError):
             self.base_flumine.run()

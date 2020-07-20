@@ -45,6 +45,10 @@ class BaseFlumine:
         self.markets = Markets()
         self._market_middleware = []
 
+        # middleware
+        if self.BACKTEST or self.client.paper_trade:
+            self.add_market_middleware(SimulatedMiddleware())
+
         # all strategies
         self.strategies = Strategies()
 
@@ -296,9 +300,6 @@ class BaseFlumine:
             config.simulated = True
         else:
             config.simulated = False
-        # middleware
-        if self.BACKTEST or self.client.paper_trade:
-            self.add_market_middleware(SimulatedMiddleware())
         # login
         self.client.login()
         self.client.update_account_details()
