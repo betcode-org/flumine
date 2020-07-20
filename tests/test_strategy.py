@@ -13,9 +13,11 @@ class StrategiesTest(unittest.TestCase):
 
     def test_call(self):
         mock_strategy = mock.Mock()
-        self.strategies(mock_strategy)
+        mock_client = mock.Mock()
+        self.strategies(mock_strategy, mock_client)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
         mock_strategy.add.assert_called_with()
+        mock_strategy.client = mock_client
 
     def test_start(self):
         mock_strategy = mock.Mock()
@@ -37,6 +39,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.mock_market_data_filter = mock.Mock()
         self.streaming_timeout = 2
         self.conflate_ms = 100
+        self.mock_client = mock.Mock()
         self.strategy = strategy.BaseStrategy(
             market_filter=self.mock_market_filter,
             market_data_filter=self.mock_market_data_filter,
@@ -47,6 +50,7 @@ class BaseStrategyTest(unittest.TestCase):
             context={"trigger": 0.123},
             max_selection_exposure=1,
             max_order_exposure=2,
+            client=self.mock_client
         )
 
     def test_init(self):
@@ -59,6 +63,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
         self.assertEqual(self.strategy.max_selection_exposure, 1)
         self.assertEqual(self.strategy.max_order_exposure, 2)
+        self.assertEqual(self.strategy.client, self.mock_client)
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()

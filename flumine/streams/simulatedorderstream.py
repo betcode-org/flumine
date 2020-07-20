@@ -1,6 +1,5 @@
 import time
 import logging
-from tenacity import retry, wait_exponential
 
 from .basestream import BaseStream
 from ..events.events import CurrentOrdersEvent
@@ -9,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class SimulatedOrderStream(BaseStream):
-    @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
         logger.info("Starting SimulatedOrderStream")
 

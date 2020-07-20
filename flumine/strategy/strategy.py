@@ -6,6 +6,7 @@ from ..streams.marketstream import BaseStream, MarketStream
 from ..markets.market import Market
 from .runnercontext import RunnerContext
 from ..utils import create_cheap_hash
+from ..clients import BaseClient
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -32,6 +33,7 @@ class BaseStrategy:
         context: dict = None,
         max_selection_exposure: float = 100,
         max_order_exposure: float = 10,
+        client: BaseClient = None,
     ):
         """
         Processes data from streams.
@@ -55,6 +57,7 @@ class BaseStrategy:
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
+        self.client = client
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
@@ -172,7 +175,8 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy: BaseStrategy) -> None:
+    def __call__(self, strategy: BaseStrategy, client: BaseClient) -> None:
+        strategy.client = client
         self._strategies.append(strategy)
         strategy.add()
 

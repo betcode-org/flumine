@@ -10,8 +10,11 @@ class SimulatedTest(unittest.TestCase):
         self.mock_order_type = mock.Mock(
             price=12, size=2.00, ORDER_TYPE=OrderTypes.LIMIT
         )
+        mock_client = mock.Mock(paper_trade=False)
+        mock_trade = mock.Mock(client=mock_client)
         self.mock_order = mock.Mock(
-            selection_id=1234, handicap=1, side="BACK", order_type=self.mock_order_type
+            selection_id=1234, handicap=1, side="BACK", order_type=self.mock_order_type,
+            trade=mock_trade
         )
         self.simulated = simulated.Simulated(self.mock_order)
 
@@ -475,4 +478,10 @@ class SimulatedTest(unittest.TestCase):
         from flumine import config
 
         config.simulated = True
+        self.assertTrue(self.simulated)
+        config.simulated = False
+
+    def test_bool_paper_trade(self):
+        self.assertFalse(self.simulated)
+        self.simulated.order.trade.client.paper_trade = True
         self.assertTrue(self.simulated)

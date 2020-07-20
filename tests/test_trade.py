@@ -9,7 +9,8 @@ from flumine.order.trade import Trade, OrderError, TradeStatus
 class TradeTest(unittest.TestCase):
     def setUp(self) -> None:
         logging.disable(logging.CRITICAL)
-        self.mock_strategy = mock.Mock()
+        mock_client = mock.Mock(paper_trade=False)
+        self.mock_strategy = mock.Mock(client=mock_client)
         self.mock_fill_kill = mock.Mock()
         self.mock_offset = mock.Mock()
         self.mock_green = mock.Mock()
@@ -121,6 +122,9 @@ class TradeTest(unittest.TestCase):
         mock_current_order.order_type = "MARKET_ON_CLOSE"
         with self.assertRaises(NotImplementedError):
             self.trade.create_order_from_current(mock_current_order, "12345")
+
+    def test_client(self):
+        self.assertEqual(self.trade.client, self.mock_strategy.client)
 
     def test_notes_str(self):
         self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})

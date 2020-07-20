@@ -270,4 +270,4 @@ class Simulated:
             return 0.0
 
     def __bool__(self):
-        return config.simulated
+        return config.simulated or self.order.trade.client.paper_trade
