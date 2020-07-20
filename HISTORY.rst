@@ -12,10 +12,6 @@ Release History
 - #193 initial work on multi client implementation
 - #192 simulation improvements with handling on runner removal
 
-**Bug Fixes**
-
--
-
 1.9.3 (2020-07-17)
 +++++++++++++++++++
 
