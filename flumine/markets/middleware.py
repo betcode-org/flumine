@@ -3,7 +3,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus
-from ..utils import get_price
+from ..utils import get_price, wap
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +87,10 @@ class SimulatedMiddleware(Middleware):
                     order.simulated.average_price_matched = 0
                     order.simulated.matched = []
                     order.simulated.size_voided = order.order_type.size
+                    logger.warning(
+                        "Order voided on non runner {0}".format(order.selection_id),
+                        extra=order.info,
+                    )
                 else:
                     if order.status == OrderStatus.EXECUTABLE:
                         # todo cancel if not PERSIST
@@ -98,6 +102,15 @@ class SimulatedMiddleware(Middleware):
                             match[1] = round(
                                 match[1] * (1 - (removal_adjustment_factor / 100)), 2
                             )
+                        _, order.simulated.average_price_matched = wap(
+                            order.simulated.matched
+                        )
+                        logger.warning(
+                            "Order adjusted due to non runner {0}".format(
+                                order.selection_id
+                            ).format(order.selection_id),
+                            extra=order.info,
+                        )
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:

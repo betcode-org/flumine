@@ -95,13 +95,14 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     def test__process_runner_removal(self):
         mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
         mock_simulated.__bool__.return_value = True
-        mock_order = mock.Mock(simulated=mock_simulated)
+        mock_order = mock.Mock(simulated=mock_simulated, info={})
         mock_simulated_two = mock.MagicMock(matched=[[123, 8.6, 10]])
         mock_simulated_two.__bool__.return_value = False
-        mock_order_two = mock.Mock(simulated=mock_simulated_two)
+        mock_order_two = mock.Mock(simulated=mock_simulated_two, info={})
         mock_market = mock.Mock(blotter=[mock_order, mock_order_two])
         self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
         self.assertEqual(mock_order.simulated.matched, [[123, 7.21, 10]])
+        self.assertEqual(mock_order.simulated.average_price_matched, 7.21)
         self.assertEqual(mock_order_two.simulated.matched, [[123, 8.6, 10]])
 
     def test__process_runner_removal_under_limit(self):
@@ -115,7 +116,9 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     def test__process_runner_removal_void(self):
         mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
         mock_simulated.__bool__.return_value = True
-        mock_order = mock.Mock(lookup=("1.23", 12345, 0), simulated=mock_simulated)
+        mock_order = mock.Mock(
+            lookup=("1.23", 12345, 0), simulated=mock_simulated, info={}
+        )
         mock_order.order_type.size = 10
         mock_market = mock.Mock(market_id="1.23", blotter=[mock_order])
         self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
