@@ -25,6 +25,7 @@ class BaseClient:
         id_: str = None,
         order_stream: bool = True,
         best_price_execution: bool = True,
+        paper_trade: bool = False,
     ):
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
@@ -34,6 +35,7 @@ class BaseClient:
         self.interactive_login = interactive_login
         self.order_stream = order_stream
         self.best_price_execution = best_price_execution
+        self.paper_trade = paper_trade
 
         self.account_details = None
         self.account_funds = None
@@ -56,7 +58,7 @@ class BaseClient:
         raise NotImplementedError
 
     def add_execution(self, flumine) -> None:
-        if self.EXCHANGE == ExchangeType.SIMULATED:
+        if self.EXCHANGE == ExchangeType.SIMULATED or self.paper_trade:
             self.execution = flumine.simulated_execution
         elif self.EXCHANGE == ExchangeType.BETFAIR:
             self.execution = flumine.betfair_execution
@@ -83,4 +85,5 @@ class BaseClient:
             "trading_controls": self.trading_controls,
             "order_stream": self.order_stream,
             "best_price_execution": self.best_price_execution,
+            "paper_trade": self.paper_trade,
         }

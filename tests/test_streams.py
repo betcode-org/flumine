@@ -64,10 +64,17 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams.add_order_stream")
     def test_add_client_betfair(self, mock_add_order_stream):
-        mock_client = mock.Mock(order_stream=True)
+        mock_client = mock.Mock(order_stream=True, paper_trade=False)
         mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_called_with(mock_client)
+
+    @mock.patch("flumine.streams.streams.Streams.add_simulated_order_stream")
+    def test_add_client_paper_trade(self, mock_add_simulated_order_stream):
+        mock_client = mock.Mock(order_stream=True, paper_trade=True)
+        mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
+        self.streams.add_client(mock_client)
+        mock_add_simulated_order_stream.assert_called_with(mock_client)
 
     @mock.patch("flumine.streams.streams.Streams.add_order_stream")
     def test_add_client_no_order_stream(self, mock_add_order_stream):
@@ -161,6 +168,25 @@ class StreamsTest(unittest.TestCase):
         streaming_timeout = 0.5
         mock_client = mock.Mock()
         self.streams.add_order_stream(mock_client, conflate_ms, streaming_timeout)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        mock_order_stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            streaming_timeout=streaming_timeout,
+            conflate_ms=conflate_ms,
+            client=mock_client,
+        )
+
+    @mock.patch("flumine.streams.streams.SimulatedOrderStream")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_simulated_order_stream(self, mock_increment, mock_order_stream_class):
+        conflate_ms = 500
+        streaming_timeout = 0.5
+        mock_client = mock.Mock()
+        self.streams.add_simulated_order_stream(
+            mock_client, conflate_ms, streaming_timeout
+        )
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_order_stream_class.assert_called_with(
@@ -512,6 +538,27 @@ class TestOrderStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
         self.stream = streams.OrderStream(self.mock_flumine, 123, 0.01, 100)
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertIsNone(self.stream.market_filter)
+        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+    #
+    # def test_handle_output(self):
+    #     pass
+
+
+class TestSimulatedOrderStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.SimulatedOrderStream(self.mock_flumine, 123, 0.01, 100)
 
     def test_init(self):
         self.assertEqual(self.stream.flumine, self.mock_flumine)

@@ -29,6 +29,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.trading_controls, [])
         self.assertTrue(self.base_client.order_stream)
         self.assertTrue(self.base_client.best_price_execution)
+        self.assertFalse(self.base_client.paper_trade)
 
     def test_login(self):
         with self.assertRaises(NotImplementedError):
@@ -54,6 +55,13 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.EXCHANGE = ExchangeType.BETFAIR
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
+
+    def test_add_execution_paper(self):
+        self.base_client.paper_trade = True
+        self.base_client.EXCHANGE = ExchangeType.BETFAIR
+        mock_flumine = mock.Mock()
+        self.base_client.add_execution(mock_flumine)
+        self.assertEqual(self.base_client.execution, mock_flumine.simulated_execution)
 
     def test_min_bet_size(self):
         with self.assertRaises(NotImplementedError):

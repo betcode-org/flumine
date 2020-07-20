@@ -6,7 +6,7 @@ from flumine.baseflumine import BaseFlumine
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock()
+        self.mock_client = mock.Mock(paper_trade=False)
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
