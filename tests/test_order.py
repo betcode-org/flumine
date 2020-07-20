@@ -14,7 +14,8 @@ from flumine.exceptions import OrderUpdateError
 
 class BaseOrderTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_trade = mock.Mock()
+        mock_client = mock.Mock(paper_trade=False)
+        self.mock_trade = mock.Mock(client=mock_client)
         self.mock_order_type = mock.Mock()
         self.order = BaseOrder(self.mock_trade, "BACK", self.mock_order_type, 1)
 
@@ -230,7 +231,8 @@ class BaseOrderTest(unittest.TestCase):
 
 class BetfairOrderTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_trade = mock.Mock()
+        mock_client = mock.Mock(paper_trade=False)
+        self.mock_trade = mock.Mock(client=mock_client)
         self.mock_status = mock.Mock()
         self.mock_order_type = mock.Mock()
         self.order = BetfairOrder(self.mock_trade, "BACK", self.mock_order_type)

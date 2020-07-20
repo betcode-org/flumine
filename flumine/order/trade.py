@@ -135,6 +135,11 @@ class Trade:
         return order
 
     @property
+    def client(self):
+        # 193 todo trade.client
+        return self.strategy.client
+
+    @property
     def notes_str(self) -> str:
         return ",".join(str(x) for x in self.notes.values())
 

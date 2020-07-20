@@ -6,6 +6,7 @@ from .marketstream import MarketStream
 from .datastream import DataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
+from .simulatedorderstream import SimulatedOrderStream
 from ..clients import ExchangeType, BaseClient
 
 logger = logging.getLogger(__name__)
@@ -35,8 +36,9 @@ class Streams:
 
     def add_client(self, client: BaseClient) -> None:
         if client.order_stream:
-            # todo if paper_trade: add_simulated_order_stream()
-            if client.EXCHANGE == ExchangeType.BETFAIR:
+            if client.paper_trade:
+                self.add_simulated_order_stream(client)
+            elif client.EXCHANGE == ExchangeType.BETFAIR:
                 self.add_order_stream(client)
 
     """ market data """
@@ -119,8 +121,25 @@ class Streams:
         self._streams.append(stream)
         return stream
 
-    def add_simulated_order_stream(self):  # todo
-        return
+    def add_simulated_order_stream(
+        self,
+        client: BaseClient,
+        conflate_ms: int = None,
+        streaming_timeout: float = 0.25,
+    ) -> SimulatedOrderStream:
+        logger.warning(
+            "Client {0} now paper trading".format(client.betting_client.username)
+        )
+        stream_id = self._increment_stream_id()
+        stream = SimulatedOrderStream(
+            flumine=self.flumine,
+            stream_id=stream_id,
+            conflate_ms=conflate_ms,
+            streaming_timeout=streaming_timeout,
+            client=client,
+        )
+        self._streams.append(stream)
+        return stream
 
     def start(self) -> None:
         if not self.flumine.BACKTEST:

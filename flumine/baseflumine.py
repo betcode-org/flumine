@@ -73,10 +73,11 @@ class BaseFlumine:
     def run(self) -> None:
         raise NotImplementedError
 
-    def add_strategy(self, strategy: BaseStrategy) -> None:
+    def add_strategy(self, strategy: BaseStrategy, client: BaseClient = None) -> None:
         logger.info("Adding strategy {0}".format(strategy))
+        _client = client or self.client
         self.streams(strategy)  # create required streams
-        self.strategies(strategy)  # store in strategies
+        self.strategies(strategy, _client)  # store in strategies
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:

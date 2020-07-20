@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.10.0 (2020-07-20)
++++++++++++++++++++
+
+**Improvements**
+
+- #180 client paper trade now implemented
+- #193 initial work on multi client implementation
+
+**Bug Fixes**
+
+-
+
 1.9.3 (2020-07-17)
 +++++++++++++++++++
 

@@ -14,9 +14,7 @@ from flumine import Flumine, clients
 trading = betfairlightweight.APIClient("username")
 client = clients.BetfairClient(trading)
 
-framework = Flumine(
-    client=client,
-)
+framework = Flumine(client=client)
 ```
 
 !!! note
@@ -94,6 +92,31 @@ strategy = ExampleDataStrategy(
 
 flumine.add_strategy(strategy)
 ```
+
+## Paper Trading
+
+Flumine can be used to paper trade strategies live using the following code:
+
+```python
+import betfairlightweight
+from flumine import Flumine, clients
+
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading, paper_trade=True)
+framework = Flumine(client=client)
+
+strategy = ExampleStrategy(
+    market_filter={"markets": ["/tmp/marketdata/1.170212754"]}
+)
+framework.add_strategy(strategy)
+
+framework.run()
+```
+
+Market data will be recieved as per live but any orders will use Simulated execution and Simulated order polling to replicate live trading.
+
+!!! tip
+    This can be handy when testing strategies as the betfair website can be used to validate the market.
 
 ## Backtesting
 
