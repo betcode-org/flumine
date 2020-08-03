@@ -189,7 +189,7 @@ class S3MarketRecorder(MarketRecorder):
                     Key=os.path.join(
                         "marketdata",
                         "marketCatalogue",
-                        "{0}.json".format(market.market_id),
+                        market.market_id,
                     ),
                 )
                 logger.info(
