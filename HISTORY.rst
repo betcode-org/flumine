@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.10.3 (2020-08-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Handle missing id in raw data (race stream)
+- Handle no market passed to market recorder (race stream)
+
 1.10.2 (2020-08-03)
 +++++++++++++++++++
 
@@ -23,7 +31,7 @@ Release History
 
 **Bug Fixes**
 
--Add middleware moved to init, Simulated needs to be the first middleware
+- Add middleware moved to init, Simulated needs to be the first middleware
 
 1.10.0 (2020-07-20)
 +++++++++++++++++++

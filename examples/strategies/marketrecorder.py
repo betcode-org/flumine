@@ -176,7 +176,7 @@ class S3MarketRecorder(MarketRecorder):
             logger.error("Error loading to s3: %s" % e)
 
         # upload marketCatalogue data
-        if self.context.get("load_market_catalogue", True):
+        if market and self.context.get("load_market_catalogue", True):
             if market.market_catalogue is None:
                 logger.warning(
                     "No marketCatalogue data available for %s" % market.market_id
