@@ -48,13 +48,8 @@ class MarketRecorder(BaseStrategy):
                 json.dumps({"op": "mcm", "clk": None, "pt": publish_time, "mc": [data]})
                 + "\n"
             )
-        if (
-            "marketDefinition" in data
-            and data["marketDefinition"]["status"] == "CLOSED"
-        ):
-            self._on_market_closed(data)
 
-    def _on_market_closed(self, data: dict) -> None:
+    def process_closed_market(self, market, data: dict) -> None:
         market_id = data.get(self.MARKET_ID_LOOKUP)
         if market_id in self._loaded_markets:
             if self._force_update:
@@ -91,7 +86,7 @@ class MarketRecorder(BaseStrategy):
         zip_file_dir = self._zip_file(file_dir, market_id)
 
         # core load code
-        self._load(zip_file_dir, market_definition)
+        self._load(market, zip_file_dir, market_definition)
 
         # clean up
         self._clean_up()
@@ -110,7 +105,7 @@ class MarketRecorder(BaseStrategy):
             )
         return zip_file_directory
 
-    def _load(self, zip_file_dir: str, market_definition: dict) -> None:
+    def _load(self, market, zip_file_dir: str, market_definition: dict) -> None:
         pass
 
     def _clean_up(self) -> None:
@@ -154,7 +149,7 @@ class S3MarketRecorder(MarketRecorder):
         super().add()
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
-    def _load(self, zip_file_dir: str, market_definition: dict) -> None:
+    def _load(self, market, zip_file_dir: str, market_definition: dict) -> None:
         # note this will block the main handler queue during upload
         # todo create background worker instead?
         event_type_id = (
@@ -179,3 +174,26 @@ class S3MarketRecorder(MarketRecorder):
             logger.info("%s successfully loaded to s3" % zip_file_dir)
         except (BotoCoreError, Exception) as e:
             logger.error("Error loading to s3: %s" % e)
+
+        # upload marketCatalogue data
+        if self.context.get("load_market_catalogue", True):
+            if market.market_catalogue is None:
+                logger.warning(
+                    "No marketCatalogue data available for %s" % market.market_id
+                )
+                return
+            try:
+                self.s3.put_object(
+                    Body=market.market_catalogue.json(),
+                    Bucket=self._bucket,
+                    Key=os.path.join(
+                        "marketdata",
+                        "marketCatalogue",
+                        "{0}.json".format(market.market_id),
+                    ),
+                )
+                logger.info(
+                    "%s successfully loaded marketCatalogue to s3" % market.market_id
+                )
+            except (BotoCoreError, Exception) as e:
+                logger.error("Error loading to s3: %s" % e)
