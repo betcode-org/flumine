@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.10.4 (2020-08-03)
++++++++++++++++++++
+
+**Improvements**
+
+- updates for bflw 2.7.2
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.7.2
+
 1.10.3 (2020-08-03)
 +++++++++++++++++++
 
