@@ -98,13 +98,18 @@ class BaseExecutionTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
 
-    @mock.patch("flumine.execution.baseexecution.requests")
-    def test__get_http_session(self, mock_requests):
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._create_new_session")
+    def test__get_http_session(self, mock__create_new_session):
         self.execution._sessions = [1, 2]
         self.assertEqual(self.execution._get_http_session(), 2)
         self.assertEqual(self.execution._get_http_session(), 1)
-        self.assertEqual(self.execution._get_http_session(), mock_requests.Session())
+        self.assertEqual(self.execution._get_http_session(), mock__create_new_session())
         self.assertEqual(self.execution._sessions_created, 1)
+
+    def test__create_new_session(self):
+        session = self.execution._create_new_session()
+        self.assertIsNotNone(session.time_created)
+        self.assertIsNotNone(session.time_returned)
 
     def test__return_http_session(self):
         mock_session = mock.Mock()

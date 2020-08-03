@@ -1,3 +1,4 @@
+import time
 import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
@@ -68,11 +69,22 @@ class BaseExecution:
             except IndexError:
                 continue
         self._sessions_created += 1
+        return self._create_new_session()
+
+    def _create_new_session(self) -> requests.Session:
+        session = requests.Session()
+        session.time_created = time.time()
+        session.time_returned = time.time()
         logger.info(
             "New requests.Session created",
-            extra={"sessions_created": self._sessions_created},
+            extra={
+                "sessions_created": self._sessions_created,
+                "session": session,
+                "session_time_created": session.time_created,
+                "session_time_returned": session.time_returned,
+            },
         )
-        return requests.Session()
+        return session
 
     def _return_http_session(
         self, http_session: requests.Session, err: bool = False
