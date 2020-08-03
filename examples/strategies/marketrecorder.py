@@ -187,9 +187,7 @@ class S3MarketRecorder(MarketRecorder):
                     Body=market.market_catalogue.json(),
                     Bucket=self._bucket,
                     Key=os.path.join(
-                        "marketdata",
-                        "marketCatalogue",
-                        market.market_id,
+                        "marketdata", "marketCatalogue", market.market_id,
                     ),
                 )
                 logger.info(
