@@ -6,9 +6,13 @@ Release History
 1.10.2 (2020-08-03)
 +++++++++++++++++++
 
+**Improvements**
+
+- _process_raw_data refactored to create market objects and call market.closed_market on closure
+
 **Bug Fixes**
 
-- Readme typo (thanks @petercoles)
+- Docs typo (thanks @petercoles)
 
 **Libraries**
 
