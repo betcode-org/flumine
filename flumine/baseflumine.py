@@ -173,21 +173,21 @@ class BaseFlumine:
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
-            market_id = datum["id"]
-            market = self.markets.markets.get(market_id)
-            if market is None:
-                market = self._add_market(market_id, None)
-            elif market.closed:
-                self.markets.add_market(market_id, market)
+            market, _closed = None, False
+            if "id" in datum:
+                market_id = datum["id"]
+                market = self.markets.markets.get(market_id)
+                if market is None:
+                    market = self._add_market(market_id, None)
+                elif market.closed:
+                    self.markets.add_market(market_id, market)
 
-            if (
-                "marketDefinition" in datum
-                and datum["marketDefinition"]["status"] == "CLOSED"
-            ):
-                market.close_market()
-                _closed = True
-            else:
-                _closed = False
+                if (
+                    "marketDefinition" in datum
+                    and datum["marketDefinition"]["status"] == "CLOSED"
+                ):
+                    market.close_market()
+                    _closed = True
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
