@@ -1,6 +1,6 @@
 __title__ = "flumine"
 __description__ = "Betfair trading framework"
 __url__ = "https://github.com/liampauling/flumine"
-__version__ = "1.10.4"
+__version__ = "1.10.5"
 __author__ = "Liam Pauling"
 __license__ = "MIT"

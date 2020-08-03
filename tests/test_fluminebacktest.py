@@ -177,6 +177,30 @@ class FlumineBacktestTest(unittest.TestCase):
         self.flumine._check_pending_packages()
         mock__process_order_package.assert_not_called()
 
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test__process_close_market_closed(self, mock_log_control, mock_info):
+        mock_strategy = mock.Mock()
+        mock_strategy.stream_ids = [1, 2, 3]
+        self.flumine.strategies = [mock_strategy]
+        mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
+        mock_market.market_book.streaming_unique_id = 2
+        self.flumine.markets._markets = {
+            "1.23": mock_market,
+            "4.56": mock.Mock(market_id="4.56", closed=True, elapsed_seconds_closed=25),
+            "7.89": mock.Mock(
+                market_id="7.89", closed=True, elapsed_seconds_closed=3601
+            ),
+            "1.01": mock.Mock(
+                market_id="1.01", closed=False, elapsed_seconds_closed=3601
+            ),
+        }
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock(market_id="1.23")
+        mock_event.event = mock_market_book
+        self.flumine._process_close_market(mock_event)
+        self.assertEqual(len(self.flumine.markets._markets), 4)
+
     def test_str(self):
         assert str(self.flumine) == "<FlumineBacktest>"
 

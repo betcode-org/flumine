@@ -249,13 +249,18 @@ class BaseFlumine:
         logger.info("Market closed", extra={"market_id": market.market_id, **self.info})
 
         # check for markets that have been closed for x seconds and remove
-        closed_markets = [
-            m
-            for m in self.markets
-            if m.closed and m.elapsed_seconds_closed and m.elapsed_seconds_closed > 3600
-        ]
-        for market in closed_markets:
-            self._remove_market(market)
+        if (
+            self.BACKTEST is False
+        ):  # due to monkey patching this will clear backtested markets
+            closed_markets = [
+                m
+                for m in self.markets
+                if m.closed
+                and m.elapsed_seconds_closed
+                and m.elapsed_seconds_closed > 3600
+            ]
+            for market in closed_markets:
+                self._remove_market(market)
 
     def _process_cleared_orders(self, event):
         market_id = event.event.market_id
