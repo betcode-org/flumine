@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.10.2 (2020-08-03)
++++++++++++++++++++
+
+**Improvements**
+
+- _process_raw_data refactored to create market objects and call market.closed_market on closure
+
+**Bug Fixes**
+
+- Docs typo (thanks @petercoles)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.7.1
+
 1.10.1 (2020-07-20)
 +++++++++++++++++++
 

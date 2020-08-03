@@ -67,7 +67,7 @@ class Stream(BFLWBaseStream):
                     if cache.market_definition["inPlay"]:
                         continue
             market_books.append(
-                cache.create_resource(self.unique_id, None, self._lightweight)
+                cache.create_resource(self.unique_id, self._lightweight)
             )
         return market_books
 
@@ -100,7 +100,6 @@ class HistoricalStream(BaseStream):
         pass
 
     def create_generator(self):
-        self._listener.register_stream(0, "marketSubscription")
         stream = HistoricalGeneratorStream(
             file_path=self.market_filter, listener=self._listener
         )

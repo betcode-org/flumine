@@ -167,10 +167,24 @@ class BaseFlumineTest(unittest.TestCase):
         mock_markets.remove_market.assert_called_with(mock_market.market_id)
         mock_middleware.remove_market.assert_called_with(mock_market)
 
-    def test__process_raw_data(self):
+    @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
+    def test__process_raw_data(self, mock__add_market):
         mock_event = mock.Mock()
-        mock_event.event = (12, 12345, {})
+        mock_event.event = (12, 12345, [{"id": "1.23"}])
         self.base_flumine._process_raw_data(mock_event)
+        mock__add_market.assert_called_with("1.23", None)
+
+    @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
+    def test__process_raw_data_closed(self, mock__add_market):
+        mock_event = mock.Mock()
+        mock_event.event = (
+            12,
+            12345,
+            [{"id": "1.23", "marketDefinition": {"status": "CLOSED"}}],
+        )
+        self.base_flumine._process_raw_data(mock_event)
+        mock__add_market.assert_called_with("1.23", None)
+        mock__add_market().close_market.assert_called()
 
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

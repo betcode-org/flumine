@@ -58,7 +58,7 @@ strategy = ExampleStrategy(
     market_data_filter=streaming_market_data_filter(fields=["EX_ALL_OFFERS"])
 )
 
-flumine.add_strategy(strategy)
+framework.add_strategy(strategy)
 ```
 
 The framework can now be started:
