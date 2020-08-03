@@ -22,6 +22,7 @@ class BaseStream(threading.Thread):
         market_data_filter: dict = None,
         client=None,
         output_queue: bool = True,
+        operation: str = "marketSubscription",
         **listener_kwargs,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
@@ -34,6 +35,7 @@ class BaseStream(threading.Thread):
         self._client = client
         self._stream = None
         self._output_queue = queue.Queue() if output_queue else None
+        self.operation = operation
         self._listener = self.LISTENER(
             output_queue=self._output_queue,
             max_latency=self.MAX_LATENCY,

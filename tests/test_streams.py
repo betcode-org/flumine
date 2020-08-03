@@ -240,6 +240,7 @@ class TestBaseStream(unittest.TestCase):
             {"please": "now"},
             client=self.mock_client,
             output_queue=False,
+            operation="test",
         )
 
     def test_init(self):
@@ -253,6 +254,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
         self.assertIsNone(self.stream._output_queue)
+        self.assertEqual(self.stream.operation, "test")
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
@@ -437,9 +439,13 @@ class TestHistoricalStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.historicalstream.HistoricalGeneratorStream")
     def test_create_generator(self, mock_generator):
-        self.assertEqual(
-            self.stream.create_generator(), mock_generator().get_generator()
+        generator = self.stream.create_generator()
+        mock_generator.assert_called_with(
+            file_path={"test": "me"},
+            listener=self.stream._listener,
+            operation="marketSubscription",
         )
+        self.assertEqual(generator, mock_generator().get_generator())
 
 
 class TestStream(unittest.TestCase):

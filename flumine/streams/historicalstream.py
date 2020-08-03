@@ -101,6 +101,8 @@ class HistoricalStream(BaseStream):
 
     def create_generator(self):
         stream = HistoricalGeneratorStream(
-            file_path=self.market_filter, listener=self._listener
+            file_path=self.market_filter,
+            listener=self._listener,
+            operation=self.operation,
         )
         return stream.get_generator()
