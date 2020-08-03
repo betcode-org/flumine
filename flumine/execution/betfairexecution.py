@@ -1,3 +1,4 @@
+import time
 import logging
 import requests
 from typing import Callable
@@ -10,10 +11,47 @@ from ..exceptions import OrderExecutionError
 
 logger = logging.getLogger(__name__)
 
+API_ENDPOINT = "https://api.betfair.com"
+
 
 class BetfairExecution(BaseExecution):
 
     EXCHANGE = ExchangeType.BETFAIR
+
+    def start(self):
+        logger.info("Starting something")
+
+        def func(execution: BaseExecution):
+            print("enter")
+
+            while execution._thread_pool._shutdown is False:
+                print(execution)
+
+                try:
+                    _session = execution._sessions.pop(0)
+                    print(_session)
+                except IndexError:
+                    print("no sessions")
+                    _session = None
+
+                if _session:
+                    print("checking", _session)
+                    execution._return_http_session(_session)
+
+                to_create = execution._max_workers - len(execution._sessions) - 1
+
+                for i in range(0, to_create):
+                    _session = execution._create_new_session()
+                    execution._return_http_session(_session)
+
+                time.sleep(10)
+
+
+            print("exit")
+
+        func(self)
+
+        self._thread_pool.submit(func, self)
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session

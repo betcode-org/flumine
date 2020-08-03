@@ -24,6 +24,9 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution._sessions, [])
         self.assertEqual(self.execution._sessions_created, 0)
 
+    def test_start(self):
+        self.execution.start()
+
     @mock.patch("flumine.execution.baseexecution.BaseExecution._get_http_session")
     @mock.patch("flumine.execution.baseexecution.BaseExecution.execute_place")
     def test_handler_place(self, mock_execute_place, mock__get_http_session):

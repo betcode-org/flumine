@@ -314,6 +314,9 @@ class BaseFlumine:
         self.strategies.start()
         # start streams
         self.streams.start()
+        # start execution
+        self.simulated_execution.start()
+        self.betfair_execution.start()
 
         self._running = True
 

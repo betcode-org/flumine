@@ -312,6 +312,8 @@ class BaseFlumineTest(unittest.TestCase):
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
+            self.base_flumine.simulated_execution.start.assert_called_with()
+            self.base_flumine.betfair_execution.start.assert_called_with()
 
         self.assertFalse(self.base_flumine._running)
         self.mock_client.logout.assert_called_with()

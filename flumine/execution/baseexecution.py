@@ -8,7 +8,7 @@ from ..events.events import OrderEvent
 
 logger = logging.getLogger(__name__)
 
-MAX_WORKERS = 32
+MAX_WORKERS = 16
 BET_ID_START = 100000000000  # simulated start betId->
 
 
@@ -16,13 +16,16 @@ class BaseExecution:
 
     EXCHANGE = None
 
-    def __init__(self, flumine, max_workers=MAX_WORKERS):
+    def __init__(self, flumine, max_workers: int = MAX_WORKERS):
         self.flumine = flumine
         self._max_workers = max_workers
         self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)
         self._bet_id = BET_ID_START
         self._sessions = []
         self._sessions_created = 0
+
+    def start(self):
+        pass
 
     def handler(self, order_package: BaseOrderPackage):
         """ Handles order_package, capable of place, cancel,
@@ -68,13 +71,13 @@ class BaseExecution:
                 return self._sessions.pop()
             except IndexError:
                 continue
-        self._sessions_created += 1
         return self._create_new_session()
 
     def _create_new_session(self) -> requests.Session:
         session = requests.Session()
         session.time_created = time.time()
         session.time_returned = time.time()
+        self._sessions_created += 1
         logger.info(
             "New requests.Session created",
             extra={
