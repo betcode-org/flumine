@@ -3,12 +3,13 @@
 Release History
 ---------------
 
-1.10.5 (2020-08-03)
+1.10.5 (2020-08-04)
 +++++++++++++++++++
 
 **Bug Fixes**
 
 - Prevent closed markets being removed when backtesting
+- Adds check to check removal_adjustment_factor is not None when processing runner removal (@lunswor)
 
 1.10.4 (2020-08-03)
 +++++++++++++++++++
