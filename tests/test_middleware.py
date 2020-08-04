@@ -127,6 +127,14 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(mock_order.simulated.matched, [])
         self.assertEqual(mock_order.simulated.size_voided, 10)
 
+    def test__process_runner_removal_none(self):
+        mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(simulated=mock_simulated)
+        mock_market = mock.Mock(blotter=[mock_order])
+        self.middleware._process_runner_removal(mock_market, 12345, 0, None)
+        self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
+
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()
         mock_order = mock.Mock()

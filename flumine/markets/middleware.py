@@ -96,7 +96,10 @@ class SimulatedMiddleware(Middleware):
                         # todo cancel if not PERSIST
                         # todo does a market version bump occur if withdrawal is below the limit?
                         pass
-                    if removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR:
+                    if (
+                        removal_adjustment_factor
+                        and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
+                    ):
                         # todo place market
                         for match in order.simulated.matched:
                             match[1] = round(
