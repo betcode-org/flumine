@@ -250,7 +250,7 @@ class BaseFlumine:
 
         # check for markets that have been closed for x seconds and remove
         if (
-            self.BACKTEST is False
+            self.BACKTEST is False and self.client.paper_trade is False
         ):  # due to monkey patching this will clear backtested markets
             closed_markets = [
                 m

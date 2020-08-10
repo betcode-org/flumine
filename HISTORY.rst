@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.10.6 (2020-08-10)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent closed markets being removed when paper trading
+
 1.10.5 (2020-08-04)
 +++++++++++++++++++
 
