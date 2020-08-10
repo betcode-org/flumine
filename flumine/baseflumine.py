@@ -229,7 +229,8 @@ class BaseFlumine:
         self._process_market_orders()
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
-        market_id = event.event.market_id
+        market_book = event.event
+        market_id = market_book.market_id
         market = self.markets.markets.get(market_id)
         if market is None:
             logger.warning(
@@ -241,7 +242,7 @@ class BaseFlumine:
         market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:
-            if market.market_book.streaming_unique_id in strategy.stream_ids:
+            if market_book.streaming_unique_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
         self.cleared_market_queue.put(market.market_id)
@@ -250,7 +251,7 @@ class BaseFlumine:
 
         # check for markets that have been closed for x seconds and remove
         if (
-            self.BACKTEST is False
+            self.BACKTEST is False and self.client.paper_trade is False
         ):  # due to monkey patching this will clear backtested markets
             closed_markets = [
                 m

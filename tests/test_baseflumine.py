@@ -232,10 +232,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
-        mock_market.market_book.streaming_unique_id = 2
         self.base_flumine.markets._markets = {"1.23": mock_market}
         mock_event = mock.Mock()
-        mock_market_book = mock.Mock(market_id="1.23")
+        mock_market_book = mock.Mock(market_id="1.23", streaming_unique_id=2)
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
@@ -283,6 +282,31 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_close_market(mock_event)
 
         self.assertEqual(len(self.base_flumine.markets._markets), 3)
+
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test__process_close_market_closed_paper(self, mock_log_control, mock_info):
+        self.base_flumine.client.paper_trade = True
+        mock_strategy = mock.Mock()
+        mock_strategy.stream_ids = [1, 2, 3]
+        self.base_flumine.strategies = [mock_strategy]
+        mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
+        mock_market.market_book.streaming_unique_id = 2
+        self.base_flumine.markets._markets = {
+            "1.23": mock_market,
+            "4.56": mock.Mock(market_id="4.56", closed=True, elapsed_seconds_closed=25),
+            "7.89": mock.Mock(
+                market_id="7.89", closed=True, elapsed_seconds_closed=3601
+            ),
+            "1.01": mock.Mock(
+                market_id="1.01", closed=False, elapsed_seconds_closed=3601
+            ),
+        }
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock(market_id="1.23")
+        mock_event.event = mock_market_book
+        self.base_flumine._process_close_market(mock_event)
+        self.assertEqual(len(self.base_flumine.markets._markets), 4)
 
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
