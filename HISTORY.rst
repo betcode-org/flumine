@@ -9,6 +9,7 @@ Release History
 **Bug Fixes**
 
 - Prevent closed markets being removed when paper trading
+- Fix missing MarketBook from market (closes #FLUMINE-PROD-EE)
 
 1.10.5 (2020-08-04)
 +++++++++++++++++++
