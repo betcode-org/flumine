@@ -74,11 +74,6 @@ class BaseExecution:
                     return _session
             except IndexError:
                 continue
-        self._sessions_created += 1
-        logger.info(
-            "New requests.Session created",
-            extra={"sessions_created": self._sessions_created},
-        )
         return self._create_new_session()
 
     def _create_new_session(self) -> requests.Session:
