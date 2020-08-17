@@ -130,7 +130,9 @@ class BaseStrategyTest(unittest.TestCase):
     def test_finish(self):
         self.strategy.finish()
 
-    @mock.patch("flumine.strategy.strategy.BaseStrategy.validate_order", return_value=True)
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.validate_order", return_value=True
+    )
     def test_place_order(self, mock_validate_order):
         mock_order = mock.Mock()
         mock_order.lookup = ("1", 2, 3)

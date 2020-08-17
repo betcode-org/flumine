@@ -83,17 +83,23 @@ class Market:
 
     @property
     def event_type_id(self) -> str:
-        if self.market_book:
+        if self.market_catalogue:
+            return self.market_catalogue.event_type.id
+        elif self.market_book:
             return self.market_book.market_definition.event_type_id
 
     @property
     def event_id(self) -> str:
-        if self.market_book:
+        if self.market_catalogue:
+            return self.market_catalogue.event.id
+        elif self.market_book:
             return self.market_book.market_definition.event_id
 
     @property
     def market_type(self) -> str:
-        if self.market_book:
+        if self.market_catalogue:
+            return self.market_catalogue.description.market_type
+        elif self.market_book:
             return self.market_book.market_definition.market_type
 
     @property

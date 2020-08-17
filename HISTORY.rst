@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - invested migrated to executable_orders on RunnerContext *breaking change
+- Use MarketCatalogue where available for market descriptions
 
 **Libraries**
 

@@ -182,9 +182,9 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(mock_blotter.pending_replace, [mock_order])
 
     def test_event(self):
-        mock_market_book = mock.Mock()
-        mock_market_book.market_definition = mock.Mock(event_id=12)
-        self.market.market_book = mock_market_book
+        mock_market_catalogue = mock.Mock()
+        mock_market_catalogue.event.id = 12
+        self.market.market_catalogue = mock_market_catalogue
 
         self.market.flumine.markets = []
         self.assertEqual(self.market.event, {})
@@ -196,21 +196,41 @@ class MarketTest(unittest.TestCase):
         self.market.flumine.markets = [m_one, m_two, m_three, m_four]
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
 
-    def test_event_type_id(self):
+    def test_event_type_id_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(self.market.event_type_id, mock_market_catalogue.event_type.id)
+
+    def test_event_type_id_mb(self):
+        self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.event_type_id, mock_market_book.market_definition.event_type_id
         )
 
-    def test_event_id(self):
+    def test_event_id_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(self.market.event_id, mock_market_catalogue.event.id)
+
+    def test_event_id_mb(self):
+        self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.event_id, mock_market_book.market_definition.event_id
         )
 
-    def test_market_type(self):
+    def test_market_type_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(
+            self.market.market_type, mock_market_catalogue.description.market_type
+        )
+
+    def test_market_type_mb(self):
+        self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
         self.assertEqual(
