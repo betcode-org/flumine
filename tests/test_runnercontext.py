@@ -10,7 +10,6 @@ class RunnerContextTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.context.selection_id, 12345)
-
         self.assertFalse(self.context.invested)
         self.assertIsNone(self.context.datetime_last_placed)
         self.assertIsNone(self.context.datetime_last_reset)
@@ -25,12 +24,15 @@ class RunnerContextTest(unittest.TestCase):
         self.assertEqual(self.context.live_trade_count, 1)
 
     def test_reset(self):
-        self.context.invested = True
         self.context.live_trade_count = 1
         self.context.reset()
-        self.assertFalse(self.context.invested)
         self.assertIsNotNone(self.context.datetime_last_reset)
         self.assertEqual(self.context.live_trade_count, 0)
+
+    def test_executable_orders(self):
+        self.assertFalse(self.context.executable_orders)
+        self.context.live_trade_count = 1
+        self.assertTrue(self.context.executable_orders)
 
     def test_placed_elapsed_seconds(self):
         self.assertIsNone(self.context.placed_elapsed_seconds)

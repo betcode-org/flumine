@@ -20,10 +20,15 @@ class RunnerContext:
         self.live_trade_count += 1
 
     def reset(self) -> None:
-        if self.invested:
-            self.invested = False
-            self.datetime_last_reset = datetime.datetime.utcnow()
-            self.live_trade_count -= 1
+        self.datetime_last_reset = datetime.datetime.utcnow()
+        self.live_trade_count -= 1
+
+    @property
+    def executable_orders(self) -> bool:
+        if self.live_trade_count:
+            return True
+        else:
+            return False
 
     @property
     def placed_elapsed_seconds(self) -> Optional[float]:

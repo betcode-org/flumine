@@ -2,8 +2,8 @@ import logging
 
 from ..markets.markets import Markets
 from ..strategy.strategy import Strategies
-from ..order.trade import Trade, TradeStatus
-from ..order.order import BaseOrder, OrderStatus
+from ..order.trade import Trade
+from ..order.order import BaseOrder, OrderStatus, OrderTypes
 
 logger = logging.getLogger(__name__)
 
@@ -52,12 +52,19 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
 
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
-        if order.size_voided:
-            order.voided()
-        elif order.size_lapsed:
-            order.lapsed()
-        elif order.size_remaining == 0:
-            order.execution_complete()
+        if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if order.size_voided:
+                order.voided()
+            elif order.size_lapsed:
+                order.lapsed()
+            elif order.size_remaining == 0:
+                order.execution_complete()
+        elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
+            # todo
+            pass
+        elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+            # todo
+            pass
 
     if order.trade.complete:
         order.trade.complete_trade()

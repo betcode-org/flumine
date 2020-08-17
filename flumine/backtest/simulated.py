@@ -188,10 +188,12 @@ class Simulated:
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
                     if actual_sp < _order_type.price:
+                        self.order.execution_complete()
                         return
                     size = _order_type.liability
                 else:
                     if actual_sp > _order_type.price:
+                        self.order.execution_complete()
                         return
                     size = round(_order_type.liability / (actual_sp - 1), 2)
             elif _order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
@@ -202,6 +204,13 @@ class Simulated:
             else:
                 raise NotImplementedError()
             self._update_matched([publish_time, actual_sp, size])
+            self.order.execution_complete()
+        else:
+            logger.warning(
+                "SP not available for order {0} on runner {1}".format(
+                    self.order.id, runner.selection_id
+                )
+            )
 
     def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update

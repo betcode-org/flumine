@@ -58,7 +58,7 @@ class IntegrationTest(unittest.TestCase):
 
         class MarketOnCloseOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
-                if market_book.inplay and market.seconds_to_start < 100:
+                if not market_book.inplay and market.seconds_to_start < 100:
                     return True
 
             def process_market_book(self, market, market_book):
