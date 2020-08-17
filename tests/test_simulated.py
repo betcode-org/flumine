@@ -290,6 +290,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [[1234571, 12.2, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_none(self):
         mock_runner = mock.Mock()
@@ -309,6 +310,7 @@ class SimulatedTest(unittest.TestCase):
             self.simulated.matched, [[1234571, 10.0, 1], [1234572, 12.2, 1]]
         )
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_limit_on_close_back(self):
         mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
@@ -319,6 +321,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234573, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234573, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_limit_on_close_back_no_match(self):
         mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
@@ -329,6 +332,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234574, mock_runner_book)
         self.assertEqual(self.simulated.matched, [])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_limit_on_close_lay(self):
         mock_limit_on_close_order = mock.Mock(price=100.0, liability=2.00)
@@ -340,6 +344,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234575, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234575, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_limit_on_close_lay_no_match(self):
         mock_limit_on_close_order = mock.Mock(price=60.0, liability=2.00)
@@ -351,6 +356,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234576, mock_runner_book)
         self.assertEqual(self.simulated.matched, [])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_market_on_close_back(self):
         mock_limit_on_close_order = mock.Mock(liability=2.00)
@@ -361,6 +367,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234577, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234577, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_market_on_close_lay(self):
         mock_limit_on_close_order = mock.Mock(liability=2.00)
@@ -372,6 +379,7 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._process_sp(1234578, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234578, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
 
     @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
     def test__process_traded_back(self, mock__calculate_process_traded):

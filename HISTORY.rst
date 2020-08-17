@@ -12,6 +12,10 @@ Release History
 - Use MarketCatalogue where available for market descriptions
 - Create session added, sessions closed and deleted if stale for 200s or more
 
+**Bug Fixes**
+
+- Limit process to limit orders to prevent SP orders from being completed when not + test bug fix
+
 1.10.6 (2020-08-10)
 +++++++++++++++++++
 
