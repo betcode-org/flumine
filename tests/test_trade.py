@@ -24,6 +24,8 @@ class TradeTest(unittest.TestCase):
             self.mock_fill_kill,
             self.mock_offset,
             self.mock_green,
+            12,
+            34,
         )
 
     def test_init(self):
@@ -41,6 +43,8 @@ class TradeTest(unittest.TestCase):
         self.assertIsNotNone(self.trade.date_time_created)
         self.assertIsNone(self.trade.date_time_complete)
         self.assertIsNone(self.trade.market_notes)
+        self.assertEqual(self.trade.place_reset_seconds, 12)
+        self.assertEqual(self.trade.reset_seconds, 34)
 
     @mock.patch("flumine.order.trade.get_market_notes")
     def test_update_market_notes(self, mock_get_market_notes):
