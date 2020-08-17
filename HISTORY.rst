@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.11.0 (2020-08-03)
++++++++++++++++++++
+
+**Improvements**
+
+- invested migrated to executable_orders on RunnerContext *breaking change
+
+**Libraries**
+
+-
+
 1.10.6 (2020-08-10)
 +++++++++++++++++++
 
