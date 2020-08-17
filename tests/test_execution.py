@@ -1,3 +1,4 @@
+import time
 import unittest
 from unittest import mock
 from unittest.mock import call
@@ -5,7 +6,13 @@ from unittest.mock import call
 from betfairlightweight import BetfairError
 from flumine.clients.clients import ExchangeType
 from flumine.exceptions import OrderExecutionError
-from flumine.execution.baseexecution import BaseExecution, OrderPackageType
+from flumine.execution.baseexecution import (
+    MAX_WORKERS,
+    MAX_SESSION_AGE,
+    BET_ID_START,
+    BaseExecution,
+    OrderPackageType,
+)
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
 
@@ -16,6 +23,9 @@ class BaseExecutionTest(unittest.TestCase):
         self.execution = BaseExecution(self.mock_flumine, max_workers=2)
 
     def test_init(self):
+        self.assertEqual(MAX_WORKERS, 16)
+        self.assertEqual(MAX_SESSION_AGE, 200)
+        self.assertEqual(BET_ID_START, 100000000000)
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertEqual(self.execution._max_workers, 2)
         self.assertIsNotNone(self.execution._thread_pool)
@@ -98,13 +108,31 @@ class BaseExecutionTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.execution.execute_place(None, None)
 
-    @mock.patch("flumine.execution.baseexecution.requests")
-    def test__get_http_session(self, mock_requests):
-        self.execution._sessions = [1, 2]
-        self.assertEqual(self.execution._get_http_session(), 2)
-        self.assertEqual(self.execution._get_http_session(), 1)
-        self.assertEqual(self.execution._get_http_session(), mock_requests.Session())
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._create_new_session")
+    def test__get_http_session(self, mock__create_new_session):
+        mock_session_one = mock.Mock(time_returned=time.time())
+        mock_session_two = mock.Mock(time_returned=time.time())
+        self.execution._sessions = [mock_session_one, mock_session_two]
+        self.assertEqual(self.execution._get_http_session(), mock_session_two)
+        self.assertEqual(self.execution._get_http_session(), mock_session_one)
+        self.assertEqual(self.execution._get_http_session(), mock__create_new_session())
         self.assertEqual(self.execution._sessions_created, 1)
+
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._return_http_session")
+    @mock.patch("flumine.execution.baseexecution.BaseExecution._create_new_session")
+    def test__get_http_session_stale(
+        self, mock__create_new_session, mock__return_http_session
+    ):
+        mock_session = mock.Mock(time_returned=123)
+        self.execution._sessions = [mock_session]
+        self.assertEqual(self.execution._get_http_session(), mock__create_new_session())
+        self.assertEqual(self.execution._sessions_created, 1)
+        mock__return_http_session.assert_called_with(mock_session, err=True)
+
+    def test__create_new_session(self):
+        session = self.execution._create_new_session()
+        self.assertIsNotNone(session.time_created)
+        self.assertIsNotNone(session.time_returned)
 
     def test__return_http_session(self):
         mock_session = mock.Mock()
@@ -113,6 +141,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.execution._return_http_session(mock_session)
         self.execution._return_http_session(mock_session)
         self.assertEqual(self.execution._sessions, [mock_session, mock_session])
+        self.assertGreater(mock_session.time_returned, 0)
 
     def test__return_http_session_close(self):
         self.execution._sessions = [1, 2]

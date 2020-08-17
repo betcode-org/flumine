@@ -10,10 +10,7 @@ Release History
 
 - invested migrated to executable_orders on RunnerContext *breaking change
 - Use MarketCatalogue where available for market descriptions
-
-**Libraries**
-
--
+- Create session added, sessions closed and deleted if stale for 200s or more
 
 1.10.6 (2020-08-10)
 +++++++++++++++++++
