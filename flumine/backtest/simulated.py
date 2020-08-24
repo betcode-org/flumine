@@ -293,5 +293,18 @@ class Simulated:
         else:
             return 0.0
 
+    @property
+    def status(self) -> str:
+        if self.order.status.value in [
+            "EXECUTION_COMPLETE",
+            "EXPIRED",
+            "VOIDED",
+            "LAPSED",
+            "VIOLATION",
+        ]:
+            return "EXECUTION_COMPLETE"
+        else:
+            return "EXECUTABLE"
+
     def __bool__(self):
         return config.simulated or self.order.trade.client.paper_trade
