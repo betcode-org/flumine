@@ -68,7 +68,9 @@ class TestMaxOrderCount(unittest.TestCase):
         "flumine.controls.clientcontrols.MaxOrderCount._check_transaction_count"
     )
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
-    def test_validate_place(self, mock_check_hour, mock__check_transaction_count, mock__set_next_hour):
+    def test_validate_place(
+        self, mock_check_hour, mock__check_transaction_count, mock__set_next_hour
+    ):
         mock_package = mock.Mock()
         mock_package.package_type = OrderPackageType.PLACE
         mock_package.__len__ = mock.Mock()
