@@ -114,12 +114,22 @@ class TradeTest(unittest.TestCase):
     def test_create_order_from_current_limit_on_close(self):
         mock_current_order = mock.Mock()
         mock_current_order.order_type = "LIMIT_ON_CLOSE"
-        with self.assertRaises(NotImplementedError):
-            self.trade.create_order_from_current(mock_current_order, "12345")
+        order = self.trade.create_order_from_current(mock_current_order, "12345")
+        self.assertEqual(order.bet_id, mock_current_order.bet_id)
+        self.assertEqual(order.id, "12345")
+        self.assertEqual(self.trade.orders, [order])
 
     def test_create_order_from_current_market_on_close(self):
         mock_current_order = mock.Mock()
         mock_current_order.order_type = "MARKET_ON_CLOSE"
+        order = self.trade.create_order_from_current(mock_current_order, "12345")
+        self.assertEqual(order.bet_id, mock_current_order.bet_id)
+        self.assertEqual(order.id, "12345")
+        self.assertEqual(self.trade.orders, [order])
+
+    def test_create_order_from_current_unknown(self):
+        mock_current_order = mock.Mock()
+        mock_current_order.order_type = "BE"
         with self.assertRaises(NotImplementedError):
             self.trade.create_order_from_current(mock_current_order, "12345")
 

@@ -60,11 +60,11 @@ def process_current_order(order: BaseOrder):
             elif order.size_remaining == 0:
                 order.execution_complete()
         elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-            # todo
-            pass
+            if order.current_order.status == "EXECUTION_COMPLETE":
+                order.execution_complete()
         elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-            # todo
-            pass
+            if order.current_order.status == "EXECUTION_COMPLETE":
+                order.execution_complete()
 
     if order.trade.complete:
         order.trade.complete_trade()

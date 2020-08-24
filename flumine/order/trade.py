@@ -121,6 +121,12 @@ class Trade:
                 current_order.price_size.size,
                 current_order.persistence_type,
             )
+        elif current_order.order_type == "LIMIT_ON_CLOSE":
+            order_type = LimitOnCloseOrder(
+                current_order.bsp_liability, current_order.price_size.price
+            )
+        elif current_order.order_type == "MARKET_ON_CLOSE":
+            order_type = MarketOnCloseOrder(current_order.bsp_liability)
         else:
             raise NotImplementedError
         order = BetfairOrder(
