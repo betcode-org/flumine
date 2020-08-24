@@ -34,6 +34,8 @@ class BaseStrategy:
         max_selection_exposure: float = 100,
         max_order_exposure: float = 10,
         client: BaseClient = None,
+        max_trade_count: int = 1e6,  # max total number of trades per runner
+        max_live_trade_count: int = 1,  # max live (with executable orders) trades per runner
     ):
         """
         Processes data from streams.
@@ -58,6 +60,8 @@ class BaseStrategy:
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
         self.client = client
+        self.max_trade_count = max_trade_count
+        self.max_live_trade_count = max_live_trade_count
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
@@ -119,8 +123,20 @@ class BaseStrategy:
         market.replace_order(order, new_price)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
-        # todo multi/count
-        if runner_context.executable_orders:
+        # validate context
+        if runner_context.trade_count >= self.max_trade_count:
+            return False
+        elif runner_context.live_trade_count >= self.max_live_trade_count:
+            return False
+        elif (
+            runner_context.placed_elapsed_seconds
+            and runner_context.placed_elapsed_seconds < order.trade.place_reset_seconds
+        ):
+            return False
+        elif (
+            runner_context.reset_elapsed_seconds
+            and runner_context.reset_elapsed_seconds < order.trade.reset_seconds
+        ):
             return False
         else:
             return True
