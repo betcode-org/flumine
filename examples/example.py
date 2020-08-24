@@ -73,7 +73,6 @@ framework = Flumine(client=client)
 
 strategy = ExampleStrategy(
     market_filter=streaming_market_filter(market_ids=["1.170378175"]),
-    streaming_timeout=2,
 )
 framework.add_strategy(strategy)
 
