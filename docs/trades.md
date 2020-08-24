@@ -24,18 +24,18 @@ order = trade.create_order(
 trade.orders  # [<BetfairOrder>]
 ```
 
-Extras include:
+### Parameters
 
-### offset orders
-
-desc
-
-```python
-example
-```
-
-### fill kill
-### greening
+- `market_id` Market Id
+- `selection_id` Selection Id
+- `handicap` Runner handicap
+- `strategy` Strategy object
+- `notes` Trade notes, used to store market / trigger info for later analysis
+- `fill_kill` Not implemented
+- `offset` Not implemented
+- `green` Not implemented
+- `place_reset_seconds` Seconds to wait since `runner_context.reset` before allowing another order
+- `reset_seconds` Seconds to wait since `runner_context.place` before allowing another order
 
 ### custom
 You can create your own trade classes and then handle the logic within the `strategy.process_orders` function.

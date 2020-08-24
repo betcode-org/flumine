@@ -1,18 +1,32 @@
 # Markets
 
-### Market
+## Market
 
 Within markets you have market objects which contains current up to date market data.
 
-```python
-from flumine.markets.market import Market
+### Class variables
 
-market: Market
+- `market_book` Latest MarketBook object
+- `market_catalogue` Latest MarketCatalogue object
+- `context` Market context, store market specific context e.g. simulated data store
+- `blotter` Holds all order data and position
 
-market.market_book
+### Functions
 
-market.market_catalogue
-```
+- `place_order(order)` Place new order from order object
+- `cancel_order(order, size_reduction)` Cancel order
+- `update_order(order, new_persistance_type)` Update order
+- `replace_order(order, new_price)` Replace order
+
+### Properties
+
+- `event` Dictionary containing all event related markets (assumes markets have been subscribed)
+- `event_type_id` Betfair event type id (horse racing: 7)
+- `event_id` Market event id (12345)
+- `market_type` Market type ('WIN')
+- `seconds_to_start` Seconds to scheduled market start time (123.45)
+- `elapsed_seconds_closed` Seconds since market was closed (543.21)
+- `market_start_datetime` Market scheduled start time
 
 ### Middleware
 

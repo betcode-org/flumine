@@ -38,6 +38,8 @@ The Flumine class can be adapted by overriding the following functions:
 - `max_selection_exposure` Max exposure per selection (including new order), note this does __not__ handle reduction in exposure due to laying another runner
 - `max_order_exposure` Max exposure per order
 - `client` Strategy client, half implemented when flumine will be migrated to multi clients
+- `max_trade_count` Max total number of trades per runner
+- `max_live_trade_count` Max live (with executable orders) trades per runner
 
 ### Functions
 
@@ -86,11 +88,7 @@ This is created on a per market basis when backtesting.
 
 ### Order Stream
 
-_In development_
-
-### Custom Stream
-
-_In development_
+Subscribes to all orders per running instance using the `config.hostname`
 
 ## Custom Event
 
@@ -139,7 +137,7 @@ from flumine.worker import BackgroundWorker
 def func(a): print(a)
 
 worker = BackgroundWorker(
-    interval=10, function=func, func_args=("hello",), name="print_a"
+    framework, interval=10, function=func, func_args=("hello",), name="print_a"
 )
 
 framework.add_worker(
@@ -176,6 +174,14 @@ logger.setLevel(logging.INFO)
 
 ## Config
 
+### simulated
+
+Updated to True when backtesting or paper trading
+
+### instance_id
+
+Store server id or similar (e.g. AWS ec2 instanceId)
+
 ### hostname
 
 Used as customerStrategyRefs so that only orders created by the running instance is returned.
@@ -188,6 +194,6 @@ OS process id of running application.
 
 Used for backtesting
 
-### current_time
+### raise_errors
 
 Raises errors on strategy functions, see [Error Handling](/advanced/#error-handling)

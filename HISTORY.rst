@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.11.1 (2020-08-24)
++++++++++++++++++++
+
+**Improvements**
+
+- #187 strategy and trade runner context additions
+
+**Bug Fixes**
+
+- Handling for SP orders on startup
+- Bug fix on client control max orders when backtesting
+
 1.11.0 (2020-08-03)
 +++++++++++++++++++
 

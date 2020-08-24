@@ -51,6 +51,8 @@ class BaseStrategyTest(unittest.TestCase):
             max_selection_exposure=1,
             max_order_exposure=2,
             client=self.mock_client,
+            max_trade_count=3,
+            max_live_trade_count=4,
         )
 
     def test_init(self):
@@ -64,6 +66,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.max_selection_exposure, 1)
         self.assertEqual(self.strategy.max_order_exposure, 2)
         self.assertEqual(self.strategy.client, self.mock_client)
+        self.assertEqual(self.strategy.max_trade_count, 3)
+        self.assertEqual(self.strategy.max_live_trade_count, 4)
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()
@@ -161,9 +165,32 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_validate_order(self):
         mock_order = mock.Mock()
-        runner_context = mock.Mock(executable_orders=False)
+        runner_context = mock.Mock(
+            trade_count=0,
+            live_trade_count=0,
+            placed_elapsed_seconds=None,
+            reset_elapsed_seconds=None,
+        )
         self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
-        runner_context.executable_orders = True
+        # trade count
+        runner_context.trade_count = 3
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+        # live trade count
+        runner_context.trade_count = 1
+        runner_context.live_trade_count = 4
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+        # place elapsed
+        runner_context.trade_count = 1
+        runner_context.live_trade_count = 1
+        runner_context.placed_elapsed_seconds = 0.49
+        mock_order.trade.place_reset_seconds = 0.5
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+        # reset elapsed
+        runner_context.trade_count = 1
+        runner_context.live_trade_count = 1
+        runner_context.placed_elapsed_seconds = None
+        runner_context.reset_elapsed_seconds = 0.49
+        mock_order.trade.reset_seconds = 0.5
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
 
     def test_executable_orders(self):

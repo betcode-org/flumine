@@ -138,5 +138,18 @@ framework.run()
 
 Note the use of market filter to pass the file directories.
 
+Sometimes a subset of the market lifetime is required, this can be optimised by limiting the number of updates to process resulting in faster backtesting:
+
+```python
+strategy = ExampleStrategy(
+    market_filter={
+        "markets": ["/tmp/marketdata/1.170212754"],
+        "listener_kwargs": {"inplay": False, "seconds_to_start": 600},
+    }
+)
+```
+
+The extra kwargs above will limit processing to preplay in the final 10 minutes.
+
 !!! tip
     Multiple strategies and markets can be passed, flumine will pass the MarketBooks to the correct strategy via its subscription.

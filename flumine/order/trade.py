@@ -32,6 +32,8 @@ class Trade:
         fill_kill=None,
         offset=None,
         green=None,
+        place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
+        reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
     ):
         self.id = uuid.uuid1()
         self.market_id = market_id
@@ -45,6 +47,8 @@ class Trade:
         self.fill_kill = fill_kill  # todo
         self.offset = offset  # todo
         self.green = green  # todo
+        self.place_reset_seconds = place_reset_seconds
+        self.reset_seconds = reset_seconds
         self.orders = []  # all orders linked to trade
         self.offset_orders = []  # pending offset orders once initial order has matched
         self.status_log = []
@@ -121,6 +125,12 @@ class Trade:
                 current_order.price_size.size,
                 current_order.persistence_type,
             )
+        elif current_order.order_type == "LIMIT_ON_CLOSE":
+            order_type = LimitOnCloseOrder(
+                current_order.bsp_liability, current_order.price_size.price
+            )
+        elif current_order.order_type == "MARKET_ON_CLOSE":
+            order_type = MarketOnCloseOrder(current_order.bsp_liability)
         else:
             raise NotImplementedError
         order = BetfairOrder(

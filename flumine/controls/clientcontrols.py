@@ -30,10 +30,11 @@ class MaxOrderCount(BaseControl):
         self.update_requests = 0
         self.replace_requests = 0
         self._next_hour = None
-        self._set_next_hour()
         self.transaction_count = 0
 
     def _validate(self, order_package) -> None:
+        if self._next_hour is None:
+            self._set_next_hour()
         self._check_hour()
         self.total += 1
         if order_package.package_type == OrderPackageType.PLACE:
