@@ -13,6 +13,7 @@ Release History
 **Bug Fixes**
 
 - Handling for SP orders on startup
+- Bug fix on client control max orders when backtesting
 
 1.11.0 (2020-08-03)
 +++++++++++++++++++

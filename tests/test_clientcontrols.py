@@ -51,8 +51,7 @@ class TestMaxOrderCount(unittest.TestCase):
         self.mock_flumine = mock.Mock()
         self.trading_control = MaxOrderCount(self.mock_flumine, self.mock_client)
 
-    @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._set_next_hour")
-    def test_init(self, mock_set_next_hour):
+    def test_init(self):
         self.assertEqual(self.trading_control.client, self.mock_client)
         self.assertEqual(self.trading_control.NAME, "MAX_ORDER_COUNT")
         self.assertEqual(self.trading_control.total, 0)
@@ -60,24 +59,25 @@ class TestMaxOrderCount(unittest.TestCase):
         self.assertEqual(self.trading_control.update_requests, 0)
         self.assertEqual(self.trading_control.cancel_requests, 0)
         self.assertEqual(self.trading_control.replace_requests, 0)
-
-        self.assertIsNotNone(self.trading_control._next_hour)
+        self.assertIsNone(self.trading_control._next_hour)
         self.assertEqual(self.trading_control.transaction_count, 0)
         self.assertEqual(self.trading_control.transaction_limit, 1000)
 
+    @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._set_next_hour")
     @mock.patch(
         "flumine.controls.clientcontrols.MaxOrderCount._check_transaction_count"
     )
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
-    def test_validate_place(self, mock_check_hour, mock__check_transaction_count):
+    def test_validate_place(self, mock_check_hour, mock__check_transaction_count, mock__set_next_hour):
         mock_package = mock.Mock()
         mock_package.package_type = OrderPackageType.PLACE
         mock_package.__len__ = mock.Mock()
         mock_package.__len__.return_value = 1
         self.trading_control._validate(mock_package)
 
-        mock_check_hour.assert_called_with()
+        mock_check_hour.assert_called()
         mock__check_transaction_count.assert_called_with(1)
+        mock__set_next_hour.assert_called()
         self.assertEqual(self.trading_control.place_requests, 1)
 
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
@@ -115,6 +115,7 @@ class TestMaxOrderCount(unittest.TestCase):
 
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._set_next_hour")
     def test_check_hour(self, mock_set_next_hour):
+        self.trading_control._next_hour = datetime.datetime.utcnow()
         self.trading_control._check_hour()
 
         self.trading_control.transaction_count = 1069
