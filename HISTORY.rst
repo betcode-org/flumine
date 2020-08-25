@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.11.2 (2020-08-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Minor refactor and test improvements on FlumineBacktest
+
 1.11.1 (2020-08-24)
 +++++++++++++++++++
 
