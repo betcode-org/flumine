@@ -66,6 +66,8 @@ class BaseOrder:
         self.status_log.append(status)
         self.status = status
         logger.info("Order status update: %s" % self.status.value, extra=self.info)
+        if self.trade.complete:
+            self.trade.complete_trade()
 
     def placing(self) -> None:
         self._update_status(OrderStatus.PENDING)

@@ -39,9 +39,11 @@ class BaseOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BaseOrder.info")
     def test__update_status(self, mock_info):
+        self.mock_trade.complete = True
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
         self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
         self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
+        self.mock_trade.complete_trade.assert_called()
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
