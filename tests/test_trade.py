@@ -52,10 +52,13 @@ class TradeTest(unittest.TestCase):
         self.trade.update_market_notes(mock_market)
         self.assertEqual(self.trade.market_notes, mock_get_market_notes())
 
-    def test__update_status(self):
+    @mock.patch("flumine.order.trade.Trade.complete_trade")
+    @mock.patch("flumine.order.trade.Trade.complete", new_callable=mock.PropertyMock, return_value=True)
+    def test__update_status(self, mock_complete, mock_complete_trade):
         self.trade._update_status(TradeStatus.COMPLETE)
         self.assertEqual(self.trade.status_log, [TradeStatus.COMPLETE])
         self.assertEqual(self.trade.status, TradeStatus.COMPLETE)
+        mock_complete_trade.assert_called()
 
     @mock.patch("flumine.order.trade.Trade._update_status")
     def test_complete_trade(self, mock__update_status):
