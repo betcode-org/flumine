@@ -3,12 +3,18 @@
 Release History
 ---------------
 
-1.11.2 (2020-08-25)
+1.11.2 (2020-08-28)
 +++++++++++++++++++
 
 **Improvements**
 
 - Minor refactor and test improvements on FlumineBacktest
+- Tennis/inplayservice worker example added
+
+**Bug Fixes**
+
+- Validates runner is active on placeOrder when simulating (@lunswor)
+- Complete.trade moved to when order or trade status updates rather than process.py, previously it was missing any orders that violated when no other orders active
 
 1.11.1 (2020-08-24)
 +++++++++++++++++++
