@@ -66,9 +66,6 @@ def process_current_order(order: BaseOrder):
             if order.current_order.status == "EXECUTION_COMPLETE":
                 order.execution_complete()
 
-    if order.trade.complete:
-        order.trade.complete_trade()
-
 
 def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
     strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
