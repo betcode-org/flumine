@@ -64,6 +64,8 @@ class Trade:
         self.status_log.append(status)
         self.status = status
         logger.info("Trade status update: %s" % self.status.value, extra=self.info)
+        if self.complete:
+            self.complete_trade()
 
     def complete_trade(self) -> None:
         self._update_status(TradeStatus.COMPLETE)

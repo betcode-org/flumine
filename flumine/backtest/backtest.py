@@ -71,6 +71,7 @@ class FlumineBacktest(BaseFlumine):
                 self._process_close_market(event=events.CloseMarketEvent(market_book))
                 continue
 
+            # get market
             market = self.markets.markets.get(market_id)
             if market is None:
                 market = self._add_market(market_id, market_book)
@@ -92,18 +93,28 @@ class FlumineBacktest(BaseFlumine):
                     )
 
             # process current orders
-            blotter = market.blotter
-            for order in blotter.live_orders:
-                process.process_current_order(order)
-                if order.trade.status.value == "Complete":
-                    blotter.complete_order(order)
-            for strategy in self.strategies:
-                strategy_orders = blotter.strategy_orders(strategy)
-                strategy.process_orders(market, strategy_orders)
+            self._process_backtest_orders(market)
 
             self._process_market_orders()
 
+    def _process_backtest_orders(self, market) -> None:
+        """Remove order from blotter live
+        orders if complete and process
+        orders through strategies
+        """
+        blotter = market.blotter
+        for order in blotter.live_orders:
+            process.process_current_order(order)
+            if order.trade.status.value == "Complete":
+                blotter.complete_order(order)
+        for strategy in self.strategies:
+            strategy_orders = blotter.strategy_orders(strategy)
+            strategy.process_orders(market, strategy_orders)
+
     def _process_market_orders(self) -> None:
+        """Add any packages to pending
+        packages for later execution
+        """
         for market in self.markets:
             for order_package in market.blotter.process_orders(self.client):
                 self._pending_packages.append(order_package)

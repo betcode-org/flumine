@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine import FlumineBacktest
+from flumine.clients import ExchangeType
 from flumine.order.orderpackage import OrderPackageType
 from flumine import config
 from flumine.exceptions import RunError
@@ -9,8 +10,8 @@ from flumine.exceptions import RunError
 
 class FlumineBacktestTest(unittest.TestCase):
     def setUp(self):
-        self.mock_trading = mock.Mock()
-        self.flumine = FlumineBacktest(self.mock_trading)
+        self.mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        self.flumine = FlumineBacktest(self.mock_client)
 
     def test_init(self):
         self.assertTrue(self.flumine.BACKTEST)
@@ -22,44 +23,71 @@ class FlumineBacktestTest(unittest.TestCase):
         with self.assertRaises(RunError):
             self.flumine.run()
 
-    # @mock.patch("flumine.flumine.Flumine._process_end_flumine")
-    # @mock.patch("flumine.flumine.Flumine._process_raw_data")
-    # @mock.patch("flumine.flumine.Flumine._process_market_books")
-    # def test_run(
-    #     self,
-    #     mock__process_market_books,
-    #     mock__process_raw_data,
-    #     mock__process_end_flumine,
-    # ):
-    #     events = [
-    #         event.MarketCatalogueEvent(None),
-    #         event.MarketBookEvent(None),
-    #         event.RawDataEvent(None),
-    #         event.CurrentOrdersEvent(None),
-    #         event.ClearedMarketsEvent(None),
-    #         event.ClearedOrdersEvent(None),
-    #         event.CloseMarketEvent(None),
-    #         event.StrategyResetEvent(None),
-    #         event.CustomEvent(None),
-    #         event.NewDayEvent(None),
-    #         event.EventType.TERMINATOR,
-    #     ]
-    #     for i in events:
-    #         self.flumine.handler_queue.put(i)
-    #     self.flumine.run()
-    #
-    #     mock__process_market_books.assert_called_with(events[1])
-    #     mock__process_raw_data.assert_called_with(events[2])
-    #     mock__process_end_flumine.assert_called_with()
-
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._check_pending_packages")
-    def test__process_market_books(self, mock__check_pending_packages):
-        mock_event = mock.Mock()
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._unpatch_datetime")
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_end_flumine")
+    @mock.patch("flumine.backtest.backtest.events")
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_books")
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._monkey_patch_datetime")
+    def test_run(
+        self,
+        mock__monkey_patch_datetime,
+        mock__process_market_books,
+        mock_events,
+        mock__process_end_flumine,
+        mock__unpatch_datetime,
+    ):
+        mock_stream = mock.Mock()
         mock_market_book = mock.Mock()
+        mock_gen = mock.Mock(return_value=[[mock_market_book]])
+        mock_stream.create_generator.return_value = mock_gen
+        self.flumine.streams._streams = [mock_stream]
+        self.flumine.run()
+        mock__monkey_patch_datetime.assert_called_with()
+        mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
+        mock__process_end_flumine.assert_called_with()
+        mock__unpatch_datetime.assert_called_with()
+        self.assertEqual(mock_market_book.streaming_unique_id, mock_stream.stream_id)
+
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_orders")
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_backtest_orders")
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._check_pending_packages")
+    def test__process_market_books(
+        self,
+        mock__check_pending_packages,
+        mock__process_backtest_orders,
+        mock__process_market_orders,
+    ):
+        mock_event = mock.Mock()
+        mock_market_book = mock.Mock(market_id="1.23")
         mock_market_book.runners = []
+        mock_market = mock.Mock(market_book=mock_market_book, context={})
+        mock_market.blotter.live_orders = []
+        self.flumine.markets._markets = {"1.23": mock_market}
         mock_event.event = [mock_market_book]
         self.flumine._process_market_books(mock_event)
         mock__check_pending_packages.assert_called_with()
+        mock__process_backtest_orders.assert_called_with(mock_market)
+        mock__process_market_orders.assert_called_with()
+
+    @mock.patch("flumine.backtest.backtest.process.process_current_order")
+    def test__process_backtest_orders(self, mock_process_current_order):
+        mock_market = mock.Mock(context={})
+        mock_order = mock.Mock()
+        mock_order.trade.status.value = "Complete"
+        mock_market.blotter.live_orders = [mock_order]
+        self.flumine._process_backtest_orders(mock_market)
+        mock_process_current_order.assert_called_with(mock_order)
+        mock_market.blotter.complete_order.assert_called_with(mock_order)
+
+    def test__process_backtest_orders_strategies(self):
+        mock_market = mock.Mock(context={})
+        mock_market.blotter.live_orders = []
+        mock_strategy = mock.Mock()
+        self.flumine.strategies = [mock_strategy]
+        self.flumine._process_backtest_orders(mock_market)
+        mock_strategy.process_orders.assert_called_with(
+            mock_market, mock_market.blotter.strategy_orders(mock_strategy)
+        )
 
     def test__process_market_orders(self):
         self.flumine._pending_packages = []

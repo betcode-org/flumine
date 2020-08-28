@@ -227,3 +227,11 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
             get_price(runner.ex.available_to_lay, 0),
             runner.last_price_traded,
         )
+
+
+def get_event_ids(markets: list, event_type_id: str) -> list:
+    event_ids = []
+    for market in markets:
+        if not market.closed and market.event_type_id == event_type_id:
+            event_ids.append(market.event_id)
+    return list(set(event_ids))
