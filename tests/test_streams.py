@@ -441,7 +441,7 @@ class TestHistoricalStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.historicalstream.HistoricalGeneratorStream")
     def test_create_generator(self, mock_generator):
-        generator = self.stream.create_generator()
+        generator = self.stream.create_snap_generator()
         mock_generator.assert_called_with(
             file_path={"test": "me"},
             listener=self.stream._listener,

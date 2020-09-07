@@ -1,5 +1,6 @@
 import logging
 import datetime
+import json
 
 from ..baseflumine import BaseFlumine
 from ..events import events
@@ -35,13 +36,18 @@ class FlumineBacktest(BaseFlumine):
             self._monkey_patch_datetime()
 
             for stream in self.streams:
-                stream_gen = stream.create_generator()
+                stream_gen = stream.create_update_generator()
 
                 logger.info(
                     "Starting historical market '{0}'".format(stream.market_filter)
                 )
 
-                for event in stream_gen():
+                # for event in stream_gen():
+                for update in stream_gen():
+                    config.current_time = get_update_publish_time(update)
+                    self._check_pending_packages()
+
+                    event = stream.apply_update(update)
                     for market_book in event:  # todo move?
                         market_book.streaming_unique_id = stream.stream_id
                     self._process_market_books(events.MarketBookEvent(event))
@@ -62,10 +68,6 @@ class FlumineBacktest(BaseFlumine):
         # todo DRY!
         for market_book in event.event:
             market_id = market_book.market_id
-            config.current_time = market_book.publish_time
-
-            # check if there are orders to process
-            self._check_pending_packages()
 
             if market_book.status == "CLOSED":
                 self._process_close_market(event=events.CloseMarketEvent(market_book))
@@ -165,3 +167,8 @@ class FlumineBacktest(BaseFlumine):
 
     def __str__(self) -> str:
         return "<FlumineBacktest>"
+
+
+def get_update_publish_time(update) -> datetime.datetime:
+    data = json.loads(update)
+    return datetime.datetime.utcfromtimestamp(data["pt"] / 1e3)

@@ -1,4 +1,5 @@
 import unittest
+import json
 from unittest import mock
 
 from flumine import FlumineBacktest
@@ -37,9 +38,10 @@ class FlumineBacktestTest(unittest.TestCase):
         mock__unpatch_datetime,
     ):
         mock_stream = mock.Mock()
+        mock_gen = mock.Mock(return_value=[json.dumps({"pt": 1598896706888})])
+        mock_stream.create_update_generator.return_value = mock_gen
         mock_market_book = mock.Mock()
-        mock_gen = mock.Mock(return_value=[[mock_market_book]])
-        mock_stream.create_generator.return_value = mock_gen
+        mock_stream.apply_update.return_value = [mock_market_book]
         self.flumine.streams._streams = [mock_stream]
         self.flumine.run()
         mock__monkey_patch_datetime.assert_called_with()

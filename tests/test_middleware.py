@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+from betfairlightweight.resources import PriceSize, PriceSizeList
+
 from flumine.markets.middleware import (
     Middleware,
     SimulatedMiddleware,
@@ -214,7 +216,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
 
     def test__calculate_traded_dict_new(self):
         mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = [{"price": 1.01, "size": 69}]
+        mock_runner.ex.traded_volume = PriceSizeList([[1.01, 69]])
         self.runner_analytics._traded_volume = []
         self.assertEqual(
             self.runner_analytics._calculate_traded(mock_runner), {1.01: 69.0}
@@ -222,13 +224,16 @@ class RunnerAnalyticsTest(unittest.TestCase):
 
     def test__calculate_traded_dict_new_multi(self):
         mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = [
-            {"price": 1.01, "size": 69},
-            {"price": 10, "size": 32},
-        ]
-        self.runner_analytics._traded_volume = [{"price": 1.01, "size": 30}]
+        mock_runner.ex.traded_volume = PriceSizeList(
+            [
+                [1.01, 69],
+                [10, 32],
+            ]
+        )
+        self.runner_analytics._traded_volume = [PriceSize(price=1.01, size=30)]
         self.assertEqual(
-            self.runner_analytics._calculate_traded(mock_runner), {1.01: 39.0, 10: 32},
+            self.runner_analytics._calculate_traded(mock_runner),
+            {1.01: 39.0, 10: 32},
         )
 
     def test__calculate_middle(self):
@@ -236,11 +241,11 @@ class RunnerAnalyticsTest(unittest.TestCase):
         mock_runner.ex.available_to_back = []
         mock_runner.ex.available_to_lay = []
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 500.5)
-        mock_runner.ex.available_to_back = [{"price": 2.00}]
-        mock_runner.ex.available_to_lay = [{"price": 2.02}]
+        mock_runner.ex.available_to_back = PriceSizeList([[2.00, 10]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[2.02, 10]])
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 2.01)
-        mock_runner.ex.available_to_back = [{"price": 10.00}]
-        mock_runner.ex.available_to_lay = [{"price": 15.5}]
+        mock_runner.ex.available_to_back = PriceSizeList([[10.00, 10]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[15.5, 10]])
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 12.75)
 
     def test__calculate_matched(self):

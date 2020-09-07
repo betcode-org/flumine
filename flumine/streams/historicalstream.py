@@ -99,7 +99,18 @@ class HistoricalStream(BaseStream):
     def handle_output(self) -> None:
         pass
 
-    def create_generator(self):
+    def create_update_generator(self):
+        self.historical_stream = HistoricalGeneratorStream(
+            file_path=self.market_filter,
+            listener=self._listener,
+            operation=self.operation,
+        )
+        return self.historical_stream.get_update_generator()
+
+    def apply_update(self, update) -> dict:
+        return self.historical_stream._update(update)
+
+    def create_snap_generator(self):
         stream = HistoricalGeneratorStream(
             file_path=self.market_filter,
             listener=self._listener,
