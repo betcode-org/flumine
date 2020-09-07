@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+from betfairlightweight.test_data import create_market_definition_data
+
 from flumine.streams import streams, datastream, historicalstream
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
@@ -459,7 +461,14 @@ class TestStream(unittest.TestCase):
 
     def test__process(self):
         self.stream._process(
-            [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}], 12345
+            [
+                {
+                    "id": "1.23",
+                    "img": {1: 2},
+                    "marketDefinition": create_market_definition_data(),
+                }
+            ],
+            12345,
         )
         self.assertEqual(len(self.stream._caches), 1)
 

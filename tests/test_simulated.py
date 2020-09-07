@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+from betfairlightweight.resources import PriceSizeList
+
 from flumine.backtest import simulated
 from flumine.order.ordertype import OrderTypes
 
@@ -87,8 +89,8 @@ class SimulatedTest(unittest.TestCase):
         mock_client = mock.Mock(best_price_execution=True)
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock_runner.ex.available_to_back = PriceSizeList([[12, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[13, 120]])
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
@@ -102,13 +104,10 @@ class SimulatedTest(unittest.TestCase):
         mock_client = mock.Mock(best_price_execution=True)
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
-        mock_runner.ex.available_to_lay = [
-            {"price": 10.5, "size": 120},
-            {"price": 11.5, "size": 10},
-            {"price": 12, "size": 22},
-            {"price": 15, "size": 32},
-        ]
+        mock_runner.ex.available_to_back = PriceSizeList([[10, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList(
+            [[10.5, 120], [11.5, 10], [12, 22], [15, 32]]
+        )
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 0)
@@ -121,8 +120,8 @@ class SimulatedTest(unittest.TestCase):
         mock_client = mock.Mock(best_price_execution=False)
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 15, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 16, "size": 120}]
+        mock_runner.ex.available_to_back = PriceSizeList([[15, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[16, 120]])
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.status, "FAILURE")
@@ -135,8 +134,8 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_back = PriceSizeList([[11, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[12, 120]])
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
@@ -151,13 +150,10 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [
-            {"price": 10.5, "size": 120},
-            {"price": 11.5, "size": 10},
-            {"price": 12, "size": 22},
-            {"price": 14, "size": 32},
-        ]
-        mock_runner.ex.available_to_lay = [{"price": 15, "size": 32}]
+        mock_runner.ex.available_to_back = PriceSizeList(
+            [[10.5, 120], [11.5, 120], [12, 22], [14, 32]]
+        )
+        mock_runner.ex.available_to_lay = PriceSizeList([[15, 32]])
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 0)
@@ -171,8 +167,8 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 10.5, "size": 120}]
+        mock_runner.ex.available_to_back = PriceSizeList([[10, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[10.5, 120]])
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(resp.status, "FAILURE")
@@ -185,8 +181,8 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.side = "BACK"
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 10.5, "size": 120}]
+        mock_runner.ex.available_to_back = PriceSizeList([[10, 120]])
+        mock_runner.ex.available_to_lay = PriceSizeList([[10.5, 120]])
         mock_runner.status = "REMOVED"
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
@@ -236,7 +232,8 @@ class SimulatedTest(unittest.TestCase):
         mock_runner = mock.Mock(selection_id=1234, handicap=1)
         mock_market_book.runners = [mock_runner]
         self.assertEqual(
-            self.simulated._get_runner(mock_market_book), mock_runner,
+            self.simulated._get_runner(mock_market_book),
+            mock_runner,
         )
         mock_runner = mock.Mock(selection_id=134, handicap=1)
         mock_market_book.runners = [mock_runner]
@@ -249,22 +246,25 @@ class SimulatedTest(unittest.TestCase):
     )
     def test__process_price_matched_back(self, mock_side):
         self.simulated._process_price_matched(
-            1234567, 12.0, 2.00, [{"price": 15, "size": 120}]
+            1234567, 12.0, 2.00, PriceSizeList([[15, 120]])
         )
         self.assertEqual(self.simulated.matched, [[1234567, 15, 2]])
+
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234568, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 1}]
+            1234568, 12.0, 2.00, PriceSizeList([[15, 1], [12, 1]], reverse=True)
         )
         self.assertEqual(self.simulated.matched, [[1234568, 15, 1], [1234568, 12, 1]])
+
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234569, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 0.5}]
+            1234569, 12.0, 2.00, PriceSizeList([[15, 1], [12, 0.5]], reverse=True)
         )
         self.assertEqual(self.simulated.matched, [[1234569, 15, 1], [1234569, 12, 0.5]])
+
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234570, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 11, "size": 0.5}]
+            1234570, 12.0, 2.00, PriceSizeList([[15, 1], [11, 0.5]], reverse=True)
         )
         self.assertEqual(self.simulated.matched, [[1234570, 15, 1]])
 
@@ -275,12 +275,12 @@ class SimulatedTest(unittest.TestCase):
     )
     def test__process_price_matched_lay(self, mock_side):
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 2.02, "size": 120}]
+            1234571, 3.0, 20.00, PriceSizeList([[2.02, 120]])
         )
         self.assertEqual(self.simulated.matched, [[1234571, 2.02, 20]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 2.02, "size": 1}, {"price": 3, "size": 20}]
+            1234571, 3.0, 20.00, PriceSizeList([[2.02, 1], [3, 20]])
         )
         self.assertEqual(self.simulated.matched, [[1234571, 2.02, 1], [1234571, 3, 19]])
         self.simulated.matched = []
@@ -288,14 +288,14 @@ class SimulatedTest(unittest.TestCase):
             1234571,
             3.0,
             20.00,
-            [{"price": 2.02, "size": 1}, {"price": 2.9, "size": 0.5}],
+            PriceSizeList([[2.02, 1], [2.9, 0.5]]),
         )
         self.assertEqual(
             self.simulated.matched, [[1234571, 2.02, 1], [1234571, 2.9, 0.5]]
         )
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 3, "size": 1}, {"price": 11, "size": 0.5}]
+            1234571, 3.0, 20.00, PriceSizeList([[3, 1], [11, 0.5]])
         )
         self.assertEqual(self.simulated.matched, [[1234571, 3, 1]])
 

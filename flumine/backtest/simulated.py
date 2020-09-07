@@ -59,7 +59,9 @@ class Simulated:
 
             if runner.status == "REMOVED":
                 return self._create_place_response(
-                    bet_id, status="FAILURE", error_code="RUNNER_REMOVED",
+                    bet_id,
+                    status="FAILURE",
+                    error_code="RUNNER_REMOVED",
                 )
 
             available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
@@ -101,8 +103,8 @@ class Simulated:
 
             # calculate position in queue
             for avail in available:
-                if avail["price"] == price:
-                    self._piq = avail["size"]
+                if avail.price == price:
+                    self._piq = avail.size
                     break
 
             logger.debug(
@@ -136,7 +138,8 @@ class Simulated:
             )
         else:
             return SimulatedCancelResponse(
-                status="FAILURE", error_code="BET_ACTION_ERROR",  # todo ?
+                status="FAILURE",
+                error_code="BET_ACTION_ERROR",  # todo ?
             )
 
     def update(self, instruction: dict):
@@ -151,7 +154,8 @@ class Simulated:
             return SimulatedUpdateResponse(status="SUCCESS")
         else:
             return SimulatedCancelResponse(
-                status="FAILURE", error_code="BET_ACTION_ERROR",
+                status="FAILURE",
+                error_code="BET_ACTION_ERROR",
             )
 
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:
@@ -169,16 +173,16 @@ class Simulated:
         for avail in available:
             if size_remaining == 0:
                 break
-            elif (self.side == "BACK" and price <= avail["price"]) or (
-                self.side == "LAY" and price >= avail["price"]
+            elif (self.side == "BACK" and price <= avail.price) or (
+                self.side == "LAY" and price >= avail.price
             ):
                 _size_remaining = size_remaining
-                size_remaining = max(size_remaining - avail["size"], 0)
+                size_remaining = max(size_remaining - avail.size, 0)
                 if size_remaining == 0:
                     _size_matched = _size_remaining
                 else:
-                    _size_matched = avail["size"]
-                _matched = [publish_time, avail["price"], round(_size_matched, 2)]
+                    _size_matched = avail.size
+                _matched = [publish_time, avail.price, round(_size_matched, 2)]
                 self._update_matched(_matched)
             else:
                 break

@@ -16,8 +16,7 @@ class SimulatedExecution(BaseExecution):
     REPLACE_LATENCY = 0.280
 
     def handler(self, order_package: BaseOrderPackage) -> None:
-        """ Only uses _thread_pool if paper_trade
-        """
+        """Only uses _thread_pool if paper_trade"""
         if order_package.package_type == OrderPackageType.PLACE:
             func = self.execute_place
         elif order_package.package_type == OrderPackageType.CANCEL:
@@ -107,7 +106,9 @@ class SimulatedExecution(BaseExecution):
                 else:
                     order.lapsed()  # todo do not carry out replace
                 self._order_logger(
-                    order, cancel_instruction_report, OrderPackageType.CANCEL,
+                    order,
+                    cancel_instruction_report,
+                    OrderPackageType.CANCEL,
                 )
 
                 # place new order

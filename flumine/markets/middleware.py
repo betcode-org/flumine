@@ -8,7 +8,8 @@ from ..utils import get_price, wap
 logger = logging.getLogger(__name__)
 
 WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
-PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+# todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0
 
 
 class Middleware:
@@ -88,7 +89,8 @@ class SimulatedMiddleware(Middleware):
                     order.simulated.matched = []
                     order.simulated.size_voided = order.order_type.size
                     logger.warning(
-                        "Order voided on non runner {0}".format(order.selection_id),
+                        "Order voided on non runner {0}".format(
+                            order.selection_id),
                         extra=order.info,
                     )
                 else:
@@ -103,7 +105,8 @@ class SimulatedMiddleware(Middleware):
                         # todo place market
                         for match in order.simulated.matched:
                             match[1] = round(
-                                match[1] * (1 - (removal_adjustment_factor / 100)), 2
+                                match[1] *
+                                (1 - (removal_adjustment_factor / 100)), 2
                             )
                         _, order.simulated.average_price_matched = wap(
                             order.simulated.matched
@@ -127,7 +130,8 @@ class SimulatedMiddleware(Middleware):
     @staticmethod
     def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
         try:
-            runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
+            runner_analytics = market_analytics[(
+                runner.selection_id, runner.handicap)]
         except KeyError:
             runner_analytics = market_analytics[
                 (runner.selection_id, runner.handicap)
@@ -157,9 +161,9 @@ class RunnerAnalytics:
             c_v, p_v, traded = {}, {}, {}
             # create dictionaries
             for i in runner.ex.traded_volume:
-                c_v[i["price"]] = i["size"]
+                c_v[i.price] = i.size
             for i in self._traded_volume:
-                p_v[i["price"]] = i["size"]  # todo cache from previous run?
+                p_v[i.price] = i.size  # todo cache from previous run?
             # calculate difference
             for key in c_v.keys():
                 if key in p_v:

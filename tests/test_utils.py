@@ -2,6 +2,7 @@ import logging
 import unittest
 from unittest import mock
 
+from betfairlightweight.resources import PriceSizeList
 from flumine import utils, FlumineException
 
 
@@ -20,7 +21,8 @@ class UtilsTest(unittest.TestCase):
 
     def test_create_cheap_hash(self):
         self.assertEqual(
-            utils.create_cheap_hash("test"), utils.create_cheap_hash("test"),
+            utils.create_cheap_hash("test"),
+            utils.create_cheap_hash("test"),
         )
         self.assertEqual(len(utils.create_cheap_hash("test", 16)), 16)
 
@@ -42,35 +44,35 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.get_nearest_price(2.0099), 2.00)
 
     def test_get_price(self):
+        entries = PriceSizeList([[12, 120], [34, 120]])
+
         self.assertEqual(
-            utils.get_price(
-                [{"price": 12, "size": 120}, {"price": 34, "size": 120}], 0
-            ),
+            utils.get_price(entries, 0),
             12,
         )
+
         self.assertEqual(
-            utils.get_price(
-                [{"price": 12, "size": 120}, {"price": 34, "size": 120}], 1
-            ),
+            utils.get_price(entries, 1),
             34,
         )
-        self.assertIsNone(
-            utils.get_price([{"price": 12, "size": 120}, {"price": 34, "size": 120}], 3)
-        )
-        self.assertIsNone(utils.get_price([], 3))
+
+        self.assertIsNone(utils.get_price(entries, 3))
+        self.assertIsNone(utils.get_size([], 3))
 
     def test_get_size(self):
+        entries = PriceSizeList([[12, 12], [34, 34]])
+
         self.assertEqual(
-            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 0),
+            utils.get_size(entries, 0),
             12,
         )
+
         self.assertEqual(
-            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 1),
+            utils.get_size(entries, 1),
             34,
         )
-        self.assertIsNone(
-            utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 3)
-        )
+
+        self.assertIsNone(utils.get_size(entries, 3))
         self.assertIsNone(utils.get_size([], 3))
 
     def test_get_sp(self):

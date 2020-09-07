@@ -39,7 +39,7 @@ def file_line_count(file_path: str) -> int:
 
 def chunks(l: list, n: int) -> list:
     for i in range(0, len(l), n):
-        yield l[i : i + n]
+        yield l[i: i + n]
 
 
 def create_cheap_hash(txt: str, length: int = 15) -> str:
@@ -89,7 +89,7 @@ def get_nearest_price(price, cutoffs=CUTOFFS):
 
 def get_price(data: list, level: int) -> Optional[float]:
     try:
-        return data[level]["price"]
+        return data[level].price  # ["price"]
     except KeyError:
         return
     except IndexError:
@@ -100,7 +100,7 @@ def get_price(data: list, level: int) -> Optional[float]:
 
 def get_size(data: list, level: int) -> Optional[float]:
     try:
-        return data[level]["size"]
+        return data[level].size  # ["size"]
     except KeyError:
         return
     except IndexError:
