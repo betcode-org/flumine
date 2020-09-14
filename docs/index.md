@@ -6,8 +6,8 @@ flūmine
 
 <div align="center">
 <p>
-<a href="https://travis-ci.org/liampauling/flumine">
-    <img src="https://travis-ci.org/liampauling/flumine.svg?branch=master" alt="Build Status">
+<a href="https://github.com/liampauling/flumine/actions?query=workflow%3Atest">
+    <img src="https://github.com/liampauling/flumine/workflows/test/badge.svg" alt="Build Status">
 </a>
 <a href="https://coveralls.io/github/liampauling/flumine?branch=master">
     <img src="https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master" alt="Coverage">
