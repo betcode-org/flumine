@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
--
+- #269 latency warning added
 
 **Bug Fixes**
 
