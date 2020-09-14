@@ -52,6 +52,8 @@ class Flumine(BaseFlumine):
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
 
+                del event
+
     def _add_default_workers(self):
         self.add_worker(
             worker.BackgroundWorker(self, function=worker.keep_alive, interval=1200)
