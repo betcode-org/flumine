@@ -1,5 +1,6 @@
 import datetime
 import logging
+import weakref
 from typing import Optional
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
@@ -25,7 +26,7 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
-        self.blotter = Blotter(self)
+        self.blotter = Blotter(weakref.ref(self))
 
     def __call__(self, market_book: MarketBook):
         self.market_book = market_book

@@ -10,6 +10,10 @@ Release History
 
 -
 
+**Bug Fixes**
+
+- #248 addition of weakref to try and break circular reference (@synapticarbors)
+
 **Libraries**
 
 - betfairlightweight upgraded to 2.8.0 (orjson)
