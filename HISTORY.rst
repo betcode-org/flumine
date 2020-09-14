@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.12.0 (2020-09-14)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.8.0 (orjson)
+- black updated to 20.8b1
+
 1.11.2 (2020-08-28)
 +++++++++++++++++++
 
