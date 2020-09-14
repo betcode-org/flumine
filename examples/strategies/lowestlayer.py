@@ -36,10 +36,14 @@ class LowestLayer(BaseStrategy):
                 # lay at current best lay price
                 lay = get_price(runner.ex.available_to_lay, 0)
                 trade = Trade(
-                    market_book.market_id, runner.selection_id, runner.handicap, self,
+                    market_book.market_id,
+                    runner.selection_id,
+                    runner.handicap,
+                    self,
                 )
                 order = trade.create_order(
-                    side="LAY", order_type=LimitOrder(lay, self.context["stake"]),
+                    side="LAY",
+                    order_type=LimitOrder(lay, self.context["stake"]),
                 )
                 self.place_order(market, order)
 

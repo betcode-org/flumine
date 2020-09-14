@@ -109,7 +109,8 @@ class OrderPackageTest(unittest.TestCase):
 
     def test_bet_delay(self):
         self.assertEqual(
-            self.order_package.bet_delay, self.mock_market.market_book.bet_delay,
+            self.order_package.bet_delay,
+            self.mock_market.market_book.bet_delay,
         )
 
     def test_iter(self):

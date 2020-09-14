@@ -206,8 +206,7 @@ def call_process_market_book(
 def get_runner_book(
     market_book: MarketBook, selection_id: int, handicap=0
 ) -> Optional[RunnerBook]:
-    """Returns runner book based on selection id.
-    """
+    """Returns runner book based on selection id."""
     for runner_book in market_book.runners:
         if (
             runner_book.selection_id == selection_id

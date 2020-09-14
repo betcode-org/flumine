@@ -59,7 +59,9 @@ class Simulated:
 
             if runner.status == "REMOVED":
                 return self._create_place_response(
-                    bet_id, status="FAILURE", error_code="RUNNER_REMOVED",
+                    bet_id,
+                    status="FAILURE",
+                    error_code="RUNNER_REMOVED",
                 )
 
             available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
@@ -136,7 +138,8 @@ class Simulated:
             )
         else:
             return SimulatedCancelResponse(
-                status="FAILURE", error_code="BET_ACTION_ERROR",  # todo ?
+                status="FAILURE",
+                error_code="BET_ACTION_ERROR",  # todo ?
             )
 
     def update(self, instruction: dict):
@@ -151,7 +154,8 @@ class Simulated:
             return SimulatedUpdateResponse(status="SUCCESS")
         else:
             return SimulatedCancelResponse(
-                status="FAILURE", error_code="BET_ACTION_ERROR",
+                status="FAILURE",
+                error_code="BET_ACTION_ERROR",
             )
 
     def _get_runner(self, market_book: MarketBook) -> RunnerBook:

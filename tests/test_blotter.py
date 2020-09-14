@@ -7,10 +7,11 @@ from flumine.markets.blotter import Blotter, OrderPackageType
 class BlotterTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_market = mock.Mock()
-        self.blotter = Blotter(self.mock_market)
+        self.blotter = Blotter(self.mock_market, "1.23")
 
     def test_init(self):
         self.assertEqual(self.blotter.market, self.mock_market)
+        self.assertEqual(self.blotter.market_id, "1.23")
         self.assertEqual(self.blotter._orders, {})
         self.assertEqual(self.blotter.pending_place, [])
         self.assertEqual(self.blotter.pending_cancel, [])
@@ -105,7 +106,8 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), -2,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            -2,
         )
 
     def test_selection_exposure_no_match(self):
@@ -120,11 +122,9 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), 0,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            0,
         )
-
-    def test_market_id(self):
-        self.assertEqual(self.blotter.market_id, self.mock_market.market_id)
 
     def test_complete_order(self):
         self.blotter._live_orders = ["test"]

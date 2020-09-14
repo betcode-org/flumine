@@ -75,7 +75,7 @@ class BackgroundWorker(threading.Thread):
 
 
 def keep_alive(context: dict, flumine) -> None:
-    """ Attempt keep alive if required or
+    """Attempt keep alive if required or
     login if keep alive failed
     """
     client = flumine.client

@@ -39,8 +39,7 @@ class MarketStream(BaseStream):
         logger.info("Stopped MarketStream {0}".format(self.stream_id))
 
     def handle_output(self) -> None:
-        """Handles output from stream.
-        """
+        """Handles output from stream."""
         while self.is_alive():
             try:
                 market_books = self._output_queue.get(

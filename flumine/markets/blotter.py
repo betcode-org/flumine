@@ -12,8 +12,9 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
-    def __init__(self, market):
-        self.market = market
+    def __init__(self, market, market_id: str):
+        self.market = market  # weakref
+        self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
         # pending orders
@@ -23,8 +24,7 @@ class Blotter:
         self.pending_replace = []
 
     def strategy_orders(self, strategy) -> list:
-        """Returns all orders related to a strategy.
-        """
+        """Returns all orders related to a strategy."""
         return [order for order in self if order.trade.strategy == strategy]
 
     def process_orders(self, client) -> list:
@@ -64,7 +64,7 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                market=self.market,
+                market=self.market(),
             )
             packages.append(order_package)
         orders.clear()
@@ -111,10 +111,6 @@ class Blotter:
                 else:
                     ml.append((order.average_price_matched, order.size_matched))
         return calculate_exposure(mb, ml)
-
-    @property
-    def market_id(self):
-        return self.market.market_id
 
     """ getters / setters """
 

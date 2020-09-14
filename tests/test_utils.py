@@ -20,7 +20,8 @@ class UtilsTest(unittest.TestCase):
 
     def test_create_cheap_hash(self):
         self.assertEqual(
-            utils.create_cheap_hash("test"), utils.create_cheap_hash("test"),
+            utils.create_cheap_hash("test"),
+            utils.create_cheap_hash("test"),
         )
         self.assertEqual(len(utils.create_cheap_hash("test", 16)), 16)
 

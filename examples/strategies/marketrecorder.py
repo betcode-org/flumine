@@ -94,8 +94,7 @@ class MarketRecorder(BaseStrategy):
         self._loaded_markets.append(market_id)
 
     def _zip_file(self, file_dir: str, market_id: str) -> str:
-        """zips txt file into filename.zip
-        """
+        """zips txt file into filename.zip"""
         zip_file_directory = os.path.join(
             self.local_dir, self.recorder_id, "%s.zip" % market_id
         )
@@ -187,7 +186,9 @@ class S3MarketRecorder(MarketRecorder):
                     Body=market.market_catalogue.json(),
                     Bucket=self._bucket,
                     Key=os.path.join(
-                        "marketdata", "marketCatalogue", market.market_id,
+                        "marketdata",
+                        "marketCatalogue",
+                        market.market_id,
                     ),
                 )
                 logger.info(

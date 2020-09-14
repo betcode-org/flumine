@@ -228,7 +228,8 @@ class RunnerAnalyticsTest(unittest.TestCase):
         ]
         self.runner_analytics._traded_volume = [{"price": 1.01, "size": 30}]
         self.assertEqual(
-            self.runner_analytics._calculate_traded(mock_runner), {1.01: 39.0, 10: 32},
+            self.runner_analytics._calculate_traded(mock_runner),
+            {1.01: 39.0, 10: 32},
         )
 
     def test__calculate_middle(self):

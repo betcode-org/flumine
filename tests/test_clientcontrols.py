@@ -120,7 +120,7 @@ class TestMaxOrderCount(unittest.TestCase):
         self.trading_control._next_hour = datetime.datetime.utcnow()
         self.trading_control._check_hour()
 
-        self.trading_control.transaction_count = 1069
+        self.trading_control.transaction_count = 5069
         now = datetime.datetime.now()
         self.trading_control._next_hour = (now + datetime.timedelta(hours=-1)).replace(
             minute=0, second=0, microsecond=0
