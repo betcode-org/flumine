@@ -1,3 +1,4 @@
+import time
 import queue
 import logging
 import threading
@@ -113,6 +114,15 @@ class BaseFlumine:
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         for market_book in event.event:
             market_id = market_book.market_id
+
+            # check latency
+            latency = time.time() - (market_book.publish_time_epoch / 1e3)
+            if latency > 2:
+                logger.warning(
+                    "High latency between current time and MarketBook publish time",
+                    extra={"market_id": market_id, "latency": latency, "pt": market_book.publish_time}
+                )
+
             if market_book.status == "CLOSED":
                 self.handler_queue.put(events.CloseMarketEvent(market_book))
                 continue
