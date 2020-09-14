@@ -26,7 +26,7 @@ class BaseExecution:
         self._sessions_created = 0
 
     def handler(self, order_package: BaseOrderPackage):
-        """ Handles order_package, capable of place, cancel,
+        """Handles order_package, capable of place, cancel,
         replace and update.
         """
         http_session = self._get_http_session()

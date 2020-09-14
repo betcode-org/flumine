@@ -143,7 +143,7 @@ class BaseOrder:
 
     @property
     def complete(self) -> bool:
-        """ Returns False if order is
+        """Returns False if order is
         live or pending in the market"""
         if self.status in [
             OrderStatus.PENDING,

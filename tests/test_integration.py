@@ -46,7 +46,8 @@ class IntegrationTest(unittest.TestCase):
                             self,
                         )
                         order = trade.create_order(
-                            side="LAY", order_type=LimitOrder(lay, 2.00),
+                            side="LAY",
+                            order_type=LimitOrder(lay, 2.00),
                         )
                         self.place_order(market, order)
 
@@ -74,7 +75,8 @@ class IntegrationTest(unittest.TestCase):
                             self,
                         )
                         order = trade.create_order(
-                            side="LAY", order_type=MarketOnCloseOrder(100.00),
+                            side="LAY",
+                            order_type=MarketOnCloseOrder(100.00),
                         )
                         self.place_order(market, order)
 

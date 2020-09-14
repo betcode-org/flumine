@@ -105,7 +105,8 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), -2,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            -2,
         )
 
     def test_selection_exposure_no_match(self):
@@ -120,7 +121,8 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup), 0,
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            0,
         )
 
     def test_market_id(self):

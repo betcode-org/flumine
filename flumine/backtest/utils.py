@@ -46,7 +46,9 @@ class SimulatedCancelResponse:
 
 class SimulatedUpdateResponse:
     def __init__(
-        self, status: str = None, error_code: str = None,
+        self,
+        status: str = None,
+        error_code: str = None,
     ):
         self.status = status
         self.error_code = error_code

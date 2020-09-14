@@ -23,8 +23,7 @@ class Blotter:
         self.pending_replace = []
 
     def strategy_orders(self, strategy) -> list:
-        """Returns all orders related to a strategy.
-        """
+        """Returns all orders related to a strategy."""
         return [order for order in self if order.trade.strategy == strategy]
 
     def process_orders(self, client) -> list:

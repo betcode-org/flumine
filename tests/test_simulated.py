@@ -236,7 +236,8 @@ class SimulatedTest(unittest.TestCase):
         mock_runner = mock.Mock(selection_id=1234, handicap=1)
         mock_market_book.runners = [mock_runner]
         self.assertEqual(
-            self.simulated._get_runner(mock_market_book), mock_runner,
+            self.simulated._get_runner(mock_market_book),
+            mock_runner,
         )
         mock_runner = mock.Mock(selection_id=134, handicap=1)
         mock_market_book.runners = [mock_runner]

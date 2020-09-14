@@ -25,10 +25,16 @@ framework = Flumine(client=client)
 strategy = MarketRecorder(
     name="WIN",
     market_filter=betfairlightweight.filters.streaming_market_filter(
-        event_type_ids=["7"], country_codes=["GB", "IE"], market_types=["WIN"],
+        event_type_ids=["7"],
+        country_codes=["GB", "IE"],
+        market_types=["WIN"],
     ),
     stream_class=DataStream,
-    context={"local_dir": "/tmp", "force_update": False, "remove_file": True,},
+    context={
+        "local_dir": "/tmp",
+        "force_update": False,
+        "remove_file": True,
+    },
 )
 
 framework.add_strategy(strategy)

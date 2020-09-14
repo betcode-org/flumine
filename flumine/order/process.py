@@ -19,7 +19,8 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
         for current_order in current_orders.orders:
             strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
             order = markets.get_order(
-                market_id=current_order.market_id, order_id=order_id,
+                market_id=current_order.market_id,
+                order_id=order_id,
             )
             if not order:
                 logger.warning(
@@ -42,7 +43,8 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
                     continue
             if order.bet_id != current_order.bet_id:  # replaceOrder handling (hacky)
                 order = markets.get_order_from_bet_id(
-                    market_id=current_order.market_id, bet_id=current_order.bet_id,
+                    market_id=current_order.market_id,
+                    bet_id=current_order.bet_id,
                 )
 
             if order:
