@@ -120,7 +120,11 @@ class BaseFlumine:
             if latency > 2:
                 logger.warning(
                     "High latency between current time and MarketBook publish time",
-                    extra={"market_id": market_id, "latency": latency, "pt": market_book.publish_time}
+                    extra={
+                        "market_id": market_id,
+                        "latency": latency,
+                        "pt": market_book.publish_time,
+                    },
                 )
 
             if market_book.status == "CLOSED":
