@@ -42,9 +42,7 @@ class SimulatedTest(unittest.TestCase):
         mock__process_sp.assert_called_with(
             mock_market_book.publish_time_epoch, mock__get_runner()
         )
-        mock__process_traded.assert_called_with(
-            mock_market_book.publish_time_epoch, mock_runner_analytics.traded
-        )
+        mock__process_traded.assert_not_called()
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
@@ -305,6 +303,16 @@ class SimulatedTest(unittest.TestCase):
         mock_runner.sp.actual_sp = 12.20
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [[1234571, 12.2, 2.00]])
+        self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.execution_complete.assert_called()
+
+    def test__process_sp_lay(self):
+        mock_runner = mock.Mock()
+        mock_runner.sp.actual_sp = 12.20
+        self.simulated.order.side = 'LAY'
+        self.simulated._process_sp(1234571, mock_runner)
+        self.assertEqual(self.simulated.matched, [[1234571, 12.2, 1.96]])
+        self.assertEqual(self.simulated.size_cancelled, 0.04)
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 

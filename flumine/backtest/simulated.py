@@ -43,7 +43,7 @@ class Simulated:
         ):
             self._process_sp(market_book.publish_time_epoch, runner)
 
-        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
+        elif self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining:
             # todo piq cancellations
             self._process_traded(
                 market_book.publish_time_epoch, runner_analytics.traded
@@ -194,7 +194,14 @@ class Simulated:
             self._bsp_reconciled = True
             _order_type = self.order.order_type
             if _order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                size = self.size_remaining
+                if self.side=='BACK':
+                    size = self.size_remaining
+                else:
+                    remaining_risk = (_order_type.price-1.0) * self.size_remaining
+                    size = round(remaining_risk / (actual_sp-1.0), 2)
+                    # Not sure if this is strictly accurate,
+                    # but it stops Flumine from matching any further size.
+                    self.size_cancelled += round(self.size_remaining-size, 2)
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
                     if actual_sp < _order_type.price:
