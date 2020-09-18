@@ -199,8 +199,7 @@ class Simulated:
                 else:
                     remaining_risk = (_order_type.price-1.0) * self.size_remaining
                     size = round(remaining_risk / (actual_sp-1.0), 2)
-                    # Not sure if this is strictly accurate,
-                    # but it stops Flumine from matching any further size.
+                    # Cancel remaining size
                     self.size_cancelled += round(self.size_remaining-size, 2)
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
