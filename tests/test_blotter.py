@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.markets.blotter import Blotter, OrderPackageType
+from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
 
 
 class BlotterTest(unittest.TestCase):
@@ -102,11 +103,13 @@ class BlotterTest(unittest.TestCase):
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
+            size_remaining=0.0,
+            order_type = LimitOrder(price=5.6, size=2.0)
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            -2,
+            (9.2, -2.),
         )
 
     def test_selection_exposure_no_match(self):
@@ -118,11 +121,83 @@ class BlotterTest(unittest.TestCase):
             side="BACK",
             average_price_matched=5.6,
             size_matched=0.0,
+            size_remaining=0.0,
+            order_type = LimitOrder(price=5.6, size=2.0)
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            0,
+            (0., 0.),
+        )
+
+    def test_selection_exposure_from_unmatched_back(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=2.0,
+            order_type = LimitOrder(price=6, size=4.0)
+        )
+        self.blotter._orders = {"12345": mock_order}
+        # On the win side, we have 2.0 * (5.6-1.0) = 9.2
+        # On the lose side, we have -2.0-2.0=-4.0
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            (9.2, -4.0),
+        )
+
+    def test_selection_exposure_from_unmatched_lay(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="LAY",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=2.0,
+            order_type = LimitOrder(price=6, size=4.0)
+        )
+        self.blotter._orders = {"12345": mock_order}
+        # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2
+        # On the lose side, we have 2.0 from size_matched
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            (-19.2, 2.0),
+        )
+
+    def test_selection_exposure_from_market_on_close_back(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            order_type=MarketOnCloseOrder(liability=10.0)
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            (0., -10.0),
+        )
+
+    def test_selection_exposure_from_market_on_close_lay(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="LAY",
+            order_type=MarketOnCloseOrder(liability=10.0)
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            (-10., 0.0),
         )
 
     def test_complete_order(self):
