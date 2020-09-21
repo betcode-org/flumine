@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.12.1 (2020-09-21)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+- #275 Laying Limit Orders, Persistence Type MARKET_ON_CLOSE (@jsphon)
+- PR added to actions
+
 1.12.0 (2020-09-14)
 +++++++++++++++++++
 
