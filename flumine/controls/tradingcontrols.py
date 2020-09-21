@@ -110,21 +110,31 @@ class StrategyExposure(BaseControl):
             OrderPackageType.REPLACE,  # todo potential bug?
         ):
 
-            package_orders_by_strategy_lookup = {}
+            package_order_exposures_by_lookup = {}
             for order in order_package:
                 strategy = order.trade.strategy
-                package_orders_by_strategy_lookup.setdefault(
-                    (strategy, order.lookup), []
-                ).append(order)
+
+                lookup_exposures = package_order_exposures_by_lookup.setdefault(order.lookup, [])
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                     if order.side == "BACK":
                         exposure = order.order_type.size
+                        lookup_exposures.append((0., -order.order_type.size))
                     else:
                         exposure = (order.order_type.price - 1) * order.order_type.size
+                        lookup_exposures.append((-exposure, 0.))
                 elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                     exposure = order.order_type.liability  # todo correct?
+                    if order.side=='BACK':
+                        lookup_exposures.append((0., -exposure))
+                    else:
+                        lookup_exposures.append((-exposure, 0.))
+
                 elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
                     exposure = order.order_type.liability
+                    if order.side=='BACK':
+                        lookup_exposures.append((0., -exposure))
+                    else:
+                        lookup_exposures.append((-exposure, 0.))
                 else:
                     continue
 
@@ -138,21 +148,41 @@ class StrategyExposure(BaseControl):
                     )
                     continue
 
-            # per selection
-            for (strategy, lookup), orders in package_orders_by_strategy_lookup.items():
+                # per selection
+                market = self.flumine.markets.markets[order_package.market_id]
+                piw, pil = market.blotter.selection_exposure(
+                    strategy, lookup=order.lookup
+                )
+                #lookup_orders.setdefault(order.lookup, []).append(order)
+                current_selection_exposure = min(piw, pil)
+                if (
+                    current_selection_exposure - exposure
+                ) < -strategy.max_selection_exposure:
+                    self._on_error(
+                        order,
+                        "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
+                            (current_selection_exposure - exposure),
+                            strategy.max_selection_exposure,
+                        ),
+                    )
+
+            for lookup, orders in package_order_exposures_by_lookup.items():
+                package_profit_if_win = sum(x[0] for x in orders)
+                package_profit_if_lose= sum(x[1] for x in orders)
 
                 market = self.flumine.markets.markets[order_package.market_id]
-                profit_if_win, profit_if_lose = market.blotter.selection_exposure(
+                current_profit_if_win, current_profit_if_lose = market.blotter.selection_exposure(
                     strategy, lookup=lookup
                 )
 
-                exposure = min(profit_if_win, profit_if_lose)
-                if exposure < -strategy.max_selection_exposure:
-                    for order in orders:
-                        self._on_error(
-                            order,
-                            "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
-                                -exposure,
-                                strategy.max_selection_exposure,
-                            ),
-                        )
+                new_profit_if_win = package_profit_if_win + current_profit_if_win
+                new_profit_if_lose = package_profit_if_lose + current_profit_if_lose
+                new_exposure = min(new_profit_if_win, new_profit_if_lose)
+                if new_exposure < -strategy.max_selection_exposure:
+                    self._on_error(
+                        order,
+                        "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
+                            -new_exposure,
+                            strategy.max_selection_exposure,
+                        ),
+                    )
