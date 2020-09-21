@@ -309,7 +309,7 @@ class SimulatedTest(unittest.TestCase):
     def test__process_sp_lay(self):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = 12.20
-        self.simulated.order.side = 'LAY'
+        self.simulated.order.side = "LAY"
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [[1234571, 12.2, 1.96]])
         self.assertEqual(self.simulated.size_cancelled, 0.04)
