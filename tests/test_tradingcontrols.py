@@ -336,22 +336,24 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_selection(self, mock_on_error):
         mock_market = mock.Mock()
-        mock_market.blotter.selection_exposure.return_value = (-10., 0.)
+        mock_market.blotter.selection_exposure.return_value = (-12., 0.)
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
         order = mock.Mock()
         order.trade.strategy.max_order_exposure = 10
         order.trade.strategy.max_selection_exposure = 10
-        order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order.side = "BACK"
-        order.order_type.size = 2
+        # order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        # order.side = "BACK"
+        # order.order_type.size = 2
         order_package = mock.Mock()
         order_package.market_id = "1.234"
         order_package.package_type = OrderPackageType.PLACE
         order_package.__iter__ = mock.Mock(return_value=iter([order]))
 
+        mock_market.blotter._live_orders = [order]
+
         self.trading_control._validate(order_package)
         mock_on_error.assert_called_with(
             order,
-            "Potential selection exposure (-12.0) is greater than strategy.max_selection_exposure (10)",
+            "Potential selection exposure (12.0) is greater than strategy.max_selection_exposure (10)",
         )
