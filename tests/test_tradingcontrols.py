@@ -342,9 +342,6 @@ class TestStrategyExposure(unittest.TestCase):
         order = mock.Mock()
         order.trade.strategy.max_order_exposure = 10
         order.trade.strategy.max_selection_exposure = 10
-        # order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        # order.side = "BACK"
-        # order.order_type.size = 2
         order_package = mock.Mock()
         order_package.market_id = "1.234"
         order_package.package_type = OrderPackageType.PLACE
