@@ -97,6 +97,10 @@ class Blotter:
     def selection_exposure(self, strategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case profit/loss arising
         from the selection either winning or losing. Can be positive or negative.
+
+        For matched sizes, the profit/exposure is always considered.
+        For unmatched sizes, we only consider potential losses if the unmatched size is matched.
+
             positive = profit on selection
             negative = exposure on selection
         """
