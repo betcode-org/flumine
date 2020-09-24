@@ -7,7 +7,7 @@ from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
 from flumine.utils import get_price
 
-SKIP_INTEGRATION_TESTS = int(os.environ.get("SKIP_INTEGRATION_TESTS", 0))
+SKIP_INTEGRATION_TESTS = int(os.environ.get("SKIP_INTEGRATION_TESTS", 1))
 
 
 class IntegrationTest(unittest.TestCase):
