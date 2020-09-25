@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_matched_exposure, calculate_unmatched_exposure
@@ -94,7 +94,7 @@ class Blotter:
 
     """ position """
 
-    def selection_exposure(self, strategy, lookup: tuple) -> float:
+    def selection_exposure(self, strategy, lookup: tuple) -> Tuple:
         """Returns strategy/selection exposure, which is the worse-case profit/loss arising
         from the selection either winning or losing. Can be positive or negative.
 

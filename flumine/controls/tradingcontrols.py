@@ -137,6 +137,7 @@ class StrategyExposure(BaseControl):
                     )
                     continue
 
+            # per selection
             for lookup, orders in pack_orders_by_lookup.items():
 
                 market = self.flumine.markets.markets[order_package.market_id]
