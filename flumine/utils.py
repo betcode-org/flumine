@@ -133,7 +133,7 @@ def price_ticks_away(price: float, n_ticks: int) -> float:
 # todo LRU cache?
 # JH: LRU cache does not work with list inputs as they are unhashable.
 #     So might need to refactor mb and ml into tuples.
-def calculate_matched_exposure(mb: list, ml: list) -> float:
+def calculate_matched_exposure(mb: list, ml: list) -> Tuple:
     """Calculates exposure based on list
     of (price, size)
     returns the tuple (profit_if_win, profit_if_lose)
@@ -149,7 +149,7 @@ def calculate_matched_exposure(mb: list, ml: list) -> float:
     return round(_win, 2), round(_lose, 2)
 
 
-def calculate_unmatched_exposure(ub: list, ul: list) -> float:
+def calculate_unmatched_exposure(ub: list, ul: list) -> Tuple:
     """Calculates worse-case exposure based on list
     of (price, size)
     returns the tuple (profit_if_win, profit_if_lose)
