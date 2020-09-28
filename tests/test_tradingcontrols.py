@@ -263,7 +263,7 @@ class TestOrderValidation(unittest.TestCase):
 class TestStrategyExposure(unittest.TestCase):
     def setUp(self):
         self.market = mock.Mock()
-        self.market.blotter = Blotter(self.market, "market_id")
+        self.market.blotter = Blotter("market_id")
         self.mock_flumine = mock.Mock()
         self.mock_flumine.markets.markets = {"market_id": self.market}
         self.trading_control = StrategyExposure(self.mock_flumine)

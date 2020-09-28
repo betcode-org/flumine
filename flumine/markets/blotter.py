@@ -1,8 +1,8 @@
 import logging
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from ..order.ordertype import OrderTypes
-from ..utils import chunks, calculate_matched_exposure, calculate_unmatched_exposure
+from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
 from ..order.order import BaseOrder
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
@@ -13,8 +13,7 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
-    def __init__(self, market, market_id: str):
-        self.market = market  # weakref
+    def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
@@ -28,33 +27,36 @@ class Blotter:
         """Returns all orders related to a strategy."""
         return [order for order in self if order.trade.strategy == strategy]
 
-    def process_orders(self, client) -> list:
+    def process_orders(self, client, bet_delay: int = 0) -> list:
         packages = []
         if self.pending_place:
             packages += self._create_packages(
-                client, self.pending_place, OrderPackageType.PLACE
+                client, self.pending_place, OrderPackageType.PLACE, bet_delay
             )
         if self.pending_cancel:
             packages += self._create_packages(
-                client, self.pending_cancel, OrderPackageType.CANCEL
+                client, self.pending_cancel, OrderPackageType.CANCEL, bet_delay
             )
         if self.pending_update:
             packages += self._create_packages(
-                client, self.pending_update, OrderPackageType.UPDATE
+                client, self.pending_update, OrderPackageType.UPDATE, bet_delay
             )
         if self.pending_replace:
             packages += self._create_packages(
-                client, self.pending_replace, OrderPackageType.REPLACE
+                client, self.pending_replace, OrderPackageType.REPLACE, bet_delay
             )
         if packages:
             logger.info(
                 "%s order packages created" % len(packages),
-                extra={"order_packages": [o.info for o in packages]},
+                extra={
+                    "order_packages": [o.info for o in packages],
+                    "bet_delay": bet_delay,
+                },
             )
         return packages
 
     def _create_packages(
-        self, client, orders: list, package_type: OrderPackageType
+        self, client, orders: list, package_type: OrderPackageType, bet_delay: int
     ) -> list:
         packages = []
         _package_cls = BetfairOrderPackage
@@ -65,7 +67,7 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                market=self.market(),
+                bet_delay=bet_delay,
             )
             packages.append(order_package)
         orders.clear()
@@ -94,23 +96,22 @@ class Blotter:
 
     """ position """
 
-    def selection_exposure(self, strategy, lookup: tuple) -> Tuple:
+    def selection_exposure(self, strategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case profit/loss arising
         from the selection either winning or losing. Can be positive or negative.
-
-        For matched sizes, the profit/exposure is always considered.
-        For unmatched sizes, we only consider potential losses if the unmatched size is matched.
-
             positive = profit on selection
             negative = exposure on selection
         """
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
-        moc_win_liability = 0.0
-        moc_lose_liability = 0.0
+        moc_win_liability = 0.
+        moc_lose_liability = 0.
         for order in self:
-            if order.trade.strategy == strategy and order.lookup == lookup:
-                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if (
+                order.trade.strategy == strategy
+                and order.lookup == lookup
+            ):
+                if order.order_type.ORDER_TYPE==OrderTypes.LIMIT:
                     if order.size_matched:
                         if order.side == "BACK":
                             mb.append((order.average_price_matched, order.size_matched))
@@ -122,11 +123,8 @@ class Blotter:
                             ub.append((order.order_type.price, order.size_remaining))
                         else:
                             ul.append((order.order_type.price, order.size_remaining))
-                elif order.order_type.ORDER_TYPE in (
-                    OrderTypes.MARKET_ON_CLOSE,
-                    OrderTypes.MARKET_ON_CLOSE,
-                ):
-                    if order.side == "BACK":
+                elif order.order_type.ORDER_TYPE in (OrderTypes.MARKET_ON_CLOSE, OrderTypes.MARKET_ON_CLOSE):
+                    if order.side=='BACK':
                         moc_lose_liability -= order.order_type.liability
                     else:
                         moc_win_liability -= order.order_type.liability
@@ -135,10 +133,8 @@ class Blotter:
 
         matched_exposure = calculate_matched_exposure(mb, ml)
         unmatched_exposure = calculate_unmatched_exposure(ub, ul)
-        return (
-            matched_exposure[0] + unmatched_exposure[0] + moc_win_liability,
-            matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability,
-        )
+        return matched_exposure[0] + unmatched_exposure[0] + moc_win_liability,\
+               matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability
 
     """ getters / setters """
 
