@@ -154,7 +154,8 @@ class BaseFlumine:
 
     def _process_market_orders(self) -> None:
         for market in self.markets:
-            for order_package in market.blotter.process_orders(self.client):
+            bet_delay = market.market_book.bet_delay
+            for order_package in market.blotter.process_orders(self.client, bet_delay):
                 self.handler_queue.put(order_package)
 
     def _process_order_package(self, order_package) -> None:
@@ -187,12 +188,11 @@ class BaseFlumine:
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, publish_time, data = event.event
         for datum in data:
-            market, _closed = None, False
             if "id" in datum:
                 market_id = datum["id"]
                 market = self.markets.markets.get(market_id)
                 if market is None:
-                    market = self._add_market(market_id, None)
+                    self._add_market(market_id, None)
                 elif market.closed:
                     self.markets.add_market(market_id, market)
 
@@ -200,14 +200,12 @@ class BaseFlumine:
                     "marketDefinition" in datum
                     and datum["marketDefinition"]["status"] == "CLOSED"
                 ):
-                    market.close_market()
-                    _closed = True
+                    datum["_stream_id"] = stream_id
+                    self.handler_queue.put(events.CloseMarketEvent(datum))
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
                     strategy.process_raw_data(publish_time, datum)
-                    if _closed:
-                        strategy.process_closed_market(market, datum)
 
     def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
@@ -244,7 +242,12 @@ class BaseFlumine:
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event
-        market_id = market_book.market_id
+        if isinstance(market_book, dict):
+            market_id = market_book["id"]
+            stream_id = market_book["_stream_id"]
+        else:
+            market_id = market_book.market_id
+            stream_id = market_book.streaming_unique_id
         market = self.markets.markets.get(market_id)
         if market is None:
             logger.warning(
@@ -256,12 +259,12 @@ class BaseFlumine:
         market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:
-            if market_book.streaming_unique_id in strategy.stream_ids:
+            if stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
-        self.cleared_market_queue.put(market.market_id)
+        self.cleared_market_queue.put(market_id)
         self.log_control(event)
-        logger.info("Market closed", extra={"market_id": market.market_id, **self.info})
+        logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
         # check for markets that have been closed for x seconds and remove
         if (

@@ -1,7 +1,10 @@
+import logging
 from typing import Iterator, Optional
 
 from .market import Market
 from ..order.order import BetfairOrder
+
+logger = logging.getLogger(__name__)
 
 
 class Markets:
@@ -22,6 +25,7 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         del self._markets[market_id].blotter
         del self._markets[market_id]
+        logger.info("Market removed", extra={"market_id": market_id})
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
         try:

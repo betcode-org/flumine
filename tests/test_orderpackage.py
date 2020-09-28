@@ -14,7 +14,6 @@ from flumine.order.orderpackage import (
 
 class OrderPackageTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_market = mock.Mock()
         self.mock_package_type = mock.Mock()
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
@@ -24,7 +23,7 @@ class OrderPackageTest(unittest.TestCase):
             "1.234",
             [self.mock_order],
             self.mock_package_type,
-            self.mock_market,
+            1,
         )
 
     def test_init(self):
@@ -34,7 +33,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.package_type, self.mock_package_type)
         self.assertEqual(self.order_package.EVENT_TYPE, EventType.ORDER_PACKAGE)
         self.assertEqual(self.order_package.QUEUE_TYPE, QueueType.HANDLER)
-        self.assertEqual(self.order_package.market, self.mock_market)
+        self.assertEqual(self.order_package.bet_delay, 1)
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
         self.assertFalse(self.order_package.processed)
@@ -107,12 +106,6 @@ class OrderPackageTest(unittest.TestCase):
     def test_market_version(self):
         self.assertIsNone(self.order_package.market_version)
 
-    def test_bet_delay(self):
-        self.assertEqual(
-            self.order_package.bet_delay,
-            self.mock_market.market_book.bet_delay,
-        )
-
     def test_iter(self):
         self.assertEqual([i for i in self.order_package], self.order_package.orders)
 
@@ -122,7 +115,6 @@ class OrderPackageTest(unittest.TestCase):
 
 class BetfairOrderPackageTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_market = mock.Mock()
         self.mock_package_type = mock.Mock()
         self.mock_client = mock.Mock()
         self.mock_order = mock.Mock()
@@ -132,7 +124,7 @@ class BetfairOrderPackageTest(unittest.TestCase):
             "1.234",
             [self.mock_order],
             self.mock_package_type,
-            self.mock_market,
+            0,
         )
 
     def test_init(self):

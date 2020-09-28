@@ -747,7 +747,9 @@ class BetfairExecutionTest(unittest.TestCase):
 
 class SimulatedExecutionTest(unittest.TestCase):
     def setUp(self) -> None:
+        self.mock_market = mock.Mock()
         self.mock_flumine = mock.Mock()
+        self.mock_flumine.markets.markets = {"1.23": self.mock_market}
         self.execution = SimulatedExecution(self.mock_flumine)
 
     def test_init(self):
@@ -808,7 +810,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23")
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.place_instructions = [1]
@@ -819,7 +821,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
             mock_order_package.client,
-            mock_order_package.market.market_book,
+            self.mock_market.market_book,
             1,
             self.execution._bet_id,
         )
@@ -835,7 +837,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23")
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.place_instructions = [1]
@@ -846,7 +848,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
             mock_order_package.client,
-            mock_order_package.market.market_book,
+            self.mock_market.market_book,
             1,
             self.execution._bet_id,
         )
@@ -859,7 +861,9 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.time")
     def test_execute_place_paper_trade(self, mock_time):
-        mock_order_package = mock.Mock(place_instructions=[], bet_delay=1)
+        mock_order_package = mock.Mock(
+            market_id="1.23", place_instructions=[], bet_delay=1
+        )
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_place(mock_order_package, None)
@@ -967,13 +971,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
-        mock_market = mock.Mock()
-        self.mock_flumine.markets.markets = {"1.234": mock_market}
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order.market_id = "1.234"
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23")
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [{"newPrice": 2.03}]
@@ -991,7 +993,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.cancel.assert_called_with()
         mock_replacement_order.simulated.place.assert_called_with(
             mock_order_package.client,
-            mock_order_package.market.market_book,
+            self.mock_market.market_book,
             {"newPrice": 2.03},
             self.execution._bet_id,
         )
@@ -1015,7 +1017,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23")
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.replace_instructions = [{"newPrice": 2.54}]
@@ -1033,7 +1035,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.cancel.assert_called_with()
         mock_replacement_order.simulated.place.assert_called_with(
             mock_order_package.client,
-            mock_order_package.market.market_book,
+            self.mock_market.market_book,
             {"newPrice": 2.54},
             self.execution._bet_id,
         )
@@ -1047,7 +1049,9 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.time")
     def test_execute_replace_paper_trade(self, mock_time):
-        mock_order_package = mock.Mock(replace_instructions=[], bet_delay=1)
+        mock_order_package = mock.Mock(
+            market_id="1.23", replace_instructions=[], bet_delay=1
+        )
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_replace(mock_order_package, None)

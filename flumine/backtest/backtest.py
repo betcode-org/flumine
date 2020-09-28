@@ -116,7 +116,8 @@ class FlumineBacktest(BaseFlumine):
         packages for later execution
         """
         for market in self.markets:
-            for order_package in market.blotter.process_orders(self.client):
+            bet_delay = market.market_book.bet_delay
+            for order_package in market.blotter.process_orders(self.client, bet_delay):
                 self._pending_packages.append(order_package)
 
     def _process_order_package(self, order_package) -> None:

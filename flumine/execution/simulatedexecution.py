@@ -38,12 +38,12 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         if order_package.client.paper_trade:
             time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
-        market_book = order_package.market.market_book
+        market = self.flumine.markets.markets[order_package.market_id]
         for order, instruction in zip(order_package, order_package.place_instructions):
             with order.trade:
                 self._bet_id += 1
                 simulated_response = order.simulated.place(
-                    order_package.client, market_book, instruction, self._bet_id
+                    order_package.client, market.market_book, instruction, self._bet_id
                 )
                 self._order_logger(
                     order, simulated_response, order_package.package_type
@@ -92,7 +92,7 @@ class SimulatedExecution(BaseExecution):
             order_package.client.paper_trade
         ):  # todo should the cancel happen without a delay?
             time.sleep(order_package.bet_delay + self.REPLACE_LATENCY)
-        market_book = order_package.market.market_book
+        market = self.flumine.markets.markets[order_package.market_id]
         for order, instruction in zip(
             order_package, order_package.replace_instructions
         ):
@@ -117,7 +117,7 @@ class SimulatedExecution(BaseExecution):
                     order, instruction.get("newPrice")
                 )
                 place_instruction_report = replacement_order.simulated.place(
-                    order_package.client, market_book, instruction, self._bet_id
+                    order_package.client, market.market_book, instruction, self._bet_id
                 )
                 if place_instruction_report.status == "SUCCESS":
                     self._order_logger(
@@ -126,7 +126,6 @@ class SimulatedExecution(BaseExecution):
                         order_package.package_type,
                     )
                     # add to blotter
-                    market = order_package.market
                     market.place_order(replacement_order, execute=False)
                     replacement_order.executable()
                 elif place_instruction_report.status == "FAILURE":

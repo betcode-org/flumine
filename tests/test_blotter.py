@@ -6,11 +6,9 @@ from flumine.markets.blotter import Blotter, OrderPackageType
 
 class BlotterTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_market = mock.Mock()
-        self.blotter = Blotter(self.mock_market, "1.23")
+        self.blotter = Blotter("1.23")
 
     def test_init(self):
-        self.assertEqual(self.blotter.market, self.mock_market)
         self.assertEqual(self.blotter.market_id, "1.23")
         self.assertEqual(self.blotter._orders, {})
         self.assertEqual(self.blotter.pending_place, [])
@@ -55,7 +53,7 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_orders = [mock_order]
         packages = self.blotter._create_packages(
-            mock_client, mock_orders, OrderPackageType.PLACE
+            mock_client, mock_orders, OrderPackageType.PLACE, 0
         )
         self.assertEqual(
             packages,
@@ -65,6 +63,7 @@ class BlotterTest(unittest.TestCase):
                     market_id=self.blotter.market_id,
                     orders=mock_orders,
                     package_type=OrderPackageType.PLACE,
+                    bet_delay=0,
                 )
             ],
         )
