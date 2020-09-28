@@ -110,11 +110,12 @@ class StrategyExposure(BaseControl):
             OrderPackageType.REPLACE,  # todo potential bug?
         ):
 
-            pack_orders_by_lookup = {}
+            package_orders_by_strategy_lookup = {}
             for order in order_package:
                 strategy = order.trade.strategy
-
-                pack_orders_by_lookup.setdefault(order.lookup, []).append(order)
+                package_orders_by_strategy_lookup.setdefault(
+                    (strategy, order.lookup), []
+                ).append(order)
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                     if order.side == "BACK":
                         exposure = order.order_type.size
@@ -138,7 +139,7 @@ class StrategyExposure(BaseControl):
                     continue
 
             # per selection
-            for lookup, orders in pack_orders_by_lookup.items():
+            for (strategy, lookup), orders in package_orders_by_strategy_lookup.items():
 
                 market = self.flumine.markets.markets[order_package.market_id]
                 profit_if_win, profit_if_lose = market.blotter.selection_exposure(
