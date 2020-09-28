@@ -33,7 +33,7 @@ class BaseOrderPackage(BaseEvent):
         market_id: str,
         orders: list,
         package_type: OrderPackageType,
-        market,
+        bet_delay: int,
         async_: bool = False,
     ):
         super(BaseOrderPackage, self).__init__(None)
@@ -42,7 +42,7 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self.market = market
+        self.bet_delay = bet_delay  # used for simulated execution
         self.async_ = async_
         self.customer_strategy_ref = config.hostname
         self.processed = False  # used for simulated execution
@@ -95,10 +95,6 @@ class BaseOrderPackage(BaseEvent):
             "retry": self._retry,
             "retry_count": self._retry_count,
         }
-
-    @property
-    def bet_delay(self) -> float:  # used for simulated execution
-        return self.market.market_book.bet_delay
 
     @property
     def market_version(self) -> Optional[dict]:

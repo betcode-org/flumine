@@ -12,8 +12,7 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
-    def __init__(self, market, market_id: str):
-        self.market = market  # weakref
+    def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
@@ -27,33 +26,36 @@ class Blotter:
         """Returns all orders related to a strategy."""
         return [order for order in self if order.trade.strategy == strategy]
 
-    def process_orders(self, client) -> list:
+    def process_orders(self, client, bet_delay: int = 0) -> list:
         packages = []
         if self.pending_place:
             packages += self._create_packages(
-                client, self.pending_place, OrderPackageType.PLACE
+                client, self.pending_place, OrderPackageType.PLACE, bet_delay
             )
         if self.pending_cancel:
             packages += self._create_packages(
-                client, self.pending_cancel, OrderPackageType.CANCEL
+                client, self.pending_cancel, OrderPackageType.CANCEL, bet_delay
             )
         if self.pending_update:
             packages += self._create_packages(
-                client, self.pending_update, OrderPackageType.UPDATE
+                client, self.pending_update, OrderPackageType.UPDATE, bet_delay
             )
         if self.pending_replace:
             packages += self._create_packages(
-                client, self.pending_replace, OrderPackageType.REPLACE
+                client, self.pending_replace, OrderPackageType.REPLACE, bet_delay
             )
         if packages:
             logger.info(
                 "%s order packages created" % len(packages),
-                extra={"order_packages": [o.info for o in packages]},
+                extra={
+                    "order_packages": [o.info for o in packages],
+                    "bet_delay": bet_delay,
+                },
             )
         return packages
 
     def _create_packages(
-        self, client, orders: list, package_type: OrderPackageType
+        self, client, orders: list, package_type: OrderPackageType, bet_delay: int
     ) -> list:
         packages = []
         _package_cls = BetfairOrderPackage
@@ -64,7 +66,7 @@ class Blotter:
                 market_id=self.market_id,
                 orders=chunked_orders,
                 package_type=package_type,
-                market=self.market(),
+                bet_delay=bet_delay,
             )
             packages.append(order_package)
         orders.clear()

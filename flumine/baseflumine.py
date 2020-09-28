@@ -154,7 +154,8 @@ class BaseFlumine:
 
     def _process_market_orders(self) -> None:
         for market in self.markets:
-            for order_package in market.blotter.process_orders(self.client):
+            bet_delay = market.market_book.bet_delay
+            for order_package in market.blotter.process_orders(self.client, bet_delay):
                 self.handler_queue.put(order_package)
 
     def _process_order_package(self, order_package) -> None:
