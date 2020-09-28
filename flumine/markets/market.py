@@ -1,6 +1,5 @@
 import datetime
 import logging
-import weakref
 from typing import Optional
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue

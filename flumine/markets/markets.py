@@ -1,7 +1,12 @@
+import gc
+import logging
 from typing import Iterator, Optional
 
 from .market import Market
 from ..order.order import BetfairOrder
+
+gc.set_debug(gc.DEBUG_SAVEALL)  # https://docs.python.org/3/library/gc.html#gc.garbage
+logger = logging.getLogger(__name__)
 
 
 class Markets:
@@ -22,6 +27,8 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         del self._markets[market_id].blotter
         del self._markets[market_id]
+        logger.info("Market removed", extra={"market_id": market_id})
+        logger.info("gc", extra={"garbage": gc.garbage})  # temp
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
         try:
