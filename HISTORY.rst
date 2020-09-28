@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.12.2 (2020-09-28)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #248 completely remove circular reference to market->blotter
+- Correct market closure when recording data (raw)
+
 1.12.1 (2020-09-21)
 +++++++++++++++++++
 
