@@ -163,9 +163,7 @@ class BetfairExecution(BaseExecution):
                             OrderPackageType.REPLACE,
                         )
                         # add to blotter
-                        market.place_order(
-                            replacement_order, execute=False
-                        )
+                        market.place_order(replacement_order, execute=False)
                         replacement_order.executable()
                     elif (
                         instruction_report.place_instruction_reports.status == "FAILURE"

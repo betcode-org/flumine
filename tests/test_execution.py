@@ -635,9 +635,7 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_order.execution_complete.assert_called_with()
         replacement_order = mock_order.trade.create_order_replacement()
         replacement_order.executable.assert_called_with()
-        mock_market.place_order.assert_called_with(
-            replacement_order, execute=False
-        )
+        mock_market.place_order.assert_called_with(replacement_order, execute=False)
         mock__order_logger.assert_called_with(
             replacement_order,
             mock_instruction_report.place_instruction_reports,
