@@ -611,15 +611,14 @@ class BetfairExecutionTest(unittest.TestCase):
     def test_execute_replace_success(
         self, mock__execution_helper, mock_replace, mock__order_logger
     ):
+        mock_market = mock.Mock()
+        self.mock_flumine.markets.markets = {"1.23": mock_market}
         mock_session = mock.Mock()
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(market_id="1.23", bet_id=123)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order.market_id = "1.234"
-        mock_order.bet_id = 123
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23", info={})
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
-        mock_order_package.info = {}
         mock_report = mock.Mock()
         mock_instruction_report = mock.Mock()
         mock_instruction_report.cancel_instruction_reports.status = "SUCCESS"
@@ -634,10 +633,9 @@ class BetfairExecutionTest(unittest.TestCase):
         #     mock_order, mock_instruction_report, OrderPackageType.CANCEL
         # )
         mock_order.execution_complete.assert_called_with()
-
         replacement_order = mock_order.trade.create_order_replacement()
         replacement_order.executable.assert_called_with()
-        mock_order_package.market.place_order.assert_called_with(
+        mock_market.place_order.assert_called_with(
             replacement_order, execute=False
         )
         mock__order_logger.assert_called_with(
@@ -743,6 +741,25 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
         mock__return_http_session.assert_called_with(mock_session, err=True)
         mock_handler_queue.put.assert_not_called()
+
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_unknown_error(self, mock__return_http_session):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_trading_function.side_effect = ValueError()
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.info = {}
+        mock_order_package.retry.return_value = True
+        self.assertIsNone(
+            self.execution._execution_helper(
+                mock_trading_function, mock_order_package, mock_session
+            )
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_called_with(mock_session, err=True)
 
 
 class SimulatedExecutionTest(unittest.TestCase):

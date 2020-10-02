@@ -123,6 +123,7 @@ class BetfairExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.replace, order_package, http_session)
         if response:
+            market = self.flumine.markets.markets[order_package.market_id]
             for (order, instruction_report) in zip(
                 order_package, response.replace_instruction_reports
             ):
@@ -162,7 +163,7 @@ class BetfairExecution(BaseExecution):
                             OrderPackageType.REPLACE,
                         )
                         # add to blotter
-                        order_package.market.place_order(
+                        market.place_order(
                             replacement_order, execute=False
                         )
                         replacement_order.executable()
@@ -207,6 +208,18 @@ class BetfairExecution(BaseExecution):
                 if order_package.retry():
                     self.handler_queue.put(order_package)
 
+                self._return_http_session(http_session, err=True)
+                return
+            except Exception as e:
+                logger.critical(
+                    "Execution unknown error",
+                    extra={
+                        "trading_function": trading_function.__name__,
+                        "exception": e,
+                        "order_package": order_package.info,
+                    },
+                    exc_info=True,
+                )
                 self._return_http_session(http_session, err=True)
                 return
             logger.info(
