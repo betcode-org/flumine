@@ -109,7 +109,7 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (9.2, -2.0),
+            2.0,
         )
 
     def test_selection_exposure_no_match(self):
@@ -127,7 +127,7 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (0.0, 0.0),
+            0.0,
         )
 
     def test_selection_exposure_from_unmatched_back(self):
@@ -147,7 +147,7 @@ class BlotterTest(unittest.TestCase):
         # On the lose side, we have -2.0-2.0=-4.0
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (9.2, -4.0),
+            4.0,
         )
 
     def test_selection_exposure_from_unmatched_lay(self):
@@ -167,7 +167,7 @@ class BlotterTest(unittest.TestCase):
         # On the lose side, we have 2.0 from size_matched
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (-19.2, 2.0),
+            19.2,
         )
 
     def test_selection_exposure_from_market_on_close_back(self):
@@ -182,7 +182,7 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (0.0, -10.0),
+            10.0,
         )
 
     def test_selection_exposure_from_market_on_close_lay(self):
@@ -197,7 +197,7 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            (-10.0, 0.0),
+            10.0,
         )
 
     def test_complete_order(self):

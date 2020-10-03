@@ -405,7 +405,7 @@ class TestStrategyExposure(unittest.TestCase):
     def test_validate_market_on_close(self, mock_on_error):
 
         mock_market = mock.Mock()
-        mock_market.blotter.selection_exposure.return_value = (-10.0, 0.0)
+        mock_market.blotter.selection_exposure.return_value = 10.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
         order = mock.Mock()
@@ -427,7 +427,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_selection(self, mock_on_error):
         mock_market = mock.Mock()
-        mock_market.blotter.selection_exposure.return_value = (-12.0, 0.0)
+        mock_market.blotter.selection_exposure.return_value = 12.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
         order = mock.Mock()
