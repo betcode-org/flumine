@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
@@ -97,10 +97,10 @@ class Blotter:
     """ position """
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:
-        """Returns strategy/selection exposure, which is the worse-case profit/loss arising
-        from the selection either winning or losing. Can be positive or negative.
-            positive = profit on selection
-            negative = exposure on selection
+        """Returns strategy/selection exposure, which is the worse-case loss arising
+        from the selection either winning or losing. Can be positive or zero.
+            positive = potential loss
+            zero = no potential loss
         """
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
@@ -133,10 +133,15 @@ class Blotter:
 
         matched_exposure = calculate_matched_exposure(mb, ml)
         unmatched_exposure = calculate_unmatched_exposure(ub, ul)
-        return (
-            matched_exposure[0] + unmatched_exposure[0] + moc_win_liability,
-            matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability,
+
+        worst_possible_profit_on_win = (
+            matched_exposure[0] + unmatched_exposure[0] + moc_win_liability
         )
+        worst_possible_profit_on_lose = (
+            matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability
+        )
+        exposure = -min(worst_possible_profit_on_win, worst_possible_profit_on_lose)
+        return max(exposure, 0.0)
 
     """ getters / setters """
 

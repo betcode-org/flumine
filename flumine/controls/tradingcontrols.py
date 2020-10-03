@@ -138,21 +138,18 @@ class StrategyExposure(BaseControl):
                     )
                     continue
 
+            market = self.flumine.markets.markets[order_package.market_id]
+
             # per selection
             for (strategy, lookup), orders in package_orders_by_strategy_lookup.items():
+                exposure = market.blotter.selection_exposure(strategy, lookup=lookup)
 
-                market = self.flumine.markets.markets[order_package.market_id]
-                profit_if_win, profit_if_lose = market.blotter.selection_exposure(
-                    strategy, lookup=lookup
-                )
-
-                exposure = min(profit_if_win, profit_if_lose)
-                if exposure < -strategy.max_selection_exposure:
+                if exposure > strategy.max_selection_exposure:
                     for order in orders:
                         self._on_error(
                             order,
                             "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
-                                -exposure,
+                                exposure,
                                 strategy.max_selection_exposure,
                             ),
                         )
