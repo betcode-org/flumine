@@ -86,14 +86,14 @@ class FlumineBacktest(BaseFlumine):
             for middleware in self._market_middleware:
                 middleware(market)  # todo err handling?
 
+            # process current orders
+            self._process_backtest_orders(market)
+
             for strategy in self.strategies:
                 if utils.call_check_market(strategy.check_market, market, market_book):
                     utils.call_process_market_book(
                         strategy.process_market_book, market, market_book
                     )
-
-            # process current orders
-            self._process_backtest_orders(market)
 
             self._process_market_orders()
 

@@ -1,7 +1,8 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple
 
-from ..utils import chunks, calculate_exposure
+from ..order.ordertype import OrderTypes
+from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
 from ..order.order import BaseOrder
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
@@ -96,23 +97,51 @@ class Blotter:
     """ position """
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:
-        """Returns strategy/selection exposure,
-        can be positive or negative.
-            positive = profit on selection
-            negative = exposure on selection
+        """Returns strategy/selection exposure, which is the worse-case loss arising
+        from the selection either winning or losing. Can be positive or zero.
+            positive = potential loss
+            zero = no potential loss
         """
-        mb, ml = [], []  # (price, size)
+        mb, ml = [], []  # matched bets, (price, size)
+        ub, ul = [], []  # unmatched bets, (price, size)
+        moc_win_liability = 0.0
+        moc_lose_liability = 0.0
         for order in self:
-            if (
-                order.trade.strategy == strategy
-                and order.size_matched
-                and order.lookup == lookup
-            ):
-                if order.side == "BACK":
-                    mb.append((order.average_price_matched, order.size_matched))
+            if order.trade.strategy == strategy and order.lookup == lookup:
+                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                    if order.size_matched:
+                        if order.side == "BACK":
+                            mb.append((order.average_price_matched, order.size_matched))
+                        else:
+                            ml.append((order.average_price_matched, order.size_matched))
+                    size_remaining = order.size_remaining
+                    if size_remaining:
+                        if order.side == "BACK":
+                            ub.append((order.order_type.price, order.size_remaining))
+                        else:
+                            ul.append((order.order_type.price, order.size_remaining))
+                elif order.order_type.ORDER_TYPE in (
+                    OrderTypes.MARKET_ON_CLOSE,
+                    OrderTypes.MARKET_ON_CLOSE,
+                ):
+                    if order.side == "BACK":
+                        moc_lose_liability -= order.order_type.liability
+                    else:
+                        moc_win_liability -= order.order_type.liability
                 else:
-                    ml.append((order.average_price_matched, order.size_matched))
-        return calculate_exposure(mb, ml)
+                    raise ValueError("Unexpected order type: %s" % order.order_type)
+
+        matched_exposure = calculate_matched_exposure(mb, ml)
+        unmatched_exposure = calculate_unmatched_exposure(ub, ul)
+
+        worst_possible_profit_on_win = (
+            matched_exposure[0] + unmatched_exposure[0] + moc_win_liability
+        )
+        worst_possible_profit_on_lose = (
+            matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability
+        )
+        exposure = -min(worst_possible_profit_on_win, worst_possible_profit_on_lose)
+        return max(exposure, 0.0)
 
     """ getters / setters """
 
