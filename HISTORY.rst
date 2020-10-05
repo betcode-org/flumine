@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.13.0 (2020-10-05)
++++++++++++++++++++
+
+**Improvements**
+
+- #270 strategy exposure improvements on trading control
+
+**Bug Fixes**
+
+- Handle unhandled exceptions in execution
+- Replace now fixed (regression on removal of `order_package.market`
+
+**Libraries**
+
+- python-json-logger upgraded to 2.0.0
+
 1.12.3 (2020-09-28)
 +++++++++++++++++++
 
