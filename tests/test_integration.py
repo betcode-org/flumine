@@ -101,9 +101,9 @@ class IntegrationTest(unittest.TestCase):
                 o for o in market.blotter if o.trade.strategy == limit_strategy
             ]
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders]), 2), 8.80
+                round(sum([o.simulated.profit for o in limit_orders]), 2), 18.96
             )
-            self.assertEqual(len(limit_orders), 14)
+            self.assertEqual(len(limit_orders), 15)
 
             market_orders = [
                 o for o in market.blotter if o.trade.strategy == market_strategy

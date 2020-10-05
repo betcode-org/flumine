@@ -14,6 +14,7 @@ Release History
 
 - Handle unhandled exceptions in execution
 - Replace now fixed (regression on removal of `order_package.market`
+- Backtest process orders now called before strategy calls *impacts backtesting profit*
 
 **Libraries**
 
