@@ -97,24 +97,83 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             utils.price_ticks_away(999, -1)
 
-    def test_calculate_exposure(self):
-        self.assertEqual(utils.calculate_exposure([], []), 0)
-        self.assertEqual(utils.calculate_exposure([(0, 0)], [(0, 0), (0, 0)]), 0)
-        self.assertEqual(utils.calculate_exposure([(5.6, 2)], []), -2)
-        self.assertEqual(utils.calculate_exposure([], [(5.6, 2)]), -9.2)
-        self.assertEqual(utils.calculate_exposure([], [(5.6, 2), (5.8, 2)]), -18.8)
-        self.assertEqual(utils.calculate_exposure([(5.6, 2)], [(5.6, 2)]), 0)
+    def test_calculate_matched_exposure(self):
+        self.assertEqual(utils.calculate_matched_exposure([], []), (0.0, 0.0))
         self.assertEqual(
-            utils.calculate_exposure([(5.6, 2), (100, 20)], [(5.6, 2)]), -20
+            utils.calculate_matched_exposure([(0, 0)], [(0, 0), (0, 0)]), (0.0, 0.0)
+        )
+        self.assertEqual(utils.calculate_matched_exposure([(5.6, 2)], []), (9.2, -2.0))
+        self.assertEqual(utils.calculate_matched_exposure([], [(5.6, 2)]), (-9.2, 2.0))
+        self.assertEqual(
+            utils.calculate_matched_exposure([], [(5.6, 2), (5.8, 2)]), (-18.8, 4.0)
         )
         self.assertEqual(
-            utils.calculate_exposure([(5.6, 2), (100, 20)], [(10, 1000)]), -7010.80
+            utils.calculate_matched_exposure([(5.6, 2)], [(5.6, 2)]), (0.0, 0.0)
         )
-        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 2)]), 0)
-        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 4)]), 2)
-        self.assertEqual(utils.calculate_exposure([(10, 2)], [(5, 8)]), -14)
+        self.assertEqual(
+            utils.calculate_matched_exposure([(5.6, 2), (100, 20)], [(5.6, 2)]),
+            (1980.0, -20.0),
+        )
+        self.assertEqual(
+            utils.calculate_matched_exposure([(5.6, 2), (100, 20)], [(10, 1000)]),
+            (-7010.80, 978.0),
+        )
+        self.assertEqual(
+            utils.calculate_matched_exposure([(10, 2)], [(5, 2)]), (10.0, 0.0)
+        )
+        self.assertEqual(
+            utils.calculate_matched_exposure([(10, 2)], [(5, 4)]), (2.0, 2.0)
+        )
+        self.assertEqual(
+            utils.calculate_matched_exposure([(10, 2)], [(5, 8)]), (-14.0, 6.0)
+        )
 
-        self.assertEqual(utils.calculate_exposure([(5.6, 200)], [(5.6, 100)]), -100)
+        self.assertEqual(
+            utils.calculate_matched_exposure([(5.6, 200)], [(5.6, 100)]),
+            (460.0, -100.0),
+        )
+
+    def test_calculate_unmatched_exposure(self):
+        self.assertEqual(utils.calculate_unmatched_exposure([], []), (0.0, 0.0))
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(0, 0)], [(0, 0), (0, 0)]), (0.0, 0.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(5.6, 2.0)], []), (0.0, -2.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([], [(5.6, 2)]), (-9.2, 0.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([], [(5.6, 2), (5.8, 2)]), (-18.8, 0.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(5.6, 2)], [(5.6, 2)]), (-9.2, -2.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(5.6, 2), (100, 20)], [(5.6, 2)]),
+            (-9.2, -22.0),
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure(
+                [(5.6, 2.0), (100.0, 20.0)], [(10, 1000)]
+            ),
+            (-9000.0, -22.0),
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(10.0, 2.0)], [(5, 2)]), (-8.0, -2.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(10, 2)], [(5, 4)]), (-16.0, -2.0)
+        )
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(10, 2)], [(5, 8)]), (-32.0, -2.0)
+        )
+
+        self.assertEqual(
+            utils.calculate_unmatched_exposure([(5.6, 200.0)], [(5.6, 100)]),
+            (-460.0, -200.0),
+        )
 
     def test_wap(self):
         self.assertEqual(

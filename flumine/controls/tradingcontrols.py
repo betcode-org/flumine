@@ -109,9 +109,13 @@ class StrategyExposure(BaseControl):
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,  # todo potential bug?
         ):
+
+            package_orders_by_strategy_lookup = {}
             for order in order_package:
                 strategy = order.trade.strategy
-
+                package_orders_by_strategy_lookup.setdefault(
+                    (strategy, order.lookup), []
+                ).append(order)
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                     if order.side == "BACK":
                         exposure = order.order_type.size
@@ -134,18 +138,18 @@ class StrategyExposure(BaseControl):
                     )
                     continue
 
-                # per selection
-                market = self.flumine.markets.markets[order_package.market_id]
-                current_selection_exposure = market.blotter.selection_exposure(
-                    strategy, lookup=order.lookup
-                )
-                if (
-                    current_selection_exposure - exposure
-                ) < -strategy.max_selection_exposure:
-                    self._on_error(
-                        order,
-                        "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
-                            (current_selection_exposure - exposure),
-                            strategy.max_selection_exposure,
-                        ),
-                    )
+            market = self.flumine.markets.markets[order_package.market_id]
+
+            # per selection
+            for (strategy, lookup), orders in package_orders_by_strategy_lookup.items():
+                exposure = market.blotter.selection_exposure(strategy, lookup=lookup)
+
+                if exposure > strategy.max_selection_exposure:
+                    for order in orders:
+                        self._on_error(
+                            order,
+                            "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
+                                exposure,
+                                strategy.max_selection_exposure,
+                            ),
+                        )

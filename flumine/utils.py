@@ -131,19 +131,38 @@ def price_ticks_away(price: float, n_ticks: int) -> float:
 
 
 # todo LRU cache?
-def calculate_exposure(mb: list, ml: list) -> float:
+# JH: LRU cache does not work with list inputs as they are unhashable.
+#     So might need to refactor mb and ml into tuples.
+def calculate_matched_exposure(mb: list, ml: list) -> Tuple:
     """Calculates exposure based on list
     of (price, size)
+    returns the tuple (profit_if_win, profit_if_lose)
     """
     if not mb and not ml:
-        return 0.0
+        return 0.0, 0.0
     back_exp = sum(-i[1] for i in mb)
     back_profit = sum((i[0] - 1) * i[1] for i in mb)
     lay_exp = sum((i[0] - 1) * -i[1] for i in ml)
     lay_profit = sum(i[1] for i in ml)
     _win = back_profit + lay_exp
     _lose = lay_profit + back_exp
-    return round(min(_win, _lose), 2)
+    return round(_win, 2), round(_lose, 2)
+
+
+def calculate_unmatched_exposure(ub: list, ul: list) -> Tuple:
+    """Calculates worse-case exposure based on list
+    of (price, size)
+    returns the tuple (profit_if_win, profit_if_lose)
+
+    The worst case profit_if_win arises if all lay bets are matched and the selection wins.
+    The worst case profit_if_lose arises if all back bets are matched and the selection loses.
+
+    """
+    if not ub and not ul:
+        return 0.0, 0.0
+    back_exp = sum(-i[1] for i in ub)
+    lay_exp = sum((i[0] - 1) * -i[1] for i in ul)
+    return round(lay_exp, 2), round(back_exp, 2)
 
 
 # todo LRU cache?
