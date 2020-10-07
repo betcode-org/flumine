@@ -15,7 +15,7 @@ from ..backtest.simulated import Simulated
 logger = logging.getLogger(__name__)
 
 
-VALID_CUSTOMER_ORDER_REF_CHARACTERS = {".", "_", "+", "*", ":", ";", "~"}
+VALID_CUSTOMER_ORDER_REF_CHARACTERS = {"-", ".", "_", "+", "*", ":", ";", "~"}
 
 
 class OrderStatus(Enum):
@@ -222,7 +222,7 @@ class BaseOrder:
 
     @property
     def customer_order_ref(self) -> str:
-        return "{0}-{1}".format(self.trade.strategy.name_hash, self.id)
+        return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
 
     @property
     def info(self) -> dict:
@@ -257,6 +257,32 @@ class BaseOrder:
 class BetfairOrder(BaseOrder):
 
     EXCHANGE = ExchangeType.BETFAIR
+
+    def __init__(
+        self,
+        trade,
+        side: str,
+        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        handicap: float = 0,
+        sep="-",
+    ):
+        super().__init__(
+            trade=trade, side=side, order_type=order_type, handicap=handicap
+        )
+
+        self._sep = "-"  # DEFAULT VALUE
+        self.sep = sep
+
+    @property
+    def sep(self):
+        return self._sep
+
+    @sep.setter
+    def sep(self, new_sep: str) -> str:
+        if is_valid_customer_order_ref_character(new_sep):
+            self._sep = new_sep
+        else:
+            raise ValueError(f"Invalid sep: {new_sep}")
 
     # updates
     def place(self, publish_time: int) -> None:

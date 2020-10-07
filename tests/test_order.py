@@ -452,6 +452,25 @@ class BetfairOrderTest(unittest.TestCase):
             },
         )
 
+    def test_set_and_get_sep(self):
+        self.order.sep = "a"
+        self.assertEqual("a", self.order.sep)
+
+    def test_set_invalid_sep(self):
+        with self.assertRaises(ValueError):
+            self.order.sep = "@"
+
+    def test_customer_order_ref(self):
+        self.order.trade.strategy.name_hash = "my_name_hash"
+        self.order.id = 1234
+        self.assertEqual("my_name_hash-1234", self.order.customer_order_ref)
+
+        self.order.sep = "I"
+        self.assertEqual("my_name_hashI1234", self.order.customer_order_ref)
+
+        self.order.sep = "O"
+        self.assertEqual("my_name_hashO1234", self.order.customer_order_ref)
+
 
 class IsValidCustomerOrderRefTestCase(unittest.TestCase):
     def test_letters_True(self):
