@@ -2,6 +2,7 @@ import uuid
 import logging
 import datetime
 from enum import Enum
+import string
 from typing import Union, Optional
 from betfairlightweight import filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
@@ -15,7 +16,11 @@ from ..backtest.simulated import Simulated
 logger = logging.getLogger(__name__)
 
 
-VALID_CUSTOMER_ORDER_REF_CHARACTERS = {"-", ".", "_", "+", "*", ":", ";", "~"}
+VALID_CUSTOMER_ORDER_REF_CHARACTERS = (
+    {"-", ".", "_", "+", "*", ":", ";", "~"}
+    .union(set(string.ascii_letters))
+    .union(set(string.digits))
+)
 
 
 class OrderStatus(Enum):
@@ -274,11 +279,11 @@ class BetfairOrder(BaseOrder):
         self.sep = sep
 
     @property
-    def sep(self):
+    def sep(self) -> str:
         return self._sep
 
     @sep.setter
-    def sep(self, new_sep: str) -> str:
+    def sep(self, new_sep: str) -> None:
         if is_valid_customer_order_ref_character(new_sep):
             self._sep = new_sep
         else:
@@ -426,8 +431,4 @@ def is_valid_customer_order_ref_character(c: str) -> bool:
     if len(c) != 1:
         return False
     else:
-        if c.isalnum():
-            return True
-        elif c in VALID_CUSTOMER_ORDER_REF_CHARACTERS:
-            return True
-        return False
+        return c in VALID_CUSTOMER_ORDER_REF_CHARACTERS
