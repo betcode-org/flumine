@@ -15,6 +15,9 @@ from ..backtest.simulated import Simulated
 logger = logging.getLogger(__name__)
 
 
+VALID_CUSTOMER_ORDER_REF_CHARACTERS = {".", "_", "+", "*", ":", ";", "~"}
+
+
 class OrderStatus(Enum):
     # Pending
     PENDING = "Pending"  # pending exchange processing
@@ -384,3 +387,21 @@ class BetfairOrder(BaseOrder):
             return self.current_order.size_voided or 0.0
         except AttributeError:
             return 0.0
+
+
+def is_valid_customer_order_ref_character(c: str) -> bool:
+    """
+    Check if the separator is of length 1, and a valid
+    character, as defined in the Betfair documentation is:
+
+    CustomerRef can contain: upper/lower chars, digits, chars
+     : - . _ + * : ; ~ only.
+    """
+    if len(c) != 1:
+        return False
+    else:
+        if c.isalnum():
+            return True
+        elif c in VALID_CUSTOMER_ORDER_REF_CHARACTERS:
+            return True
+        return False

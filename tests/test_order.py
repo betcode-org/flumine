@@ -1,3 +1,4 @@
+import string
 import unittest
 import datetime
 from unittest import mock
@@ -8,6 +9,8 @@ from flumine.order.order import (
     ExchangeType,
     OrderTypes,
     OrderStatus,
+    is_valid_customer_order_ref_character,
+    VALID_CUSTOMER_ORDER_REF_CHARACTERS,
 )
 from flumine.exceptions import OrderUpdateError
 
@@ -448,3 +451,27 @@ class BetfairOrderTest(unittest.TestCase):
                 "customer_order_ref": self.order.customer_order_ref,
             },
         )
+
+
+class IsValidCustomerOrderRefTestCase(unittest.TestCase):
+    def test_letters_True(self):
+        # ascii_letters contains a-z and A-Z
+        for c in string.ascii_letters:
+            self.assertTrue(is_valid_customer_order_ref_character(c))
+
+    def test_2letters_False(self):
+        self.assertFalse(is_valid_customer_order_ref_character("aB"))
+        self.assertFalse(is_valid_customer_order_ref_character("CD"))
+
+    def test_digits_True(self):
+        # string.digits contains digits 0-9
+        for c in string.digits:
+            self.assertTrue(is_valid_customer_order_ref_character(c))
+
+    def test_special_characters_True(self):
+        for c in VALID_CUSTOMER_ORDER_REF_CHARACTERS:
+            self.assertTrue(is_valid_customer_order_ref_character((c)))
+
+    def test_special_characters_False(self):
+        for c in list('!"£$%'):
+            self.assertFalse(is_valid_customer_order_ref_character((c)))
