@@ -37,10 +37,10 @@ class PriceRecorder(BaseStrategy):
             writer = csv.DictWriter(f, fieldnames=HEADERS)
             writer.writeheader()
 
-    def check_market_book(self, live_market, market_book):
+    def check_market_book(self, market, market_book):
         return True
 
-    def process_market_book(self, live_market, market_book):
+    def process_market_book(self, market, market_book):
         with open(self.file_directory, "a") as f:
             writer = csv.DictWriter(f, fieldnames=HEADERS)
             for runner in market_book.runners:

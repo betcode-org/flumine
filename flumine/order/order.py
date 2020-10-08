@@ -2,6 +2,7 @@ import uuid
 import logging
 import datetime
 from enum import Enum
+import string
 from typing import Union, Optional
 from betfairlightweight import filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
@@ -13,6 +14,13 @@ from ..exceptions import OrderUpdateError
 from ..backtest.simulated import Simulated
 
 logger = logging.getLogger(__name__)
+
+
+VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
+    {"-", ".", "_", "+", "*", ":", ";", "~"}
+    .union(set(string.ascii_letters))
+    .union(set(string.digits))
+)
 
 
 class OrderStatus(Enum):
@@ -40,6 +48,7 @@ class BaseOrder:
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
+        sep="-",
     ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
@@ -60,6 +69,9 @@ class BaseOrder:
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
+
+        self._sep = "-"  # DEFAULT VALUE
+        self.sep = sep
 
     # status
     def _update_status(self, status: OrderStatus) -> None:
@@ -169,6 +181,21 @@ class BaseOrder:
         raise NotImplementedError
 
     @property
+    def sep(self) -> str:
+        return self._sep
+
+    @sep.setter
+    def sep(self, new_sep: str) -> None:
+        if self.is_valid_customer_order_ref_character(new_sep):
+            self._sep = new_sep
+        else:
+            raise ValueError(f"Invalid sep: {new_sep}")
+
+    @staticmethod
+    def is_valid_customer_order_ref_character(c: str) -> bool:
+        return True
+
+    @property
     def size_matched(self) -> float:
         raise NotImplementedError
 
@@ -219,7 +246,7 @@ class BaseOrder:
 
     @property
     def customer_order_ref(self) -> str:
-        return "{0}-{1}".format(self.trade.strategy.name_hash, self.id)
+        return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
 
     @property
     def info(self) -> dict:
@@ -384,3 +411,17 @@ class BetfairOrder(BaseOrder):
             return self.current_order.size_voided or 0.0
         except AttributeError:
             return 0.0
+
+    @staticmethod
+    def is_valid_customer_order_ref_character(c: str) -> bool:
+        """
+        Check if the separator is of length 1, and a valid
+        character, as defined in the Betfair documentation is:
+
+        CustomerRef can contain: upper/lower chars, digits, chars
+         : - . _ + * : ; ~ only.
+        """
+        if len(c) != 1:
+            return False
+        else:
+            return c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS
