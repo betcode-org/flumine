@@ -10,6 +10,7 @@ Release History
 
 - Updates the pricerecorder example method parameters (@lunswor)
 - #248 Remove runner_context from strategy on market remove
+- #287 order separator (jsphon)
 
 1.13.0 (2020-10-05)
 +++++++++++++++++++
