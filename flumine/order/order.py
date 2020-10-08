@@ -16,7 +16,7 @@ from ..backtest.simulated import Simulated
 logger = logging.getLogger(__name__)
 
 
-VALID_CUSTOMER_ORDER_REF_CHARACTERS = (
+VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
     {"-", ".", "_", "+", "*", ":", ";", "~"}
     .union(set(string.ascii_letters))
     .union(set(string.digits))
@@ -48,6 +48,7 @@ class BaseOrder:
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
+        sep="-",
     ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
@@ -68,6 +69,9 @@ class BaseOrder:
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
+
+        self._sep = "-"  # DEFAULT VALUE
+        self.sep = sep
 
     # status
     def _update_status(self, status: OrderStatus) -> None:
@@ -177,6 +181,21 @@ class BaseOrder:
         raise NotImplementedError
 
     @property
+    def sep(self) -> str:
+        return self._sep
+
+    @sep.setter
+    def sep(self, new_sep: str) -> None:
+        if self.is_valid_customer_order_ref_character(new_sep):
+            self._sep = new_sep
+        else:
+            raise ValueError(f"Invalid sep: {new_sep}")
+
+    @staticmethod
+    def is_valid_customer_order_ref_character(c: str) -> bool:
+        return True
+
+    @property
     def size_matched(self) -> float:
         raise NotImplementedError
 
@@ -262,32 +281,6 @@ class BaseOrder:
 class BetfairOrder(BaseOrder):
 
     EXCHANGE = ExchangeType.BETFAIR
-
-    def __init__(
-        self,
-        trade,
-        side: str,
-        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
-        handicap: float = 0,
-        sep="-",
-    ):
-        super().__init__(
-            trade=trade, side=side, order_type=order_type, handicap=handicap
-        )
-
-        self._sep = "-"  # DEFAULT VALUE
-        self.sep = sep
-
-    @property
-    def sep(self) -> str:
-        return self._sep
-
-    @sep.setter
-    def sep(self, new_sep: str) -> None:
-        if is_valid_customer_order_ref_character(new_sep):
-            self._sep = new_sep
-        else:
-            raise ValueError(f"Invalid sep: {new_sep}")
 
     # updates
     def place(self, publish_time: int) -> None:
@@ -419,16 +412,16 @@ class BetfairOrder(BaseOrder):
         except AttributeError:
             return 0.0
 
+    @staticmethod
+    def is_valid_customer_order_ref_character(c: str) -> bool:
+        """
+        Check if the separator is of length 1, and a valid
+        character, as defined in the Betfair documentation is:
 
-def is_valid_customer_order_ref_character(c: str) -> bool:
-    """
-    Check if the separator is of length 1, and a valid
-    character, as defined in the Betfair documentation is:
-
-    CustomerRef can contain: upper/lower chars, digits, chars
-     : - . _ + * : ; ~ only.
-    """
-    if len(c) != 1:
-        return False
-    else:
-        return c in VALID_CUSTOMER_ORDER_REF_CHARACTERS
+        CustomerRef can contain: upper/lower chars, digits, chars
+         : - . _ + * : ; ~ only.
+        """
+        if len(c) != 1:
+            return False
+        else:
+            return c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS

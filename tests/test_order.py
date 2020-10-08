@@ -9,8 +9,7 @@ from flumine.order.order import (
     ExchangeType,
     OrderTypes,
     OrderStatus,
-    is_valid_customer_order_ref_character,
-    VALID_CUSTOMER_ORDER_REF_CHARACTERS,
+    VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS,
 )
 from flumine.exceptions import OrderUpdateError
 
@@ -233,6 +232,21 @@ class BaseOrderTest(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(self.order), "Order None: None")
 
+    def test_set_and_get_sep(self):
+        self.order.sep = "a"
+        self.assertEqual("a", self.order.sep)
+
+    def test_customer_order_ref(self):
+        self.order.trade.strategy.name_hash = "my_name_hash"
+        self.order.id = 1234
+        self.assertEqual("my_name_hash-1234", self.order.customer_order_ref)
+
+        self.order.sep = "I"
+        self.assertEqual("my_name_hashI1234", self.order.customer_order_ref)
+
+        self.order.sep = "O"
+        self.assertEqual("my_name_hashO1234", self.order.customer_order_ref)
+
 
 class BetfairOrderTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -452,45 +466,30 @@ class BetfairOrderTest(unittest.TestCase):
             },
         )
 
-    def test_set_and_get_sep(self):
-        self.order.sep = "a"
-        self.assertEqual("a", self.order.sep)
-
     def test_set_invalid_sep(self):
         with self.assertRaises(ValueError):
             self.order.sep = "@"
-
-    def test_customer_order_ref(self):
-        self.order.trade.strategy.name_hash = "my_name_hash"
-        self.order.id = 1234
-        self.assertEqual("my_name_hash-1234", self.order.customer_order_ref)
-
-        self.order.sep = "I"
-        self.assertEqual("my_name_hashI1234", self.order.customer_order_ref)
-
-        self.order.sep = "O"
-        self.assertEqual("my_name_hashO1234", self.order.customer_order_ref)
 
 
 class IsValidCustomerOrderRefTestCase(unittest.TestCase):
     def test_letters_True(self):
         # ascii_letters contains a-z and A-Z
         for c in string.ascii_letters:
-            self.assertTrue(is_valid_customer_order_ref_character(c))
+            self.assertTrue(BetfairOrder.is_valid_customer_order_ref_character(c))
 
     def test_2letters_False(self):
-        self.assertFalse(is_valid_customer_order_ref_character("aB"))
-        self.assertFalse(is_valid_customer_order_ref_character("CD"))
+        self.assertFalse(BetfairOrder.is_valid_customer_order_ref_character("aB"))
+        self.assertFalse(BetfairOrder.is_valid_customer_order_ref_character("CD"))
 
     def test_digits_True(self):
         # string.digits contains digits 0-9
         for c in string.digits:
-            self.assertTrue(is_valid_customer_order_ref_character(c))
+            self.assertTrue(BetfairOrder.is_valid_customer_order_ref_character(c))
 
     def test_special_characters_True(self):
-        for c in VALID_CUSTOMER_ORDER_REF_CHARACTERS:
-            self.assertTrue(is_valid_customer_order_ref_character((c)))
+        for c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS:
+            self.assertTrue(BetfairOrder.is_valid_customer_order_ref_character((c)))
 
     def test_special_characters_False(self):
         for c in list('!"£$%'):
-            self.assertFalse(is_valid_customer_order_ref_character((c)))
+            self.assertFalse(BetfairOrder.is_valid_customer_order_ref_character((c)))
