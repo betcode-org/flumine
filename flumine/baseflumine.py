@@ -186,6 +186,8 @@ class BaseFlumine:
         logger.info("Removing market {0}".format(market.market_id), extra=self.info)
         for middleware in self._market_middleware:
             middleware.remove_market(market)
+        for strategy in self.strategies:
+            strategy.remove_market(market.market_id)
         self.markets.remove_market(market.market_id)
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
@@ -367,6 +369,7 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
+        # todo shutdown workers
         # shutdown logging controls
         self.log_control(events.TerminationEvent(None))
         for c in self._logging_controls:

@@ -134,6 +134,15 @@ class BaseStrategyTest(unittest.TestCase):
     def test_finish(self):
         self.strategy.finish()
 
+    def test_remove_market(self):
+        self.strategy._invested = {
+            ("1.23", 456, 7): 1,
+            ("1.23", 891, 7): 2,
+            ("1.24", 112, 7): 3,
+        }
+        self.strategy.remove_market("1.23")
+        self.assertEqual(self.strategy._invested, {("1.24", 112, 7): 3})
+
     @mock.patch(
         "flumine.strategy.strategy.BaseStrategy.validate_order", return_value=True
     )

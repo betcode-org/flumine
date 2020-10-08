@@ -106,6 +106,14 @@ class BaseStrategy:
         # called before flumine ends
         return
 
+    def remove_market(self, market_id: str) -> None:
+        to_remove = []
+        for invested in self._invested:
+            if invested[0] == market_id:
+                to_remove.append(invested)
+        for i in to_remove:
+            del self._invested[i]
+
     # order
     def place_order(self, market: Market, order) -> None:
         runner_context = self.get_runner_context(*order.lookup)

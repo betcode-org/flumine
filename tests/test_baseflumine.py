@@ -160,6 +160,8 @@ class BaseFlumineTest(unittest.TestCase):
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     def test__remove_market(self, _):
+        mock_strategy = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy]
         mock_markets = mock.Mock()
         self.base_flumine.markets = mock_markets
         mock_middleware = mock.Mock()
@@ -168,6 +170,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._remove_market(mock_market)
         mock_markets.remove_market.assert_called_with(mock_market.market_id)
         mock_middleware.remove_market.assert_called_with(mock_market)
+        mock_strategy.remove_market.assert_called_with(mock_market.market_id)
 
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
     def test__process_raw_data(self, mock__add_market):

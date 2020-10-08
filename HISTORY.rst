@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.13.1 (2020-10-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Updates the pricerecorder example method parameters (@lunswor)
+- #248 Remove runner_context from strategy on market remove
+
 1.13.0 (2020-10-05)
 +++++++++++++++++++
 
