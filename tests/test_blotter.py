@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.markets.blotter import Blotter, OrderPackageType
+from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder
 
 
