@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.markets.blotter import Blotter, OrderPackageType
-from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder
+from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
 
 
 class BlotterTest(unittest.TestCase):
@@ -111,6 +111,25 @@ class BlotterTest(unittest.TestCase):
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             2.0,
         )
+
+    def test_selection_exposure_raises_value_error(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=0.0,
+            order_type=mock.Mock(ORDER_TYPE="INVALID"),
+        )
+        self.blotter._orders = {"12345": mock_order}
+
+        with self.assertRaises(ValueError) as e:
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup)
+
+        self.assertEqual("Unexpected order type: INVALID", e.exception.args[0])
 
     def test_selection_exposure_with_price_none(self):
         """
@@ -227,6 +246,21 @@ class BlotterTest(unittest.TestCase):
             lookup=(self.blotter.market_id, 123, 0),
             side="LAY",
             order_type=MarketOnCloseOrder(liability=10.0),
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            10.0,
+        )
+
+    def test_selection_exposure_from_limit_on_close_lay(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="LAY",
+            order_type=LimitOnCloseOrder(price=1.01, liability=10.0),
         )
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(
