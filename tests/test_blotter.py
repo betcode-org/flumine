@@ -112,6 +112,40 @@ class BlotterTest(unittest.TestCase):
             2.0,
         )
 
+    def test_selection_exposure_with_price_none(self):
+        """
+        Check that selection_exposure works if order.order_type.price is None.
+        If order.order_type.price is None, the controls will flag the order as a violation
+        and it won't be set to the exchange, so there won't be any exposure and we can ignore it.
+        :return:
+        """
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        lookup = (self.blotter.market_id, 123, 0)
+        mock_order1 = mock.Mock(
+            trade=mock_trade,
+            lookup=lookup,
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=0.0,
+            order_type=LimitOrder(price=5.6, size=2.0),
+        )
+        mock_order2 = mock.Mock(
+            trade=mock_trade,
+            lookup=lookup,
+            side="LAY",
+            average_price_matched=5.6,
+            size_matched=0.0,
+            size_remaining=2.0,
+            order_type=LimitOrder(price=None, size=2.0),
+        )
+        self.blotter._orders = {"12345": mock_order1, "23456": mock_order2}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, lookup),
+            2.0,
+        )
+
     def test_selection_exposure_no_match(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
