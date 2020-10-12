@@ -114,14 +114,13 @@ class Blotter:
                             mb.append((order.average_price_matched, order.size_matched))
                         else:
                             ml.append((order.average_price_matched, order.size_matched))
-                    size_remaining = order.size_remaining
-                    if size_remaining:
+                    if order.order_type.price and order.size_remaining:
                         if order.side == "BACK":
                             ub.append((order.order_type.price, order.size_remaining))
                         else:
                             ul.append((order.order_type.price, order.size_remaining))
                 elif order.order_type.ORDER_TYPE in (
-                    OrderTypes.MARKET_ON_CLOSE,
+                    OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
                 ):
                     if order.side == "BACK":
@@ -129,7 +128,9 @@ class Blotter:
                     else:
                         moc_win_liability -= order.order_type.liability
                 else:
-                    raise ValueError("Unexpected order type: %s" % order.order_type)
+                    raise ValueError(
+                        "Unexpected order type: %s" % order.order_type.ORDER_TYPE
+                    )
 
         matched_exposure = calculate_matched_exposure(mb, ml)
         unmatched_exposure = calculate_unmatched_exposure(ub, ul)
