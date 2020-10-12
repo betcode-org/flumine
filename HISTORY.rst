@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
--
+- Prevent MarketBook latency logging when update is from a snap
 
 **Bug Fixes**
 
