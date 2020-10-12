@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.14.0 (2020-10-12)
++++++++++++++++++++
+
+**Improvements**
+
+- Prevent MarketBook latency logging when update is from a snap
+
+**Bug Fixes**
+
+- #291 Bug in calculated_unmatched_exposure func
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.9.0 (#248 memory leak)
+
 1.13.1 (2020-10-08)
 +++++++++++++++++++
 
