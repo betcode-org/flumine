@@ -85,6 +85,9 @@ class Simulated:
                         runner.ex.available_to_back,
                     )
                     return self._create_place_response(bet_id)
+                elif self.order.order_type.time_in_force == "FILL_OR_KILL":
+                    self.order.expiring()
+                    return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
                 if not client.best_price_execution and available_to_lay < price:
@@ -100,6 +103,9 @@ class Simulated:
                         size,
                         runner.ex.available_to_lay,
                     )
+                    return self._create_place_response(bet_id)
+                elif self.order.order_type.time_in_force == "FILL_OR_KILL":
+                    self.order.expiring()
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_back
 

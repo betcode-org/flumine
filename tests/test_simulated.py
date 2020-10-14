@@ -115,6 +115,27 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated._piq, 22)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_back_fill_or_kill_expires(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
+        mock_runner.ex.available_to_lay = [
+            {"price": 10.5, "size": 120},
+            {"price": 11.5, "size": 10},
+            {"price": 12, "size": 22},
+            {"price": 15, "size": 32},
+        ]
+        mock__get_runner.return_value = mock_runner
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated._piq, 0.0)
+        self.simulated.order.expiring.assert_called_once()
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_back_bpe(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_market_book = mock.Mock()
@@ -162,6 +183,29 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 22)
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_lay_fill_or_kill_expires(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        self.simulated.order.side = "LAY"
+        mock_market_book = mock.Mock()
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [
+            {"price": 10.5, "size": 120},
+            {"price": 11.5, "size": 10},
+            {"price": 12, "size": 22},
+            {"price": 14, "size": 32},
+        ]
+        mock_runner.ex.available_to_lay = [{"price": 15, "size": 32}]
+        mock__get_runner.return_value = mock_runner
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated._piq, 0)
+        self.assertEqual(self.simulated.matched, [])
+        self.simulated.order.expiring.assert_called_once()
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_lay_bpe(self, mock__get_runner):

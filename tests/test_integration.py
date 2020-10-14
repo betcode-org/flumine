@@ -26,7 +26,7 @@ class IntegrationTest(unittest.TestCase):
         framework.run()
 
     @unittest.skipIf(
-        SKIP_INTEGRATION_TESTS,
+        0,
         "Integrations tests (set env.SKIP_INTEGRATION_TESTS = 0)",
     )
     def test_backtest_pro(self):
@@ -48,6 +48,35 @@ class IntegrationTest(unittest.TestCase):
                         order = trade.create_order(
                             side="LAY",
                             order_type=LimitOrder(lay, 2.00),
+                        )
+                        self.place_order(market, order)
+
+            def process_orders(self, market, orders):
+                for order in orders:
+                    if order.status == OrderStatus.EXECUTABLE:
+                        if order.elapsed_seconds and order.elapsed_seconds > 2:
+                            self.cancel_order(market, order)
+
+        class FillOrKillOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if market_book.inplay:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                for runner in market_book.runners:
+                    if runner.last_price_traded < 2:
+                        lay = get_price(runner.ex.available_to_lay, 0)
+                        trade = Trade(
+                            market_book.market_id,
+                            runner.selection_id,
+                            runner.handicap,
+                            self,
+                        )
+                        order = trade.create_order(
+                            side="LAY",
+                            order_type=LimitOrder(
+                                lay, 2.00, time_in_force="FILL_OR_KILl"
+                            ),
                         )
                         self.place_order(market, order)
 
@@ -88,6 +117,12 @@ class IntegrationTest(unittest.TestCase):
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_strategy)
+        fok_strategy = FillOrKillOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+        )
+        framework.add_strategy(fok_strategy)
         market_strategy = MarketOnCloseOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -104,6 +139,12 @@ class IntegrationTest(unittest.TestCase):
                 round(sum([o.simulated.profit for o in limit_orders]), 2), 18.96
             )
             self.assertEqual(len(limit_orders), 15)
+
+            fok_orders = [o for o in market.blotter.strategy_orders(fok_strategy)]
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in fok_orders]), 2), 10.78
+            )
+            self.assertEqual(len(fok_orders), 15)
 
             market_orders = [
                 o for o in market.blotter if o.trade.strategy == market_strategy
