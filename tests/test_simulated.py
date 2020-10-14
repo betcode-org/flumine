@@ -2,7 +2,6 @@ import unittest
 from unittest import mock
 
 from flumine.backtest import simulated
-from flumine.order.order import OrderStatus
 from flumine.order.ordertype import OrderTypes
 
 
