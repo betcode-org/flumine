@@ -49,7 +49,14 @@ class SimulatedExecution(BaseExecution):
                     order, simulated_response, order_package.package_type
                 )
                 if simulated_response.status == "SUCCESS":
-                    order.executable()
+                    if simulated_response.order_status == "EXECUTABLE":
+                        order.executable()
+                    elif simulated_response.order_status == "EXPIRED":
+                        order.expiring()
+                    else:
+                        # This might happen as we add new functionality
+                        # Raising an error here to help catch potential problems
+                        raise NotImplementedError()
                 elif simulated_response.status == "FAILURE":
                     order.lapsed()
 

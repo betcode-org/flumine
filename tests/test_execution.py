@@ -832,6 +832,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.info = {}
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "SUCCESS"
+        mock_sim_resp.order_status = "EXECUTABLE"
         mock_order.simulated.place.return_value = mock_sim_resp
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
@@ -844,6 +845,34 @@ class SimulatedExecutionTest(unittest.TestCase):
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
         mock_order.executable.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_place_success_but_expired(self, mock__order_logger):
+        mock_order = mock.Mock()
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.Mock(market_id="1.23")
+        mock_order_package.client.paper_trade = False
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.place_instructions = [1]
+        mock_order_package.info = {}
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_sim_resp.order_status = "EXPIRED"
+        mock_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_place(mock_order_package, None)
+        mock_order.simulated.place.assert_called_with(
+            mock_order_package.client,
+            self.mock_market.market_book,
+            1,
+            self.execution._bet_id,
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.expiring.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 

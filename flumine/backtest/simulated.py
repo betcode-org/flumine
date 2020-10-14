@@ -125,9 +125,14 @@ class Simulated:
     def _create_place_response(
         self, bet_id: int, status: str = "SUCCESS", error_code: str = None
     ) -> SimulatedPlaceResponse:
+        order_status = "EXECUTABLE"
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.order.order_type.time_in_force == "FILL_OR_KILL":
+                if len(self.matched) == 0:
+                    order_status = "EXPIRED"
         return SimulatedPlaceResponse(
             status=status,
-            order_status="EXECUTABLE",  # todo?
+            order_status=order_status,
             bet_id=str(bet_id),
             average_price_matched=self.average_price_matched,
             size_matched=self.size_matched,
@@ -203,10 +208,6 @@ class Simulated:
                 filled_size = sum(x[2] for x in _matches)
                 if filled_size >= self.order.order_type.min_fill_size:
                     self._update_multi_matched(lst_data=_matches)
-                else:
-                    self.order.expiring()
-            else:
-                self.order.expiring()
         else:
             self._update_multi_matched(lst_data=_matches)
 
