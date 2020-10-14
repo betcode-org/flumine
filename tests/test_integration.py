@@ -5,7 +5,7 @@ from flumine import FlumineBacktest, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
-from flumine.utils import get_price
+from flumine.utils import get_price, get_size
 
 SKIP_INTEGRATION_TESTS = int(os.environ.get("SKIP_INTEGRATION_TESTS", 1))
 
@@ -58,6 +58,10 @@ class IntegrationTest(unittest.TestCase):
                             self.cancel_order(market, order)
 
         class FillOrKillOrders(BaseStrategy):
+            def __init__(self, add_a_penny=False, *args, **kwargs):
+                super(FillOrKillOrders, self).__init__(*args, **kwargs)
+                self.add_a_penny = add_a_penny
+
             def check_market_book(self, market, market_book):
                 if market_book.inplay:
                     return True
@@ -66,6 +70,10 @@ class IntegrationTest(unittest.TestCase):
                 for runner in market_book.runners:
                     if runner.last_price_traded < 2:
                         lay = get_price(runner.ex.available_to_lay, 0)
+                        if self.add_a_penny:
+                            size = 2 * get_size(runner.ex.available_to_lay, 0)
+                        else:
+                            size = 2.0
                         trade = Trade(
                             market_book.market_id,
                             runner.selection_id,
@@ -75,16 +83,10 @@ class IntegrationTest(unittest.TestCase):
                         order = trade.create_order(
                             side="LAY",
                             order_type=LimitOrder(
-                                lay, 2.00, time_in_force="FILL_OR_KILl"
+                                lay, size, time_in_force="FILL_OR_KILL"
                             ),
                         )
                         self.place_order(market, order)
-
-            def process_orders(self, market, orders):
-                for order in orders:
-                    if order.status == OrderStatus.EXECUTABLE:
-                        if order.elapsed_seconds and order.elapsed_seconds > 2:
-                            self.cancel_order(market, order)
 
         class MarketOnCloseOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
@@ -142,9 +144,9 @@ class IntegrationTest(unittest.TestCase):
 
             fok_orders = [o for o in market.blotter.strategy_orders(fok_strategy)]
             self.assertEqual(
-                round(sum([o.simulated.profit for o in fok_orders]), 2), 10.78
+                round(sum([o.simulated.profit for o in fok_orders]), 2), 14.46
             )
-            self.assertEqual(len(fok_orders), 15)
+            self.assertEqual(len(fok_orders), 18)
 
             market_orders = [
                 o for o in market.blotter if o.trade.strategy == market_strategy
