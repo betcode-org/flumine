@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.backtest import simulated
+from flumine.order.order import OrderStatus
 from flumine.order.ordertype import OrderTypes
 
 
@@ -270,6 +271,65 @@ class SimulatedTest(unittest.TestCase):
     @mock.patch(
         "flumine.backtest.simulated.Simulated.side",
         new_callable=mock.PropertyMock,
+        return_value="BACK",
+    )
+    def test__process_price_matched_back_fill_or_kill_succeeds(self, mock_side):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated._process_price_matched(
+            1234567, 12.0, 2.00, [{"price": 15, "size": 120}]
+        )
+        self.assertEqual(self.simulated.matched, [[1234567, 15, 2]])
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="BACK",
+    )
+    def test__process_price_matched_back_fill_or_kill_expires(self, mock_side):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = None
+        self.simulated._process_price_matched(
+            1234567, 12.0, 2.00, [{"price": 15, "size": 1.99}]
+        )
+        self.assertEqual(self.simulated.matched, [])
+        self.simulated.order.expiring.assert_called_once()
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="BACK",
+    )
+    def test__process_price_matched_back_fill_or_kill_min_fill_size_succeeds(
+        self, mock_side
+    ):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = 1.0
+
+        self.simulated._process_price_matched(
+            1234567, 12.0, 2.00, [{"price": 15, "size": 1.99}]
+        )
+        self.assertEqual(self.simulated.matched, [[1234567, 15, 1.99]])
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="BACK",
+    )
+    def test__process_price_matched_back_fill_or_kill_min_fill_size_expires(
+        self, mock_side
+    ):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = 2.0
+
+        self.simulated._process_price_matched(
+            1234567, 12.0, 2.00, [{"price": 15, "size": 1.99}]
+        )
+        self.assertEqual(self.simulated.matched, [])
+        self.simulated.order.expiring.assert_called_once()
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
         return_value="LAY",
     )
     def test__process_price_matched_lay(self, mock_side):
@@ -297,6 +357,70 @@ class SimulatedTest(unittest.TestCase):
             1234571, 3.0, 20.00, [{"price": 3, "size": 1}, {"price": 11, "size": 0.5}]
         )
         self.assertEqual(self.simulated.matched, [[1234571, 3, 1]])
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="LAY",
+    )
+    def test__process_price_matched_lay_fill_or_kill_succeeds(self, mock_side):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+
+        self.simulated._process_price_matched(
+            1234571, 3.0, 20.00, [{"price": 2.02, "size": 200}]
+        )
+
+        self.assertEqual(self.simulated.matched, [[1234571, 2.02, 20.0]])
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="LAY",
+    )
+    def test__process_price_matched_lay_fill_or_kill_expires(self, mock_side):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = None
+
+        self.simulated._process_price_matched(
+            1234571, 3.0, 20.00, [{"price": 2.02, "size": 2.0}]
+        )
+
+        self.assertEqual(self.simulated.matched, [])
+        self.simulated.order.expiring.assert_called_once()
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="LAY",
+    )
+    def test__process_price_matched_lay_fill_or_kill_min_fill_size_succeeds(
+        self, mock_side
+    ):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = 1.0
+
+        self.simulated._process_price_matched(
+            1234571, 3.0, 20.00, [{"price": 2.02, "size": 200}]
+        )
+
+        self.assertEqual(self.simulated.matched, [[1234571, 2.02, 20.0]])
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.side",
+        new_callable=mock.PropertyMock,
+        return_value="LAY",
+    )
+    def test__process_price_matched_lay_fill_or_kill_min_fill_size_expires(
+        self, mock_side
+    ):
+        self.simulated.order.order_type.time_in_force = "FILL_OR_KILL"
+        self.simulated.order.order_type.min_fill_size = 2.0
+
+        self.simulated._process_price_matched(
+            1234567, 12.0, 2.00, [{"price": 15, "size": 1.99}]
+        )
+        self.assertEqual(self.simulated.matched, [])
+        self.simulated.order.expiring.assert_called_once()
 
     def test__process_sp(self):
         mock_runner = mock.Mock()

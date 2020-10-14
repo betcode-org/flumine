@@ -172,6 +172,7 @@ class Simulated:
     ) -> None:
         # calculate matched on execution
         size_remaining = size
+        _matches = []
         for avail in available:
             if size_remaining == 0:
                 break
@@ -185,9 +186,28 @@ class Simulated:
                 else:
                     _size_matched = avail["size"]
                 _matched = [publish_time, avail["price"], round(_size_matched, 2)]
-                self._update_matched(_matched)
+                _matches.append(_matched)
             else:
                 break
+
+        if self.order.order_type.time_in_force == "FILL_OR_KILL":
+            if size_remaining == 0:
+                self._update_multi_matched(lst_data=_matches)
+            elif self.order.order_type.min_fill_size:
+                filled_size = sum(x[2] for x in _matches)
+                if filled_size >= self.order.order_type.min_fill_size:
+                    self._update_multi_matched(lst_data=_matches)
+                else:
+                    self.order.expiring()
+            else:
+                self.order.expiring()
+        else:
+            self._update_multi_matched(lst_data=_matches)
+
+    def _update_multi_matched(self, lst_data: List) -> None:
+        logger.debug("Simulated order {0} matched: {1}".format(self.order.id, lst_data))
+        self.matched.extend(lst_data)
+        self.size_matched, self.average_price_matched = wap(self.matched)
 
     def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
