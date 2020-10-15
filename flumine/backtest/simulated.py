@@ -84,10 +84,14 @@ class Simulated:
                         size,
                         runner.ex.available_to_back,
                     )
-                    should_expire = self._should_expire()
+                    if self._should_expire():
+                        order_status = "EXPIRED"
+                        self.order.expired()
+                    else:
+                        order_status = "EXECUTABLE"
                     return self._create_place_response(
                         bet_id,
-                        order_status="EXPIRED" if should_expire else "EXECUTABLE",
+                        order_status=order_status,
                     )
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
                     self.order.expired()
@@ -107,10 +111,14 @@ class Simulated:
                         size,
                         runner.ex.available_to_lay,
                     )
-                    should_expire = self._should_expire()
+                    if self._should_expire():
+                        order_status = "EXPIRED"
+                        self.order.expired()
+                    else:
+                        order_status = "EXECUTABLE"
                     return self._create_place_response(
                         bet_id,
-                        order_status="EXPIRED" if should_expire else "EXECUTABLE",
+                        order_status=order_status,
                     )
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
                     self.order.expired()
