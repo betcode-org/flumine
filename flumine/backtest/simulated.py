@@ -86,7 +86,7 @@ class Simulated:
                     )
                     return self._create_place_response(bet_id)
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
-                    self.order.expiring()
+                    self.order.expired()
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
@@ -105,7 +105,7 @@ class Simulated:
                     )
                     return self._create_place_response(bet_id)
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
-                    self.order.expiring()
+                    self.order.expired()
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_back
 
@@ -205,7 +205,7 @@ class Simulated:
             if size_remaining == 0:
                 self._update_multi_matched(lst_data=_matches)
             elif self.order.order_type.min_fill_size:
-                filled_size = sum(x[2] for x in _matches)
+                filled_size = size - size_remaining
                 if filled_size >= self.order.order_type.min_fill_size:
                     self._update_multi_matched(lst_data=_matches)
         else:

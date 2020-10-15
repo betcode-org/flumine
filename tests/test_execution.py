@@ -872,7 +872,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
-        mock_order.expiring.assert_called_with()
+        mock_order.expired.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 

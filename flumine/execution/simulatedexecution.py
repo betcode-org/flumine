@@ -52,7 +52,7 @@ class SimulatedExecution(BaseExecution):
                     if simulated_response.order_status == "EXECUTABLE":
                         order.executable()
                     elif simulated_response.order_status == "EXPIRED":
-                        order.expiring()
+                        order.expired()
                     else:
                         # This might happen as we add new functionality
                         # Raising an error here to help catch potential problems

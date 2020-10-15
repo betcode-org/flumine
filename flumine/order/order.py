@@ -93,7 +93,7 @@ class BaseOrder:
         self.date_time_execution_complete = datetime.datetime.utcnow()
         self.update_data.clear()
 
-    def expiring(self) -> None:
+    def expired(self) -> None:
         self._update_status(OrderStatus.EXPIRED)
 
     def cancelling(self) -> None:

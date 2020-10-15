@@ -133,7 +133,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0.0)
-        self.simulated.order.expiring.assert_called_once()
+        self.simulated.order.expired.assert_called_once()
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_back_bpe(self, mock__get_runner):
@@ -205,7 +205,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.simulated.order.expiring.assert_called_once()
+        self.simulated.order.expired.assert_called_once()
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_lay_bpe(self, mock__get_runner):
