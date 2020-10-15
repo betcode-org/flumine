@@ -84,10 +84,14 @@ class Simulated:
                         size,
                         runner.ex.available_to_back,
                     )
-                    return self._create_place_response(bet_id)
+                    should_expire = self._should_expire()
+                    return self._create_place_response(
+                        bet_id,
+                        order_status="EXPIRED" if should_expire else "EXECUTABLE",
+                    )
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
                     self.order.expired()
-                    return self._create_place_response(bet_id)
+                    return self._create_place_response(bet_id, order_status="EXPIRED")
                 available = runner.ex.available_to_lay
             else:
                 if not client.best_price_execution and available_to_lay < price:
@@ -103,10 +107,14 @@ class Simulated:
                         size,
                         runner.ex.available_to_lay,
                     )
-                    return self._create_place_response(bet_id)
+                    should_expire = self._should_expire()
+                    return self._create_place_response(
+                        bet_id,
+                        order_status="EXPIRED" if should_expire else "EXECUTABLE",
+                    )
                 elif self.order.order_type.time_in_force == "FILL_OR_KILL":
                     self.order.expired()
-                    return self._create_place_response(bet_id)
+                    return self._create_place_response(bet_id, order_status="EXPIRED")
                 available = runner.ex.available_to_back
 
             # calculate position in queue
@@ -123,13 +131,12 @@ class Simulated:
             return self._create_place_response(bet_id)
 
     def _create_place_response(
-        self, bet_id: int, status: str = "SUCCESS", error_code: str = None
+        self,
+        bet_id: int,
+        status: str = "SUCCESS",
+        error_code: str = None,
+        order_status: str = "EXECUTABLE",
     ) -> SimulatedPlaceResponse:
-        order_status = "EXECUTABLE"
-        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            if self.order.order_type.time_in_force == "FILL_OR_KILL":
-                if len(self.matched) == 0:
-                    order_status = "EXPIRED"
         return SimulatedPlaceResponse(
             status=status,
             order_status=order_status,
@@ -353,3 +360,9 @@ class Simulated:
 
     def __bool__(self):
         return config.simulated or self.order.trade.client.paper_trade
+
+    def _should_expire(self) -> bool:
+        # It is implicitly assumed that this will only be called if the order is a limit order.
+        if self.order.order_type.time_in_force == "FILL_OR_KILL":
+            if len(self.matched) == 0:
+                return True
