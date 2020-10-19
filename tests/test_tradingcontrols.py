@@ -356,6 +356,7 @@ class TestStrategyExposure(unittest.TestCase):
         order1.lookup = "lookup"
         order1.average_price_matched = 0.0
         order1.size_matched = 0
+        order1.complete = False
 
         order2 = mock.Mock()
         order2.trade.strategy = strategy
@@ -367,6 +368,7 @@ class TestStrategyExposure(unittest.TestCase):
         order2.lookup = "lookup"
         order2.average_price_matched = 0.0
         order2.size_matched = 0
+        order2.complete = False
 
         self.market.blotter._orders = {"order1": order1, "order2": order2}
 

@@ -194,7 +194,7 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
-            complete = lambda: False
+            complete = False
         )
         self.blotter._orders = {"12345": mock_order}
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
@@ -215,7 +215,7 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
-            complete = lambda: False
+            complete = False
         )
         mock_complete_order = mock.Mock(
             trade=mock_trade,
@@ -225,7 +225,7 @@ class BlotterTest(unittest.TestCase):
             size_matched=0.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
-            complete = lambda: True
+            complete = True
         )
         self.blotter._orders = {"12345": mock_order, "complete": mock_complete_order}
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
@@ -246,7 +246,7 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
-            complete = lambda: False,
+            complete = False,
         )
         self.blotter._orders = {"12345": mock_order}
         # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2
