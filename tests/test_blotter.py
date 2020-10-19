@@ -194,8 +194,40 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
+            complete = lambda: False
         )
         self.blotter._orders = {"12345": mock_order}
+        # On the win side, we have 2.0 * (5.6-1.0) = 9.2
+        # On the lose side, we have -2.0-2.0=-4.0
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            4.0,
+        )
+
+    def test_selection_exposure_from_unmatched_back_ignoring_incomplete(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=2.0,
+            order_type=LimitOrder(price=6, size=4.0),
+            complete = lambda: False
+        )
+        mock_complete_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=0.0,
+            size_remaining=2.0,
+            order_type=LimitOrder(price=6, size=4.0),
+            complete = lambda: True
+        )
+        self.blotter._orders = {"12345": mock_order, "complete": mock_complete_order}
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
         # On the lose side, we have -2.0-2.0=-4.0
         self.assertEqual(
@@ -214,6 +246,7 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
+            complete = lambda: False,
         )
         self.blotter._orders = {"12345": mock_order}
         # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2

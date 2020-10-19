@@ -3,7 +3,7 @@ from typing import Iterable, Tuple
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
-from ..order.order import BaseOrder
+from ..order.order import BaseOrder, OrderStatus
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
 logger = logging.getLogger(__name__)
@@ -115,10 +115,11 @@ class Blotter:
                         else:
                             ml.append((order.average_price_matched, order.size_matched))
                     if order.order_type.price and order.size_remaining:
-                        if order.side == "BACK":
-                            ub.append((order.order_type.price, order.size_remaining))
-                        else:
-                            ul.append((order.order_type.price, order.size_remaining))
+                        if not order.complete():
+                            if order.side == "BACK":
+                                ub.append((order.order_type.price, order.size_remaining))
+                            else:
+                                ul.append((order.order_type.price, order.size_remaining))
                 elif order.order_type.ORDER_TYPE in (
                     OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
