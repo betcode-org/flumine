@@ -117,9 +117,13 @@ class Blotter:
                     if order.order_type.price and order.size_remaining:
                         if not order.complete:
                             if order.side == "BACK":
-                                ub.append((order.order_type.price, order.size_remaining))
+                                ub.append(
+                                    (order.order_type.price, order.size_remaining)
+                                )
                             else:
-                                ul.append((order.order_type.price, order.size_remaining))
+                                ul.append(
+                                    (order.order_type.price, order.size_remaining)
+                                )
                 elif order.order_type.ORDER_TYPE in (
                     OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
