@@ -20,8 +20,11 @@ class BaseControl:
         raise NotImplementedError
 
     def _on_error(self, order: BaseOrder, error: str) -> None:
-        order.violation()
+        violation_msg = "Order has violated {0} and will not be placed".format(
+            self.NAME
+        )
+        order.violation(violation_msg)
         logger.warning(
-            "Order has violated {0} and will not be placed".format(self.NAME),
+            violation_msg,
             extra={"control": self.NAME, "error": error, "order": order.info},
         )

@@ -34,13 +34,17 @@ class TestBaseControl(unittest.TestCase):
         order = mock.Mock()
         order.info = {"hello": "world"}
         self.control._on_error(order, "test")
-        order.violation.assert_called_with()
+        order.violation.assert_called_with(
+            "Order has violated None and will not be placed"
+        )
 
     def test_on_error_offset(self):
         order = mock.Mock()
         order.info = {"hello": "world"}
         self.control._on_error(order, "test")
-        order.violation.assert_called_with()
+        order.violation.assert_called_with(
+            "Order has violated None and will not be placed"
+        )
 
 
 class TestMaxOrderCount(unittest.TestCase):
