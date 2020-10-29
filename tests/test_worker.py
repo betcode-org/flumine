@@ -13,25 +13,33 @@ class BackgroundWorkerTest(unittest.TestCase):
         self.worker = worker.BackgroundWorker(
             self.mock_flumine,
             self.mock_function,
-            123,
+            0,
             (1, 2),
             {"hello": "world"},
-            5,
+            0,
             {1: 2},
         )
 
     def test_init(self):
-        self.assertEqual(self.worker.interval, 123)
+        self.assertEqual(self.worker.interval, 0)
         self.assertEqual(self.worker.function, self.mock_function)
         self.assertEqual(self.worker.flumine, self.mock_flumine)
         self.assertEqual(self.worker.func_args, (1, 2))
         self.assertEqual(self.worker.func_kwargs, {"hello": "world"})
-        self.assertEqual(self.worker.start_delay, 5)
+        self.assertEqual(self.worker.start_delay, 0)
         self.assertEqual(self.worker.context, {1: 2})
         self.assertEqual(self.worker.name, "test")
+        self.assertFalse(self.worker._running)
 
     # def test_run(self):
     #     self.worker.run()
+
+    def test_shutdown(self):
+        self.worker.start()
+        self.assertTrue(self.worker.is_alive())
+        self.worker.shutdown()
+        self.assertFalse(self.worker._running)
+        self.assertFalse(self.worker.is_alive())
 
 
 class WorkersTest(unittest.TestCase):

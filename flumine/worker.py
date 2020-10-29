@@ -33,6 +33,7 @@ class BackgroundWorker(threading.Thread):
         self.func_kwargs = func_kwargs if func_kwargs is not None else {}
         self.start_delay = start_delay
         self.context = context or {}
+        self._running = False
 
     def run(self) -> None:
         logger.info(
@@ -48,7 +49,8 @@ class BackgroundWorker(threading.Thread):
             },
         )
         time.sleep(self.start_delay)
-        while self.is_alive():
+        self._running = True
+        while self._running:
             logger.debug(
                 "BackgroundWorker {0} executing".format(self.name),
                 extra={
@@ -72,6 +74,17 @@ class BackgroundWorker(threading.Thread):
                     exc_info=True,
                 )
             time.sleep(self.interval)
+
+    def shutdown(self, timeout: int = 4) -> None:
+        logger.info(
+            "BackgroundWorker {0} shutting down".format(self.name),
+            extra={
+                "worker_name": self.name,
+                "function": self.function,
+            },
+        )
+        self._running = False
+        self.join(timeout)
 
 
 def keep_alive(context: dict, flumine) -> None:

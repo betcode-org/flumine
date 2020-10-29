@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.14.1 (2020-10-29)
++++++++++++++++++++
+
+**Improvements**
+
+- #297 add violation msg to order on violation
+- Graceful worker shutdown
+- Terminate worker example added
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.9.2
+- python-json-logger upgraded to 2.0.1
+
 1.14.0 (2020-10-12)
 +++++++++++++++++++
 

@@ -30,6 +30,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.runner_status)
         self.assertIsNone(self.order.status)
         self.assertEqual(self.order.status_log, [])
+        self.assertIsNone(self.order.violation_msg)
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
@@ -99,9 +100,10 @@ class BaseOrderTest(unittest.TestCase):
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_violation(self, mock__update_status):
         self.order.update_data = {123: 456}
-        self.order.violation()
+        self.order.violation("the murder capital")
         mock__update_status.assert_called_with(OrderStatus.VIOLATION)
         self.assertEqual(self.order.update_data, {})
+        self.assertEqual(self.order.violation_msg, "the murder capital")
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):

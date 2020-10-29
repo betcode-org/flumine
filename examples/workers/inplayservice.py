@@ -4,6 +4,11 @@ from flumine.events.events import CustomEvent
 
 logger = logging.getLogger(__name__)
 
+"""
+See examples/tennisexample.py in how
+to use this worker for betting.
+"""
+
 
 def poll_in_play_service(context: dict, flumine, event_type_id: str) -> None:
     trading = flumine.client.betting_client

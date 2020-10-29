@@ -370,7 +370,9 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
-        # todo shutdown workers
+        # shutdown workers
+        for w in self._workers:
+            w.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(None))
         for c in self._logging_controls:

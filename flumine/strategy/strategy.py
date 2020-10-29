@@ -115,11 +115,17 @@ class BaseStrategy:
             del self._invested[i]
 
     # order
-    def place_order(self, market: Market, order) -> None:
+    def place_order(self, market: Market, order) -> bool:
+        """Returns True if passes
+        validate_order and placed.
+        """
         runner_context = self.get_runner_context(*order.lookup)
         if self.validate_order(runner_context, order):
             runner_context.place()
             market.place_order(order)
+            return True
+        else:
+            return False
 
     def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
         market.cancel_order(order, size_reduction)
