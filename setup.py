@@ -21,7 +21,7 @@ setup(
     url=about["__url__"],
     license=about["__license__"],
     author=about["__author__"],
-    author_email="",
+    author_email="a@unknown.invalid",
     description=about["__description__"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
