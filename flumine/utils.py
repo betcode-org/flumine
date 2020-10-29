@@ -130,7 +130,7 @@ def price_ticks_away(price: float, n_ticks: int) -> float:
         return 1000
 
 
-def calc_ticks_spread(price1: float, price2: float) -> int:
+def calc_ticks_spread(price1: float, price2: float) -> Optional[int]:
     """returns number of ticks between price1 and price2"""
     try:
         return PRICES.index(as_dec(price1)) - PRICES.index(as_dec(price2))
@@ -144,8 +144,8 @@ def calc_runner_vwap(runner: RunnerBook) -> Optional[float]:
         tt = 0.0
         tw = 0.0
         for pd in runner.ex.traded_volume:
-            tt += pd['size']
-            tw += pd['size'] * pd['price']
+            tt += pd.size
+            tw += pd.size * pd.price
         return tw / tt
     except:
         return None
