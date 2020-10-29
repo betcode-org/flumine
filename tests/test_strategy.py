@@ -150,8 +150,19 @@ class BaseStrategyTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.lookup = ("1", 2, 3)
         mock_market = mock.Mock()
-        self.strategy.place_order(mock_market, mock_order)
+        self.assertTrue(self.strategy.place_order(mock_market, mock_order))
         mock_market.place_order.assert_called_with(mock_order)
+        self.assertIn(mock_order.lookup, self.strategy._invested)
+
+    @mock.patch(
+        "flumine.strategy.strategy.BaseStrategy.validate_order", return_value=False
+    )
+    def test_place_order_false(self, mock_validate_order):
+        mock_order = mock.Mock()
+        mock_order.lookup = ("1", 2, 3)
+        mock_market = mock.Mock()
+        self.assertFalse(self.strategy.place_order(mock_market, mock_order))
+        mock_market.place_order.assert_not_called()
         self.assertIn(mock_order.lookup, self.strategy._invested)
 
     def test_cancel_order(self):

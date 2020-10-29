@@ -59,6 +59,7 @@ class BaseOrder:
         self.runner_status = None  # RunnerBook.status
         self.status = None
         self.status_log = []
+        self.violation_msg = None
 
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
@@ -110,8 +111,9 @@ class BaseOrder:
         self._update_status(OrderStatus.VOIDED)
         self.update_data.clear()
 
-    def violation(self) -> None:
+    def violation(self, violation_msg: str) -> None:
         self._update_status(OrderStatus.VIOLATION)
+        self.violation_msg = violation_msg
         self.update_data.clear()
 
     # updates
