@@ -59,11 +59,12 @@ class BacktestLoggingControl(LoggingControl):
                         "market_note": order.trade.market_notes,
                         "notes": order.trade.notes_str,
                     }
-                    csv_writer = csv.DictWriter(
-                        m, delimiter=",", fieldnames=FIELDNAMES
-                    )
+                    csv_writer = csv.DictWriter(m, delimiter=",", fieldnames=FIELDNAMES)
                     csv_writer.writerow(order_data)
                 except Exception as e:
-                    print("error", e)
+                    logger.error(
+                        "_process_cleared_orders_meta: %s" % e,
+                        extra={"order": order, "error": e},
+                    )
 
         logger.info("Orders updated", extra={"order_count": len(orders)})
