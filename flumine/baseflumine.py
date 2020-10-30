@@ -21,7 +21,6 @@ from .controls.tradingcontrols import OrderValidation, StrategyExposure
 from .controls.loggingcontrols import LoggingControl
 from . import config, utils
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -268,7 +267,10 @@ class BaseFlumine:
             if stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
-        self.cleared_market_queue.put(market_id)
+        if self.BACKTEST or self.client.paper_trade:
+            self._process_cleared_orders(events.ClearedOrdersEvent(market))
+        else:
+            self.cleared_market_queue.put(market_id)
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
