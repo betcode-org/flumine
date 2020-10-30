@@ -208,10 +208,18 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.error_code, "dubs of the mad skint and british")
 
     def test_cancel(self):
+        self.simulated.order.update_data = {}
         resp = self.simulated.cancel()
         self.assertEqual(self.simulated.size_cancelled, 2.0)
         self.assertEqual(resp.status, "SUCCESS")
         self.assertEqual(resp.size_cancelled, 2.0)
+
+    def test_cancel_reduction(self):
+        self.simulated.order.update_data = {"size_reduction": 0.50}
+        resp = self.simulated.cancel()
+        self.assertEqual(self.simulated.size_cancelled, 0.50)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.size_cancelled, 0.50)
 
     def test_cancel_else(self):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
