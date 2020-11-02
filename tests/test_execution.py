@@ -886,7 +886,7 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel(self, mock__order_logger):
-        mock_order = mock.Mock(size_cancelled=2, size_remaining=2)
+        mock_order = mock.Mock(size_cancelled=2, size_remaining=0)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
@@ -906,7 +906,7 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel_executable(self, mock__order_logger):
-        mock_order = mock.Mock(size_cancelled=2, size_remaining=3)
+        mock_order = mock.Mock(size_cancelled=2, size_remaining=2)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()

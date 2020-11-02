@@ -65,7 +65,7 @@ class SimulatedExecution(BaseExecution):
                     order, simulated_response, order_package.package_type
                 )
                 if simulated_response.status == "SUCCESS":
-                    if order.size_cancelled == order.size_remaining:
+                    if order.size_remaining == 0:
                         order.execution_complete()
                     else:
                         order.executable()
