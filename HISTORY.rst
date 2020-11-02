@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.14.2 (2020-11-02)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+-
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.10.0
+
 1.14.1 (2020-10-29)
 +++++++++++++++++++
 
