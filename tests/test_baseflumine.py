@@ -314,9 +314,13 @@ class BaseFlumineTest(unittest.TestCase):
 
         self.assertEqual(len(self.base_flumine.markets._markets), 3)
 
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine._process_cleared_orders")
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
-    def test__process_close_market_closed_paper(self, mock_log_control, mock_info):
+    def test__process_close_market_closed_paper(
+        self, mock_log_control, mock_info, mock__process_cleared_orders, mock_events
+    ):
         self.base_flumine.client.paper_trade = True
         mock_strategy = mock.Mock()
         mock_strategy.stream_ids = [1, 2, 3]
@@ -338,6 +342,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
         self.assertEqual(len(self.base_flumine.markets._markets), 4)
+        mock__process_cleared_orders.assert_called_with(
+            mock_events.ClearedOrdersEvent()
+        )
 
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

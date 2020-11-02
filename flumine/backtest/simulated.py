@@ -132,7 +132,10 @@ class Simulated:
     def cancel(self) -> SimulatedCancelResponse:
         # simulates cancelOrder request->cancel->response
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            self.size_cancelled = self.size_remaining
+            _size_reduction = (
+                self.order.update_data.get("size_reduction") or self.size_remaining
+            )  # todo handle when size_reduction provided greater than size_remaining?
+            self.size_cancelled = _size_reduction
             return SimulatedCancelResponse(
                 status="SUCCESS",  # todo handle errors
                 size_cancelled=self.size_cancelled,

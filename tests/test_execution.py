@@ -886,7 +886,7 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(size_cancelled=2, size_remaining=2)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.Mock()
@@ -901,6 +901,26 @@ class SimulatedExecutionTest(unittest.TestCase):
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
         mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
+    def test_execute_cancel_executable(self, mock__order_logger):
+        mock_order = mock.Mock(size_cancelled=2, size_remaining=3)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.Mock()
+        mock_order_package.client.paper_trade = False
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_sim_resp = mock.Mock()
+        mock_sim_resp.status = "SUCCESS"
+        mock_order.simulated.cancel.return_value = mock_sim_resp
+        self.execution.execute_cancel(mock_order_package, None)
+        mock_order.simulated.cancel.assert_called_with()
+        mock__order_logger.assert_called_with(
+            mock_order, mock_sim_resp, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
 

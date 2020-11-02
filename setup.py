@@ -14,7 +14,13 @@ setup(
     name=about["__title__"],
     version=about["__version__"],
     packages=find_packages(
-        exclude=["examples", "examples.strategies", "examples.workers"]
+        exclude=[
+            "examples",
+            "examples.strategies",
+            "examples.workers",
+            "examples.middleware",
+            "examples.controls",
+        ]
     ),
     package_dir={"flumine": "flumine"},
     install_requires=INSTALL_REQUIRES,
