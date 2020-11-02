@@ -8,15 +8,13 @@ Release History
 
 **Improvements**
 
--
-
-**Bug Fixes**
-
--
+- _process_cleared_orders called on market closure when backtesting / paper trading
+- size reduction handling added to simulated execution on cancel
+- Add py3.9 actions test
 
 **Libraries**
 
-- betfairlightweight upgraded to 2.10.0
+- betfairlightweight upgraded to 2.10.0 (exchange stream api release 10/11/20)
 
 1.14.1 (2020-10-29)
 +++++++++++++++++++
