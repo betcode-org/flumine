@@ -218,8 +218,17 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.update_data = {"size_reduction": 0.50}
         resp = self.simulated.cancel()
         self.assertEqual(self.simulated.size_cancelled, 0.50)
+        self.assertEqual(self.simulated.size_remaining, 1.50)
         self.assertEqual(resp.status, "SUCCESS")
         self.assertEqual(resp.size_cancelled, 0.50)
+
+    def test_cancel_reduction_greater_than(self):
+        self.simulated.order.update_data = {"size_reduction": 64.0}
+        resp = self.simulated.cancel()
+        self.assertEqual(self.simulated.size_cancelled, 2.00)
+        self.assertEqual(self.simulated.size_remaining, 0.00)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.size_cancelled, 2.00)
 
     def test_cancel_else(self):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
