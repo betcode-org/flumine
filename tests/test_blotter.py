@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.markets.blotter import Blotter, OrderPackageType
+from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
 
 
@@ -266,6 +267,22 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             10.0,
+        )
+
+    def test_selection_exposure_voided(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            order_type=LimitOrder(price=5, size=10.0),
+            status=OrderStatus.VIOLATION,
+        )
+        self.blotter._orders = {"12345": mock_order}
+        self.assertEqual(
+            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
+            0,
         )
 
     def test_complete_order(self):
