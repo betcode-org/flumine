@@ -391,7 +391,10 @@ class BetfairOrder(BaseOrder):
         try:
             return self.current_order.size_remaining or 0.0
         except AttributeError:
-            return 0.0
+            if self.size_matched > 0:
+                return self.order_type.size - self.size_matched
+            else:
+                return self.order_type.size
 
     @property
     def size_cancelled(self) -> float:
