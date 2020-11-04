@@ -29,6 +29,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.trading_controls, [])
         self.assertTrue(self.base_client.order_stream)
         self.assertTrue(self.base_client.best_price_execution)
+        self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)
 
     def test_login(self):

@@ -25,6 +25,7 @@ class BaseClient:
         id_: str = None,
         order_stream: bool = True,
         best_price_execution: bool = True,
+        min_bet_validation: bool = True,
         paper_trade: bool = False,
     ):
         self.id = id_ or create_short_uuid()
@@ -35,6 +36,7 @@ class BaseClient:
         self.interactive_login = interactive_login
         self.order_stream = order_stream
         self.best_price_execution = best_price_execution
+        self.min_bet_validation = min_bet_validation  # used in OrderValidation control
         self.paper_trade = paper_trade
 
         self.account_details = None

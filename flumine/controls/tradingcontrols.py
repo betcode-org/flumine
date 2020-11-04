@@ -60,6 +60,8 @@ class OrderValidation(BaseControl):
 
     def _validate_betfair_min_size(self, order, order_type):
         client = self.flumine.client
+        if client.min_bet_validation is False:
+            return  # some accounts do not have min bet restrictions
         if order_type == OrderTypes.LIMIT:
             if (
                 order.order_type.size < client.min_bet_size
