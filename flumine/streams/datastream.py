@@ -42,7 +42,7 @@ class FlumineMarketStream(FlumineStream):
 
     _lookup = "mc"
 
-    def _process(self, market_books, publish_time):
+    def _process(self, market_books: list, publish_time: int) -> bool:
         for market_book in market_books:
             market_id = market_book.get("id")
             if (
@@ -66,13 +66,14 @@ class FlumineMarketStream(FlumineStream):
 
         self.on_process([self.unique_id, publish_time, market_books])
         self._updates_processed += len(market_books)
+        return False
 
 
 class FlumineRaceStream(FlumineStream):
 
     _lookup = "rc"
 
-    def _process(self, race_updates, publish_time):
+    def _process(self, race_updates: list, publish_time: int) -> bool:
         for update in race_updates:
             market_id = update["mid"]
             if self._caches.get(market_id) is None:
@@ -85,6 +86,7 @@ class FlumineRaceStream(FlumineStream):
 
         self.on_process([self.unique_id, publish_time, race_updates])
         self._updates_processed += len(race_updates)
+        return False
 
 
 class DataStream(BaseStream):
