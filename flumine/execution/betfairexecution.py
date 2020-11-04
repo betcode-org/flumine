@@ -156,6 +156,7 @@ class BetfairExecution(BaseExecution):
                         replacement_order = order.trade.create_order_replacement(
                             order,
                             instruction_report.place_instruction_reports.instruction.limit_order.price,
+                            instruction_report.place_instruction_reports.instruction.limit_order.size,
                         )
                         self._order_logger(
                             replacement_order,
