@@ -138,10 +138,10 @@ class Simulated:
             _size_cancelled = min(
                 _size_reduction, self.size_remaining
             )  # cancelled cannot be more than remaining (does not error)
-            self.size_cancelled = _size_cancelled
+            self.size_cancelled += _size_cancelled
             return SimulatedCancelResponse(
                 status="SUCCESS",  # todo handle errors
-                size_cancelled=self.size_cancelled,
+                size_cancelled=_size_cancelled,
                 cancelled_date=datetime.datetime.utcnow(),
             )
         else:

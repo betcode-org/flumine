@@ -222,6 +222,15 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "SUCCESS")
         self.assertEqual(resp.size_cancelled, 0.50)
 
+    def test_cancel_reduction_multi(self):
+        self.simulated.size_cancelled = 0.10
+        self.simulated.order.update_data = {"size_reduction": 0.50}
+        resp = self.simulated.cancel()
+        self.assertEqual(self.simulated.size_cancelled, 0.60)
+        self.assertEqual(self.simulated.size_remaining, 1.40)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.size_cancelled, 0.50)
+
     def test_cancel_reduction_greater_than(self):
         self.simulated.order.update_data = {"size_reduction": 64.0}
         resp = self.simulated.cancel()
