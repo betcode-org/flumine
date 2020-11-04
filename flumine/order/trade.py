@@ -103,13 +103,13 @@ class Trade:
         return order
 
     def create_order_replacement(
-        self, order: BetfairOrder, new_price: float
+        self, order: BetfairOrder, new_price: float, size: float
     ) -> BetfairOrder:
         """Create new order due to replace
         execution"""
         order_type = LimitOrder(
             price=new_price,
-            size=order.order_type.size,
+            size=size,
             persistence_type=order.order_type.persistence_type,
         )
         order = BetfairOrder(
