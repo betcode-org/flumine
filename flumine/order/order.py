@@ -391,7 +391,7 @@ class BetfairOrder(BaseOrder):
         try:
             return self.current_order.size_remaining or 0.0
         except AttributeError:
-            if self.size_matched > 0:
+            if self.size_matched > 0:  # placeResponse does not include sizeRemaining
                 return self.order_type.size - self.size_matched
             else:
                 return self.order_type.size
