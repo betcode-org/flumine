@@ -36,6 +36,8 @@ class BackgroundWorkerTest(unittest.TestCase):
 
     def test_shutdown(self):
         self.worker.start()
+        while not self.worker._running:
+            continue  # wait for thread to start
         self.assertTrue(self.worker.is_alive())
         self.worker.shutdown()
         self.assertFalse(self.worker._running)

@@ -3,7 +3,7 @@ from typing import Iterable, Tuple
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
-from ..order.order import BaseOrder
+from ..order.order import BaseOrder, OrderStatus
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
 logger = logging.getLogger(__name__)
@@ -108,6 +108,9 @@ class Blotter:
         moc_lose_liability = 0.0
         for order in self:
             if order.trade.strategy == strategy and order.lookup == lookup:
+                if order.status == OrderStatus.VIOLATION:
+                    continue
+
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                     if order.size_matched:
                         if order.side == "BACK":

@@ -300,7 +300,12 @@ class BetfairOrderTest(unittest.TestCase):
         with self.assertRaises(OrderUpdateError):
             self.order.cancel(21)
 
-    def test_cancel_error(self):
+    @mock.patch(
+        "flumine.order.order.BetfairOrder.size_remaining",
+        new_callable=mock.PropertyMock,
+    )
+    def test_cancel_error(self, mock_size_remaining):
+        mock_size_remaining.return_value = 20
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.order.status = OrderStatus.PENDING
         with self.assertRaises(OrderUpdateError):
@@ -418,10 +423,25 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(self.order.size_matched, mock_current_order.size_matched)
 
     def test_size_remaining(self):
+        self.mock_order_type.size = 0
         self.assertEqual(self.order.size_remaining, 0)
+        self.mock_order_type.size = 10
         mock_current_order = mock.Mock(size_remaining=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, mock_current_order.size_remaining)
+
+    def test_size_remaining_missing(self):
+        self.mock_order_type.size = 2.51
+        self.assertEqual(self.order.size_remaining, 2.51)
+
+    @mock.patch(
+        "flumine.order.order.BetfairOrder.size_matched",
+        new_callable=mock.PropertyMock,
+    )
+    def test_size_remaining_missing_partial_match(self, mock_size_matched):
+        mock_size_matched.return_value = 2
+        self.mock_order_type.size = 10
+        self.assertEqual(self.order.size_remaining, 8)
 
     def test_size_cancelled(self):
         self.assertEqual(self.order.size_cancelled, 0)

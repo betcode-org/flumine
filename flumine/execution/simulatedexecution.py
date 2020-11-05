@@ -117,7 +117,9 @@ class SimulatedExecution(BaseExecution):
                 # place new order
                 self._bet_id += 1
                 replacement_order = order.trade.create_order_replacement(
-                    order, instruction.get("newPrice")
+                    order,
+                    instruction.get("newPrice"),
+                    cancel_instruction_report.size_cancelled,
                 )
                 place_instruction_report = replacement_order.simulated.place(
                     order_package.client, market.market_book, instruction, self._bet_id
