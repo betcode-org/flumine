@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-1.14.4 (2020-11-04)
+1.14.4 (2020-11-05)
 +++++++++++++++++++
 
 **Improvements**
@@ -16,6 +16,7 @@ Release History
 - filters out violated orders from being used to calculate the selection exposure (@lunswor)
 - handle simulated cancel when size reduction is larger than size remaining
 - pass correct size into create replace order based on api response
+- #314 Calculates size_remaining from size and size_matched when not set from placeResponse
 
 1.14.3 (2020-11-02)
 +++++++++++++++++++
