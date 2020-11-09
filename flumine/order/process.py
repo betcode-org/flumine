@@ -19,7 +19,7 @@ Handles orphan orders by creating empty trade and order data from CurrentOrder o
 def process_current_orders(markets: Markets, strategies: Strategies, event):
     for current_orders in event.event:
         for current_order in current_orders.orders:
-            order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1:]
+            order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
                 market_id=current_order.market_id,
                 order_id=order_id,
