@@ -10,6 +10,7 @@ from flumine.order.order import (
 )
 from flumine.order.process import process_current_orders
 from flumine.strategy.strategy import Strategies
+from flumine.utils import create_cheap_hash
 
 
 class BaseOrderTest(unittest.TestCase):
@@ -26,25 +27,26 @@ class BaseOrderTest(unittest.TestCase):
     def test_process_current_orders_with_default_sep(self):
         market_book = mock.Mock()
         markets = Markets()
-        market = Market(flumine=mock.Mock(), market_id='market_id', market_book=market_book)
+        market = Market(
+            flumine=mock.Mock(), market_id="market_id", market_book=market_book
+        )
 
-        markets.add_market('market_id', market)
+        markets.add_market("market_id", market)
 
         strategies = Strategies()
 
-        trade = mock.Mock(market_id='market_id')
-        trade.strategy.name_hash = 'name_hash'
+        cheap_hash = create_cheap_hash("strategy_name", 13)
+
+        trade = mock.Mock(market_id="market_id")
+        trade.strategy.name_hash = cheap_hash
 
         current_order = mock.Mock(
-            customer_order_ref='cheap_hash-123',
-            market_id='market_id',
-            bet_id=None
-
+            customer_order_ref=f"{cheap_hash}I123", market_id="market_id", bet_id=None
         )
 
-        betfair_order = BetfairOrder(trade=trade, side='BACK', order_type=mock.Mock())
-        betfair_order.id = '123'
-        market.blotter = {'123': betfair_order}
+        betfair_order = BetfairOrder(trade=trade, side="BACK", order_type=mock.Mock())
+        betfair_order.id = "123"
+        market.blotter = {"123": betfair_order}
 
         event = mock.Mock(event=[mock.Mock(orders=[current_order])])
 
