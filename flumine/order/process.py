@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 Handles trade fillkill / green etc.
 Handles orphan orders by creating empty trade and order data from CurrentOrder object/
 """
+
+
 # todo handle fillkill/green/
 
 
