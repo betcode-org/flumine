@@ -1,9 +1,9 @@
 import logging
 
 from ..markets.markets import Markets
-from ..order.order import BaseOrder, OrderStatus, OrderTypes
-from ..order.trade import Trade
 from ..strategy.strategy import Strategies
+from ..order.trade import Trade
+from ..order.order import BaseOrder, OrderStatus, OrderTypes
 
 logger = logging.getLogger(__name__)
 
