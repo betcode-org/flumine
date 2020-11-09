@@ -1,9 +1,9 @@
 import logging
 
 from ..markets.markets import Markets
-from ..strategy.strategy import Strategies
-from ..order.trade import Trade
 from ..order.order import BaseOrder, OrderStatus, OrderTypes
+from ..order.trade import Trade
+from ..strategy.strategy import Strategies
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,10 @@ Handles orphan orders by creating empty trade and order data from CurrentOrder o
 def process_current_orders(markets: Markets, strategies: Strategies, event):
     for current_orders in event.event:
         for current_order in current_orders.orders:
-            strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
+            # In strategy.py, the name_hash is created with length 13.
+            # The name_hash is used as the first part of the customer_order_ref in order.py
+            # The bet id comes after the separator, and therefore starts from character 14
+            order_id = current_order.customer_order_ref[14:]
             order = markets.get_order(
                 market_id=current_order.market_id,
                 order_id=order_id,
