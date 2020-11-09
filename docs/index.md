@@ -131,7 +131,6 @@ framework.run()
 - Order execution
 - Paper trading
 - Back testing
-- Analytics (in development)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService
 
 ## Dependencies

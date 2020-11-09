@@ -18,7 +18,7 @@ framework = Flumine(client=client)
 ```
 
 !!! note
-    flumine will handle login, logout and keep alive whilst the framework is running.
+    flumine will handle login, logout and keep alive whilst the framework is running using the `keep_alive` worker.
 
 A strategy can now be created by using the BaseStrategy class:
 
@@ -153,3 +153,14 @@ The extra kwargs above will limit processing to preplay in the final 10 minutes.
 
 !!! tip
     Multiple strategies and markets can be passed, flumine will pass the MarketBooks to the correct strategy via its subscription.
+
+Backtesting uses the `SimulatedExecution` execution class and tries to accurately simulate matching with the following:
+
+- Place/Cancel/Replace latency delay added
+- BetDelay added based on market
+- Queue positioning based on liquidity available
+
+Limitations:
+
+- Queue cancellations
+- Double counting of liquidity
