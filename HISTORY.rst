@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.14.5 (2020-11-11)
++++++++++++++++++++
+
+**Improvements**
+
+- Docs cleanup
+
+**Bug Fixes**
+
+- #318 process customer order ref
+- Rounding on order properties
+
 1.14.4 (2020-11-05)
 +++++++++++++++++++
 

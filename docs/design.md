@@ -21,7 +21,6 @@ ___
 - `CLOSE_MARKET` flumine Close Market update
 - *`STRATEGY_RESET` flumine Strategy Reset update*
 - *`CUSTOM_EVENT` flumine Custom event update*
-- *`NEW_DAY` flumine New Day update*
 - `TERMINATOR` flumine End instance update
 
 The above events are handled in the [flumine class]()

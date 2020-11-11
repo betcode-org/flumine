@@ -98,7 +98,7 @@ Before placing an order flumine will check the client and trading controls, this
 
 ### Client Controls
 
-- `MaxOrderCount`: Checks order count is not over betfair transaction limit (1000) 
+- `MaxOrderCount`: Checks order count is not over betfair transaction limit (5000 per hour) 
 
 ### Trading Controls
 
