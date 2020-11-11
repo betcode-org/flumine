@@ -1,9 +1,9 @@
 import logging
 
 from ..markets.markets import Markets
-from ..strategy.strategy import Strategies
-from ..order.trade import Trade
 from ..order.order import BaseOrder, OrderStatus, OrderTypes
+from ..order.trade import Trade
+from ..strategy.strategy import Strategies, STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -11,13 +11,15 @@ logger = logging.getLogger(__name__)
 Handles trade fillkill / green etc.
 Handles orphan orders by creating empty trade and order data from CurrentOrder object/
 """
+
+
 # todo handle fillkill/green/
 
 
 def process_current_orders(markets: Markets, strategies: Strategies, event):
     for current_orders in event.event:
         for current_order in current_orders.orders:
-            strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
+            order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
                 market_id=current_order.market_id,
                 order_id=order_id,

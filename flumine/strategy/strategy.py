@@ -1,12 +1,14 @@
 from typing import Type, Iterator
+
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
-
-from ..streams.marketstream import BaseStream, MarketStream
-from ..markets.market import Market
 from .runnercontext import RunnerContext
-from ..utils import create_cheap_hash
 from ..clients import BaseClient
+from ..markets.market import Market
+from ..streams.marketstream import BaseStream, MarketStream
+from ..utils import create_cheap_hash
+
+STRATEGY_NAME_HASH_LENGTH = 13
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
@@ -195,7 +197,7 @@ class BaseStrategy:
 
     @property
     def name_hash(self) -> str:
-        return create_cheap_hash(self.name, 13)
+        return create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
     def __str__(self):
         return "{0}".format(self.name)
