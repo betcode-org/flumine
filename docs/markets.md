@@ -35,4 +35,4 @@ It is common that you want to carry about analysis on a market before passing th
 For example backtesting uses [simulated middleware](https://github.com/liampauling/flumine/blob/master/flumine/markets/middleware.py#L15) in order to calculate order matching.
 
 !!! note
-    Middleware will be executed in the order it is added.
+    Middleware will be executed in the order it is added and before the strategies are processed.
