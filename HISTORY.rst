@@ -8,7 +8,6 @@ Release History
 
 **Improvements**
 
-- Cached property added to `order.lookup`
 - Refactor on calculate_traded func (15% speed increase)
 
 **Bug Fixes**

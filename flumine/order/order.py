@@ -1,7 +1,6 @@
 import uuid
 import logging
 import datetime
-import functools
 import string
 from enum import Enum
 from typing import Union, Optional
@@ -242,7 +241,7 @@ class BaseOrder:
     def selection_id(self) -> int:
         return self.trade.selection_id
 
-    @functools.cached_property
+    @property  # todo cache (slow when lots of orders)
     def lookup(self) -> tuple:
         return self.market_id, self.selection_id, self.handicap
 
