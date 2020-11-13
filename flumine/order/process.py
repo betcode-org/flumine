@@ -72,7 +72,8 @@ def process_current_order(order: BaseOrder):
 
 
 def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
-    strategy_name_hash, order_id = current_order.customer_order_ref.split("-")
+    strategy_name_hash = current_order.customer_order_ref[:STRATEGY_NAME_HASH_LENGTH]
+    order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
     # get market
     market = markets.markets.get(current_order.market_id)
     if market is None:

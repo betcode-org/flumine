@@ -138,28 +138,26 @@ class SimulatedMiddleware(Middleware):
 class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
-        self.traded = {}  # price: size traded since last event
-        self.middle = None  # middle of odds at last event
-        self.matched = 0  # amount matched since last event
+        self.traded = {}  # price: size traded since last update
+        self.middle = None  # middle of odds at last update
+        self.matched = 0  # amount matched since last update
         self._traded_volume = runner.ex.traded_volume
+        self._p_v = {}  # cached previous volume
 
     def __call__(self, runner: RunnerBook):
-        self.middle = self._calculate_middle(self._runner)  # use last event
+        self.middle = self._calculate_middle(self._runner)  # use last update
         self.matched = self._calculate_matched(runner)
         self.traded = self._calculate_traded(runner)
         self._traded_volume = runner.ex.traded_volume
         self._runner = runner
 
-    def _calculate_traded(self, runner: RunnerBook) -> dict:
+    def _calculate_traded(self, runner) -> dict:
         if self._traded_volume == runner.ex.traded_volume:
             return {}
         else:
-            c_v, p_v, traded = {}, {}, {}
-            # create dictionaries
-            for i in runner.ex.traded_volume:
-                c_v[i["price"]] = i["size"]
-            for i in self._traded_volume:
-                p_v[i["price"]] = i["size"]  # todo cache from previous run?
+            c_v, p_v, traded = {}, self._p_v, {}
+            # create dictionary
+            c_v = {i["price"]: i["size"] for i in runner.ex.traded_volume}
             # calculate difference
             for key in c_v.keys():
                 if key in p_v:
@@ -167,8 +165,9 @@ class RunnerAnalytics:
                 else:
                     new_value = float(c_v[key])
                 if new_value > 0:
-                    new_value = round(new_value, 2)
-                    traded[key] = new_value
+                    traded[key] = round(new_value, 2)
+            # cache for next update
+            self._p_v = c_v
             return traded
 
     @staticmethod

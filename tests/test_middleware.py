@@ -180,6 +180,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(self.runner_analytics.traded, {})
         self.assertEqual(self.runner_analytics.matched, 0)
         self.assertIsNone(self.runner_analytics.middle)
+        self.assertEqual(self.runner_analytics._p_v, {})
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
@@ -210,7 +211,9 @@ class RunnerAnalyticsTest(unittest.TestCase):
         mock_runner = mock.Mock()
         mock_runner.ex.traded_volume = [{"price": 1.01, "size": 69}]
         self.runner_analytics._traded_volume = [{"price": 1.01, "size": 69}]
+        self.runner_analytics._p_v = {1.01: 69}
         self.assertEqual(self.runner_analytics._calculate_traded(mock_runner), {})
+        self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
     def test__calculate_traded_dict_new(self):
         mock_runner = mock.Mock()
@@ -219,6 +222,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(
             self.runner_analytics._calculate_traded(mock_runner), {1.01: 69.0}
         )
+        self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
     def test__calculate_traded_dict_new_multi(self):
         mock_runner = mock.Mock()
@@ -227,10 +231,12 @@ class RunnerAnalyticsTest(unittest.TestCase):
             {"price": 10, "size": 32},
         ]
         self.runner_analytics._traded_volume = [{"price": 1.01, "size": 30}]
+        self.runner_analytics._p_v = {1.01: 30}
         self.assertEqual(
             self.runner_analytics._calculate_traded(mock_runner),
             {1.01: 39.0, 10: 32},
         )
+        self.assertEqual(self.runner_analytics._p_v, {1.01: 69, 10: 32})
 
     def test__calculate_middle(self):
         mock_runner = mock.Mock()

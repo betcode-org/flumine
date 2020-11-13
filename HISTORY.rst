@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.14.6 (2020-11-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Refactor on calculate_traded func (15% speed increase)
+
+**Bug Fixes**
+
+- Refactoring create_order_from_current, so that it is not dependent on the '-' separator (@jsphon)
+
 1.14.5 (2020-11-11)
 +++++++++++++++++++
 

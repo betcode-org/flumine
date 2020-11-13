@@ -1,8 +1,8 @@
 import uuid
 import logging
 import datetime
-from enum import Enum
 import string
+from enum import Enum
 from typing import Union, Optional
 from betfairlightweight import filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
@@ -233,7 +233,6 @@ class BaseOrder:
                 self.date_time_execution_complete - self.responses.date_time_placed
             ).total_seconds()
 
-    # todo cached properties?
     @property
     def market_id(self) -> str:
         return self.trade.market_id
@@ -242,7 +241,7 @@ class BaseOrder:
     def selection_id(self) -> int:
         return self.trade.selection_id
 
-    @property
+    @property  # todo cache (slow when lots of orders)
     def lookup(self) -> tuple:
         return self.market_id, self.selection_id, self.handicap
 
