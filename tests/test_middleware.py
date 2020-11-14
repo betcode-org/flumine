@@ -170,6 +170,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 class RunnerAnalyticsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_runner = mock.Mock()
+        self.mock_runner.ex.traded_volume = [{"price": 1.01, "size": 2}]
         self.runner_analytics = RunnerAnalytics(self.mock_runner)
 
     def test_init(self):
@@ -180,7 +181,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(self.runner_analytics.traded, {})
         self.assertEqual(self.runner_analytics.matched, 0)
         self.assertIsNone(self.runner_analytics.middle)
-        self.assertEqual(self.runner_analytics._p_v, {})
+        self.assertEqual(self.runner_analytics._p_v, {1.01: 2})
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
@@ -220,7 +221,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         mock_runner.ex.traded_volume = [{"price": 1.01, "size": 69}]
         self.runner_analytics._traded_volume = []
         self.assertEqual(
-            self.runner_analytics._calculate_traded(mock_runner), {1.01: 69.0}
+            self.runner_analytics._calculate_traded(mock_runner), {1.01: 67.0}
         )
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
