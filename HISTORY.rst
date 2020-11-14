@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.14.7 (2020-11-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Minor bug on initial init with calculate_traded func
+
 1.14.6 (2020-11-13)
 +++++++++++++++++++
 

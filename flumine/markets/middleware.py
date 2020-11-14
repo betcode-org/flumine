@@ -142,7 +142,9 @@ class RunnerAnalytics:
         self.middle = None  # middle of odds at last update
         self.matched = 0  # amount matched since last update
         self._traded_volume = runner.ex.traded_volume
-        self._p_v = {}  # cached previous volume
+        self._p_v = {
+            i["price"]: i["size"] for i in runner.ex.traded_volume
+        }  # cached current volume
 
     def __call__(self, runner: RunnerBook):
         self.middle = self._calculate_middle(self._runner)  # use last update
@@ -151,7 +153,7 @@ class RunnerAnalytics:
         self._traded_volume = runner.ex.traded_volume
         self._runner = runner
 
-    def _calculate_traded(self, runner) -> dict:
+    def _calculate_traded(self, runner: RunnerBook) -> dict:
         if self._traded_volume == runner.ex.traded_volume:
             return {}
         else:
