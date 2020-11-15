@@ -23,6 +23,13 @@ class TestLoggingControl(unittest.TestCase):
         self.logging_control.logging_queue.put(None)
         self.logging_control.run()
 
+    @mock.patch("flumine.controls.loggingcontrols.LoggingControl._process_config")
+    def test_process_event_config(self, mock_process_config):
+        mock_event = mock.Mock()
+        mock_event.EVENT_TYPE = EventType.CONFIG
+        self.logging_control.process_event(mock_event)
+        mock_process_config.assert_called_with(mock_event)
+
     @mock.patch("flumine.controls.loggingcontrols.LoggingControl._process_strategy")
     def test_process_event_strategy(self, mock_process_strategy):
         mock_event = mock.Mock()
@@ -117,7 +124,7 @@ class TestLoggingControl(unittest.TestCase):
         self.assertIsNone(self.logging_control.logging_queue.get())
 
     def test_process_config(self):
-        self.logging_control.process_config(None)
+        self.logging_control._process_config(None)
 
     def test_process_strategy(self):
         self.logging_control._process_strategy(None)

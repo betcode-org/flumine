@@ -395,6 +395,7 @@ class BaseFlumineTest(unittest.TestCase):
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
+            mock_log_control.assert_called_with(mock_events.ConfigEvent(None))
 
         self.assertFalse(self.base_flumine._running)
         self.mock_client.logout.assert_called_with()

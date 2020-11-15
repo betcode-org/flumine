@@ -3,6 +3,7 @@ from enum import Enum
 
 
 class EventType(Enum):
+    CONFIG = "Config"
     TERMINATOR = "Terminator"
     # betfair objects
     MARKET_CATALOGUE = "MarketCatalogue"
@@ -98,6 +99,10 @@ class NewDayEvent(BaseEvent):
 
 
 # LOGGING
+
+class ConfigEvent(BaseEvent):
+    EVENT_TYPE = EventType.CONFIG
+    QUEUE_TYPE = QueueType.LOGGING
 
 
 class ClearedOrdersMetaEvent(BaseEvent):
