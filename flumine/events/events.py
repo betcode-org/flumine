@@ -100,6 +100,7 @@ class NewDayEvent(BaseEvent):
 
 # LOGGING
 
+
 class ConfigEvent(BaseEvent):
     EVENT_TYPE = EventType.CONFIG
     QUEUE_TYPE = QueueType.LOGGING
