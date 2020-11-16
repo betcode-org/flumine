@@ -10,7 +10,7 @@ class SimulatedTest(unittest.TestCase):
         self.mock_order_type = mock.Mock(
             price=12, size=2.00, ORDER_TYPE=OrderTypes.LIMIT
         )
-        mock_client = mock.Mock(paper_trade=False)
+        mock_client = mock.Mock(paper_trade=False, min_bsp_liability=10)
         mock_trade = mock.Mock(client=mock_client)
         self.mock_order = mock.Mock(
             selection_id=1234,
@@ -341,6 +341,17 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.size_cancelled, 0.04)
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
+
+    def test__process_sp_lay_liability(self):
+        self.simulated.size_matched = 1.90
+        mock_runner = mock.Mock()
+        mock_runner.sp.actual_sp = 12.20
+        self.simulated.order.side = "LAY"
+        self.simulated._process_sp(1234571, mock_runner)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_lapsed, 0.10)
+        self.assertTrue(self.simulated._bsp_reconciled)
+        self.simulated.order.lapsed.assert_called()
 
     def test__process_sp_none(self):
         mock_runner = mock.Mock()
