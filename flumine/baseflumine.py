@@ -359,6 +359,8 @@ class BaseFlumine:
         # start logging controls
         for c in self._logging_controls:
             c.start()
+        # process config (logging)
+        self.log_control(events.ConfigEvent(config))
         # start strategies
         self.strategies.start()
         # start streams

@@ -206,9 +206,15 @@ class Simulated:
                     size = self.size_remaining
                 else:
                     remaining_risk = (_order_type.price - 1.0) * self.size_remaining
-                    size = round(remaining_risk / (actual_sp - 1.0), 2)
-                    # Cancel remaining size
-                    self.size_cancelled += round(self.size_remaining - size, 2)
+                    client = self.order.trade.client
+                    if remaining_risk >= client.min_bsp_liability:
+                        size = round(remaining_risk / (actual_sp - 1.0), 2)
+                        # Cancel remaining size
+                        self.size_cancelled += round(self.size_remaining - size, 2)
+                    else:  # lapse
+                        self.size_lapsed += self.size_remaining
+                        self.order.lapsed()
+                        return
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":
                     if actual_sp < _order_type.price:
