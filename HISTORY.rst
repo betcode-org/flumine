@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.14.8 (2020-11-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Config event added and processed on start
+
+**Bug Fixes**
+
+- #320 prevent market on close limit order when below min bsp liability
+
 1.14.7 (2020-11-14)
 +++++++++++++++++++
 
