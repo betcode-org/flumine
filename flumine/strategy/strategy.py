@@ -1,5 +1,7 @@
 from typing import Type, Iterator
 
+import logging
+
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
 from .runnercontext import RunnerContext
@@ -7,6 +9,8 @@ from ..clients import BaseClient
 from ..markets.market import Market
 from ..streams.marketstream import BaseStream, MarketStream
 from ..utils import create_cheap_hash
+
+logger = logging.getLogger(__name__)
 
 STRATEGY_NAME_HASH_LENGTH = 13
 
@@ -67,6 +71,9 @@ class BaseStrategy:
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
+        self.log_validation = (
+            False  # determines whether or not to log validation failures.
+        )
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
         if market_book.streaming_unique_id not in self.stream_ids:
@@ -141,18 +148,41 @@ class BaseStrategy:
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # validate context
         if runner_context.trade_count >= self.max_trade_count:
+            if self.log_validation:
+                logger.info(
+                    "validate_order failed: trade_count (%s) >= max_trade_count (%s)",
+                    runner_context.trade_count,
+                    self.max_live_trade_count,
+                )
             return False
         elif runner_context.live_trade_count >= self.max_live_trade_count:
+            if self.log_validation:
+                logger.info(
+                    "validate_order failed: live_trade_count (%s) >= max_live_trade_count (%s)"
+                    % (runner_context.live_trade_count, self.max_live_trade_count)
+                )
             return False
         elif (
             runner_context.placed_elapsed_seconds
             and runner_context.placed_elapsed_seconds < order.trade.place_reset_seconds
         ):
+            if self.log_validation:
+                logger.info(
+                    "validate_order failed: placed_elapsed_seconds (%s) < place_reset_seconds (%s)",
+                    runner_context.placed_elapsed_seconds,
+                    order.trade.place_reset_seconds,
+                )
             return False
         elif (
             runner_context.reset_elapsed_seconds
             and runner_context.reset_elapsed_seconds < order.trade.reset_seconds
         ):
+            if self.log_validation:
+                logger.info(
+                    "validate_order failed: reset_elapsed_seconds (%s) < reset_seconds (%s)",
+                    runner_context.reset_elapsed_seconds,
+                    order.trade.reset_seconds,
+                )
             return False
         else:
             return True

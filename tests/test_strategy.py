@@ -191,6 +191,7 @@ class BaseStrategyTest(unittest.TestCase):
             placed_elapsed_seconds=None,
             reset_elapsed_seconds=None,
         )
+        self.strategy.log_validation = True
         self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
         # trade count
         runner_context.trade_count = 3
