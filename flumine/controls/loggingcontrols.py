@@ -2,7 +2,6 @@ import logging
 import queue
 from threading import Thread
 
-from .. import config
 from ..events import events
 from ..events.events import EventType
 
@@ -42,11 +41,11 @@ class LoggingControl(Thread):
                         extra={"event": event},
                     )
 
-    def process_config(self, config: config):
-        logger.debug("process_config: %s" % config)
-
     def process_event(self, event: events.BaseEvent):
-        if event.EVENT_TYPE == EventType.STRATEGY:
+        if event.EVENT_TYPE == EventType.CONFIG:
+            self._process_config(event)
+
+        elif event.EVENT_TYPE == EventType.STRATEGY:
             self._process_strategy(event)
 
         elif event.EVENT_TYPE == EventType.MARKET:
@@ -85,6 +84,9 @@ class LoggingControl(Thread):
 
         else:
             logger.error("Unwanted item in logging control: {0}".format(event))
+
+    def _process_config(self, event):
+        logger.debug("process_config: %s" % event)
 
     def _process_strategy(self, event):
         logger.debug("process_strategy: %s" % event)
