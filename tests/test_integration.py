@@ -96,6 +96,8 @@ class IntegrationTest(unittest.TestCase):
         framework.add_strategy(market_strategy)
         framework.run()
 
+        self.assertEqual(len(framework.markets), 1)
+
         for market in framework.markets:
             limit_orders = [
                 o for o in market.blotter if o.trade.strategy == limit_strategy

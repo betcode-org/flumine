@@ -1,7 +1,7 @@
 import logging
 import datetime
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
-from betfairlightweight.streaming.stream import BaseStream as BFLWBaseStream
+from betfairlightweight.streaming.stream import MarketStream
 from betfairlightweight.resources.baseresource import BaseResource
 
 from .basestream import BaseStream
@@ -9,14 +9,12 @@ from .basestream import BaseStream
 logger = logging.getLogger(__name__)
 
 
-class Stream(BFLWBaseStream):
+class FlumineMarketStream(MarketStream):
     """
     Custom bflw stream to speed up processing
     by limiting to inplay/not inplay or limited
     seconds to start.
     """
-
-    _lookup = "mc"
 
     def snap(self, market_ids: list = None) -> list:
         market_books = []
@@ -58,7 +56,7 @@ class HistoricListener(StreamListener):
 
     def _add_stream(self, unique_id, stream_type):
         if stream_type == "marketSubscription":
-            return Stream(self)
+            return FlumineMarketStream(self)
 
 
 class HistoricalStream(BaseStream):

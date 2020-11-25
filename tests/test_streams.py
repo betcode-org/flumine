@@ -448,10 +448,10 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertEqual(generator, mock_generator().get_generator())
 
 
-class TestStream(unittest.TestCase):
+class TestFlumineMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.Stream(self.listener)
+        self.stream = historicalstream.FlumineMarketStream(self.listener)
 
     def test_init(self):
         self.assertEqual(self.stream._listener, self.listener)
@@ -459,7 +459,7 @@ class TestStream(unittest.TestCase):
 
     def test_snap_inplay(self):
         # inPlay
-        self.stream = historicalstream.Stream(
+        self.stream = historicalstream.FlumineMarketStream(
             mock.Mock(inplay=True, seconds_to_start=None)
         )
         self.stream._caches = {
@@ -475,7 +475,7 @@ class TestStream(unittest.TestCase):
         }
         self.assertEqual(len(self.stream.snap()), 1)
 
-        self.stream = historicalstream.Stream(
+        self.stream = historicalstream.FlumineMarketStream(
             mock.Mock(inplay=False, seconds_to_start=None)
         )
         self.stream._caches = {
@@ -489,7 +489,7 @@ class TestStream(unittest.TestCase):
 
     def test_snap_seconds_to_start(self):
         # secondsToStart
-        self.stream = historicalstream.Stream(
+        self.stream = historicalstream.FlumineMarketStream(
             mock.Mock(inplay=None, seconds_to_start=600)
         )
         self.stream._caches = {
@@ -527,7 +527,7 @@ class TestHistoricListener(unittest.TestCase):
         self.assertTrue(self.listener.inplay)
         self.assertEqual(self.listener.seconds_to_start, 123)
 
-    @mock.patch("flumine.streams.historicalstream.Stream")
+    @mock.patch("flumine.streams.historicalstream.FlumineMarketStream")
     def test__add_stream(self, mock_stream):
         self.assertEqual(
             self.listener._add_stream(123, "marketSubscription"), mock_stream()
