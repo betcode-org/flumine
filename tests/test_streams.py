@@ -457,12 +457,6 @@ class TestStream(unittest.TestCase):
         self.assertEqual(self.stream._listener, self.listener)
         self.assertEqual(self.stream._lookup, "mc")
 
-    def test__process(self):
-        self.stream._process(
-            [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}], 12345
-        )
-        self.assertEqual(len(self.stream._caches), 1)
-
     def test_snap_inplay(self):
         # inPlay
         self.stream = historicalstream.Stream(
@@ -532,12 +526,6 @@ class TestHistoricListener(unittest.TestCase):
     def test_init(self):
         self.assertTrue(self.listener.inplay)
         self.assertEqual(self.listener.seconds_to_start, 123)
-
-    @mock.patch("flumine.streams.historicalstream.Stream")
-    def test__add_stream(self, mock_stream):
-        self.assertEqual(
-            self.listener._add_stream(123, "marketSubscription"), mock_stream()
-        )
 
 
 class TestOrderStream(unittest.TestCase):
