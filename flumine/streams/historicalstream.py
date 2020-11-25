@@ -56,6 +56,10 @@ class HistoricListener(StreamListener):
         self.inplay = inplay
         self.seconds_to_start = seconds_to_start
 
+    def _add_stream(self, unique_id, stream_type):
+        if stream_type == "marketSubscription":
+            return Stream(self)
+
 
 class HistoricalStream(BaseStream):
 
