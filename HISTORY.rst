@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.14.9 (2020-11-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Historic stream cleanup for bflw 2.10.1
+- Adding logging of order validation
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.10.1
+
 1.14.8 (2020-11-16)
 +++++++++++++++++++
 
