@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.14.11 (2020-11-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Flaky flaky integration tests
+
+**Bug Fixes**
+
+- Missing 'on_process' function (now subclassed)
+
 1.14.10 (2020-11-25)
 +++++++++++++++++++
 
