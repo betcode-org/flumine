@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.14.10 (2020-11-25)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Revert removal of `add_stream` (removed by accident)
+
 1.14.9 (2020-11-25)
 +++++++++++++++++++
 

@@ -527,6 +527,12 @@ class TestHistoricListener(unittest.TestCase):
         self.assertTrue(self.listener.inplay)
         self.assertEqual(self.listener.seconds_to_start, 123)
 
+    @mock.patch("flumine.streams.historicalstream.Stream")
+    def test__add_stream(self, mock_stream):
+        self.assertEqual(
+            self.listener._add_stream(123, "marketSubscription"), mock_stream()
+        )
+
 
 class TestOrderStream(unittest.TestCase):
     def setUp(self) -> None:
