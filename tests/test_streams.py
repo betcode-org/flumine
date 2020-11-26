@@ -457,6 +457,23 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertEqual(self.stream._listener, self.listener)
         self.assertEqual(self.stream._lookup, "mc")
 
+    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    def test__process(self, mock_cache):
+        self.assertFalse(
+            self.stream._process(
+                [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}],
+                12345,
+            )
+        )
+        self.assertEqual(len(self.stream._caches), 1)
+        self.assertEqual(self.stream._updates_processed, 1)
+        mock_cache.assert_called_with(
+            publish_time=12345, id="1.23", img={1: 2}, marketDefinition={"runners": []}
+        )
+        mock_cache().update_cache.assert_called_with(
+            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}, 12345
+        )
+
     def test_snap_inplay(self):
         # inPlay
         self.stream = historicalstream.FlumineMarketStream(
