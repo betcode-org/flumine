@@ -2,6 +2,7 @@ import logging
 import datetime
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
 from betfairlightweight.streaming.stream import MarketStream
+from betfairlightweight.streaming.cache import MarketBookCache
 from betfairlightweight.resources.baseresource import BaseResource
 
 from .basestream import BaseStream
@@ -14,7 +15,38 @@ class FlumineMarketStream(MarketStream):
     Custom bflw stream to speed up processing
     by limiting to inplay/not inplay or limited
     seconds to start.
+    `_process` updated to not call `on_process`
+    which reduces some function calls.
     """
+
+    def _process(self, data: list, publish_time: int) -> bool:
+        for market_book in data:
+            market_id = market_book["id"]
+            full_image = market_book.get("img", False)
+            market_book_cache = self._caches.get(market_id)
+
+            if (
+                full_image or market_book_cache is None
+            ):  # historic data does not contain img
+                if "marketDefinition" not in market_book:
+                    logger.error(
+                        "[%s: %s]: Unable to add %s to cache due to marketDefinition "
+                        "not being present (make sure EX_MARKET_DEF is requested)"
+                        % (self, self.unique_id, market_id)
+                    )
+                    continue
+                market_book_cache = MarketBookCache(
+                    publish_time=publish_time, **market_book
+                )
+                self._caches[market_id] = market_book_cache
+                logger.info(
+                    "[%s: %s]: %s added, %s markets in cache"
+                    % (self, self.unique_id, market_id, len(self._caches))
+                )
+
+            market_book_cache.update_cache(market_book, publish_time)
+            self._updates_processed += 1
+        return False
 
     def snap(self, market_ids: list = None) -> list:
         market_books = []
