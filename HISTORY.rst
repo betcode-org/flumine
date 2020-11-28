@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.14.12 (2020-11-28)
++++++++++++++++++++
+
+**Improvements**
+
+- 'on_process' function optimised
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.10.2
+
 1.14.11 (2020-11-25)
 +++++++++++++++++++
 
