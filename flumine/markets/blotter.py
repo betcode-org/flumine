@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
@@ -72,6 +72,19 @@ class Blotter:
             packages.append(order_package)
         orders.clear()
         return packages
+
+    @property
+    def pending_orders(self) -> bool:
+        if self.pending_place:
+            return True
+        elif self.pending_cancel:
+            return True
+        elif self.pending_update:
+            return True
+        elif self.pending_replace:
+            return True
+        else:
+            return False
 
     @property
     def live_orders(self):
