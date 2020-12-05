@@ -423,6 +423,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(self.order.size_matched, mock_current_order.size_matched)
 
     def test_size_remaining(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order_type.size = 0
         self.assertEqual(self.order.size_remaining, 0)
         self.mock_order_type.size = 10
@@ -431,6 +432,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.assertEqual(self.order.size_remaining, mock_current_order.size_remaining)
 
     def test_size_remaining_missing(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order_type.size = 2.51
         self.assertEqual(self.order.size_remaining, 2.51)
 
@@ -439,9 +441,16 @@ class BetfairOrderTest(unittest.TestCase):
         new_callable=mock.PropertyMock,
     )
     def test_size_remaining_missing_partial_match(self, mock_size_matched):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_size_matched.return_value = 2
         self.mock_order_type.size = 10
         self.assertEqual(self.order.size_remaining, 8)
+
+    def test_size_remaining_market_on_close(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        self.mock_order_type.size = ValueError
+        self.order.responses.current_order = None
+        self.assertEqual(self.order.size_remaining, self.mock_order_type.liability)
 
     def test_size_cancelled(self):
         self.assertEqual(self.order.size_cancelled, 0)
