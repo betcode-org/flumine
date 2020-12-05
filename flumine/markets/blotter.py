@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from ..order.ordertype import OrderTypes
 from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
@@ -74,14 +74,25 @@ class Blotter:
         return packages
 
     @property
+    def pending_orders(self) -> bool:
+        return any(
+            (
+                self.pending_place,
+                self.pending_cancel,
+                self.pending_update,
+                self.pending_replace,
+            )
+        )
+
+    @property
     def live_orders(self):
         return iter(self._live_orders)
 
     @property
-    def has_live_orders(self):
+    def has_live_orders(self) -> bool:
         return bool(self._live_orders)
 
-    def process_closed_market(self, market_book):
+    def process_closed_market(self, market_book) -> None:
         for order in self:
             for runner in market_book.runners:
                 if (order.selection_id, order.handicap) == (

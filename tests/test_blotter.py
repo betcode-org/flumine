@@ -71,6 +71,11 @@ class BlotterTest(unittest.TestCase):
         )
         self.assertEqual(mock_orders, [])
 
+    def test_pending_orders(self):
+        self.assertFalse(self.blotter.pending_orders)
+        self.blotter.pending_update = [1]
+        self.assertTrue(self.blotter.pending_orders)
+
     def test_live_orders(self):
         self.assertEqual(list(self.blotter.live_orders), [])
         mock_order = mock.Mock(complete=False)
