@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.14.13 (2020-12-05)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest market catalogue middleware example (@lunswor)
+- #344 Initial work on improving calls when subscribed to 5k+ markets
+
+**Bug Fixes**
+
+- #342 market/limit on close order size remaining bug
+
 1.14.12 (2020-11-28)
 +++++++++++++++++++
 
