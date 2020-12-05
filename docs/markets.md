@@ -6,6 +6,10 @@ Within markets you have market objects which contains current up to date market 
 
 ### Class variables
 
+- `flumine` Framework
+- `market_id` MarketBook id
+- `closed` Closed bool
+- `date_time_closed` Closed datetime
 - `market_book` Latest MarketBook object
 - `market_catalogue` Latest MarketCatalogue object
 - `context` Market context, store market specific context e.g. simulated data store
@@ -36,3 +40,19 @@ For example backtesting uses [simulated middleware](https://github.com/liampauli
 
 !!! note
     Middleware will be executed in the order it is added and before the strategies are processed.
+
+Please see below for the example middleware class if you wish to create your own:
+
+```python
+from flumine.markets.middleware import Middleware
+
+class CustomMiddleware(Middleware):
+    def __call__(self, market) -> None:
+        pass  # called on each MarketBook update
+
+    def add_market(self, market) -> None:
+        print("market {0} added".format(market.market_id))
+
+    def remove_market(self, market) -> None:
+        print("market {0} removed".format(market.market_id))
+```
