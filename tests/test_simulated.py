@@ -215,7 +215,7 @@ class SimulatedTest(unittest.TestCase):
         new_callable=mock.PropertyMock,
         return_value=0,
     )
-    def test__create_place_response_complete(self):
+    def test__create_place_response_complete(self, mock_size_remaining):
         resp = self.simulated._create_place_response(1234)
         self.assertEqual(resp.bet_id, "1234")
         self.assertEqual(resp.status, "SUCCESS")
