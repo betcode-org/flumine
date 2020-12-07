@@ -9,6 +9,11 @@ Release History
 **Improvements**
 
 - Updates for bflw 2.11.0
+- logging improved on orphan orders
+
+**Bug Fixes**
+
+- #347 incorrect adjustment factor (sub 1.01)
 
 **Libraries**
 
