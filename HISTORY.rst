@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.15.0 (2020-12-07)
++++++++++++++++++++
+
+**Improvements**
+
+- Updates for bflw 2.11.0
+- logging improved on orphan orders
+
+**Bug Fixes**
+
+- #347 incorrect adjustment factor (sub 1.01)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.11.0
+
 1.14.13 (2020-12-05)
 +++++++++++++++++++
 

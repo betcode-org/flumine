@@ -135,6 +135,14 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware._process_runner_removal(mock_market, 12345, 0, None)
         self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
 
+    def test__calculate_reduction_factor(self):
+        self.assertEqual(self.middleware._calculate_reduction_factor(10, 10), 9)
+        self.assertEqual(self.middleware._calculate_reduction_factor(1000, 0), 1000)
+        self.assertEqual(self.middleware._calculate_reduction_factor(1000, 5), 950)
+        self.assertEqual(self.middleware._calculate_reduction_factor(3.2, 75.18), 1.01)
+        self.assertEqual(self.middleware._calculate_reduction_factor(10, 75.18), 2.48)
+        self.assertEqual(self.middleware._calculate_reduction_factor(1.01, 75.18), 1.01)
+
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()
         mock_order = mock.Mock()

@@ -533,6 +533,27 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertEqual(len(self.stream.snap()), 0)
 
 
+class TestFlumineRaceStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.listener = mock.Mock()
+        self.stream = historicalstream.FlumineRaceStream(self.listener)
+
+    @mock.patch("flumine.streams.historicalstream.RaceCache")
+    def test__process(self, mock_cache):
+        self.assertFalse(
+            self.stream._process(
+                [{"mid": "1.23", "img": {1: 2}}],
+                12345,
+            )
+        )
+        self.assertEqual(len(self.stream._caches), 1)
+        self.assertEqual(self.stream._updates_processed, 1)
+        mock_cache.assert_called_with(publish_time=12345, mid="1.23", img={1: 2})
+        mock_cache().update_cache.assert_called_with(
+            {"mid": "1.23", "img": {1: 2}}, 12345
+        )
+
+
 class TestHistoricListener(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
@@ -545,9 +566,15 @@ class TestHistoricListener(unittest.TestCase):
         self.assertEqual(self.listener.seconds_to_start, 123)
 
     @mock.patch("flumine.streams.historicalstream.FlumineMarketStream")
-    def test__add_stream(self, mock_stream):
+    def test__add_stream_market(self, mock_stream):
         self.assertEqual(
             self.listener._add_stream(123, "marketSubscription"), mock_stream()
+        )
+
+    @mock.patch("flumine.streams.historicalstream.FlumineRaceStream")
+    def test__add_stream_race(self, mock_stream):
+        self.assertEqual(
+            self.listener._add_stream(123, "raceSubscription"), mock_stream()
         )
 
 
