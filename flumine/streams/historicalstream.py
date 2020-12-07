@@ -1,8 +1,8 @@
 import logging
 import datetime
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
-from betfairlightweight.streaming.stream import MarketStream
-from betfairlightweight.streaming.cache import MarketBookCache
+from betfairlightweight.streaming.stream import MarketStream, RaceStream
+from betfairlightweight.streaming.cache import MarketBookCache, RaceCache
 from betfairlightweight.resources.baseresource import BaseResource
 
 from .basestream import BaseStream
@@ -75,6 +75,29 @@ class FlumineMarketStream(MarketStream):
         return market_books
 
 
+class FlumineRaceStream(RaceStream):
+    """
+    `_process` updated to not call `on_process`
+    which reduces some function calls.
+    # todo snap optimisation?
+    """
+
+    def _process(self, race_updates: list, publish_time: int) -> bool:
+        for update in race_updates:
+            market_id = update["mid"]
+            race_cache = self._caches.get(market_id)
+            if race_cache is None:
+                race_cache = RaceCache(publish_time=publish_time, **update)
+                self._caches[market_id] = race_cache
+                logger.info(
+                    "[%s: %s]: %s added, %s markets in cache"
+                    % (self, self.unique_id, market_id, len(self._caches))
+                )
+            race_cache.update_cache(update, publish_time)
+            self._updates_processed += 1
+        return False
+
+
 class HistoricListener(StreamListener):
     """
     Custom listener to restrict processing by
@@ -89,6 +112,8 @@ class HistoricListener(StreamListener):
     def _add_stream(self, unique_id, stream_type):
         if stream_type == "marketSubscription":
             return FlumineMarketStream(self)
+        elif stream_type == "raceSubscription":
+            return FlumineRaceStream(self)
 
 
 class HistoricalStream(BaseStream):
