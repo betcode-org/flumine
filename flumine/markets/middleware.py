@@ -102,8 +102,8 @@ class SimulatedMiddleware(Middleware):
                     ):
                         # todo place market
                         for match in order.simulated.matched:
-                            match[1] = round(
-                                match[1] * (1 - (removal_adjustment_factor / 100)), 2
+                            match[1] = self._calculate_reduction_factor(
+                                match[1], removal_adjustment_factor
                             )
                         _, order.simulated.average_price_matched = wap(
                             order.simulated.matched
@@ -114,6 +114,11 @@ class SimulatedMiddleware(Middleware):
                             ).format(order.selection_id),
                             extra=order.info,
                         )
+
+    @staticmethod
+    def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
+        price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
+        return max(price_adjusted, 1.01)  # min: 1.01
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
