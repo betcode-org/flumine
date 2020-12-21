@@ -381,7 +381,7 @@ class BaseFlumine:
         for w in self._workers:
             w.shutdown()
         # shutdown logging controls
-        self.log_control(events.TerminationEvent(None))
+        self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()
