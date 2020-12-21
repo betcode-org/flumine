@@ -17,8 +17,10 @@ from flumine.exceptions import OrderUpdateError
 class BaseOrderTest(unittest.TestCase):
     def setUp(self) -> None:
         mock_client = mock.Mock(paper_trade=False)
-        self.mock_trade = mock.Mock(client=mock_client)
-        self.mock_order_type = mock.Mock()
+        self.mock_trade = mock.Mock(
+            client=mock_client, market_id="1.1", selection_id=123, info={}
+        )
+        self.mock_order_type = mock.Mock(info={})
         self.order = BaseOrder(self.mock_trade, "BACK", self.mock_order_type, 1)
 
     def test_init(self):
@@ -253,9 +255,11 @@ class BaseOrderTest(unittest.TestCase):
 class BetfairOrderTest(unittest.TestCase):
     def setUp(self) -> None:
         mock_client = mock.Mock(paper_trade=False)
-        self.mock_trade = mock.Mock(client=mock_client)
+        self.mock_trade = mock.Mock(
+            client=mock_client, market_id="1.1", selection_id=123, info={}
+        )
         self.mock_status = mock.Mock()
-        self.mock_order_type = mock.Mock()
+        self.mock_order_type = mock.Mock(info={}, size=2.0, liability=2.0)
         self.order = BetfairOrder(self.mock_trade, "BACK", self.mock_order_type)
 
     def test_init(self):
@@ -480,6 +484,7 @@ class BetfairOrderTest(unittest.TestCase):
                 "id": self.order.id,
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
+                "publish_time": None,
                 "status": None,
                 "status_log": "Pending, Execution complete",
                 "trade": self.mock_trade.info,
@@ -494,8 +499,16 @@ class BetfairOrderTest(unittest.TestCase):
                     "average_price_matched": self.order.average_price_matched,
                 },
                 "customer_order_ref": self.order.customer_order_ref,
+                "simulated": {
+                    "profit": 0.0,
+                    "piq": 0.0,
+                    "matched": [],
+                },
             },
         )
+
+    def test_json(self):
+        self.assertTrue(isinstance(self.order.json(), str))
 
     def test_set_invalid_sep(self):
         with self.assertRaises(ValueError):

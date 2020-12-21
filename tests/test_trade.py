@@ -157,10 +157,10 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(
             self.trade.info,
             {
-                "id": self.trade.id,
+                "id": str(self.trade.id),
                 "orders": [],
-                "status": TradeStatus.LIVE,
-                "strategy": self.mock_strategy,
+                "status": "Live",
+                "strategy": str(self.mock_strategy),
                 "notes": "123",
                 "market_notes": None,
             },

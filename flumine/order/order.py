@@ -1,3 +1,4 @@
+import json
 import uuid
 import logging
 import datetime
@@ -258,6 +259,7 @@ class BaseOrder:
             "id": self.id,
             "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
+            "publish_time": str(self.publish_time) if self.publish_time else None,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
             "info": {
@@ -271,7 +273,11 @@ class BaseOrder:
             },
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
+            "simulated": self.simulated.info,
         }
+
+    def json(self) -> str:
+        return json.dumps(self.info)
 
     def __repr__(self):
         return "Order {0}: {1}".format(

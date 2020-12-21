@@ -336,5 +336,13 @@ class Simulated:
         else:
             return "EXECUTABLE"
 
+    @property
+    def info(self) -> dict:
+        return {
+            "profit": self.profit,
+            "piq": self._piq,
+            "matched": self.matched,
+        }
+
     def __bool__(self):
         return config.simulated or self.order.trade.client.paper_trade

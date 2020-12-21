@@ -158,9 +158,9 @@ class Trade:
     @property
     def info(self) -> dict:
         return {
-            "id": self.id,
-            "strategy": self.strategy,
-            "status": self.status,
+            "id": str(self.id),
+            "strategy": str(self.strategy),
+            "status": self.status.value if self.status else None,
             "orders": [o.id for o in self.orders],
             "notes": self.notes_str,
             "market_notes": self.market_notes,
