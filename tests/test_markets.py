@@ -268,3 +268,15 @@ class MarketTest(unittest.TestCase):
         self.market.closed = True
         self.market.date_time_closed = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)
+
+    def test_info(self):
+        self.assertEqual(
+            self.market.info,
+            {
+                "market_id": self.market.market_id,
+                "event_id": self.market.event_id,
+                "event_type_id": self.market.event_type_id,
+                "market_type": self.market.market_type,
+                "market_start_datetime": str(self.market.market_start_datetime),
+            },
+        )

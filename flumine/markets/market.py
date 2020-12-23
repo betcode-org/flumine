@@ -119,3 +119,13 @@ class Market:
             return self.market_book.market_definition.market_time
         else:
             return datetime.datetime.utcfromtimestamp(0)
+
+    @property
+    def info(self) -> dict:
+        return {
+            "market_id": self.market_id,
+            "event_id": self.event_id,
+            "event_type_id": self.event_type_id,
+            "market_type": self.market_type,
+            "market_start_datetime": str(self.market_start_datetime),
+        }
