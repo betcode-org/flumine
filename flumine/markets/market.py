@@ -34,7 +34,7 @@ class Market:
         self.closed = False
         logger.info(
             "Market {0} opened".format(self.market_id),
-            extra={"market_id": self.market_id},
+            extra=self.info,
         )
 
     def close_market(self) -> None:
@@ -42,10 +42,7 @@ class Market:
         self.date_time_closed = datetime.datetime.utcnow()
         logger.info(
             "Market {0} closed".format(self.market_id),
-            extra={
-                "market_id": self.market_id,
-                "date_time_closed": self.date_time_closed,
-            },
+            extra=self.info,
         )
 
     # order
@@ -103,7 +100,7 @@ class Market:
             return self.market_book.market_definition.market_type
 
     @property
-    def seconds_to_start(self):
+    def seconds_to_start(self) -> float:
         return (self.market_start_datetime - datetime.datetime.utcnow()).total_seconds()
 
     @property
@@ -121,11 +118,43 @@ class Market:
             return datetime.datetime.utcfromtimestamp(0)
 
     @property
+    def event_name(self) -> Optional[str]:
+        if self.market_catalogue:
+            return self.market_catalogue.event.name
+        elif self.market_book:
+            return self.market_book.market_definition.event_name
+
+    @property
+    def country_code(self) -> Optional[str]:
+        if self.market_catalogue:
+            return self.market_catalogue.event.country_code
+        elif self.market_book:
+            return self.market_book.market_definition.country_code
+
+    @property
+    def venue(self) -> Optional[str]:
+        if self.market_catalogue:
+            return self.market_catalogue.event.venue
+        elif self.market_book:
+            return self.market_book.market_definition.venue
+
+    @property
+    def race_type(self) -> Optional[str]:
+        if self.market_catalogue:
+            return self.market_catalogue.description.race_type
+        elif self.market_book:
+            return self.market_book.market_definition.race_type
+
+    @property
     def info(self) -> dict:
         return {
             "market_id": self.market_id,
             "event_id": self.event_id,
             "event_type_id": self.event_type_id,
+            "event_name": self.event_name,
             "market_type": self.market_type,
             "market_start_datetime": str(self.market_start_datetime),
+            "country_code": self.country_code,
+            "venue": self.venue,
+            "race_type": self.race_type,
         }

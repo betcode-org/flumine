@@ -37,29 +37,29 @@ class JupyterLoggingControl(LoggingControl):
                 # info.info
                 _info = info.pop("info")
                 for k, v in _info.items():
-                    info["info.{0}".format(k)] = v
+                    info["info__{0}".format(k)] = v
                 # info.trade
                 trade = info.pop("trade")
                 for k, v in trade.items():
-                    info["trade.{0}".format(k)] = v
+                    info["trade__{0}".format(k)] = v
                 # info.order_type
                 order_type = info.pop("order_type")
                 for k, v in order_type.items():
-                    info["order_type.{0}".format(k)] = v
+                    info["order_type__{0}".format(k)] = v
                 # info.simulated
                 simulated = info.pop("simulated")
                 for k, v in simulated.items():
-                    info["simulated.{0}".format(k)] = v
+                    info["simulated__{0}".format(k)] = v
+                # info.responses
+                responses = info.pop("responses")
+                for k, v in responses.items():
+                    info["responses__{0}".format(k)] = v
                 orders.append(info)
-        # market data
-        markets = [market.info for market in framework.markets]
-        # strategy data
-        strategies = [strategy.info for strategy in framework.strategies]
         # create data
         data = {
             "framework": {"title": "flumine", "version": __version__},
-            "strategies": strategies,
-            "markets": markets,
+            "strategies": [strategy.info for strategy in framework.strategies],
+            "markets": [market.info for market in framework.markets],
             "orders": orders,
         }
         self._create_json(data)

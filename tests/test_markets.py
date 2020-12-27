@@ -269,6 +269,60 @@ class MarketTest(unittest.TestCase):
         self.market.date_time_closed = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)
 
+    def test_event_name_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(self.market.event_name, mock_market_catalogue.event.name)
+
+    def test_event_name_mb(self):
+        self.market.market_catalogue = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.event_name, mock_market_book.market_definition.event_name
+        )
+
+    def test_country_code_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(
+            self.market.country_code, mock_market_catalogue.event.country_code
+        )
+
+    def test_country_code_mb(self):
+        self.market.market_catalogue = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.country_code, mock_market_book.market_definition.country_code
+        )
+
+    def test_venue_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(self.market.venue, mock_market_catalogue.event.venue)
+
+    def test_venue_mb(self):
+        self.market.market_catalogue = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(self.market.venue, mock_market_book.market_definition.venue)
+
+    def test_race_type_mc(self):
+        mock_market_catalogue = mock.Mock()
+        self.market.market_catalogue = mock_market_catalogue
+        self.assertEqual(
+            self.market.race_type, mock_market_catalogue.description.race_type
+        )
+
+    def test_race_type_mb(self):
+        self.market.market_catalogue = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.race_type, mock_market_book.market_definition.race_type
+        )
+
     def test_info(self):
         self.assertEqual(
             self.market.info,
@@ -276,7 +330,11 @@ class MarketTest(unittest.TestCase):
                 "market_id": self.market.market_id,
                 "event_id": self.market.event_id,
                 "event_type_id": self.market.event_type_id,
+                "event_name": self.market.event_name,
                 "market_type": self.market.market_type,
                 "market_start_datetime": str(self.market.market_start_datetime),
+                "country_code": self.market.country_code,
+                "venue": self.market.venue,
+                "race_type": self.market.race_type,
             },
         )
