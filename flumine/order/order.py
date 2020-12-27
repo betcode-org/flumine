@@ -259,6 +259,7 @@ class BaseOrder:
             "id": self.id,
             "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
+            "date_time_created": str(self.date_time_created),
             "publish_time": str(self.publish_time) if self.publish_time else None,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
@@ -271,8 +272,16 @@ class BaseOrder:
                 "size_voided": self.size_voided,
                 "average_price_matched": self.average_price_matched,
             },
+            "responses": {
+                "date_time_placed": str(self.responses.date_time_placed)
+                if self.responses.date_time_placed
+                else None,
+                "elapsed_seconds_executable": self.elapsed_seconds_executable,
+            },
+            "runner_status": self.runner_status,
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
+            "violation_msg": self.violation_msg,
             "simulated": self.simulated.info,
         }
 

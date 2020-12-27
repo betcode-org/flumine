@@ -154,15 +154,19 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.notes_str, "")
 
     def test_info(self):
+        self.trade.status_log = [TradeStatus.PENDING, TradeStatus.COMPLETE]
         self.assertEqual(
             self.trade.info,
             {
                 "id": str(self.trade.id),
                 "orders": [],
-                "status": "Live",
+                "place_reset_seconds": 12,
+                "reset_seconds": 34,
                 "strategy": str(self.mock_strategy),
                 "notes": "123",
                 "market_notes": None,
+                "status": "Live",
+                "status_log": "Pending, Complete",
             },
         )
 

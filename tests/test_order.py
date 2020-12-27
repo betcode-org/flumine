@@ -482,6 +482,7 @@ class BetfairOrderTest(unittest.TestCase):
                 "bet_id": None,
                 "handicap": self.order.handicap,
                 "id": self.order.id,
+                "date_time_created": str(self.order.date_time_created),
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
                 "publish_time": None,
@@ -504,6 +505,12 @@ class BetfairOrderTest(unittest.TestCase):
                     "piq": 0.0,
                     "matched": [],
                 },
+                "violation_msg": self.order.violation_msg,
+                "responses": {
+                    "date_time_placed": None,
+                    "elapsed_seconds_executable": None,
+                },
+                "runner_status": self.order.runner_status,
             },
         )
 

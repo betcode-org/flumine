@@ -160,10 +160,13 @@ class Trade:
         return {
             "id": str(self.id),
             "strategy": str(self.strategy),
-            "status": self.status.value if self.status else None,
+            "place_reset_seconds": self.place_reset_seconds,
+            "reset_seconds": self.reset_seconds,
             "orders": [o.id for o in self.orders],
             "notes": self.notes_str,
             "market_notes": self.market_notes,
+            "status": self.status.value if self.status else None,
+            "status_log": ", ".join([s.value for s in self.status_log]),
         }
 
     def __enter__(self):
