@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.15.1 (2020-12-28)
++++++++++++++++++++
+
+**Improvements**
+
+- #356 Jupyter logging control added (POC) with info improvements
+- #344 lookup cache added and info optimisations
+- #327 correctly return orderStatus
+- Minor test improvements
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.11.1
+
 1.15.0 (2020-12-07)
 +++++++++++++++++++
 
