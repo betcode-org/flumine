@@ -27,6 +27,10 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order.side, "BACK")
         self.assertEqual(self.order.order_type, self.mock_order_type)
         self.assertEqual(self.order.handicap, 1)
+        self.assertEqual(
+            self.order.lookup,
+            (self.order.market_id, self.order.selection_id, self.order.handicap),
+        )
         self.assertIsNone(self.order.runner_status)
         self.assertIsNone(self.order.status)
         self.assertEqual(self.order.status_log, [])

@@ -55,6 +55,7 @@ class BaseOrder:
         self.side = side
         self.order_type = order_type
         self.handicap = handicap
+        self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
         self.status = None
@@ -240,10 +241,6 @@ class BaseOrder:
     @property
     def selection_id(self) -> int:
         return self.trade.selection_id
-
-    @property  # todo cache (slow when lots of orders)
-    def lookup(self) -> tuple:
-        return self.market_id, self.selection_id, self.handicap
 
     @property
     def customer_order_ref(self) -> str:
