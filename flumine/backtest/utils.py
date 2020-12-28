@@ -13,8 +13,8 @@ class PendingPackages(list):
 class SimulatedPlaceResponse:
     def __init__(
         self,
-        status: str,
-        order_status: str = None,
+        status: str,  # SUCCESS, FAILURE or TIMEOUT
+        order_status: str = None,  # PENDING, EXECUTION_COMPLETE, EXECUTABLE or EXPIRED
         bet_id: str = None,
         average_price_matched: float = None,
         size_matched: float = None,

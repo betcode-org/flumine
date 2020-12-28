@@ -117,11 +117,20 @@ class Simulated:
             return self._create_place_response(bet_id)
 
     def _create_place_response(
-        self, bet_id: int, status: str = "SUCCESS", error_code: str = None
+        self,
+        bet_id: int,
+        status: str = "SUCCESS",
+        order_status: str = None,
+        error_code: str = None,
     ) -> SimulatedPlaceResponse:
+        if order_status is None:
+            if self.size_remaining == 0:
+                order_status = "EXECUTION_COMPLETE"
+            else:
+                order_status = "EXECUTABLE"
         return SimulatedPlaceResponse(
             status=status,
-            order_status="EXECUTABLE",  # todo?
+            order_status=order_status,
             bet_id=str(bet_id),
             average_price_matched=self.average_price_matched,
             size_matched=self.size_matched,
@@ -335,6 +344,14 @@ class Simulated:
             return "EXECUTION_COMPLETE"
         else:
             return "EXECUTABLE"
+
+    @property
+    def info(self) -> dict:
+        return {
+            "profit": self.profit,
+            "piq": self._piq,
+            "matched": self.matched,
+        }
 
     def __bool__(self):
         return config.simulated or self.order.trade.client.paper_trade

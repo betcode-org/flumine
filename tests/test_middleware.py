@@ -49,7 +49,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_market_book.runners = [mock_runner]
         mock_market.market_book = mock_market_book
         self.middleware(mock_market)
-        mock__process_runner.assert_called_with({}, mock_runner)
+        mock__process_runner.assert_called_with({}, mock_runner, True)
         self.assertEqual(mock_market.context, {"simulated": {}})
         mock__process_simulated_orders.assert_called_with(mock_market, {})
 
@@ -135,6 +135,29 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware._process_runner_removal(mock_market, 12345, 0, None)
         self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
 
+    def test__process_streaming_update(self):
+        mock_market_book = mock.Mock(
+            streaming_update={"img": True, "rc": [{"id": 3}, {"id": 4}]},
+            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
+        )
+        self.assertEqual(
+            self.middleware._process_streaming_update(mock_market_book), [1, 2]
+        )
+        mock_market_book = mock.Mock(
+            streaming_update={"marketDefinition": {1: 2}, "rc": [{"id": 3}, {"id": 4}]},
+            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
+        )
+        self.assertEqual(
+            self.middleware._process_streaming_update(mock_market_book), [1, 2]
+        )
+        mock_market_book = mock.Mock(
+            streaming_update={"rc": [{"id": 3}, {"id": 4}]},
+            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
+        )
+        self.assertEqual(
+            self.middleware._process_streaming_update(mock_market_book), [3, 4]
+        )
+
     def test__calculate_reduction_factor(self):
         self.assertEqual(self.middleware._calculate_reduction_factor(10, 10), 9)
         self.assertEqual(self.middleware._calculate_reduction_factor(1000, 0), 1000)
@@ -168,11 +191,12 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     def test__process_runner(self, mock_runner_analytics):
         market_analytics = {}
         mock_runner = mock.Mock()
-        self.middleware._process_runner(market_analytics, mock_runner)
+        self.middleware._process_runner(market_analytics, mock_runner, True)
         self.assertEqual(len(market_analytics), 1)
-        self.middleware._process_runner(market_analytics, mock_runner)
+        self.middleware._process_runner(market_analytics, mock_runner, False)
         self.assertEqual(len(market_analytics), 1)
         mock_runner_analytics.assert_called_with(mock_runner)
+        mock_runner_analytics().assert_called_with(mock_runner, False)
 
 
 class RunnerAnalyticsTest(unittest.TestCase):
@@ -198,7 +222,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self, mock__calculate_traded, mock__calculate_middle, mock__calculate_matched
     ):
         mock_runner = mock.Mock()
-        self.runner_analytics(mock_runner)
+        self.runner_analytics(mock_runner, True)
         mock__calculate_traded.assert_called_with(mock_runner)
         mock__calculate_middle.assert_called_with(self.mock_runner)
         mock__calculate_matched.assert_called_with(mock_runner)
@@ -209,6 +233,20 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(self.runner_analytics.matched, mock__calculate_matched())
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
         self.assertEqual(self.runner_analytics._runner, mock_runner)
+
+    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
+    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
+    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
+    def test_call_no_update(
+        self, mock__calculate_traded, mock__calculate_middle, mock__calculate_matched
+    ):
+        mock_runner = mock.Mock()
+        self.runner_analytics(mock_runner, False)
+        mock__calculate_traded.assert_not_called()
+        mock__calculate_middle.assert_not_called()
+        mock__calculate_matched.assert_not_called()
+        self.assertEqual(self.runner_analytics.matched, 0)
+        self.assertEqual(self.runner_analytics.traded, {})
 
     def test__calculate_traded_dict_empty(self):
         self.runner_analytics._traded_volume = []

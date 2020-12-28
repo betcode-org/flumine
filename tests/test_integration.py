@@ -11,6 +11,10 @@ SKIP_INTEGRATION_TESTS = int(os.environ.get("SKIP_INTEGRATION_TESTS", 1))
 
 
 class IntegrationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # change config to raise errors
+        config.raise_errors = True
+
     def test_backtest_basic(self):
         class Ex(BaseStrategy):
             def check_market_book(self, market, market_book):
@@ -117,3 +121,4 @@ class IntegrationTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         config.simulated = False
+        config.raise_errors = False

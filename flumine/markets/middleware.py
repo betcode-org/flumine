@@ -37,9 +37,13 @@ class SimulatedMiddleware(Middleware):
     def __call__(self, market) -> None:
         market_analytics = self.markets[market.market_id]
         runner_removals = []  # [(selectionId, handicap, adjustmentFactor)..]
+        # optimisation to only process a runner on an update
+        runner_updates = self._process_streaming_update(market.market_book)
+
         for runner in market.market_book.runners:
+            update = bool(runner.selection_id in runner_updates)
             if runner.status == "ACTIVE":
-                self._process_runner(market_analytics, runner)
+                self._process_runner(market_analytics, runner, update)
             elif runner.status == "REMOVED":
                 _removal = (
                     runner.selection_id,
@@ -116,6 +120,15 @@ class SimulatedMiddleware(Middleware):
                         )
 
     @staticmethod
+    def _process_streaming_update(market_book) -> list:
+        # return list of runners that have been updated
+        update = market_book.streaming_update
+        if update.get("img") or update.get("marketDefinition"):
+            return [runner.selection_id for runner in market_book.runners]
+        else:
+            return [runner["id"] for runner in update.get("rc", [])]
+
+    @staticmethod
     def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01
@@ -130,14 +143,16 @@ class SimulatedMiddleware(Middleware):
                 order.simulated(market.market_book, runner_analytics)
 
     @staticmethod
-    def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
+    def _process_runner(
+        market_analytics: dict, runner: RunnerBook, update: bool
+    ) -> None:
         try:
             runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
         except KeyError:
             runner_analytics = market_analytics[
                 (runner.selection_id, runner.handicap)
             ] = RunnerAnalytics(runner)
-        runner_analytics(runner)
+        runner_analytics(runner, update)
 
 
 class RunnerAnalytics:
@@ -151,12 +166,16 @@ class RunnerAnalytics:
             i["price"]: i["size"] for i in runner.ex.traded_volume
         }  # cached current volume
 
-    def __call__(self, runner: RunnerBook):
-        self.middle = self._calculate_middle(self._runner)  # use last update
-        self.matched = self._calculate_matched(runner)
-        self.traded = self._calculate_traded(runner)
-        self._traded_volume = runner.ex.traded_volume
-        self._runner = runner
+    def __call__(self, runner: RunnerBook, update: bool):
+        if update:
+            self.middle = self._calculate_middle(self._runner)  # use last update
+            self.matched = self._calculate_matched(runner)
+            self.traded = self._calculate_traded(runner)
+            self._traded_volume = runner.ex.traded_volume
+            self._runner = runner
+        else:
+            self.matched = 0
+            self.traded = {}
 
     def _calculate_traded(self, runner: RunnerBook) -> dict:
         if self._traded_volume == runner.ex.traded_volume:

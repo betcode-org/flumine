@@ -1,3 +1,4 @@
+import json
 import uuid
 import logging
 import datetime
@@ -55,6 +56,7 @@ class BaseOrder:
         self.side = side
         self.order_type = order_type
         self.handicap = handicap
+        self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
         self.status = None
@@ -241,10 +243,6 @@ class BaseOrder:
     def selection_id(self) -> int:
         return self.trade.selection_id
 
-    @property  # todo cache (slow when lots of orders)
-    def lookup(self) -> tuple:
-        return self.market_id, self.selection_id, self.handicap
-
     @property
     def customer_order_ref(self) -> str:
         return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
@@ -258,6 +256,8 @@ class BaseOrder:
             "id": self.id,
             "customer_order_ref": self.customer_order_ref,
             "bet_id": self.bet_id,
+            "date_time_created": str(self.date_time_created),
+            "publish_time": str(self.publish_time) if self.publish_time else None,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
             "info": {
@@ -269,9 +269,21 @@ class BaseOrder:
                 "size_voided": self.size_voided,
                 "average_price_matched": self.average_price_matched,
             },
+            "responses": {
+                "date_time_placed": str(self.responses.date_time_placed)
+                if self.responses.date_time_placed
+                else None,
+                "elapsed_seconds_executable": self.elapsed_seconds_executable,
+            },
+            "runner_status": self.runner_status,
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
+            "violation_msg": self.violation_msg,
+            "simulated": self.simulated.info,
         }
+
+    def json(self) -> str:
+        return json.dumps(self.info)
 
     def __repr__(self):
         return "Order {0}: {1}".format(

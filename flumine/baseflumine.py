@@ -178,7 +178,7 @@ class BaseFlumine:
             logger.warning("Empty package, not executing", extra=order_package.info)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
-        logger.info("Adding: {0} to markets".format(market_id), extra=self.info)
+        logger.info("Adding: {0} to markets".format(market_id))
         market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
         for middleware in self._market_middleware:
@@ -223,7 +223,8 @@ class BaseFlumine:
                     market.market_catalogue = market_catalogue
                     self.log_control(events.MarketEvent(market))
                     logger.info(
-                        "Updated marketCatalogue for {0}".format(market.market_id)
+                        "Updated marketCatalogue for {0}".format(market.market_id),
+                        extra=market.info,
                     )
                 else:
                     market.market_catalogue = market_catalogue
@@ -335,8 +336,6 @@ class BaseFlumine:
             "markets": {
                 "market_count": len(self.markets),
                 "open_market_count": len(self.markets.open_market_ids),
-                "live_orders": self.markets.live_orders,
-                "markets": [m.market_id for m in self.markets],
             },
             "streams": [s for s in self.streams],
             "logging_controls": self._logging_controls,
@@ -381,7 +380,7 @@ class BaseFlumine:
         for w in self._workers:
             w.shutdown()
         # shutdown logging controls
-        self.log_control(events.TerminationEvent(None))
+        self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()
