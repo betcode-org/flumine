@@ -192,20 +192,34 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.error_code, "RUNNER_REMOVED")
         self.assertEqual(self.simulated.matched, [])
 
-    def test_place_else(self):
+    @mock.patch("flumine.backtest.simulated.Simulated._create_place_response")
+    def test_place_else(self, mock__create_place_response):
         mock_client = mock.Mock(best_price_execution=True)
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         mock_market_book = mock.Mock()
         self.simulated.place(mock_client, mock_market_book, {}, 1)
         self.assertEqual(self.simulated.matched, [])
+        mock__create_place_response.assert_called_with(1)
 
     def test__create_place_response(self):
         resp = self.simulated._create_place_response(
-            1234, "FAILURE", "dubs of the mad skint and british"
+            1234, "FAILURE", error_code="dubs of the mad skint and british"
         )
         self.assertEqual(resp.bet_id, "1234")
         self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.order_status, "EXECUTABLE")
         self.assertEqual(resp.error_code, "dubs of the mad skint and british")
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_remaining",
+        new_callable=mock.PropertyMock,
+        return_value=0,
+    )
+    def test__create_place_response_complete(self, mock_size_remaining):
+        resp = self.simulated._create_place_response(1234)
+        self.assertEqual(resp.bet_id, "1234")
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.order_status, "EXECUTION_COMPLETE")
 
     def test_cancel(self):
         self.simulated.order.update_data = {}
