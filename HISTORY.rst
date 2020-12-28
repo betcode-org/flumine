@@ -11,6 +11,7 @@ Release History
 - #356 Jupyter logging control added (POC) with info improvements
 - #344 lookup cache added and info optimisations
 - #327 correctly return orderStatus
+- Middleware optimisation by only processing updated runners
 - Minor test improvements
 
 **Libraries**
