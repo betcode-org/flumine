@@ -223,7 +223,8 @@ class BaseFlumine:
                     market.market_catalogue = market_catalogue
                     self.log_control(events.MarketEvent(market))
                     logger.info(
-                        "Updated marketCatalogue for {0}".format(market.market_id)
+                        "Updated marketCatalogue for {0}".format(market.market_id),
+                        extra=market.info,
                     )
                 else:
                     market.market_catalogue = market_catalogue
@@ -379,7 +380,7 @@ class BaseFlumine:
         for w in self._workers:
             w.shutdown()
         # shutdown logging controls
-        self.log_control(events.TerminationEvent(None))
+        self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:
             if c.is_alive():
                 c.join()

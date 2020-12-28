@@ -565,6 +565,16 @@ class SimulatedTest(unittest.TestCase):
         self.mock_order.status.value = "PENDING"
         self.assertEqual(self.simulated.status, "EXECUTABLE")
 
+    def test_info(self):
+        self.assertEqual(
+            self.simulated.info,
+            {
+                "profit": 0,
+                "piq": 0,
+                "matched": [],
+            },
+        )
+
     def test_bool(self):
         self.assertFalse(self.simulated)
         from flumine import config

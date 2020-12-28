@@ -217,8 +217,13 @@ class BaseStrategy:
             "streaming_timeout": self.streaming_timeout,
             "conflate_ms": self.conflate_ms,
             "stream_ids": self.stream_ids,
+            "max_selection_exposure": self.max_selection_exposure,
+            "max_order_exposure": self.max_order_exposure,
+            "max_live_trade_count": self.max_live_trade_count,
+            "max_trade_count": self.max_trade_count,
             "context": self.context,
             "name_hash": self.name_hash,
+            "client": str(self.client),
         }
 
     @property

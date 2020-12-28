@@ -45,4 +45,4 @@ def terminate(
         market_count = len(markets)
     if market_count == 0:
         logger.info("No more markets available, terminating framework")
-        flumine.handler_queue.put(TerminationEvent(None))
+        flumine.handler_queue.put(TerminationEvent(flumine))

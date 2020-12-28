@@ -246,6 +246,11 @@ class BaseStrategyTest(unittest.TestCase):
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,
                 "context": {"trigger": 0.123},
+                "max_live_trade_count": 4,
+                "max_order_exposure": 2,
+                "max_selection_exposure": 1,
+                "max_trade_count": 3,
+                "client": str(self.strategy.client),
             },
         )
 
