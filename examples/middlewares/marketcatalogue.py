@@ -11,6 +11,9 @@ MARKET_CATALOGUE_PATH = ""  # update to correct path
 # Usage framework.add_middleware(MarketCatalogueMiddleware())
 class MarketCatalogueMiddleware(Middleware):
     def __call__(self, market) -> None:
+        pass
+
+    def add_market(self, market) -> None:
         catalogue_file_path = os.path.join(MARKET_CATALOGUE_PATH, market.market_id)
         if os.path.exists(catalogue_file_path):
             with open(catalogue_file_path, "r") as r:
