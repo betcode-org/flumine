@@ -6,6 +6,7 @@ from flumine.markets.middleware import (
     SimulatedMiddleware,
     RunnerAnalytics,
     OrderStatus,
+    OrderTypes,
     WIN_MINIMUM_ADJUSTMENT_FACTOR,
     PLACE_MINIMUM_ADJUSTMENT_FACTOR,
 )
@@ -120,6 +121,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
             lookup=("1.23", 12345, 0), simulated=mock_simulated, info={}
         )
         mock_order.order_type.size = 10
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_market = mock.Mock(market_id="1.23", blotter=[mock_order])
         self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
         self.assertEqual(mock_order.simulated.size_matched, 0)

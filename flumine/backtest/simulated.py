@@ -235,7 +235,9 @@ class Simulated:
                     if actual_sp > _order_type.price:
                         self.order.execution_complete()
                         return
-                    size = round(_order_type.liability / (actual_sp - 1), 2)
+                    size = round(
+                        _order_type.liability / (actual_sp - 1), 2
+                    )  # todo round 2dp down
             elif _order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
                 if self.side == "BACK":
                     size = _order_type.liability
