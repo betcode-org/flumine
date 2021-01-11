@@ -35,6 +35,7 @@ class BaseOrderPackage(BaseEvent):
         package_type: OrderPackageType,
         bet_delay: int,
         async_: bool = False,
+        market_version: int = None,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid1()
@@ -44,6 +45,7 @@ class BaseOrderPackage(BaseEvent):
         self.package_type = package_type
         self.bet_delay = bet_delay  # used for simulated execution
         self.async_ = async_
+        self._market_version = market_version
         self.customer_strategy_ref = config.hostname
         self.processed = False  # used for simulated execution
         self._retry = True
@@ -91,15 +93,15 @@ class BaseOrderPackage(BaseEvent):
             "package_type": self.package_type.value,
             "customer_strategy_ref": self.customer_strategy_ref,
             "bet_delay": self.bet_delay,
-            "market_version": self.market_version,
+            "market_version": self._market_version,
             "retry": self._retry,
             "retry_count": self._retry_count,
         }
 
     @property
     def market_version(self) -> Optional[dict]:
-        return None
-        # todo return {"version": self.market.market_book.version}
+        if self._market_version:
+            return {"version": self._market_version}
 
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)

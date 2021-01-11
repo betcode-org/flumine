@@ -2,7 +2,12 @@ import logging
 from typing import Iterable
 
 from ..order.ordertype import OrderTypes
-from ..utils import chunks, calculate_unmatched_exposure, calculate_matched_exposure
+from ..utils import (
+    batch_orders,
+    chunks,
+    calculate_unmatched_exposure,
+    calculate_matched_exposure,
+)
 from ..order.order import BaseOrder, OrderStatus
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
@@ -17,7 +22,7 @@ class Blotter:
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
-        # pending orders
+        # pending orders, list of (<Order>, {..})
         self.pending_place = []
         self.pending_cancel = []
         self.pending_update = []
@@ -61,15 +66,21 @@ class Blotter:
         packages = []
         _package_cls = BetfairOrderPackage
         limit = _package_cls.order_limit(package_type)
-        for chunked_orders in chunks(orders, limit):
-            order_package = _package_cls(
-                client=client,
-                market_id=self.market_id,
-                orders=chunked_orders,
-                package_type=package_type,
-                bet_delay=bet_delay,
-            )
-            packages.append(order_package)
+        # batch based on request data dict
+        batched_orders = batch_orders(orders)
+        # create packages
+        for market_version, mv_batched_orders in batched_orders.items():
+            for _orders in mv_batched_orders:
+                for chunked_orders in chunks(_orders, limit):
+                    order_package = _package_cls(
+                        client=client,
+                        market_id=self.market_id,
+                        orders=chunked_orders,
+                        package_type=package_type,
+                        bet_delay=bet_delay,
+                        market_version=market_version,
+                    )
+                    packages.append(order_package)
         orders.clear()
         return packages
 

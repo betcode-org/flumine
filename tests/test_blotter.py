@@ -51,22 +51,60 @@ class BlotterTest(unittest.TestCase):
 
     @mock.patch("flumine.markets.blotter.BetfairOrderPackage")
     def test___create_packages(self, mock_cls):
+        mock_cls.order_limit.return_value = 10
         mock_client = mock.Mock()
-        mock_order = mock.Mock()
-        mock_orders = [mock_order]
+        mock_order_one = mock.Mock()
+        mock_order_two = mock.Mock()
+        mock_order_three = mock.Mock()
+        mock_order_four = mock.Mock()
+        mock_order_five = mock.Mock()
+        mock_orders = [
+            (mock_order_one, {}),
+            (mock_order_two, {"batch": False}),
+            (mock_order_three, {"market_version": 123}),
+            (mock_order_four, {"market_version": 123}),
+            (mock_order_five, {"market_version": 123, "batch": False}),
+        ]
         packages = self.blotter._create_packages(
             mock_client, mock_orders, OrderPackageType.PLACE, 0
         )
+        self.assertEqual(len(packages), 4)
+        mock_cls.order_limit.assert_called_with(OrderPackageType.PLACE)
         self.assertEqual(
-            packages,
+            mock_cls.call_args_list,
             [
-                mock_cls(
-                    client=None,
+                mock.call(
+                    client=mock_client,
                     market_id=self.blotter.market_id,
-                    orders=mock_orders,
+                    orders=[mock_order_one],
                     package_type=OrderPackageType.PLACE,
                     bet_delay=0,
-                )
+                    market_version=None,
+                ),
+                mock.call(
+                    client=mock_client,
+                    market_id=self.blotter.market_id,
+                    orders=[mock_order_two],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=0,
+                    market_version=None,
+                ),
+                mock.call(
+                    client=mock_client,
+                    market_id=self.blotter.market_id,
+                    orders=[mock_order_three, mock_order_four],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=0,
+                    market_version=123,
+                ),
+                mock.call(
+                    client=mock_client,
+                    market_id=self.blotter.market_id,
+                    orders=[mock_order_five],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=0,
+                    market_version=123,
+                ),
             ],
         )
         self.assertEqual(mock_orders, [])

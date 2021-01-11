@@ -124,26 +124,51 @@ class BaseStrategy:
             del self._invested[i]
 
     # order
-    def place_order(self, market: Market, order) -> bool:
+    def place_order(
+        self,
+        market: Market,
+        order,
+        batch: bool = True,  # batch placeRequest with other orders
+        market_version: int = None,
+    ) -> bool:
         """Returns True if passes
         validate_order and placed.
         """
         runner_context = self.get_runner_context(*order.lookup)
         if self.validate_order(runner_context, order):
             runner_context.place()
-            market.place_order(order)
+            market.place_order(order, batch, market_version)
             return True
         else:
             return False
 
-    def cancel_order(self, market: Market, order, size_reduction: float = None) -> None:
-        market.cancel_order(order, size_reduction)
+    def cancel_order(
+        self,
+        market: Market,
+        order,
+        size_reduction: float = None,
+        batch: bool = True,  # batch cancelRequest with other orders
+    ) -> None:
+        market.cancel_order(order, size_reduction, batch)
 
-    def update_order(self, market: Market, order, new_persistence_type: str) -> None:
-        market.update_order(order, new_persistence_type)
+    def update_order(
+        self,
+        market: Market,
+        order,
+        new_persistence_type: str,
+        batch: bool = True,  # batch updateRequest with other orders
+    ) -> None:
+        market.update_order(order, new_persistence_type, batch)
 
-    def replace_order(self, market: Market, order, new_price: float) -> None:
-        market.replace_order(order, new_price)
+    def replace_order(
+        self,
+        market: Market,
+        order,
+        new_price: float,
+        batch: bool = True,  # batch replaceRequest with other orders
+        market_version: int = None,
+    ) -> None:
+        market.replace_order(order, new_price, batch, market_version)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # validate context
