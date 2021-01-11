@@ -23,9 +23,11 @@ use:
 class JupyterLoggingControl(LoggingControl):
     NAME = "JUPYTER_LOGGING_CONTROL"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self, file_name: str = "orders.json", directory: str = "/tmp", *args, **kwargs
+    ):
         super(JupyterLoggingControl, self).__init__(*args, **kwargs)
-        self.filename = os.path.join("/tmp", "orders.json")
+        self.file_name = os.path.join(directory, file_name)
 
     def _process_end_flumine(self, event):
         framework = event.event
@@ -66,9 +68,10 @@ class JupyterLoggingControl(LoggingControl):
 
     def _create_json(self, data):
         # save json to file
-        with open(self.filename, "w") as f:
+        with open(self.file_name, "w") as f:
             json.dump(data, f)
 
+    @staticmethod
     def launch(self, argv=None, **kwargs):
         from jupyterlab.labapp import LabApp
 
