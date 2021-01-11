@@ -3,6 +3,23 @@
 Release History
 ---------------
 
+1.15.2 (2021-01-11)
++++++++++++++++++++
+
+**Improvements**
+
+- Order execution args added on place/cancel/update/replace
+- License update
+- Example update (@lunswor)
+
+**Bug Fixes**
+
+- #358 dynamic keep alive (based on trading client)
+
+**Libraries**
+
+- py3.5 removed from setup.py
+
 1.15.1 (2020-12-28)
 +++++++++++++++++++
 

@@ -55,8 +55,11 @@ class Flumine(BaseFlumine):
                 del event
 
     def _add_default_workers(self):
+        ka_interval = min((self.client.betting_client.session_timeout / 2), 1200)
         self.add_worker(
-            worker.BackgroundWorker(self, function=worker.keep_alive, interval=1200)
+            worker.BackgroundWorker(
+                self, function=worker.keep_alive, interval=ka_interval
+            )
         )
         self.add_worker(
             worker.BackgroundWorker(

@@ -24,6 +24,7 @@ class OrderPackageTest(unittest.TestCase):
             [self.mock_order],
             self.mock_package_type,
             1,
+            market_version=123,
         )
 
     def test_init(self):
@@ -36,6 +37,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.bet_delay, 1)
         self.assertIsNone(self.order_package.EXCHANGE)
         self.assertFalse(self.order_package.async_)
+        self.assertEqual(self.order_package._market_version, 123)
         self.assertFalse(self.order_package.processed)
         self.assertTrue(self.order_package._retry)
         self.assertEqual(self.order_package._max_retries, 3)
@@ -97,14 +99,17 @@ class OrderPackageTest(unittest.TestCase):
                 "package_type": self.order_package.package_type.value,
                 "customer_strategy_ref": self.order_package.customer_strategy_ref,
                 "bet_delay": self.order_package.bet_delay,
-                "market_version": self.order_package.market_version,
+                "market_version": self.order_package._market_version,
                 "retry": self.order_package._retry,
                 "retry_count": self.order_package._retry_count,
             },
         )
 
     def test_market_version(self):
-        self.assertIsNone(self.order_package.market_version)
+        self.assertEqual(
+            self.order_package.market_version,
+            {"version": self.order_package._market_version},
+        )
 
     def test_iter(self):
         self.assertEqual([i for i in self.order_package], self.order_package.orders)
