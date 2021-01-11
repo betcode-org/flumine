@@ -352,20 +352,20 @@ class TestDataStream(unittest.TestCase):
 
     def test_flumine_stream(self):
         mock_listener = mock.Mock()
-        stream = datastream.FlumineStream(mock_listener)
+        stream = datastream.FlumineStream(mock_listener, 0)
         self.assertEqual(str(stream), "FlumineStream")
         self.assertEqual(repr(stream), "<FlumineStream [0]>")
 
     def test_flumine_stream_on_process(self):
         mock_listener = mock.Mock()
-        stream = datastream.FlumineStream(mock_listener)
+        stream = datastream.FlumineStream(mock_listener, 0)
         stream.on_process([1, 2, 3])
         mock_listener.output_queue.put.called_with(datastream.RawDataEvent([1, 2, 3]))
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream(self, mock_on_process):
-        mock_listener = mock.Mock()
-        stream = datastream.FlumineMarketStream(mock_listener)
+        mock_listener = mock.Mock(stream_unique_id=0)
+        stream = datastream.FlumineMarketStream(mock_listener, 0)
         market_books = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
         stream._process(market_books, 123)
 
@@ -377,8 +377,8 @@ class TestDataStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream_market_closed(self, mock_on_process):
-        mock_listener = mock.Mock()
-        stream = datastream.FlumineMarketStream(mock_listener)
+        mock_listener = mock.Mock(stream_unique_id=0)
+        stream = datastream.FlumineMarketStream(mock_listener, 0)
         stream._caches = {"1.123": object}
         market_books = [{"id": "1.123", "marketDefinition": {"status": "CLOSED"}}]
         stream._process(market_books, 123)
@@ -392,8 +392,8 @@ class TestDataStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")
     def test_flumine_race_stream(self, mock_on_process):
-        mock_listener = mock.Mock()
-        stream = datastream.FlumineRaceStream(mock_listener)
+        mock_listener = mock.Mock(stream_unique_id=0)
+        stream = datastream.FlumineRaceStream(mock_listener, 0)
         race_updates = [{"mid": "1.123"}, {"mid": "1.456"}, {"mid": "1.123"}]
         stream._process(race_updates, 123)
 
@@ -444,6 +444,7 @@ class TestHistoricalStream(unittest.TestCase):
             file_path={"test": "me"},
             listener=self.stream._listener,
             operation="marketSubscription",
+            unique_id=0,
         )
         self.assertEqual(generator, mock_generator().get_generator())
 
@@ -451,7 +452,7 @@ class TestHistoricalStream(unittest.TestCase):
 class TestFlumineMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.FlumineMarketStream(self.listener)
+        self.stream = historicalstream.FlumineMarketStream(self.listener, 0)
 
     def test_init(self):
         self.assertEqual(self.stream._listener, self.listener)
@@ -467,9 +468,7 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
-        mock_cache.assert_called_with(
-            publish_time=12345, id="1.23", img={1: 2}, marketDefinition={"runners": []}
-        )
+        mock_cache.assert_called_with("1.23", 12345, self.stream._listener.lightweight)
         mock_cache().update_cache.assert_called_with(
             {"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}, 12345
         )
@@ -477,7 +476,7 @@ class TestFlumineMarketStream(unittest.TestCase):
     def test_snap_inplay(self):
         # inPlay
         self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=True, seconds_to_start=None)
+            mock.Mock(inplay=True, seconds_to_start=None), 0
         )
         self.stream._caches = {
             "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": False})
@@ -493,7 +492,7 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertEqual(len(self.stream.snap()), 1)
 
         self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=False, seconds_to_start=None)
+            mock.Mock(inplay=False, seconds_to_start=None), 0
         )
         self.stream._caches = {
             "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": False})
@@ -507,7 +506,7 @@ class TestFlumineMarketStream(unittest.TestCase):
     def test_snap_seconds_to_start(self):
         # secondsToStart
         self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=None, seconds_to_start=600)
+            mock.Mock(inplay=None, seconds_to_start=600), 0
         )
         self.stream._caches = {
             "1.123": mock.Mock(
@@ -536,21 +535,23 @@ class TestFlumineMarketStream(unittest.TestCase):
 class TestFlumineRaceStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.FlumineRaceStream(self.listener)
+        self.stream = historicalstream.FlumineRaceStream(self.listener, 0)
 
     @mock.patch("flumine.streams.historicalstream.RaceCache")
     def test__process(self, mock_cache):
         self.assertFalse(
             self.stream._process(
-                [{"mid": "1.23", "img": {1: 2}}],
+                [{"mid": "1.23", "id": 1, "img": {1: 2}}],
                 12345,
             )
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
-        mock_cache.assert_called_with(publish_time=12345, mid="1.23", img={1: 2})
+        mock_cache.assert_called_with(
+            "1.23", 12345, 1, self.stream._listener.lightweight
+        )
         mock_cache().update_cache.assert_called_with(
-            {"mid": "1.23", "img": {1: 2}}, 12345
+            {"mid": "1.23", "id": 1, "img": {1: 2}}, 12345
         )
 
 

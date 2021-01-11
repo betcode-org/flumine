@@ -36,7 +36,7 @@ class FlumineMarketStream(MarketStream):
                     )
                     continue
                 market_book_cache = MarketBookCache(
-                    publish_time=publish_time, **market_book
+                    market_id, publish_time, self._lightweight
                 )
                 self._caches[market_id] = market_book_cache
                 logger.info(
@@ -69,9 +69,7 @@ class FlumineMarketStream(MarketStream):
                 if self._listener.inplay is False:
                     if cache.market_definition["inPlay"]:
                         continue
-            market_books.append(
-                cache.create_resource(self.unique_id, self._lightweight, snap=True)
-            )
+            market_books.append(cache.create_resource(self.unique_id, snap=True))
         return market_books
 
 
@@ -87,7 +85,10 @@ class FlumineRaceStream(RaceStream):
             market_id = update["mid"]
             race_cache = self._caches.get(market_id)
             if race_cache is None:
-                race_cache = RaceCache(publish_time=publish_time, **update)
+                race_id = update.get("id")
+                race_cache = RaceCache(
+                    market_id, publish_time, race_id, self._lightweight
+                )
                 self._caches[market_id] = race_cache
                 logger.info(
                     "[%s: %s]: %s added, %s markets in cache"
@@ -111,9 +112,9 @@ class HistoricListener(StreamListener):
 
     def _add_stream(self, unique_id, stream_type):
         if stream_type == "marketSubscription":
-            return FlumineMarketStream(self)
+            return FlumineMarketStream(self, unique_id)
         elif stream_type == "raceSubscription":
-            return FlumineRaceStream(self)
+            return FlumineRaceStream(self, unique_id)
 
 
 class HistoricalStream(BaseStream):
@@ -132,5 +133,6 @@ class HistoricalStream(BaseStream):
             file_path=self.market_filter,
             listener=self._listener,
             operation=self.operation,
+            unique_id=0,
         )
         return stream.get_generator()
