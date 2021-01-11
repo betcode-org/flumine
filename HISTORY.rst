@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.15.3 (2021-01-11)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Correctly handle runner removal / order void for LimitOnClose/MarketOnClose orders
+
 1.15.2 (2021-01-11)
 +++++++++++++++++++
 
