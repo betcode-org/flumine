@@ -46,7 +46,13 @@ class Market:
         )
 
     # order
-    def place_order(self, order, execute: bool = True) -> None:
+    def place_order(
+        self,
+        order,
+        batch: bool = True,
+        market_version: int = None,
+        execute: bool = True,
+    ) -> None:
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
@@ -56,19 +62,40 @@ class Market:
         else:
             return  # retry attempt so ignore?
         if execute:  # handles replaceOrder
-            self.blotter.pending_place.append(order)
+            self.blotter.pending_place.append(
+                (order, {"batch": batch, "market_version": market_version})
+            )
 
-    def cancel_order(self, order, size_reduction: float = None) -> None:
+    def cancel_order(
+        self, order, size_reduction: float = None, batch: bool = True
+    ) -> None:
         order.cancel(size_reduction)
-        self.blotter.pending_cancel.append(order)
+        self.blotter.pending_cancel.append(
+            (order, {"size_reduction": size_reduction, "batch": batch})
+        )
 
-    def update_order(self, order, new_persistence_type: str) -> None:
+    def update_order(
+        self, order, new_persistence_type: str, batch: bool = True
+    ) -> None:
         order.update(new_persistence_type)
-        self.blotter.pending_update.append(order)
+        self.blotter.pending_update.append(
+            (order, {"new_persistence_type": new_persistence_type, "batch": batch})
+        )
 
-    def replace_order(self, order, new_price: float) -> None:
+    def replace_order(
+        self, order, new_price: float, batch: bool = True, market_version: int = None
+    ) -> None:
         order.replace(new_price)
-        self.blotter.pending_replace.append(order)
+        self.blotter.pending_replace.append(
+            (
+                order,
+                {
+                    "new_price": new_price,
+                    "batch": batch,
+                    "market_version": market_version,
+                },
+            )
+        )
 
     @property
     def event(self) -> dict:

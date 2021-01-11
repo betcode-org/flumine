@@ -31,10 +31,10 @@ class Simulated:
         self.size_voided = 0.0
         self._piq = 0.0
         self._bsp_reconciled = False
-        # todo handle limit lapsing
 
     def __call__(self, market_book: MarketBook, runner_analytics):
         # simulates order matching
+        # todo handle limit lapsing
         runner = self._get_runner(market_book)
         if (
             self._bsp_reconciled is False
@@ -46,7 +46,7 @@ class Simulated:
         elif (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining
         ):
-            # todo piq cancellations
+            # todo estimated piq cancellations
             self._process_traded(
                 market_book.publish_time_epoch, runner_analytics.traded
             )
@@ -56,6 +56,7 @@ class Simulated:
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
         # todo instruction/fillkill/timeInForce etc
+        # todo check marketVersion
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             runner = self._get_runner(market_book)
 
