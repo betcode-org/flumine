@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine import Flumine
+from flumine import Flumine, worker
 from flumine.events import events
 from flumine.order.orderpackage import BaseOrderPackage
 
@@ -65,10 +65,36 @@ class FlumineTest(unittest.TestCase):
         mock__process_custom_event.assert_called_with(mock_events[8])
         mock__add_default_workers.assert_called()
 
-    def test__add_default_workers(self):
+    @mock.patch("flumine.worker.BackgroundWorker")
+    @mock.patch("flumine.Flumine.add_worker")
+    def test__add_default_workers(self, mock_add_worker, mock_worker):
         self.mock_trading.betting_client.session_timeout = 1200
         self.flumine._add_default_workers()
-        self.assertEqual(len(self.flumine._workers), 4)
+        self.assertEqual(len(mock_add_worker.call_args_list), 4)
+        self.assertEqual(
+            mock_worker.call_args_list,
+            [
+                mock.call(self.flumine, function=worker.keep_alive, interval=600),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_account_balance,
+                    interval=120,
+                    start_delay=10,
+                ),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_market_catalogue,
+                    interval=60,
+                    start_delay=10,
+                ),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_cleared_orders,
+                    interval=10,
+                    start_delay=10,
+                ),
+            ],
+        )
 
     def test_str(self):
         assert str(self.flumine) == "<Flumine>"
