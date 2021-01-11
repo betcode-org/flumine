@@ -66,6 +66,7 @@ class FlumineTest(unittest.TestCase):
         mock__add_default_workers.assert_called()
 
     def test__add_default_workers(self):
+        self.mock_trading.betting_client.session_timeout = 1200
         self.flumine._add_default_workers()
         self.assertEqual(len(self.flumine._workers), 4)
 
