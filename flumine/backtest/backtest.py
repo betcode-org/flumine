@@ -40,10 +40,7 @@ class FlumineBacktest(BaseFlumine):
                 logger.info(
                     "Starting historical market '{0}'".format(stream.market_filter)
                 )
-
                 for event in stream_gen():
-                    for market_book in event:  # todo move?
-                        market_book.streaming_unique_id = stream.stream_id
                     self._process_market_books(events.MarketBookEvent(event))
 
                 self._pending_packages.clear()

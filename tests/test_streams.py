@@ -444,8 +444,13 @@ class TestHistoricalStream(unittest.TestCase):
             file_path={"test": "me"},
             listener=self.stream._listener,
             operation="marketSubscription",
-            unique_id=0,
+            unique_id=self.stream.stream_id,
         )
+        self.assertIsNone(self.stream._listener.max_latency)
+        self.assertIsNone(self.stream._listener.output_queue)
+        self.assertFalse(self.stream._listener.lightweight)
+        self.assertFalse(self.stream._listener.debug)
+        self.assertFalse(self.stream._listener.update_clk)
         self.assertEqual(generator, mock_generator().get_generator())
 
 
@@ -577,6 +582,14 @@ class TestHistoricListener(unittest.TestCase):
         self.assertEqual(
             self.listener._add_stream(123, "raceSubscription"), mock_stream()
         )
+
+    def test_on_data(self):
+        mock_stream = mock.Mock()
+        self.listener.stream = mock_stream
+        self.listener.on_data("{}")
+        mock_stream.on_update.assert_called_with({})
+        # error
+        self.assertIsNone(self.listener.on_data("p"))
 
 
 class TestOrderStream(unittest.TestCase):

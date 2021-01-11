@@ -1,9 +1,11 @@
 import logging
 import datetime
+from typing import Optional
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
 from betfairlightweight.streaming.stream import MarketStream, RaceStream
 from betfairlightweight.streaming.cache import MarketBookCache, RaceCache
 from betfairlightweight.resources.baseresource import BaseResource
+from betfairlightweight.compat import json
 
 from .basestream import BaseStream
 
@@ -116,6 +118,18 @@ class HistoricListener(StreamListener):
         elif stream_type == "raceSubscription":
             return FlumineRaceStream(self, unique_id)
 
+    def on_data(self, raw_data: str) -> Optional[bool]:
+        try:
+            data = json.loads(raw_data)
+        except ValueError:
+            logger.error("value error: %s" % raw_data)
+            return
+
+        # remove error handler / operation check
+
+        # skip on_change as we know it is always an update
+        self.stream.on_update(data)
+
 
 class HistoricalStream(BaseStream):
 
@@ -129,10 +143,17 @@ class HistoricalStream(BaseStream):
         pass
 
     def create_generator(self):
+        self._listener = self.LISTENER(
+            max_latency=self.MAX_LATENCY,  # ignore latency errors
+            output_queue=None,  # use generator rather than a queue (faster)
+            lightweight=False,  # lightweight mode is faster
+            debug=False,  # prevent logging calls on each update (slow)
+            update_clk=False,  # do not update clk on updates (not required when backtesting)
+        )
         stream = HistoricalGeneratorStream(
             file_path=self.market_filter,
             listener=self._listener,
             operation=self.operation,
-            unique_id=0,
+            unique_id=self.stream_id,
         )
         return stream.get_generator()
