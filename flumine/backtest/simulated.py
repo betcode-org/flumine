@@ -29,12 +29,12 @@ class Simulated:
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
         self.size_voided = 0.0
+        self.market_version = None  # version at place so we can lapse if needed
         self._piq = 0.0
         self._bsp_reconciled = False
 
-    def __call__(self, market_book: MarketBook, runner_analytics):
+    def __call__(self, market_book: MarketBook, runner_analytics) -> None:
         # simulates order matching
-        # todo handle limit lapsing
         runner = self._get_runner(market_book)
         if (
             self._bsp_reconciled is False
@@ -46,6 +46,13 @@ class Simulated:
         elif (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining
         ):
+            if market_book.version != self.market_version:
+                self.market_version = market_book.version  # update for next time
+                if market_book.status == "SUSPENDED":  # Material change
+                    if self.order.order_type.persistence_type == "LAPSE":
+                        self.size_lapsed += self.size_remaining
+                        return
+
             # todo estimated piq cancellations
             self._process_traded(
                 market_book.publish_time_epoch, runner_analytics.traded
@@ -56,7 +63,9 @@ class Simulated:
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
         # todo instruction/fillkill/timeInForce etc
-        # todo check marketVersion
+        # todo check marketVersion or reject entire package?
+
+        self.market_version = market_book.version
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             runner = self._get_runner(market_book)
 
