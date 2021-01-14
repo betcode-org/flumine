@@ -143,13 +143,8 @@ class HistoricalStream(BaseStream):
         pass
 
     def create_generator(self):
-        self._listener = self.LISTENER(
-            max_latency=self.MAX_LATENCY,  # ignore latency errors
-            output_queue=None,  # use generator rather than a queue (faster)
-            lightweight=False,  # lightweight mode is faster
-            debug=False,  # prevent logging calls on each update (slow)
-            update_clk=False,  # do not update clk on updates (not required when backtesting)
-        )
+        self._listener.debug = False  # prevent logging calls on each update (slow)
+        self._listener.update_clk = False  # do not update clk on updates (not required when backtesting)
         stream = HistoricalGeneratorStream(
             file_path=self.market_filter,
             listener=self._listener,

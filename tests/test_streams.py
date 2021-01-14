@@ -447,7 +447,6 @@ class TestHistoricalStream(unittest.TestCase):
             unique_id=self.stream.stream_id,
         )
         self.assertIsNone(self.stream._listener.max_latency)
-        self.assertIsNone(self.stream._listener.output_queue)
         self.assertFalse(self.stream._listener.lightweight)
         self.assertFalse(self.stream._listener.debug)
         self.assertFalse(self.stream._listener.update_clk)
