@@ -116,8 +116,12 @@ def keep_alive(context: dict, flumine) -> None:
 
 def poll_market_catalogue(context: dict, flumine) -> None:
     client = flumine.client
-    live_markets = list(flumine.markets.markets.keys())
-    for market_ids in chunks(live_markets, 25):
+    markets = [
+        m.market_id
+        for m in list(flumine.markets.markets.values())
+        if m.update_market_catalogue
+    ]
+    for market_ids in chunks(markets, 25):
         try:
             market_catalogues = client.betting_client.betting.list_market_catalogue(
                 filter=filters.market_filter(market_ids=market_ids),

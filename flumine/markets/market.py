@@ -24,10 +24,13 @@ class Market:
         self.date_time_closed = None
         self.market_book = market_book
         self.market_catalogue = market_catalogue
+        self.update_market_catalogue = True
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
         self.blotter = Blotter(market_id)
 
     def __call__(self, market_book: MarketBook):
+        if market_book.version != self.market_book.version:
+            self.update_market_catalogue = True
         self.market_book = market_book
 
     def open_market(self) -> None:

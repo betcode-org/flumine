@@ -208,7 +208,7 @@ class BaseFlumineTest(unittest.TestCase):
 
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
-    def test__process_market_catalogue(self, mock_log_control, mock_events):
+    def test__process_market_catalogues(self, mock_log_control, mock_events):
         mock_market = mock.Mock()
         mock_market.market_catalogue = None
         mock_markets = mock.Mock()
@@ -221,6 +221,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_market_catalogues(mock_event)
         self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
         mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
+        self.assertFalse(mock_market.update_market_catalogue)
 
     def test__process_current_orders(self):
         mock_event = mock.Mock()

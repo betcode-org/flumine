@@ -91,11 +91,16 @@ class WorkersTest(unittest.TestCase):
     def test_poll_market_catalogue(self, mock_events):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
-        mock_flumine.markets.markets = {"1.234": None, "5.678": None}
+        mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
+        mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
+        mock_flumine.markets.markets = {
+            "1.234": mock_market_one,
+            "5.678": mock_market_two,
+        }
 
         worker.poll_market_catalogue(mock_context, mock_flumine)
         mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
-            filter={"marketIds": list(mock_flumine.markets.markets.keys())},
+            filter={"marketIds": ["1.234"]},
             market_projection=[
                 "COMPETITION",
                 "EVENT",
