@@ -112,12 +112,14 @@ class MarketTest(unittest.TestCase):
         self.assertIsNone(self.market.date_time_closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
+        self.assertTrue(self.market.update_market_catalogue)
         self.assertEqual(self.market.context, {"simulated": {}})
 
     def test_call(self):
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
+        self.assertTrue(self.market.update_market_catalogue)
 
     def test_open_market(self):
         self.market.open_market()
