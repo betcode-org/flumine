@@ -99,10 +99,6 @@ class SimulatedMiddleware(Middleware):
                         extra=order.info,
                     )
                 else:
-                    if order.status == OrderStatus.EXECUTABLE:
-                        # todo cancel if not PERSIST
-                        # todo does a market version bump occur if withdrawal is below the limit?
-                        pass
                     if (
                         removal_adjustment_factor
                         and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
