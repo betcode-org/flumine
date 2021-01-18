@@ -144,7 +144,9 @@ class HistoricalStream(BaseStream):
 
     def create_generator(self):
         self._listener.debug = False  # prevent logging calls on each update (slow)
-        self._listener.update_clk = False  # do not update clk on updates (not required when backtesting)
+        self._listener.update_clk = (
+            False  # do not update clk on updates (not required when backtesting)
+        )
         stream = HistoricalGeneratorStream(
             file_path=self.market_filter,
             listener=self._listener,
