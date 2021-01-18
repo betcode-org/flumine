@@ -14,6 +14,10 @@ Release History
 
 - #192 correctly lapse limit orders
 
+**Libraries**
+
+- betfairlightweight upgraded to 2.11.2
+
 1.15.3 (2021-01-11)
 +++++++++++++++++++
 
