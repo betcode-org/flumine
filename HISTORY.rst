@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.15.4 (2021-01-18)
++++++++++++++++++++
+
+**Improvements**
+
+- Restrict catalogue requests to market version update
+
+**Bug Fixes**
+
+- #192 correctly lapse limit orders
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.11.2
+
 1.15.3 (2021-01-11)
 +++++++++++++++++++
 
