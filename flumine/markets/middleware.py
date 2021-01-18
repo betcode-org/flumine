@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
-from ..order.order import OrderStatus
+from ..order.order import OrderStatus, OrderTypes
 from ..utils import get_price, wap
 
 logger = logging.getLogger(__name__)
@@ -90,16 +90,15 @@ class SimulatedMiddleware(Middleware):
                     order.simulated.size_matched = 0
                     order.simulated.average_price_matched = 0
                     order.simulated.matched = []
-                    order.simulated.size_voided = order.order_type.size
+                    if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                        order.simulated.size_voided = order.order_type.size
+                    else:
+                        order.simulated.size_voided = order.order_type.liability
                     logger.warning(
                         "Order voided on non runner {0}".format(order.selection_id),
                         extra=order.info,
                     )
                 else:
-                    if order.status == OrderStatus.EXECUTABLE:
-                        # todo cancel if not PERSIST
-                        # todo does a market version bump occur if withdrawal is below the limit?
-                        pass
                     if (
                         removal_adjustment_factor
                         and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR

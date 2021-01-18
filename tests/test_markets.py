@@ -112,12 +112,14 @@ class MarketTest(unittest.TestCase):
         self.assertIsNone(self.market.date_time_closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
+        self.assertTrue(self.market.update_market_catalogue)
         self.assertEqual(self.market.context, {"simulated": {}})
 
     def test_call(self):
         mock_market_book = mock.Mock()
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
+        self.assertTrue(self.market.update_market_catalogue)
 
     def test_open_market(self):
         self.market.open_market()
@@ -135,7 +137,10 @@ class MarketTest(unittest.TestCase):
         mock_order.trade.market_notes = None
         self.market.place_order(mock_order)
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
-        self.assertEqual(self.market.blotter.pending_place, [mock_order])
+        self.assertEqual(
+            self.market.blotter.pending_place,
+            [(mock_order, {"batch": True, "market_version": None})],
+        )
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
         mock_order.trade.update_market_notes.assert_called_with(self.market)
 
@@ -161,7 +166,10 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.market.cancel_order(mock_order, 0.01)
         mock_order.cancel.assert_called_with(0.01)
-        self.assertEqual(mock_blotter.pending_cancel, [mock_order])
+        self.assertEqual(
+            mock_blotter.pending_cancel,
+            [(mock_order, {"size_reduction": 0.01, "batch": True})],
+        )
 
     def test_update_order(self):
         mock_blotter = mock.Mock()
@@ -170,16 +178,31 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.market.update_order(mock_order, "PERSIST")
         mock_order.update.assert_called_with("PERSIST")
-        self.assertEqual(mock_blotter.pending_update, [mock_order])
+        self.assertEqual(
+            mock_blotter.pending_update,
+            [(mock_order, {"new_persistence_type": "PERSIST", "batch": True})],
+        )
 
     def test_replace_order(self):
         mock_blotter = mock.Mock()
         mock_blotter.pending_replace = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.replace_order(mock_order, 1.01)
+        self.market.replace_order(mock_order, 1.01, True, 321)
         mock_order.replace.assert_called_with(1.01)
-        self.assertEqual(mock_blotter.pending_replace, [mock_order])
+        self.assertEqual(
+            mock_blotter.pending_replace,
+            [
+                (
+                    mock_order,
+                    {
+                        "new_price": 1.01,
+                        "batch": True,
+                        "market_version": 321,
+                    },
+                )
+            ],
+        )
 
     def test_event(self):
         mock_market_catalogue = mock.Mock()

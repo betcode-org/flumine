@@ -29,11 +29,11 @@ class Simulated:
         self.size_cancelled = 0.0
         self.size_lapsed = 0.0
         self.size_voided = 0.0
+        self.market_version = None  # version at place so we can lapse if needed
         self._piq = 0.0
         self._bsp_reconciled = False
-        # todo handle limit lapsing
 
-    def __call__(self, market_book: MarketBook, runner_analytics):
+    def __call__(self, market_book: MarketBook, runner_analytics) -> None:
         # simulates order matching
         runner = self._get_runner(market_book)
         if (
@@ -46,7 +46,14 @@ class Simulated:
         elif (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining
         ):
-            # todo piq cancellations
+            if market_book.version != self.market_version:
+                self.market_version = market_book.version  # update for next time
+                if market_book.status == "SUSPENDED":  # Material change
+                    if self.order.order_type.persistence_type == "LAPSE":
+                        self.size_lapsed += self.size_remaining
+                        return
+
+            # todo estimated piq cancellations
             self._process_traded(
                 market_book.publish_time_epoch, runner_analytics.traded
             )
@@ -56,6 +63,9 @@ class Simulated:
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
         # todo instruction/fillkill/timeInForce etc
+        # todo check marketVersion or reject entire package?
+
+        self.market_version = market_book.version
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             runner = self._get_runner(market_book)
 
@@ -234,7 +244,9 @@ class Simulated:
                     if actual_sp > _order_type.price:
                         self.order.execution_complete()
                         return
-                    size = round(_order_type.liability / (actual_sp - 1), 2)
+                    size = round(
+                        _order_type.liability / (actual_sp - 1), 2
+                    )  # todo round 2dp down
             elif _order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
                 if self.side == "BACK":
                     size = _order_type.liability

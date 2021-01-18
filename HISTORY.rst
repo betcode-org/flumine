@@ -3,6 +3,45 @@
 Release History
 ---------------
 
+1.15.4 (2021-01-18)
++++++++++++++++++++
+
+**Improvements**
+
+- Restrict catalogue requests to market version update
+
+**Bug Fixes**
+
+- #192 correctly lapse limit orders
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.11.2
+
+1.15.3 (2021-01-11)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Correctly handle runner removal / order void for LimitOnClose/MarketOnClose orders
+
+1.15.2 (2021-01-11)
++++++++++++++++++++
+
+**Improvements**
+
+- Order execution args added on place/cancel/update/replace
+- License update
+- Example update (@lunswor)
+
+**Bug Fixes**
+
+- #358 dynamic keep alive (based on trading client)
+
+**Libraries**
+
+- py3.5 removed from setup.py
+
 1.15.1 (2020-12-28)
 +++++++++++++++++++
 
