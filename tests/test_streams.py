@@ -576,6 +576,10 @@ class TestHistoricListener(unittest.TestCase):
             self.listener._add_stream(123, "marketSubscription"), mock_stream()
         )
 
+    def test__add_stream_order(self):
+        with self.assertRaises(ListenerError):
+            self.listener._add_stream(123, "orderSubscription")
+
     @mock.patch("flumine.streams.historicalstream.FlumineRaceStream")
     def test__add_stream_race(self, mock_stream):
         self.assertEqual(

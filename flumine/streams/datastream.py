@@ -18,12 +18,12 @@ helps reduce CPU.
 
 
 class FlumineListener(StreamListener):
-    def _add_stream(self, unique_id: int, stream_type: str) -> BFBaseStream:
-        if stream_type == "marketSubscription":
+    def _add_stream(self, unique_id: int, operation: str) -> BFBaseStream:
+        if operation == "marketSubscription":
             return FlumineMarketStream(self, unique_id)
-        elif stream_type == "orderSubscription":
-            raise ListenerError("Not expecting an order stream...")
-        elif stream_type == "raceSubscription":
+        elif operation == "orderSubscription":
+            raise ListenerError("Unable to process order stream")
+        elif operation == "raceSubscription":
             return FlumineRaceStream(self, unique_id)
 
 

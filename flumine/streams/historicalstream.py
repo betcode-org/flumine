@@ -8,6 +8,7 @@ from betfairlightweight.resources.baseresource import BaseResource
 from betfairlightweight.compat import json
 
 from .basestream import BaseStream
+from ..exceptions import ListenerError
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,12 @@ class FlumineMarketStream(MarketStream):
                 full_image or market_book_cache is None
             ):  # historic data does not contain img
                 if "marketDefinition" not in market_book:
-                    logger.error(
-                        "[%s: %s]: Unable to add %s to cache due to marketDefinition "
-                        "not being present (make sure EX_MARKET_DEF is requested)"
+                    logger.warning(
+                        "[%s: %s]: Missing marketDefinition on market %s resulting "
+                        "in potential missing data in the MarketBook (make sure "
+                        "EX_MARKET_DEF is requested)"
                         % (self, self.unique_id, market_id)
                     )
-                    continue
                 market_book_cache = MarketBookCache(
                     market_id, publish_time, self._lightweight
                 )
@@ -112,10 +113,12 @@ class HistoricListener(StreamListener):
         self.inplay = inplay
         self.seconds_to_start = seconds_to_start
 
-    def _add_stream(self, unique_id, stream_type):
-        if stream_type == "marketSubscription":
+    def _add_stream(self, unique_id: int, operation: str):
+        if operation == "marketSubscription":
             return FlumineMarketStream(self, unique_id)
-        elif stream_type == "raceSubscription":
+        elif operation == "orderSubscription":
+            raise ListenerError("Unable to process order stream")
+        elif operation == "raceSubscription":
             return FlumineRaceStream(self, unique_id)
 
     def on_data(self, raw_data: str) -> Optional[bool]:
