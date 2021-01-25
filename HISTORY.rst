@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.16.0 (2021-01-25)
++++++++++++++++++++
+
+**Improvements**
+
+- bflw changes / further listener optimisations
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.12.0
+
 1.15.4 (2021-01-18)
 +++++++++++++++++++
 

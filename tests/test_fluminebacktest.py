@@ -46,7 +46,6 @@ class FlumineBacktestTest(unittest.TestCase):
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
         mock__process_end_flumine.assert_called_with()
         mock__unpatch_datetime.assert_called_with()
-        self.assertEqual(mock_market_book.streaming_unique_id, mock_stream.stream_id)
 
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_orders")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_backtest_orders")

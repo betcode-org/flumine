@@ -41,7 +41,7 @@ class IntegrationTest(unittest.TestCase):
 
             def process_market_book(self, market, market_book):
                 for runner in market_book.runners:
-                    if runner.last_price_traded < 2:
+                    if runner.status == "ACTIVE" and runner.last_price_traded < 2:
                         lay = get_price(runner.ex.available_to_lay, 0)
                         trade = Trade(
                             market_book.market_id,
@@ -68,21 +68,22 @@ class IntegrationTest(unittest.TestCase):
 
             def process_market_book(self, market, market_book):
                 for runner in market_book.runners:
-                    runner_context = self.get_runner_context(
-                        market.market_id, runner.selection_id
-                    )
-                    if runner_context.trade_count == 0:
-                        trade = Trade(
-                            market_book.market_id,
-                            runner.selection_id,
-                            runner.handicap,
-                            self,
+                    if runner.status == "ACTIVE":
+                        runner_context = self.get_runner_context(
+                            market.market_id, runner.selection_id
                         )
-                        order = trade.create_order(
-                            side="LAY",
-                            order_type=MarketOnCloseOrder(100.00),
-                        )
-                        self.place_order(market, order)
+                        if runner_context.trade_count == 0:
+                            trade = Trade(
+                                market_book.market_id,
+                                runner.selection_id,
+                                runner.handicap,
+                                self,
+                            )
+                            order = trade.create_order(
+                                side="LAY",
+                                order_type=MarketOnCloseOrder(100.00),
+                            )
+                            self.place_order(market, order)
 
         client = clients.BacktestClient()
         framework = FlumineBacktest(client=client)

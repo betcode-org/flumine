@@ -19,7 +19,7 @@ client = clients.BacktestClient()
 
 framework = FlumineBacktest(client=client)
 
-_market = "/Users/liampauling/Downloads/1.169399847"
+_market = "tests/resources/PRO-1.170258213"
 
 strategy = LowestLayer(
     market_filter={"markets": [_market]},
