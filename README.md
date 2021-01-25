@@ -11,13 +11,13 @@ Betfair trading framework with a focus on:
 - rock-solid
 - safe
 
-Support for market and custom streaming data (order, score and custom polling data in development)
+Support for market, order and custom streaming data.
 
 [docs](https://liampauling.github.io/flumine/)
 
 [join slack group](https://betfairlightweight.herokuapp.com)
 
-Currently tested on Python 3.6, 3.7 and 3.8.
+Tested on Python 3.6, 3.7, 3.8 and 3.9.
 
 ## installation
 
