@@ -6,7 +6,6 @@ from ..events import events
 from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
-from .utils import PendingPackages
 from ..order.orderpackage import OrderPackageType
 from ..order import process
 
@@ -24,7 +23,7 @@ class FlumineBacktest(BaseFlumine):
 
     def __init__(self, client):
         super(FlumineBacktest, self).__init__(client)
-        self._pending_packages = PendingPackages()
+        self._pending_packages = []
 
     def run(self) -> None:
         if self.client.EXCHANGE != ExchangeType.SIMULATED:
@@ -62,7 +61,8 @@ class FlumineBacktest(BaseFlumine):
             config.current_time = market_book.publish_time
 
             # check if there are orders to process
-            self._check_pending_packages()
+            if self._pending_packages:
+                self._check_pending_packages()
 
             if market_book.status == "CLOSED":
                 self._process_close_market(event=events.CloseMarketEvent(market_book))
@@ -113,36 +113,39 @@ class FlumineBacktest(BaseFlumine):
         packages for later execution
         """
         for market in self.markets:
-            bet_delay = market.market_book.bet_delay
-            for order_package in market.blotter.process_orders(self.client, bet_delay):
-                self._pending_packages.append(order_package)
-
-    def _process_order_package(self, order_package) -> None:
-        """Validate trading controls and
-        then execute immediately.
-        """
-        super(FlumineBacktest, self)._process_order_package(order_package)
-        order_package.processed = True
+            if market.blotter.pending_orders:
+                bet_delay = market.market_book.bet_delay
+                for order_package in market.blotter.process_orders(
+                    self.client, bet_delay
+                ):
+                    self._pending_packages.append(order_package)
 
     def _check_pending_packages(self):
+        processed = []
         for order_package in self._pending_packages:
-            _client = order_package.client
+            client = order_package.client
             if order_package.package_type == OrderPackageType.PLACE:
                 if order_package.elapsed_seconds > (
-                    _client.execution.PLACE_LATENCY + order_package.bet_delay
+                    client.execution.PLACE_LATENCY + order_package.bet_delay
                 ):
                     self._process_order_package(order_package)
+                    processed.append(order_package)
             elif order_package.package_type == OrderPackageType.CANCEL:
-                if order_package.elapsed_seconds > _client.execution.CANCEL_LATENCY:
+                if order_package.elapsed_seconds > client.execution.CANCEL_LATENCY:
                     self._process_order_package(order_package)
+                    processed.append(order_package)
             elif order_package.package_type == OrderPackageType.UPDATE:
-                if order_package.elapsed_seconds > _client.execution.UPDATE_LATENCY:
+                if order_package.elapsed_seconds > client.execution.UPDATE_LATENCY:
                     self._process_order_package(order_package)
+                    processed.append(order_package)
             elif order_package.package_type == OrderPackageType.REPLACE:
                 if order_package.elapsed_seconds > (
-                    _client.execution.REPLACE_LATENCY + order_package.bet_delay
+                    client.execution.REPLACE_LATENCY + order_package.bet_delay
                 ):
                     self._process_order_package(order_package)
+                    processed.append(order_package)
+        for p in processed:
+            self._pending_packages.remove(p)
 
     def _monkey_patch_datetime(self):
         config.current_time = datetime.datetime.utcnow()

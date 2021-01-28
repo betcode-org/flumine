@@ -56,6 +56,7 @@ class FlumineBacktestTest(unittest.TestCase):
         mock__process_backtest_orders,
         mock__process_market_orders,
     ):
+        self.flumine._pending_packages = [mock.Mock()]
         mock_event = mock.Mock()
         mock_market_book = mock.Mock(market_id="1.23")
         mock_market_book.runners = []
@@ -99,12 +100,6 @@ class FlumineBacktestTest(unittest.TestCase):
             self.flumine.client, mock_market.market_book.bet_delay
         )
         self.assertEqual(self.flumine._pending_packages, [mock_order_package])
-
-    @mock.patch("flumine.backtest.backtest.BaseFlumine._process_order_package")
-    def test__process_order_package(self, mock__process_order_package):
-        mock_order_package = mock.Mock(processed=False)
-        self.flumine._process_order_package(mock_order_package)
-        self.assertTrue(mock_order_package.processed)
 
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_order_package")
     def test__check_pending_packages_place(self, mock__process_order_package):

@@ -57,9 +57,9 @@ class FlumineMarketStream(MarketStream):
             if market_ids and cache.market_id not in market_ids:
                 continue
             # if market has closed send regardless
-            if cache.market_definition["status"] != "CLOSED":
+            if cache._definition_status != "CLOSED":
                 if self._listener.inplay:
-                    if not cache.market_definition["inPlay"]:
+                    if not cache._definition_in_play:
                         continue
                 elif self._listener.seconds_to_start:
                     _now = datetime.datetime.utcfromtimestamp(cache.publish_time / 1e3)
@@ -70,7 +70,7 @@ class FlumineMarketStream(MarketStream):
                     if seconds_to_start > self._listener.seconds_to_start:
                         continue
                 if self._listener.inplay is False:
-                    if cache.market_definition["inPlay"]:
+                    if cache._definition_in_play:
                         continue
             market_books.append(cache.create_resource(self.unique_id, snap=True))
         return market_books
@@ -130,8 +130,24 @@ class HistoricListener(StreamListener):
 
         # remove error handler / operation check
 
-        # skip on_change as we know it is always an update
-        self.stream.on_update(data)
+        # skip on_change / on_update as we know it is always an update
+        publish_time = data["pt"]
+        self.stream._process(data[self.stream._lookup], publish_time)
+
+
+class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
+    """Super fast historical stream"""
+
+    def _read_loop(self) -> dict:
+        self.listener.register_stream(self.unique_id, self.operation)
+        listener_on_data = self.listener.on_data  # cache functions
+        stream_snap = self.listener.stream.snap
+        with open(self.file_path, "r") as f:
+            for update in f:
+                listener_on_data(update)
+                data = stream_snap()
+                if data:  # can return empty list
+                    yield data
 
 
 class HistoricalStream(BaseStream):
@@ -150,7 +166,7 @@ class HistoricalStream(BaseStream):
         self._listener.update_clk = (
             False  # do not update clk on updates (not required when backtesting)
         )
-        stream = HistoricalGeneratorStream(
+        stream = FlumineHistoricalGeneratorStream(
             file_path=self.market_filter,
             listener=self._listener,
             operation=self.operation,
