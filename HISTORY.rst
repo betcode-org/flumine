@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.16.1 (2021-01-28)
++++++++++++++++++++
+
+**Improvements**
+
+- Various optimisations on pending_packages and low level listener updates
+
 1.16.0 (2021-01-25)
 +++++++++++++++++++
 

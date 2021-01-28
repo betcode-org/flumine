@@ -437,7 +437,7 @@ class TestHistoricalStream(unittest.TestCase):
     def test_handle_output(self):
         self.stream.handle_output()
 
-    @mock.patch("flumine.streams.historicalstream.HistoricalGeneratorStream")
+    @mock.patch("flumine.streams.historicalstream.FlumineHistoricalGeneratorStream")
     def test_create_generator(self, mock_generator):
         generator = self.stream.create_generator()
         mock_generator.assert_called_with(
@@ -483,15 +483,15 @@ class TestFlumineMarketStream(unittest.TestCase):
             mock.Mock(inplay=True, seconds_to_start=None), 0
         )
         self.stream._caches = {
-            "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": False})
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=False),
         }
         self.assertEqual(len(self.stream.snap()), 0)
         self.stream._caches = {
-            "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": True})
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True),
         }
         self.assertEqual(len(self.stream.snap()), 1)
         self.stream._caches = {
-            "1.123": mock.Mock(market_definition={"status": "CLOSED", "inPlay": False})
+            "1.123": mock.Mock(_definition_status="CLOSED", _definition_in_play=False),
         }
         self.assertEqual(len(self.stream.snap()), 1)
 
@@ -499,11 +499,11 @@ class TestFlumineMarketStream(unittest.TestCase):
             mock.Mock(inplay=False, seconds_to_start=None), 0
         )
         self.stream._caches = {
-            "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": False})
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=False),
         }
         self.assertEqual(len(self.stream.snap()), 1)
         self.stream._caches = {
-            "1.123": mock.Mock(market_definition={"status": "OPEN", "inPlay": True})
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True),
         }
         self.assertEqual(len(self.stream.snap()), 0)
 
@@ -587,10 +587,10 @@ class TestHistoricListener(unittest.TestCase):
         )
 
     def test_on_data(self):
-        mock_stream = mock.Mock()
+        mock_stream = mock.Mock(_lookup="mc")
         self.listener.stream = mock_stream
-        self.listener.on_data("{}")
-        mock_stream.on_update.assert_called_with({})
+        self.listener.on_data('{"pt": 123, "mc": {}}')
+        self.listener.stream._process.assert_called_with({}, 123)
         # error
         self.assertIsNone(self.listener.on_data("p"))
 
