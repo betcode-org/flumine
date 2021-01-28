@@ -37,15 +37,11 @@ jobs:
     - name: Unittest
       run: |
         python -m unittest discover -s tests
-      env:
-        SKIP_INTEGRATION_TESTS: 0
         
     - name: Coverage
       run: |
         coverage run -m unittest discover
         coverage report
-      env:
-        SKIP_INTEGRATION_TESTS: 0
 
   deploy:
     needs: test

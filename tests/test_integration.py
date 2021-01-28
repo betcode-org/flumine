@@ -1,4 +1,3 @@
-import os
 import unittest
 
 from flumine import FlumineBacktest, clients, BaseStrategy, config
@@ -6,8 +5,6 @@ from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
 from flumine.utils import get_price
-
-SKIP_INTEGRATION_TESTS = int(os.environ.get("SKIP_INTEGRATION_TESTS", 1))
 
 
 class IntegrationTest(unittest.TestCase):
@@ -29,10 +26,6 @@ class IntegrationTest(unittest.TestCase):
         framework.add_strategy(strategy)
         framework.run()
 
-    @unittest.skipIf(
-        SKIP_INTEGRATION_TESTS,
-        "Integrations tests (set env.SKIP_INTEGRATION_TESTS = 0)",
-    )
     def test_backtest_pro(self):
         class LimitOrders(BaseStrategy):
             def check_market_book(self, market, market_book):

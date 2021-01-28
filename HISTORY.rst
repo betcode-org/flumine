@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - Various optimisations on pending_packages and low level listener updates
+- Always run integrations tests (now possible with faster backtesting from bflw 2.12.0)
 
 1.16.0 (2021-01-25)
 +++++++++++++++++++
