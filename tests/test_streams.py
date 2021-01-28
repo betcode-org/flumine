@@ -41,8 +41,7 @@ class StreamsTest(unittest.TestCase):
     @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
     def test_call_backtest(self, mock_add_historical_stream):
         self.mock_flumine.BACKTEST = True
-        mock_strategy = mock.Mock()
-        mock_strategy.streams = []
+        mock_strategy = mock.Mock(streams=[], historic_stream_ids=[])
         mock_strategy.market_filter = {
             "markets": ["dubs of the mad skint and british"],
             "listener_kwargs": {"canary_yellow": True},
@@ -53,6 +52,7 @@ class StreamsTest(unittest.TestCase):
             mock_strategy, "dubs of the mad skint and british", canary_yellow=True
         )
         self.assertEqual(len(mock_strategy.streams), 1)
+        self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
 
     def test_call_backtest_no_markets(self):
         self.mock_flumine.BACKTEST = True

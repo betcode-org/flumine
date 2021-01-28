@@ -30,6 +30,7 @@ class Streams:
                         strategy, market, **listener_kwargs
                     )
                     strategy.streams.append(stream)
+                    strategy.historic_stream_ids.append(stream.stream_id)
         else:
             stream = self.add_stream(strategy)
             strategy.streams.append(stream)

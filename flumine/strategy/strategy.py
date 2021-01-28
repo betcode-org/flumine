@@ -73,6 +73,7 @@ class BaseStrategy:
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
+        self.historic_stream_ids = []
         self.log_validation_failures = log_validation_failures
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
@@ -231,7 +232,10 @@ class BaseStrategy:
 
     @property
     def stream_ids(self) -> list:
-        return [stream.stream_id for stream in self.streams]
+        if self.historic_stream_ids:
+            return self.historic_stream_ids
+        else:
+            return [stream.stream_id for stream in self.streams]
 
     @property
     def info(self) -> dict:

@@ -68,6 +68,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.client, self.mock_client)
         self.assertEqual(self.strategy.max_trade_count, 3)
         self.assertEqual(self.strategy.max_live_trade_count, 4)
+        self.assertEqual(self.strategy.streams, [])
+        self.assertEqual(self.strategy.historic_stream_ids, [])
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()
@@ -233,6 +235,8 @@ class BaseStrategyTest(unittest.TestCase):
         mock_stream.stream_id = 321
         self.strategy.streams = [mock_stream]
         self.assertEqual(self.strategy.stream_ids, [321])
+        self.strategy.historic_stream_ids = [123]
+        self.assertEqual(self.strategy.stream_ids, [123])
 
     def test_info(self):
         self.assertEqual(
