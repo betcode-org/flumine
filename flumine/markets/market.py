@@ -55,8 +55,7 @@ class Market:
         order,
         market_version: int = None,
         execute: bool = True,
-    ) -> None:
-        # todo bool
+    ) -> bool:
         # todo validate controls
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
@@ -65,34 +64,36 @@ class Market:
                 order.trade.update_market_notes(self)
             self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
         else:
-            return  # retry attempt so ignore?
+            return True  # retry attempt so ignore?
         if execute:  # handles replaceOrder
             # todo market.transaction() / marketVersion
             order_package = self._create_order_package(
                 [order], OrderPackageType.PLACE, market_version
             )
             self.flumine.handler_queue.put(order_package)
+            return True
+        else:
+            return True
 
-    def cancel_order(self, order, size_reduction: float = None) -> None:
-        # todo bool
+    def cancel_order(self, order, size_reduction: float = None) -> bool:
         # todo validate controls
         order.cancel(size_reduction)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.CANCEL)
         self.flumine.handler_queue.put(order_package)
+        return True
 
-    def update_order(self, order, new_persistence_type: str) -> None:
-        # todo bool
+    def update_order(self, order, new_persistence_type: str) -> bool:
         # todo validate controls?
         order.update(new_persistence_type)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.UPDATE)
         self.flumine.handler_queue.put(order_package)
+        return True
 
     def replace_order(
         self, order, new_price: float, market_version: int = None
-    ) -> None:
-        # todo bool
+    ) -> bool:
         # todo validate controls
         order.replace(new_price)
         # todo market.transaction()
@@ -100,6 +101,7 @@ class Market:
             [order], OrderPackageType.REPLACE, market_version
         )
         self.flumine.handler_queue.put(order_package)
+        return True
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, market_version: int = None

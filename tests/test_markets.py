@@ -136,7 +136,7 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.id = "123"
         mock_order.trade.market_notes = None
-        self.market.place_order(mock_order)
+        self.assertTrue(self.market.place_order(mock_order))
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
         mock_order.trade.update_market_notes.assert_called_with(self.market)
@@ -152,7 +152,7 @@ class MarketTest(unittest.TestCase):
     def test_place_order_not_executed(self, mock_events, mock__create_order_package):
         mock_order = mock.Mock()
         mock_order.id = "123"
-        self.market.place_order(mock_order, execute=False)
+        self.assertTrue(self.market.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
         mock__create_order_package.assert_not_called()
@@ -161,7 +161,7 @@ class MarketTest(unittest.TestCase):
     def test_place_order_retry(self, mock__create_order_package):
         mock_order = mock.Mock()
         self.market.blotter._orders = {mock_order.id: mock_order}
-        self.market.place_order(mock_order)
+        self.assertTrue(self.market.place_order(mock_order))
         mock__create_order_package.assert_not_called()
 
     @mock.patch("flumine.markets.market.Market._create_order_package")
@@ -170,7 +170,7 @@ class MarketTest(unittest.TestCase):
         mock_blotter.pending_cancel = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.cancel_order(mock_order, 0.01)
+        self.assertTrue(self.market.cancel_order(mock_order, 0.01))
         mock_order.cancel.assert_called_with(0.01)
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.CANCEL
@@ -185,7 +185,7 @@ class MarketTest(unittest.TestCase):
         mock_blotter.pending_update = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.update_order(mock_order, "PERSIST")
+        self.assertTrue(self.market.update_order(mock_order, "PERSIST"))
         mock_order.update.assert_called_with("PERSIST")
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.UPDATE
@@ -200,7 +200,7 @@ class MarketTest(unittest.TestCase):
         mock_blotter.pending_replace = []
         self.market.blotter = mock_blotter
         mock_order = mock.Mock()
-        self.market.replace_order(mock_order, 1.01, 321)
+        self.assertTrue(self.market.replace_order(mock_order, 1.01, 321))
         mock_order.replace.assert_called_with(1.01)
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.REPLACE, 321

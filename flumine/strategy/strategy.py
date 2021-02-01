@@ -1,9 +1,9 @@
-from typing import Type, Iterator
-
 import logging
-
+import warnings
+from typing import Type, Iterator
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
+
 from .runnercontext import RunnerContext
 from ..clients import BaseClient
 from ..markets.market import Market
@@ -134,11 +134,14 @@ class BaseStrategy:
         """Returns True if passes
         validate_order and placed.
         """
+        warnings.warn(
+            "strategy.place_order is deprecated, use market.place_order instead",
+            PendingDeprecationWarning,
+        )
         runner_context = self.get_runner_context(*order.lookup)
         if self.validate_order(runner_context, order):
             runner_context.place()
-            market.place_order(order, market_version)
-            return True
+            return market.place_order(order, market_version)
         else:
             return False
 
@@ -147,16 +150,24 @@ class BaseStrategy:
         market: Market,
         order,
         size_reduction: float = None,
-    ) -> None:
-        market.cancel_order(order, size_reduction)
+    ) -> bool:
+        warnings.warn(
+            "strategy.cancel_order is deprecated, use market.cancel_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.cancel_order(order, size_reduction)
 
     def update_order(
         self,
         market: Market,
         order,
         new_persistence_type: str,
-    ) -> None:
-        market.update_order(order, new_persistence_type)
+    ) -> bool:
+        warnings.warn(
+            "strategy.update_order is deprecated, use market.update_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.update_order(order, new_persistence_type)
 
     def replace_order(
         self,
@@ -164,8 +175,12 @@ class BaseStrategy:
         order,
         new_price: float,
         market_version: int = None,
-    ) -> None:
-        market.replace_order(order, new_price, market_version)
+    ) -> bool:
+        warnings.warn(
+            "strategy.replace_order is deprecated, use market.replace_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.replace_order(order, new_price, market_version)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # validate context
