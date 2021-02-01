@@ -138,12 +138,7 @@ class BaseStrategy:
             "strategy.place_order is deprecated, use market.place_order instead",
             PendingDeprecationWarning,
         )
-        runner_context = self.get_runner_context(*order.lookup)
-        if self.validate_order(runner_context, order):
-            runner_context.place()
-            return market.place_order(order, market_version)
-        else:
-            return False
+        return market.place_order(order, market_version)
 
     def cancel_order(
         self,
