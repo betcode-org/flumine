@@ -97,19 +97,6 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
-    def test__process_market_orders(self):
-        mock_market = mock.Mock()
-        mock_market.blotter.pending_orders = True
-        mock_market.blotter.process_orders.return_value = [1, 2, 3]
-        mock_market_two = mock.Mock()
-        mock_market_two.blotter.pending_orders = False
-        self.base_flumine.markets = [mock_market, mock_market_two]
-        self.base_flumine._process_market_orders()
-        mock_market.blotter.process_orders.assert_called_with(
-            self.mock_client, mock_market.market_book.bet_delay
-        )
-        mock_market_two.blotter.process_orders.assert_not_called()
-
     def test__process_order_package(self):
         mock_trading_control = mock.Mock()
         self.base_flumine._trading_controls = [mock_trading_control]
@@ -230,14 +217,12 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_current_orders]
         self.base_flumine._process_current_orders(mock_event)
 
-    @mock.patch("flumine.baseflumine.BaseFlumine._process_market_orders")
-    def test__process_custom_event(self, mock__process_market_orders):
+    def test__process_custom_event(self):
         mock_market = mock.Mock()
         self.base_flumine.markets = [mock_market]
         mock_event = mock.Mock()
         self.base_flumine._process_custom_event(mock_event)
         mock_event.callback.assert_called_with(self.base_flumine, mock_event)
-        mock__process_market_orders.assert_called_with()
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

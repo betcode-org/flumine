@@ -6,6 +6,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 
 from .blotter import Blotter
 from ..events import events
+from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +53,11 @@ class Market:
     def place_order(
         self,
         order,
-        batch: bool = True,
         market_version: int = None,
         execute: bool = True,
     ) -> None:
+        # todo bool
+        # todo validate controls
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
@@ -65,39 +67,50 @@ class Market:
         else:
             return  # retry attempt so ignore?
         if execute:  # handles replaceOrder
-            self.blotter.pending_place.append(
-                (order, {"batch": batch, "market_version": market_version})
+            # todo market.transaction() / marketVersion
+            order_package = self._create_order_package(
+                [order], OrderPackageType.PLACE, market_version
             )
+            self.flumine.handler_queue.put(order_package)
 
-    def cancel_order(
-        self, order, size_reduction: float = None, batch: bool = True
-    ) -> None:
+    def cancel_order(self, order, size_reduction: float = None) -> None:
+        # todo bool
+        # todo validate controls
         order.cancel(size_reduction)
-        self.blotter.pending_cancel.append(
-            (order, {"size_reduction": size_reduction, "batch": batch})
-        )
+        # todo market.transaction()
+        order_package = self._create_order_package([order], OrderPackageType.CANCEL)
+        self.flumine.handler_queue.put(order_package)
 
-    def update_order(
-        self, order, new_persistence_type: str, batch: bool = True
-    ) -> None:
+    def update_order(self, order, new_persistence_type: str) -> None:
+        # todo bool
+        # todo validate controls?
         order.update(new_persistence_type)
-        self.blotter.pending_update.append(
-            (order, {"new_persistence_type": new_persistence_type, "batch": batch})
-        )
+        # todo market.transaction()
+        order_package = self._create_order_package([order], OrderPackageType.UPDATE)
+        self.flumine.handler_queue.put(order_package)
 
     def replace_order(
-        self, order, new_price: float, batch: bool = True, market_version: int = None
+        self, order, new_price: float, market_version: int = None
     ) -> None:
+        # todo bool
+        # todo validate controls
         order.replace(new_price)
-        self.blotter.pending_replace.append(
-            (
-                order,
-                {
-                    "new_price": new_price,
-                    "batch": batch,
-                    "market_version": market_version,
-                },
-            )
+        # todo market.transaction()
+        order_package = self._create_order_package(
+            [order], OrderPackageType.REPLACE, market_version
+        )
+        self.flumine.handler_queue.put(order_package)
+
+    def _create_order_package(
+        self, orders: list, package_type: OrderPackageType, market_version: int = None
+    ):
+        return BetfairOrderPackage(
+            client=self.flumine.client,
+            market_id=self.market_id,
+            orders=orders,
+            package_type=package_type,
+            bet_delay=self.market_book.bet_delay,
+            market_version=market_version,
         )
 
     @property

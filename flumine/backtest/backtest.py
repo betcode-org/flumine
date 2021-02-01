@@ -23,7 +23,7 @@ class FlumineBacktest(BaseFlumine):
 
     def __init__(self, client):
         super(FlumineBacktest, self).__init__(client)
-        self._pending_packages = []
+        self.handler_queue = utils.PendingPackages()
 
     def run(self) -> None:
         if self.client.EXCHANGE != ExchangeType.SIMULATED:
@@ -42,7 +42,7 @@ class FlumineBacktest(BaseFlumine):
                 for event in stream_gen():
                     self._process_market_books(events.MarketBookEvent(event))
 
-                self._pending_packages.clear()
+                self.handler_queue.clear()
 
                 logger.info(
                     "Completed historical market '{0}'".format(stream.market_filter)
@@ -61,7 +61,7 @@ class FlumineBacktest(BaseFlumine):
             config.current_time = market_book.publish_time
 
             # check if there are orders to process
-            if self._pending_packages:
+            if self.handler_queue:
                 self._check_pending_packages()
 
             if market_book.status == "CLOSED":
@@ -92,8 +92,6 @@ class FlumineBacktest(BaseFlumine):
                         strategy.process_market_book, market, market_book
                     )
 
-            self._process_market_orders()
-
     def _process_backtest_orders(self, market) -> None:
         """Remove order from blotter live
         orders if complete and process
@@ -108,21 +106,9 @@ class FlumineBacktest(BaseFlumine):
             strategy_orders = blotter.strategy_orders(strategy)
             strategy.process_orders(market, strategy_orders)
 
-    def _process_market_orders(self) -> None:
-        """Add any packages to pending
-        packages for later execution
-        """
-        for market in self.markets:
-            if market.blotter.pending_orders:
-                bet_delay = market.market_book.bet_delay
-                for order_package in market.blotter.process_orders(
-                    self.client, bet_delay
-                ):
-                    self._pending_packages.append(order_package)
-
     def _check_pending_packages(self):
         processed = []
-        for order_package in self._pending_packages:
+        for order_package in self.handler_queue:
             client = order_package.client
             if order_package.package_type == OrderPackageType.PLACE:
                 if order_package.elapsed_seconds > (
@@ -145,7 +131,7 @@ class FlumineBacktest(BaseFlumine):
                     self._process_order_package(order_package)
                     processed.append(order_package)
         for p in processed:
-            self._pending_packages.remove(p)
+            self.handler_queue.remove(p)
 
     def _monkey_patch_datetime(self):
         config.current_time = datetime.datetime.utcnow()

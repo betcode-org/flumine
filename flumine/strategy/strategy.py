@@ -129,7 +129,6 @@ class BaseStrategy:
         self,
         market: Market,
         order,
-        batch: bool = True,  # batch placeRequest with other orders
         market_version: int = None,
     ) -> bool:
         """Returns True if passes
@@ -138,7 +137,7 @@ class BaseStrategy:
         runner_context = self.get_runner_context(*order.lookup)
         if self.validate_order(runner_context, order):
             runner_context.place()
-            market.place_order(order, batch, market_version)
+            market.place_order(order, market_version)
             return True
         else:
             return False
@@ -148,28 +147,25 @@ class BaseStrategy:
         market: Market,
         order,
         size_reduction: float = None,
-        batch: bool = True,  # batch cancelRequest with other orders
     ) -> None:
-        market.cancel_order(order, size_reduction, batch)
+        market.cancel_order(order, size_reduction)
 
     def update_order(
         self,
         market: Market,
         order,
         new_persistence_type: str,
-        batch: bool = True,  # batch updateRequest with other orders
     ) -> None:
-        market.update_order(order, new_persistence_type, batch)
+        market.update_order(order, new_persistence_type)
 
     def replace_order(
         self,
         market: Market,
         order,
         new_price: float,
-        batch: bool = True,  # batch replaceRequest with other orders
         market_version: int = None,
     ) -> None:
-        market.replace_order(order, new_price, batch, market_version)
+        market.replace_order(order, new_price, market_version)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # validate context

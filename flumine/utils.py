@@ -27,6 +27,16 @@ MIN_PRICE = 1.01
 MAX_PRICE = 1000
 
 
+class PendingPackages(list):
+    """
+    Queue patch to allow synchronous
+    processing of data.
+    """
+
+    def put(self, __object):
+        self.append(__object)
+
+
 def create_short_uuid() -> str:
     return str(uuid.uuid4())[:8]
 
@@ -43,7 +53,7 @@ def chunks(l: list, n: int) -> list:
         yield l[i : i + n]
 
 
-def batch_orders(orders: list) -> dict:
+def batch_orders(orders: list) -> dict:  # todo remove?
     # batch by market_version -> batch
     _return_orders = defaultdict(list)  # market_version: [[<Order>, ], .. ]
     a = _split_orders_by(orders, "market_version")
@@ -61,7 +71,7 @@ def batch_orders(orders: list) -> dict:
     return _return_orders
 
 
-def _split_orders_by(orders: list, by: str, default=None) -> dict:
+def _split_orders_by(orders: list, by: str, default=None) -> dict:  # todo remove?
     res = defaultdict(list)
     for order, request_data in orders:
         res[request_data.get(by, default)].append((order, request_data))

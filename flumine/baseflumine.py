@@ -150,20 +150,6 @@ class BaseFlumine:
                         strategy.process_market_book, market, market_book
                     )
 
-            self._process_market_orders()
-
-    def _process_market_orders(self) -> None:
-        for market in self.markets:
-            if market.blotter.pending_orders:
-                if market.market_book:
-                    bet_delay = market.market_book.bet_delay
-                else:
-                    bet_delay = None
-                for order_package in market.blotter.process_orders(
-                    self.client, bet_delay
-                ):
-                    self.handler_queue.put(order_package)
-
     def _process_order_package(self, order_package) -> None:
         """Validate trading controls and
         then execute.
@@ -237,7 +223,6 @@ class BaseFlumine:
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     strategy.process_orders(market, strategy_orders)
-        self._process_market_orders()
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:
@@ -248,7 +233,6 @@ class BaseFlumine:
                     e, event.callback
                 )
             )
-        self._process_market_orders()
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event

@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.markets.blotter import Blotter, OrderPackageType
+from flumine.markets.blotter import Blotter
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
 
@@ -13,10 +13,6 @@ class BlotterTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.blotter.market_id, "1.23")
         self.assertEqual(self.blotter._orders, {})
-        self.assertEqual(self.blotter.pending_place, [])
-        self.assertEqual(self.blotter.pending_cancel, [])
-        self.assertEqual(self.blotter.pending_update, [])
-        self.assertEqual(self.blotter.pending_replace, [])
         self.assertEqual(self.blotter._live_orders, [])
 
     def test_strategy_orders(self):
@@ -25,94 +21,6 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.assertEqual(self.blotter.strategy_orders(12), [])
         self.assertEqual(self.blotter.strategy_orders(69), [mock_order])
-
-    @mock.patch("flumine.markets.blotter.Blotter._create_packages")
-    def test_process_orders(self, mock__create_packages):
-        mock_client = mock.Mock()
-        self.blotter.pending_place = [1]
-        self.assertEqual(
-            self.blotter.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.blotter.pending_place = []
-        self.blotter.pending_cancel = [2]
-        self.assertEqual(
-            self.blotter.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.blotter.pending_cancel = []
-        self.blotter.pending_update = [3]
-        self.assertEqual(
-            self.blotter.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-        self.blotter.pending_update = []
-        self.blotter.pending_replace = [4]
-        self.assertEqual(
-            self.blotter.process_orders(mock_client), mock__create_packages().__radd__()
-        )
-
-    @mock.patch("flumine.markets.blotter.BetfairOrderPackage")
-    def test___create_packages(self, mock_cls):
-        mock_cls.order_limit.return_value = 10
-        mock_client = mock.Mock()
-        mock_order_one = mock.Mock()
-        mock_order_two = mock.Mock()
-        mock_order_three = mock.Mock()
-        mock_order_four = mock.Mock()
-        mock_order_five = mock.Mock()
-        mock_orders = [
-            (mock_order_one, {}),
-            (mock_order_two, {"batch": False}),
-            (mock_order_three, {"market_version": 123}),
-            (mock_order_four, {"market_version": 123}),
-            (mock_order_five, {"market_version": 123, "batch": False}),
-        ]
-        packages = self.blotter._create_packages(
-            mock_client, mock_orders, OrderPackageType.PLACE, 0
-        )
-        self.assertEqual(len(packages), 4)
-        mock_cls.order_limit.assert_called_with(OrderPackageType.PLACE)
-        self.assertEqual(
-            mock_cls.call_args_list,
-            [
-                mock.call(
-                    client=mock_client,
-                    market_id=self.blotter.market_id,
-                    orders=[mock_order_one],
-                    package_type=OrderPackageType.PLACE,
-                    bet_delay=0,
-                    market_version=None,
-                ),
-                mock.call(
-                    client=mock_client,
-                    market_id=self.blotter.market_id,
-                    orders=[mock_order_two],
-                    package_type=OrderPackageType.PLACE,
-                    bet_delay=0,
-                    market_version=None,
-                ),
-                mock.call(
-                    client=mock_client,
-                    market_id=self.blotter.market_id,
-                    orders=[mock_order_three, mock_order_four],
-                    package_type=OrderPackageType.PLACE,
-                    bet_delay=0,
-                    market_version=123,
-                ),
-                mock.call(
-                    client=mock_client,
-                    market_id=self.blotter.market_id,
-                    orders=[mock_order_five],
-                    package_type=OrderPackageType.PLACE,
-                    bet_delay=0,
-                    market_version=123,
-                ),
-            ],
-        )
-        self.assertEqual(mock_orders, [])
-
-    def test_pending_orders(self):
-        self.assertFalse(self.blotter.pending_orders)
-        self.blotter.pending_update = [1]
-        self.assertTrue(self.blotter.pending_orders)
 
     def test_live_orders(self):
         self.assertEqual(list(self.blotter.live_orders), [])
