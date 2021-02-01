@@ -106,6 +106,14 @@ class StrategyExposure(BaseControl):
     NAME = "STRATEGY_EXPOSURE"
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+        if package_type == OrderPackageType.PLACE:
+            # strategy.validate_order
+            runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+            if order.trade.strategy.validate_order(runner_context, order):
+                runner_context.place()
+            else:
+                return self._on_error(order, "strategy.validate_order failure")
+
         if package_type in (
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,  # todo potential bug?

@@ -131,9 +131,6 @@ class BaseStrategy:
         order,
         market_version: int = None,
     ) -> bool:
-        """Returns True if passes
-        validate_order and placed.
-        """
         warnings.warn(
             "strategy.place_order is deprecated, use market.place_order instead",
             PendingDeprecationWarning,

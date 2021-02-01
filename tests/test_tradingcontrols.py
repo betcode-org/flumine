@@ -280,8 +280,29 @@ class TestStrategyExposure(unittest.TestCase):
         self.assertEqual(self.trading_control.flumine, self.mock_flumine)
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_strategy_validate_order(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.validate_order.return_value = True
+        mock_runner_context = mock.Mock()
+        mock_order.trade.strategy.get_runner_context.return_value = mock_runner_context
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_runner_context.place.assert_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_strategy_validate_order_error(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.validate_order.return_value = False
+        mock_runner_context = mock.Mock()
+        mock_order.trade.strategy.get_runner_context.return_value = mock_runner_context
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_called_with(
+            mock_order,
+            "strategy.validate_order failure",
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id")
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -303,7 +324,7 @@ class TestStrategyExposure(unittest.TestCase):
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock(market_id="market_id")
+        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy.max_order_exposure = 10
         order1.trade.strategy.max_selection_exposure = 10
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -343,7 +364,7 @@ class TestStrategyExposure(unittest.TestCase):
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock(market_id="market_id")
+        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order1.side = "BACK"
@@ -376,7 +397,7 @@ class TestStrategyExposure(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id")
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
@@ -394,7 +415,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_market.blotter.selection_exposure.return_value = 10.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
-        mock_order = mock.Mock(market_id="1.234")
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
@@ -411,7 +432,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_market = mock.Mock()
         mock_market.blotter.selection_exposure.return_value = 12.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
-        mock_order = mock.Mock(market_id="1.234")
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 10
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT

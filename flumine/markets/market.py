@@ -56,13 +56,6 @@ class Market:
         market_version: int = None,
         execute: bool = True,
     ) -> bool:
-        # validate context todo move to control
-        runner_context = order.trade.strategy.get_runner_context(*order.lookup)
-        if order.trade.strategy.validate_order(runner_context, order):
-            runner_context.place()
-        else:
-            return False
-
         # validate controls
         validated = self._validate_controls(order, OrderPackageType.PLACE)
         if not validated:
