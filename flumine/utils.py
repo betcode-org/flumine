@@ -27,16 +27,6 @@ MIN_PRICE = 1.01
 MAX_PRICE = 1000
 
 
-class PendingPackages(list):
-    """
-    Queue patch to allow synchronous
-    processing of data.
-    """
-
-    def put(self, __object):
-        self.append(__object)
-
-
 def create_short_uuid() -> str:
     return str(uuid.uuid4())[:8]
 

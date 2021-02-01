@@ -150,11 +150,8 @@ class BaseFlumine:
                         strategy.process_market_book, market, market_book
                     )
 
-    def _process_order_package(self, order_package) -> None:
-        """Validate trading controls and
-        then execute.
-        """
-        # todo
+    def process_order_package(self, order_package) -> None:
+        """Execute through client."""
         order_package.client.execution.handler(order_package)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:

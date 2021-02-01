@@ -145,7 +145,7 @@ class MarketTest(unittest.TestCase):
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.PLACE, None
         )
-        self.mock_flumine.handler_queue.put.assert_called_with(
+        self.mock_flumine.process_order_package.assert_called_with(
             mock__create_order_package()
         )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
@@ -187,7 +187,7 @@ class MarketTest(unittest.TestCase):
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.CANCEL
         )
-        self.mock_flumine.handler_queue.put.assert_called_with(
+        self.mock_flumine.process_order_package.assert_called_with(
             mock__create_order_package()
         )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.CANCEL)
@@ -207,7 +207,7 @@ class MarketTest(unittest.TestCase):
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.UPDATE
         )
-        self.mock_flumine.handler_queue.put.assert_called_with(
+        self.mock_flumine.process_order_package.assert_called_with(
             mock__create_order_package()
         )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
@@ -227,7 +227,7 @@ class MarketTest(unittest.TestCase):
         mock__create_order_package.assert_called_with(
             [mock_order], OrderPackageType.REPLACE, 321
         )
-        self.mock_flumine.handler_queue.put.assert_called_with(
+        self.mock_flumine.process_order_package.assert_called_with(
             mock__create_order_package()
         )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)

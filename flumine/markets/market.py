@@ -74,7 +74,7 @@ class Market:
             order_package = self._create_order_package(
                 [order], OrderPackageType.PLACE, market_version
             )
-            self.flumine.handler_queue.put(order_package)
+            self.flumine.process_order_package(order_package)
             return True
         else:
             return True
@@ -88,7 +88,7 @@ class Market:
         order.cancel(size_reduction)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.CANCEL)
-        self.flumine.handler_queue.put(order_package)
+        self.flumine.process_order_package(order_package)
         return True
 
     def update_order(self, order, new_persistence_type: str) -> bool:
@@ -100,7 +100,7 @@ class Market:
         order.update(new_persistence_type)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.UPDATE)
-        self.flumine.handler_queue.put(order_package)
+        self.flumine.process_order_package(order_package)
         return True
 
     def replace_order(
@@ -116,7 +116,7 @@ class Market:
         order_package = self._create_order_package(
             [order], OrderPackageType.REPLACE, market_version
         )
-        self.flumine.handler_queue.put(order_package)
+        self.flumine.process_order_package(order_package)
         return True
 
     def _validate_controls(self, order, package_type: OrderPackageType) -> bool:

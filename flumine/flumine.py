@@ -31,9 +31,6 @@ class Flumine(BaseFlumine):
                 elif event.EVENT_TYPE == EventType.CURRENT_ORDERS:
                     self._process_current_orders(event)
 
-                elif event.EVENT_TYPE == EventType.ORDER_PACKAGE:
-                    self._process_order_package(event)
-
                 elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
                     self._process_cleared_markets(event)
 

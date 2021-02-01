@@ -97,9 +97,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
-    def test__process_order_package(self):
+    def test_process_order_package(self):
         mock_order_package = mock.Mock()
-        self.base_flumine._process_order_package(mock_order_package)
+        self.base_flumine.process_order_package(mock_order_package)
         mock_order_package.client.execution.handler.assert_called_with(
             mock_order_package
         )

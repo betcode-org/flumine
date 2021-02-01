@@ -9,14 +9,6 @@ class UtilsTest(unittest.TestCase):
     def setUp(self) -> None:
         logging.disable(logging.CRITICAL)
 
-    def test_pending_packages(self):
-        p = utils.PendingPackages()
-        p.append(1)
-        p.put(2)
-        self.assertEqual(p, [1, 2])
-        p.clear()
-        self.assertEqual(p, [])
-
     def test_create_short_uuid(self):
         self.assertTrue(utils.create_short_uuid())
 

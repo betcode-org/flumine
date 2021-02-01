@@ -23,7 +23,7 @@ class FlumineBacktest(BaseFlumine):
 
     def __init__(self, client):
         super(FlumineBacktest, self).__init__(client)
-        self.handler_queue = utils.PendingPackages()
+        self.handler_queue = []
 
     def run(self) -> None:
         if self.client.EXCHANGE != ExchangeType.SIMULATED:
@@ -92,6 +92,10 @@ class FlumineBacktest(BaseFlumine):
                         strategy.process_market_book, market, market_book
                     )
 
+    def process_order_package(self, order_package) -> None:
+        # place in pending list (wait for latency+delay)
+        self.handler_queue.append(order_package)
+
     def _process_backtest_orders(self, market) -> None:
         """Remove order from blotter live
         orders if complete and process
@@ -114,21 +118,21 @@ class FlumineBacktest(BaseFlumine):
                 if order_package.elapsed_seconds > (
                     client.execution.PLACE_LATENCY + order_package.bet_delay
                 ):
-                    self._process_order_package(order_package)
+                    client.execution.handler(order_package)
                     processed.append(order_package)
             elif order_package.package_type == OrderPackageType.CANCEL:
                 if order_package.elapsed_seconds > client.execution.CANCEL_LATENCY:
-                    self._process_order_package(order_package)
+                    client.execution.handler(order_package)
                     processed.append(order_package)
             elif order_package.package_type == OrderPackageType.UPDATE:
                 if order_package.elapsed_seconds > client.execution.UPDATE_LATENCY:
-                    self._process_order_package(order_package)
+                    client.execution.handler(order_package)
                     processed.append(order_package)
             elif order_package.package_type == OrderPackageType.REPLACE:
                 if order_package.elapsed_seconds > (
                     client.execution.REPLACE_LATENCY + order_package.bet_delay
                 ):
-                    self._process_order_package(order_package)
+                    client.execution.handler(order_package)
                     processed.append(order_package)
         for p in processed:
             self.handler_queue.remove(p)
