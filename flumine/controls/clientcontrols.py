@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from betfairlightweight.metadata import transaction_limit
 
-from ..order.orderpackage import OrderPackageType
+from ..order.orderpackage import BaseOrder, OrderPackageType
 from . import BaseControl
 from ..clients.baseclient import BaseClient
 
@@ -32,28 +32,27 @@ class MaxOrderCount(BaseControl):
         self._next_hour = None
         self.transaction_count = 0
 
-    def _validate(self, order_package) -> None:
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if self._next_hour is None:
             self._set_next_hour()
         self._check_hour()
         self.total += 1
-        if order_package.package_type == OrderPackageType.PLACE:
-            self._check_transaction_count(len(order_package))
-            self.place_requests += len(order_package)
+        if package_type == OrderPackageType.PLACE:
+            self._check_transaction_count(1)
+            self.place_requests += 1
             if not self.safe:  # and order.flumine_order_type == "initial"
-                for order in order_package:
-                    self._on_error(
-                        order,
-                        "Max Order Count has been reached ({0}) for current hour".format(
-                            self.transaction_count
-                        ),
-                    )
-        elif order_package.package_type == OrderPackageType.CANCEL:
-            self.cancel_requests += len(order_package)
-        elif order_package.package_type == OrderPackageType.UPDATE:
-            self.update_requests += len(order_package)
-        elif order_package.package_type == OrderPackageType.REPLACE:
-            self.replace_requests += len(order_package)
+                self._on_error(
+                    order,
+                    "Max Order Count has been reached ({0}) for current hour".format(
+                        self.transaction_count
+                    ),
+                )
+        elif package_type == OrderPackageType.CANCEL:
+            self.cancel_requests += 1
+        elif package_type == OrderPackageType.UPDATE:
+            self.update_requests += 1
+        elif package_type == OrderPackageType.REPLACE:
+            self.replace_requests += 1
 
     def _check_hour(self) -> None:
         if datetime.datetime.utcnow() > self._next_hour:

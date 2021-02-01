@@ -21,14 +21,13 @@ class TestBaseControl(unittest.TestCase):
 
     @mock.patch("flumine.controls.BaseControl._validate")
     def test_call(self, mock_validate):
-        order_package = mock.Mock()
-        self.control(order_package)
-
-        mock_validate.assert_called_with(order_package)
+        order = mock.Mock()
+        self.control(order, OrderPackageType.PLACE)
+        mock_validate.assert_called_with(order, OrderPackageType.PLACE)
 
     def test_validate(self):
         with self.assertRaises(NotImplementedError):
-            self.control._validate(None)
+            self.control._validate(None, None)
 
     def test_on_error(self):
         order = mock.Mock()
@@ -71,12 +70,8 @@ class TestMaxOrderCount(unittest.TestCase):
     def test_validate_place(
         self, mock_check_hour, mock__check_transaction_count, mock__set_next_hour
     ):
-        mock_package = mock.Mock()
-        mock_package.package_type = OrderPackageType.PLACE
-        mock_package.__len__ = mock.Mock()
-        mock_package.__len__.return_value = 1
-        self.trading_control._validate(mock_package)
-
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_check_hour.assert_called()
         mock__check_transaction_count.assert_called_with(1)
         mock__set_next_hour.assert_called()
@@ -84,34 +79,22 @@ class TestMaxOrderCount(unittest.TestCase):
 
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
     def test_validate_cancel(self, mock_check_hour):
-        mock_package = mock.Mock()
-        mock_package.package_type = OrderPackageType.CANCEL
-        mock_package.__len__ = mock.Mock()
-        mock_package.__len__.return_value = 1
-        self.trading_control._validate(mock_package)
-
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.CANCEL)
         mock_check_hour.assert_called_with()
         self.assertEqual(self.trading_control.cancel_requests, 1)
 
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
     def test_validate_update(self, mock_check_hour):
-        mock_package = mock.Mock()
-        mock_package.package_type = OrderPackageType.UPDATE
-        mock_package.__len__ = mock.Mock()
-        mock_package.__len__.return_value = 1
-        self.trading_control._validate(mock_package)
-
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.UPDATE)
         mock_check_hour.assert_called_with()
         self.assertEqual(self.trading_control.update_requests, 1)
 
     @mock.patch("flumine.controls.clientcontrols.MaxOrderCount._check_hour")
     def test_validate_replace(self, mock_check_hour):
-        mock_package = mock.Mock()
-        mock_package.package_type = OrderPackageType.REPLACE
-        mock_package.__len__ = mock.Mock()
-        mock_package.__len__.return_value = 1
-        self.trading_control._validate(mock_package)
-
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
         mock_check_hour.assert_called_with()
         self.assertEqual(self.trading_control.replace_requests, 1)
 

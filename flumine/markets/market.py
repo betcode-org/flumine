@@ -6,7 +6,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 
 from .blotter import Blotter
 from ..events import events
-from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
+from ..order.orderpackage import BetfairOrderPackage, OrderPackageType, OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,11 @@ class Market:
         market_version: int = None,
         execute: bool = True,
     ) -> bool:
-        # todo validate controls
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.PLACE)
+        if not validated:
+            return False
+        # place
         order.place(self.market_book.publish_time)
         if order.id not in self.blotter:
             self.blotter[order.id] = order
@@ -76,7 +80,11 @@ class Market:
             return True
 
     def cancel_order(self, order, size_reduction: float = None) -> bool:
-        # todo validate controls
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.CANCEL)
+        if not validated:
+            return False
+        # cancel
         order.cancel(size_reduction)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.CANCEL)
@@ -84,7 +92,11 @@ class Market:
         return True
 
     def update_order(self, order, new_persistence_type: str) -> bool:
-        # todo validate controls?
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.UPDATE)
+        if not validated:
+            return False
+        # update
         order.update(new_persistence_type)
         # todo market.transaction()
         order_package = self._create_order_package([order], OrderPackageType.UPDATE)
@@ -94,7 +106,11 @@ class Market:
     def replace_order(
         self, order, new_price: float, market_version: int = None
     ) -> bool:
-        # todo validate controls
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.REPLACE)
+        if not validated:
+            return False
+        # replace
         order.replace(new_price)
         # todo market.transaction()
         order_package = self._create_order_package(
@@ -102,6 +118,14 @@ class Market:
         )
         self.flumine.handler_queue.put(order_package)
         return True
+
+    def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
+        # return False on violation
+        for control in self.flumine.trading_controls:
+            control(order, package_type)
+        for control in self.flumine.client.trading_controls:
+            control(order, package_type)
+        return bool(order.status != OrderStatus.VIOLATION)
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, market_version: int = None

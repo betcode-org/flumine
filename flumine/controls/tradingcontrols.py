@@ -2,7 +2,7 @@ import logging
 
 from ..clients.clients import ExchangeType
 from ..order.ordertype import OrderTypes
-from ..order.orderpackage import OrderPackageType
+from ..order.orderpackage import OrderPackageType, BaseOrder
 from . import BaseControl
 from .. import utils
 
@@ -18,10 +18,9 @@ class OrderValidation(BaseControl):
 
     NAME = "ORDER_VALIDATION"
 
-    def _validate(self, order_package):
-        for order in order_package:
-            if order.EXCHANGE == ExchangeType.BETFAIR:
-                self._validate_betfair_order(order)
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+        if order.EXCHANGE == ExchangeType.BETFAIR:
+            self._validate_betfair_order(order)
 
     def _validate_betfair_order(self, order):
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -106,52 +105,41 @@ class StrategyExposure(BaseControl):
 
     NAME = "STRATEGY_EXPOSURE"
 
-    def _validate(self, order_package):
-        if order_package.package_type in (
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+        if package_type in (
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,  # todo potential bug?
         ):
-
-            package_orders_by_strategy_lookup = {}
-            for order in order_package:
-                strategy = order.trade.strategy
-                package_orders_by_strategy_lookup.setdefault(
-                    (strategy, order.lookup), []
-                ).append(order)
-                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    if order.side == "BACK":
-                        exposure = order.order_type.size
-                    else:
-                        exposure = (order.order_type.price - 1) * order.order_type.size
-                elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-                    exposure = order.order_type.liability  # todo correct?
-                elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-                    exposure = order.order_type.liability
+            strategy = order.trade.strategy
+            if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                if order.side == "BACK":
+                    exposure = order.order_type.size
                 else:
-                    continue
+                    exposure = (order.order_type.price - 1) * order.order_type.size
+            elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
+                exposure = order.order_type.liability  # todo correct?
+            elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+                exposure = order.order_type.liability
+            else:
+                return self._on_error(order, "Unknown order_type")
 
-                # per order
-                if exposure > strategy.max_order_exposure:
-                    self._on_error(
-                        order,
-                        "Order exposure ({0}) is greater than strategy.max_order_strategy ({1})".format(
-                            exposure, strategy.max_order_exposure
-                        ),
-                    )
-                    continue
-
-            market = self.flumine.markets.markets[order_package.market_id]
+            # per order
+            if exposure > strategy.max_order_exposure:
+                return self._on_error(
+                    order,
+                    "Order exposure ({0}) is greater than strategy.max_order_strategy ({1})".format(
+                        exposure, strategy.max_order_exposure
+                    ),
+                )
 
             # per selection
-            for (strategy, lookup), orders in package_orders_by_strategy_lookup.items():
-                exposure = market.blotter.selection_exposure(strategy, lookup=lookup)
-
-                if exposure > strategy.max_selection_exposure:
-                    for order in orders:
-                        self._on_error(
-                            order,
-                            "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
-                                exposure,
-                                strategy.max_selection_exposure,
-                            ),
-                        )
+            market = self.flumine.markets.markets[order.market_id]
+            exposure = market.blotter.selection_exposure(strategy, lookup=order.lookup)
+            if exposure > strategy.max_selection_exposure:
+                return self._on_error(
+                    order,
+                    "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
+                        exposure,
+                        strategy.max_selection_exposure,
+                    ),
+                )

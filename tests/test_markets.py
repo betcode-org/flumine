@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, OrderPackageType
+from flumine.markets.market import Market, OrderPackageType, OrderStatus
 
 
 class MarketsTest(unittest.TestCase):
@@ -130,11 +130,13 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.closed)
         self.assertIsNotNone(self.market.date_time_closed)
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
     @mock.patch("flumine.markets.market.events")
-    def test_place_order(self, mock_events, mock__create_order_package):
-        mock_order = mock.Mock()
-        mock_order.id = "123"
+    def test_place_order(
+        self, mock_events, mock__create_order_package, mock__validate_controls
+    ):
+        mock_order = mock.Mock(id="123")
         mock_order.trade.market_notes = None
         self.assertTrue(self.market.place_order(mock_order))
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
@@ -146,29 +148,39 @@ class MarketTest(unittest.TestCase):
         self.mock_flumine.handler_queue.put.assert_called_with(
             mock__create_order_package()
         )
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
     @mock.patch("flumine.markets.market.events")
-    def test_place_order_not_executed(self, mock_events, mock__create_order_package):
-        mock_order = mock.Mock()
-        mock_order.id = "123"
+    def test_place_order_not_executed(
+        self, mock_events, mock__create_order_package, mock__validate_controls
+    ):
+        mock_order = mock.Mock(id="123")
         self.assertTrue(self.market.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(self.market.market_book.publish_time)
         self.mock_flumine.log_control.assert_called_with(mock_events.TradeEvent())
         mock__create_order_package.assert_not_called()
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
-    def test_place_order_retry(self, mock__create_order_package):
+    def test_place_order_retry(
+        self, mock__create_order_package, mock__validate_controls
+    ):
         mock_order = mock.Mock()
         self.market.blotter._orders = {mock_order.id: mock_order}
         self.assertTrue(self.market.place_order(mock_order))
         mock__create_order_package.assert_not_called()
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=False)
+    def test_place_order_violation(self, mock__validate_controls):
+        mock_order = mock.Mock()
+        self.assertFalse(self.market.place_order(mock_order))
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
+
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
-    def test_cancel_order(self, mock__create_order_package):
-        mock_blotter = mock.Mock()
-        mock_blotter.pending_cancel = []
-        self.market.blotter = mock_blotter
+    def test_cancel_order(self, mock__create_order_package, mock__validate_controls):
         mock_order = mock.Mock()
         self.assertTrue(self.market.cancel_order(mock_order, 0.01))
         mock_order.cancel.assert_called_with(0.01)
@@ -178,12 +190,17 @@ class MarketTest(unittest.TestCase):
         self.mock_flumine.handler_queue.put.assert_called_with(
             mock__create_order_package()
         )
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.CANCEL)
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=False)
+    def test_cancel_order_violation(self, mock__validate_controls):
+        mock_order = mock.Mock()
+        self.assertFalse(self.market.cancel_order(mock_order))
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.CANCEL)
+
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
-    def test_update_order(self, mock__create_order_package):
-        mock_blotter = mock.Mock()
-        mock_blotter.pending_update = []
-        self.market.blotter = mock_blotter
+    def test_update_order(self, mock__create_order_package, mock__validate_controls):
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "PERSIST"))
         mock_order.update.assert_called_with("PERSIST")
@@ -193,12 +210,17 @@ class MarketTest(unittest.TestCase):
         self.mock_flumine.handler_queue.put.assert_called_with(
             mock__create_order_package()
         )
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
 
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=False)
+    def test_update_order_violation(self, mock__validate_controls):
+        mock_order = mock.Mock()
+        self.assertFalse(self.market.update_order(mock_order, "test"))
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
+
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=True)
     @mock.patch("flumine.markets.market.Market._create_order_package")
-    def test_replace_order(self, mock__create_order_package):
-        mock_blotter = mock.Mock()
-        mock_blotter.pending_replace = []
-        self.market.blotter = mock_blotter
+    def test_replace_order(self, mock__create_order_package, mock__validate_controls):
         mock_order = mock.Mock()
         self.assertTrue(self.market.replace_order(mock_order, 1.01, 321))
         mock_order.replace.assert_called_with(1.01)
@@ -208,6 +230,35 @@ class MarketTest(unittest.TestCase):
         self.mock_flumine.handler_queue.put.assert_called_with(
             mock__create_order_package()
         )
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
+
+    @mock.patch("flumine.markets.market.Market._validate_controls", return_value=False)
+    def test_replace_order_violation(self, mock__validate_controls):
+        mock_order = mock.Mock()
+        self.assertFalse(self.market.replace_order(mock_order, 2.02))
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
+
+    def test__validate_controls(self):
+        mock_trading_control = mock.Mock()
+        mock_client_control = mock.Mock()
+        self.market.flumine.trading_controls = [mock_trading_control]
+        self.market.flumine.client.trading_controls = [mock_client_control]
+        mock_order = mock.Mock()
+        mock_package_type = mock.Mock()
+        self.assertTrue(self.market._validate_controls(mock_order, mock_package_type))
+        mock_trading_control.assert_called_with(mock_order, mock_package_type)
+        mock_client_control.assert_called_with(mock_order, mock_package_type)
+
+    def test__validate_controls_voilation(self):
+        mock_trading_control = mock.Mock()
+        mock_client_control = mock.Mock()
+        self.market.flumine.trading_controls = [mock_trading_control]
+        self.market.flumine.client.trading_controls = [mock_client_control]
+        mock_order = mock.Mock(status=OrderStatus.VIOLATION)
+        mock_package_type = mock.Mock()
+        self.assertFalse(self.market._validate_controls(mock_order, mock_package_type))
+        mock_trading_control.assert_called_with(mock_order, mock_package_type)
+        mock_client_control.assert_called_with(mock_order, mock_package_type)
 
     @mock.patch("flumine.markets.market.BetfairOrderPackage")
     def test__create_order_package(self, mock_betfair_order_package):

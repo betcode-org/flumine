@@ -64,7 +64,7 @@ class BaseFlumine:
         self._logging_controls = []
 
         # trading controls
-        self._trading_controls = []
+        self.trading_controls = []
         # add default controls (processed in order)
         self.add_trading_control(OrderValidation)
         self.add_trading_control(StrategyExposure)
@@ -93,7 +93,7 @@ class BaseFlumine:
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
-        self._trading_controls.append(trading_control(self, **kwargs))
+        self.trading_controls.append(trading_control(self, **kwargs))
 
     def add_market_middleware(self, middleware: Middleware) -> None:
         logger.info("Adding market middleware {0}".format(middleware))
@@ -154,14 +154,8 @@ class BaseFlumine:
         """Validate trading controls and
         then execute.
         """
-        for control in self._trading_controls:
-            control(order_package)
-        for control in order_package.client.trading_controls:
-            control(order_package)
-        if order_package.orders:
-            order_package.client.execution.handler(order_package)
-        else:
-            logger.warning("Empty package, not executing", extra=order_package.info)
+        # todo
+        order_package.client.execution.handler(order_package)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
         logger.info("Adding: {0} to markets".format(market_id))
