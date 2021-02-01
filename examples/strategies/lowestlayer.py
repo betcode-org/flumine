@@ -45,7 +45,7 @@ class LowestLayer(BaseStrategy):
                     side="LAY",
                     order_type=LimitOrder(lay, self.context["stake"]),
                 )
-                self.place_order(market, order)
+                market.place_order(order)
 
     def process_orders(self, market, orders):
         # kill order if unmatched in market for greater than 2 seconds
@@ -53,4 +53,4 @@ class LowestLayer(BaseStrategy):
         for order in orders:
             if order.status == OrderStatus.EXECUTABLE:
                 if order.elapsed_seconds and order.elapsed_seconds > 2:
-                    self.cancel_order(market, order)
+                    market.cancel_order(order)
