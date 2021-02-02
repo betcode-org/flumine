@@ -7,6 +7,7 @@ from flumine.controls.clientcontrols import (
     MaxOrderCount,
     OrderPackageType,
 )
+from flumine.exceptions import ControlError
 
 
 class TestBaseControl(unittest.TestCase):
@@ -32,13 +33,8 @@ class TestBaseControl(unittest.TestCase):
     def test_on_error(self):
         order = mock.Mock()
         order.info = {"hello": "world"}
-        self.control._on_error(order, "test")
-        order.violation.assert_called_with("Order has violated: None Error: test")
-
-    def test_on_error_offset(self):
-        order = mock.Mock()
-        order.info = {"hello": "world"}
-        self.control._on_error(order, "test")
+        with self.assertRaises(ControlError):
+            self.control._on_error(order, "test")
         order.violation.assert_called_with("Order has violated: None Error: test")
 
 

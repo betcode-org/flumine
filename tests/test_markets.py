@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, OrderPackageType, OrderStatus
+from flumine.markets.market import Market, OrderPackageType, ControlError
 
 
 class MarketsTest(unittest.TestCase):
@@ -249,16 +249,17 @@ class MarketTest(unittest.TestCase):
         mock_trading_control.assert_called_with(mock_order, mock_package_type)
         mock_client_control.assert_called_with(mock_order, mock_package_type)
 
-    def test__validate_controls_voilation(self):
+    def test__validate_controls_violation(self):
         mock_trading_control = mock.Mock()
+        mock_trading_control.side_effect = ControlError("test")
         mock_client_control = mock.Mock()
         self.market.flumine.trading_controls = [mock_trading_control]
         self.market.flumine.client.trading_controls = [mock_client_control]
-        mock_order = mock.Mock(status=OrderStatus.VIOLATION)
+        mock_order = mock.Mock()
         mock_package_type = mock.Mock()
         self.assertFalse(self.market._validate_controls(mock_order, mock_package_type))
         mock_trading_control.assert_called_with(mock_order, mock_package_type)
-        mock_client_control.assert_called_with(mock_order, mock_package_type)
+        mock_client_control.assert_not_called()
 
     @mock.patch("flumine.markets.market.BetfairOrderPackage")
     def test__create_order_package(self, mock_betfair_order_package):

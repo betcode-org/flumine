@@ -11,6 +11,7 @@ class LowestLayer(BaseStrategy):
     will be placed on current lowest priced runner.
     - Market is active and inplay
     - Lay price below 3.0
+    - No live trades (EXECUTABLE orders in the market)
     - Order killed after 2 seconds if not matched
     """
 
@@ -33,19 +34,23 @@ class LowestLayer(BaseStrategy):
 
         for runner in market_book.runners:
             if runner.selection_id == selection_id:
-                # lay at current best lay price
-                lay = get_price(runner.ex.available_to_lay, 0)
-                trade = Trade(
-                    market_book.market_id,
-                    runner.selection_id,
-                    runner.handicap,
-                    self,
+                runner_context = self.get_runner_context(
+                    market.market_id, runner.selection_id
                 )
-                order = trade.create_order(
-                    side="LAY",
-                    order_type=LimitOrder(lay, self.context["stake"]),
-                )
-                market.place_order(order)
+                if runner_context.live_trade_count == 0:
+                    # lay at current best lay price
+                    lay = get_price(runner.ex.available_to_lay, 0)
+                    trade = Trade(
+                        market_book.market_id,
+                        runner.selection_id,
+                        runner.handicap,
+                        self,
+                    )
+                    order = trade.create_order(
+                        side="LAY",
+                        order_type=LimitOrder(lay, self.context["stake"]),
+                    )
+                    market.place_order(order)
 
     def process_orders(self, market, orders):
         # kill order if unmatched in market for greater than 2 seconds

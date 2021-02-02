@@ -286,7 +286,6 @@ class TestStrategyExposure(unittest.TestCase):
         mock_runner_context = mock.Mock()
         mock_order.trade.strategy.get_runner_context.return_value = mock_runner_context
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
-        mock_runner_context.place.assert_called()
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_strategy_validate_order_error(self, mock_on_error):
