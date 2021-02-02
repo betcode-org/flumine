@@ -137,10 +137,6 @@ class BaseExecution:
             order.bet_id = instruction_report.bet_id
             self.flumine.log_control(OrderEvent(order))
 
-    @property
-    def handler_queue(self):
-        return self.flumine.handler_queue
-
     def shutdown(self):
         logger.info("Shutting down Execution (%s)" % self.__class__.__name__)
         self._thread_pool.shutdown(wait=True)
