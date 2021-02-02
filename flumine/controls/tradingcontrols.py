@@ -109,9 +109,7 @@ class StrategyExposure(BaseControl):
         if package_type == OrderPackageType.PLACE:
             # strategy.validate_order
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)
-            if order.trade.strategy.validate_order(runner_context, order):
-                runner_context.place()
-            else:
+            if order.trade.strategy.validate_order(runner_context, order) is False:
                 return self._on_error(order, "strategy.validate_order failure")
 
         if package_type in (

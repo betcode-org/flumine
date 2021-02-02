@@ -1,6 +1,7 @@
 import logging
 
 from ..order.orderpackage import OrderPackageType, BaseOrder
+from ..exceptions import ControlError
 
 logger = logging.getLogger(__name__)
 
@@ -25,3 +26,4 @@ class BaseControl:
             violation_msg,
             extra={"control": self.NAME, "error": error, "order": order.info},
         )
+        raise ControlError(violation_msg)

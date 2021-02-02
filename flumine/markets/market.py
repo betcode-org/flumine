@@ -6,7 +6,8 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 
 from .blotter import Blotter
 from ..events import events
-from ..order.orderpackage import BetfairOrderPackage, OrderPackageType, OrderStatus
+from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
+from ..exceptions import ControlError
 
 logger = logging.getLogger(__name__)
 
@@ -121,11 +122,15 @@ class Market:
 
     def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
         # return False on violation
-        for control in self.flumine.trading_controls:
-            control(order, package_type)
-        for control in self.flumine.client.trading_controls:
-            control(order, package_type)
-        return bool(order.status != OrderStatus.VIOLATION)
+        try:
+            for control in self.flumine.trading_controls:
+                control(order, package_type)
+            for control in self.flumine.client.trading_controls:
+                control(order, package_type)
+        except ControlError:
+            return False
+        else:
+            return True
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, market_version: int = None
