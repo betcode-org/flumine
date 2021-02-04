@@ -12,18 +12,20 @@ class Transaction:
     when it is used as a context manager requests can
     be batched, for example:
 
-        with market.transaction:
-            market.place_order(order)  # execute on transaction __exit__
+        with transaction.Transaction(self) as t:
+            t.place_order(order, market_version)
 
         with market.transaction as t:
-            market.place_order(order)
-            ..
+            market.place_order(order)  # executed immediately in separate transaction
+            t.place_order(order)  # executed on transaction __exit__
+
+        with market.transaction as t:
             t.place_order(order)
             ..
-            t.execute()  # above 2 orders executed
+            t.execute()  # above order executed
             ..
-            t.cancel_order(order)
-            t.place_order(order)  # executed on transaction __exit__
+            t.cancel_order(order)  # executed on transaction __exit__
+            t.place_order(order)
     """
 
     def __init__(self, market):
