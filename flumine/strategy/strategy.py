@@ -75,6 +75,8 @@ class BaseStrategy:
         self.streams = []  # list of streams strategy is subscribed
         self.historic_stream_ids = []
         self.log_validation_failures = log_validation_failures
+        # cache
+        self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
         if market_book.streaming_unique_id not in self.stream_ids:
@@ -258,10 +260,6 @@ class BaseStrategy:
     @property
     def name(self) -> str:
         return self._name or self.__class__.__name__
-
-    @property
-    def name_hash(self) -> str:
-        return create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
     def __str__(self):
         return "{0}".format(self.name)

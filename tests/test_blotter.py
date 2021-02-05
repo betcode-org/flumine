@@ -22,7 +22,7 @@ class BlotterTest(unittest.TestCase):
     def test_strategy_orders(self):
         mock_order = mock.Mock()
         mock_order.trade.strategy = 69
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(self.blotter.strategy_orders(12), [])
         self.assertEqual(self.blotter.strategy_orders(69), [mock_order])
 
@@ -150,7 +150,7 @@ class BlotterTest(unittest.TestCase):
             size_remaining=0.0,
             order_type=LimitOrder(price=5.6, size=2.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             2.0,
@@ -168,7 +168,7 @@ class BlotterTest(unittest.TestCase):
             size_remaining=0.0,
             order_type=mock.Mock(ORDER_TYPE="INVALID"),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
 
         with self.assertRaises(ValueError) as e:
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup)
@@ -203,7 +203,8 @@ class BlotterTest(unittest.TestCase):
             size_remaining=2.0,
             order_type=LimitOrder(price=None, size=2.0),
         )
-        self.blotter._orders = {"12345": mock_order1, "23456": mock_order2}
+        self.blotter["12345"] = mock_order1
+        self.blotter["23456"] = mock_order2
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, lookup),
             2.0,
@@ -221,7 +222,7 @@ class BlotterTest(unittest.TestCase):
             size_remaining=0.0,
             order_type=LimitOrder(price=5.6, size=2.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             0.0,
@@ -239,7 +240,7 @@ class BlotterTest(unittest.TestCase):
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
         # On the lose side, we have -2.0-2.0=-4.0
         self.assertEqual(
@@ -259,7 +260,7 @@ class BlotterTest(unittest.TestCase):
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2
         # On the lose side, we have 2.0 from size_matched
         self.assertEqual(
@@ -276,7 +277,7 @@ class BlotterTest(unittest.TestCase):
             side="BACK",
             order_type=MarketOnCloseOrder(liability=10.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             10.0,
@@ -291,7 +292,7 @@ class BlotterTest(unittest.TestCase):
             side="LAY",
             order_type=MarketOnCloseOrder(liability=10.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             10.0,
@@ -306,7 +307,7 @@ class BlotterTest(unittest.TestCase):
             side="LAY",
             order_type=LimitOnCloseOrder(price=1.01, liability=10.0),
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             10.0,
@@ -322,7 +323,7 @@ class BlotterTest(unittest.TestCase):
             order_type=LimitOrder(price=5, size=10.0),
             status=OrderStatus.VIOLATION,
         )
-        self.blotter._orders = {"12345": mock_order}
+        self.blotter["12345"] = mock_order
         self.assertEqual(
             self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
             0,
@@ -338,9 +339,13 @@ class BlotterTest(unittest.TestCase):
         self.assertNotIn("321", self.blotter)
 
     def test__setitem(self):
-        self.blotter["123"] = "test"
-        self.assertEqual(self.blotter._orders, {"123": "test"})
-        self.assertEqual(self.blotter._live_orders, ["test"])
+        mock_order = mock.Mock()
+        self.blotter["123"] = mock_order
+        self.assertEqual(self.blotter._orders, {"123": mock_order})
+        self.assertEqual(self.blotter._live_orders, [mock_order])
+        self.assertEqual(
+            self.blotter._strategy_orders, {mock_order.trade.strategy: [mock_order]}
+        )
 
     def test__getitem(self):
         self.blotter._orders = {"12345": "test", "54321": "test2"}
