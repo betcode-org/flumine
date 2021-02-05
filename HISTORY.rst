@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.16.2 (2021-02-05)
++++++++++++++++++++
+
+**Improvements**
+
+- Minor selection_exposure optimisations
+- Simulated optimisations
+
 1.16.1 (2021-01-28)
 +++++++++++++++++++
 

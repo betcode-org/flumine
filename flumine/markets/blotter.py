@@ -128,22 +128,24 @@ class Blotter:
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
-        for order in self:
-            if order.trade.strategy == strategy and order.lookup == lookup:
+        for order in self.strategy_orders(strategy):
+            if order.lookup == lookup:
                 if order.status == OrderStatus.VIOLATION:
                     continue
 
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    if order.size_matched:
+                    _size_matched = order.size_matched  # cache
+                    if _size_matched:
                         if order.side == "BACK":
-                            mb.append((order.average_price_matched, order.size_matched))
+                            mb.append((order.average_price_matched, _size_matched))
                         else:
-                            ml.append((order.average_price_matched, order.size_matched))
-                    if order.order_type.price and order.size_remaining:
+                            ml.append((order.average_price_matched, _size_matched))
+                    _size_remaining = order.size_remaining  # cache
+                    if order.order_type.price and _size_remaining:
                         if order.side == "BACK":
-                            ub.append((order.order_type.price, order.size_remaining))
+                            ub.append((order.order_type.price, _size_remaining))
                         else:
-                            ul.append((order.order_type.price, order.size_remaining))
+                            ul.append((order.order_type.price, _size_remaining))
                 elif order.order_type.ORDER_TYPE in (
                     OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
