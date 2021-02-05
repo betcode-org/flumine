@@ -1,5 +1,6 @@
 import logging
 from typing import Iterable
+from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
 from ..utils import (
@@ -18,10 +19,27 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
+
+    """
+    Simple and fast class to hold all orders for
+    a particular market.
+
+    `customer_order_ref` used as the key and various
+    caches available for faster access.
+
+        blotter["abc"] = <Order>  # set
+        "abc" in blotter  # contains
+        orders = [o for o in blotter]  # iter
+        order = blotter["abc"]  # get
+    """
+
     def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
+        self._strategy_orders = defaultdict(
+            list
+        )  # cache list per strategy (faster lookup)
         # pending orders, list of (<Order>, {..})
         self.pending_place = []
         self.pending_cancel = []
@@ -30,7 +48,7 @@ class Blotter:
 
     def strategy_orders(self, strategy) -> list:
         """Returns all orders related to a strategy."""
-        return [order for order in self if order.trade.strategy == strategy]
+        return self._strategy_orders[strategy]
 
     def process_orders(self, client, bet_delay: int = 0) -> list:
         packages = []
@@ -184,6 +202,7 @@ class Blotter:
     def __setitem__(self, customer_order_ref: str, order) -> None:
         self._orders[customer_order_ref] = order
         self._live_orders.append(order)
+        self._strategy_orders[order.trade.strategy].append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]

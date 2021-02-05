@@ -8,6 +8,8 @@ Release History
 
 **Improvements**
 
+- Blotter strategy orders added for faster lookup
+- Strategy name hash cached
 - Minor selection_exposure optimisations
 - Simulated optimisations
 
