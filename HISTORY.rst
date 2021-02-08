@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.16.3 (2021-02-08)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Minor fix when combining data and market stream strategies
+
 1.16.2 (2021-02-05)
 +++++++++++++++++++
 
