@@ -97,18 +97,33 @@ class Transaction:
             packages.append(
                 self._create_order_package(
                     self._pending_place,
-                    OrderPackageType.PLACE,  # todo market_version
+                    OrderPackageType.PLACE,
                 )
             )
             self._pending_place.clear()
         if self._pending_cancel:
-            # todo
+            packages.append(
+                self._create_order_package(
+                    self._pending_cancel,
+                    OrderPackageType.CANCEL,
+                )
+            )
             self._pending_cancel.clear()
         if self._pending_update:
-            # todo
+            packages.append(
+                self._create_order_package(
+                    self._pending_update,
+                    OrderPackageType.UPDATE,
+                )
+            )
             self._pending_update.clear()
         if self._pending_replace:
-            # todo
+            packages.append(
+                self._create_order_package(
+                    self._pending_replace,
+                    OrderPackageType.REPLACE,
+                )
+            )
             self._pending_replace.clear()
 
         if packages:
@@ -138,6 +153,7 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, market_version: int = None
     ) -> BetfairOrderPackage:
+        # todo market_version
         return BetfairOrderPackage(
             client=self.market.flumine.client,
             market_id=self.market.market_id,

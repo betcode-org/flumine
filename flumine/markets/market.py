@@ -11,6 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class Market:
+    """
+    Market data structure to hold latest marketBook,
+    marketCatalogue and various properties. Also
+    allows order placement through the Transaction
+    class.
+    """
+
     def __init__(
         self,
         flumine,

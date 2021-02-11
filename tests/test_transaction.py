@@ -139,6 +139,32 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
         self.transaction._pending_replace = []
 
+    @mock.patch("flumine.execution.transaction.Transaction._create_order_package")
+    def test_execute(self, mock__create_order_package):
+        self.assertEqual(self.transaction.execute(), 0)
+        mock_order = mock.Mock()
+        self.transaction._pending_place = [(mock_order, 1234)]
+        self.transaction._pending_cancel = [(mock_order,)]
+        self.transaction._pending_update = [(mock_order,)]
+        self.transaction._pending_replace = [(mock_order, 1234)]
+        self.assertEqual(self.transaction.execute(), 4)
+        mock__create_order_package.assert_has_calls(
+            [
+                call([], OrderPackageType.PLACE),
+                call([], OrderPackageType.CANCEL),
+                call([], OrderPackageType.UPDATE),
+                call([], OrderPackageType.REPLACE),
+            ]
+        )
+        self.transaction.market.flumine.process_order_package.assert_has_calls(
+            [
+                call(mock__create_order_package()),
+                call(mock__create_order_package()),
+                call(mock__create_order_package()),
+                call(mock__create_order_package()),
+            ]
+        )
+
     def test__validate_controls(self):
         mock_trading_control = mock.Mock()
         mock_client_control = mock.Mock()
