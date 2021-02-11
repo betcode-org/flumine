@@ -61,14 +61,6 @@ The following functions can be overridden dependant on the strategy:
 
 `finish()` Function called when framework ends
 
-`place_order()` Places an order by first validating using `validate_order`
-
-`cancel_order()` Cancel an order
-
-`update_order()` Updates an order
-
-`replace_order()` Replaces an order
-
 ### Runner Context
 
 
@@ -184,7 +176,7 @@ Store server id or similar (e.g. AWS ec2 instanceId)
 
 ### hostname
 
-Used as customerStrategyRefs so that only orders created by the running instance is returned.
+Used as customerStrategyRefs so that only orders created by the running instance are returned.
 
 ### process_id
 
