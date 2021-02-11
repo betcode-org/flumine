@@ -7,6 +7,7 @@ from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.orderpackage import OrderPackageType
+from ..order.trade import TradeStatus
 from ..order import process
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ class FlumineBacktest(BaseFlumine):
         blotter = market.blotter
         for order in blotter.live_orders:
             process.process_current_order(order)
-            if order.trade.status.value == "Complete":
+            if order.trade.status == TradeStatus.COMPLETE:
                 blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)

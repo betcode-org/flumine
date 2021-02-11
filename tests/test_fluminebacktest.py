@@ -6,6 +6,7 @@ from flumine.clients import ExchangeType
 from flumine.order.orderpackage import OrderPackageType
 from flumine import config
 from flumine.exceptions import RunError
+from flumine.order.trade import TradeStatus
 
 
 class FlumineBacktestTest(unittest.TestCase):
@@ -75,7 +76,7 @@ class FlumineBacktestTest(unittest.TestCase):
     def test__process_backtest_orders(self, mock_process_current_order):
         mock_market = mock.Mock(context={})
         mock_order = mock.Mock()
-        mock_order.trade.status.value = "Complete"
+        mock_order.trade.status = TradeStatus.COMPLETE
         mock_market.blotter.live_orders = [mock_order]
         self.flumine._process_backtest_orders(mock_market)
         mock_process_current_order.assert_called_with(mock_order)

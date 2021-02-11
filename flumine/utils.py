@@ -43,31 +43,6 @@ def chunks(l: list, n: int) -> list:
         yield l[i : i + n]
 
 
-def batch_orders(orders: list) -> dict:  # todo remove?
-    # batch by market_version -> batch
-    _return_orders = defaultdict(list)  # market_version: [[<Order>, ], .. ]
-    a = _split_orders_by(orders, "market_version")
-    for market_version, a_orders in a.items():
-        b = _split_orders_by(a_orders, "batch", True)
-        for batch, b_orders in b.items():
-            _temp = []
-            for order, _ in b_orders:
-                if batch is False:
-                    _return_orders[market_version].append([order])
-                else:
-                    _temp.append(order)
-            if _temp:
-                _return_orders[market_version].append(_temp)
-    return _return_orders
-
-
-def _split_orders_by(orders: list, by: str, default=None) -> dict:  # todo remove?
-    res = defaultdict(list)
-    for order, request_data in orders:
-        res[request_data.get(by, default)].append((order, request_data))
-    return res
-
-
 def create_cheap_hash(txt: str, length: int = 15) -> str:
     # This is just a hash for debugging purposes.
     #    It does not need to be unique, just fast and short.

@@ -1,5 +1,6 @@
 import logging
 from typing import Iterable
+from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
 from ..utils import (
@@ -15,14 +16,31 @@ IMPLIED_COMMISSION_RATE = 0.03
 
 
 class Blotter:
+
+    """
+    Simple and fast class to hold all orders for
+    a particular market.
+
+    `customer_order_ref` used as the key and various
+    caches available for faster access.
+
+        blotter["abc"] = <Order>  # set
+        "abc" in blotter  # contains
+        orders = [o for o in blotter]  # iter
+        order = blotter["abc"]  # get
+    """
+
     def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
         self._live_orders = []  # cached list of live orders
+        self._strategy_orders = defaultdict(
+            list
+        )  # cache list per strategy (faster lookup)
 
     def strategy_orders(self, strategy) -> list:
         """Returns all orders related to a strategy."""
-        return [order for order in self if order.trade.strategy == strategy]
+        return self._strategy_orders[strategy]
 
     @property
     def live_orders(self):
@@ -57,22 +75,24 @@ class Blotter:
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
-        for order in self:
-            if order.trade.strategy == strategy and order.lookup == lookup:
+        for order in self.strategy_orders(strategy):
+            if order.lookup == lookup:
                 if order.status == OrderStatus.VIOLATION:
                     continue
 
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    if order.size_matched:
+                    _size_matched = order.size_matched  # cache
+                    if _size_matched:
                         if order.side == "BACK":
-                            mb.append((order.average_price_matched, order.size_matched))
+                            mb.append((order.average_price_matched, _size_matched))
                         else:
-                            ml.append((order.average_price_matched, order.size_matched))
-                    if order.order_type.price and order.size_remaining:
+                            ml.append((order.average_price_matched, _size_matched))
+                    _size_remaining = order.size_remaining  # cache
+                    if order.order_type.price and _size_remaining:
                         if order.side == "BACK":
-                            ub.append((order.order_type.price, order.size_remaining))
+                            ub.append((order.order_type.price, _size_remaining))
                         else:
-                            ul.append((order.order_type.price, order.size_remaining))
+                            ul.append((order.order_type.price, _size_remaining))
                 elif order.order_type.ORDER_TYPE in (
                     OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
@@ -111,6 +131,7 @@ class Blotter:
     def __setitem__(self, customer_order_ref: str, order) -> None:
         self._orders[customer_order_ref] = order
         self._live_orders.append(order)
+        self._strategy_orders[order.trade.strategy].append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]
