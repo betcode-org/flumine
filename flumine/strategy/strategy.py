@@ -134,7 +134,7 @@ class BaseStrategy:
         market_version: int = None,
     ) -> bool:
         warnings.warn(
-            "strategy.place_order is deprecated, use market.place_order instead",
+            "strategy.place_order is deprecated and will be removed from v1.18 onwards, use market.place_order instead",
             PendingDeprecationWarning,
         )
         return market.place_order(order, market_version)
@@ -146,7 +146,7 @@ class BaseStrategy:
         size_reduction: float = None,
     ) -> bool:
         warnings.warn(
-            "strategy.cancel_order is deprecated, use market.cancel_order instead",
+            "strategy.cancel_order is deprecated and will be removed from v1.18 onwards, use market.cancel_order instead",
             PendingDeprecationWarning,
         )
         return market.cancel_order(order, size_reduction)
@@ -158,7 +158,7 @@ class BaseStrategy:
         new_persistence_type: str,
     ) -> bool:
         warnings.warn(
-            "strategy.update_order is deprecated, use market.update_order instead",
+            "strategy.update_order is deprecated and will be removed from v1.18 onwards, use market.update_order instead",
             PendingDeprecationWarning,
         )
         return market.update_order(order, new_persistence_type)
@@ -171,7 +171,7 @@ class BaseStrategy:
         market_version: int = None,
     ) -> bool:
         warnings.warn(
-            "strategy.replace_order is deprecated, use market.replace_order instead",
+            "strategy.replace_order is deprecated and will be removed from v1.18 onwards, use market.replace_order instead",
             PendingDeprecationWarning,
         )
         return market.replace_order(order, new_price, market_version)

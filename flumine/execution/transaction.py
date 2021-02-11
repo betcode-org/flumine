@@ -145,7 +145,7 @@ class Transaction:
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType
-    ) -> list[BetfairOrderPackage]:
+    ) -> list:
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:
