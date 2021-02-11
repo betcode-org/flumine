@@ -141,6 +141,8 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.Transaction._create_order_package")
     def test_execute(self, mock__create_order_package):
+        mock_package = mock.Mock()
+        mock__create_order_package.return_value = [mock_package]
         self.assertEqual(self.transaction.execute(), 0)
         mock_order = mock.Mock()
         self.transaction._pending_place = [(mock_order, 1234)]
@@ -158,10 +160,10 @@ class TransactionTest(unittest.TestCase):
         )
         self.transaction.market.flumine.process_order_package.assert_has_calls(
             [
-                call(mock__create_order_package()),
-                call(mock__create_order_package()),
-                call(mock__create_order_package()),
-                call(mock__create_order_package()),
+                call(mock__create_order_package()[0]),
+                call(mock__create_order_package()[0]),
+                call(mock__create_order_package()[0]),
+                call(mock__create_order_package()[0]),
             ]
         )
 
@@ -194,18 +196,30 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
     def test__create_order_package(self, mock_betfair_order_package):
-        package = self.transaction._create_order_package(
-            [(1,), (2,)], OrderPackageType.PLACE, 123
+        packages = self.transaction._create_order_package(
+            [(1, None), (2, None), (3, 123), (4, 123)], OrderPackageType.PLACE
         )
-        mock_betfair_order_package.assert_called_with(
-            client=self.transaction.market.flumine.client,
-            market_id=self.transaction.market.market_id,
-            orders=[1, 2],
-            package_type=OrderPackageType.PLACE,
-            bet_delay=self.transaction.market.market_book.bet_delay,
-            market_version=123,
+        mock_betfair_order_package.assert_has_calls(
+            [
+                call(
+                    client=self.transaction.market.flumine.client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[1, 2],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    market_version=None,
+                ),
+                call(
+                    client=self.transaction.market.flumine.client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[3, 4],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    market_version=123,
+                ),
+            ]
         )
-        self.assertEqual(package, mock_betfair_order_package())
+        self.assertEqual(len(packages), 2)
 
     @mock.patch("flumine.execution.transaction.Transaction.execute")
     def test_enter_exit(self, mock_execute):

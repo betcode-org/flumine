@@ -18,31 +18,6 @@ class UtilsTest(unittest.TestCase):
     def test_chunks(self):
         self.assertEqual([i for i in utils.chunks([1, 2, 3], 1)], [[1], [2], [3]])
 
-    def test_batch_orders(self):
-        order_one = (mock.Mock(), {})
-        order_two = (mock.Mock(), {"market_version": 123})
-        order_three = (mock.Mock(), {"batch": False})
-        order_four = (mock.Mock(), {"market_version": 123, "batch": True})
-        self.assertEqual(
-            utils.batch_orders([order_one, order_two, order_three, order_four]),
-            {
-                None: [[order_one[0]], [order_three[0]]],
-                123: [[order_two[0], order_four[0]]],
-            },
-        )
-
-    def test__split_orders_by(self):
-        order_one = (mock.Mock(), {})
-        order_four = (mock.Mock(), {"market_version": 123, "batch": True})
-        order_eight = (mock.Mock(), {"market_version": 456, "batch": True})
-        order_ten = (mock.Mock(), {"market_version": 456, "batch": True})
-        self.assertEqual(
-            utils._split_orders_by(
-                [order_one, order_four, order_eight, order_ten], "market_version", 321
-            ),
-            {321: [order_one], 123: [order_four], 456: [order_eight, order_ten]},
-        )
-
     def test_create_cheap_hash(self):
         self.assertEqual(
             utils.create_cheap_hash("test"),

@@ -1,6 +1,7 @@
 import logging
-from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
+from collections import defaultdict
 
+from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 from ..events import events
 from ..exceptions import ControlError
 
@@ -66,7 +67,7 @@ class Transaction:
             return False
         # cancel
         order.cancel(size_reduction)
-        self._pending_cancel.append((order,))
+        self._pending_cancel.append((order, None))
         return True
 
     def update_order(self, order, new_persistence_type: str) -> bool:
@@ -76,7 +77,7 @@ class Transaction:
             return False
         # update
         order.update(new_persistence_type)
-        self._pending_update.append((order,))
+        self._pending_update.append((order, None))
         return True
 
     def replace_order(
@@ -94,35 +95,27 @@ class Transaction:
     def execute(self) -> int:
         packages = []
         if self._pending_place:
-            packages.append(
-                self._create_order_package(
-                    self._pending_place,
-                    OrderPackageType.PLACE,
-                )
+            packages += self._create_order_package(
+                self._pending_place,
+                OrderPackageType.PLACE,
             )
             self._pending_place.clear()
         if self._pending_cancel:
-            packages.append(
-                self._create_order_package(
-                    self._pending_cancel,
-                    OrderPackageType.CANCEL,
-                )
+            packages += self._create_order_package(
+                self._pending_cancel,
+                OrderPackageType.CANCEL,
             )
             self._pending_cancel.clear()
         if self._pending_update:
-            packages.append(
-                self._create_order_package(
-                    self._pending_update,
-                    OrderPackageType.UPDATE,
-                )
+            packages += self._create_order_package(
+                self._pending_update,
+                OrderPackageType.UPDATE,
             )
             self._pending_update.clear()
         if self._pending_replace:
-            packages.append(
-                self._create_order_package(
-                    self._pending_replace,
-                    OrderPackageType.REPLACE,
-                )
+            packages += self._create_order_package(
+                self._pending_replace,
+                OrderPackageType.REPLACE,
             )
             self._pending_replace.clear()
 
@@ -151,17 +144,26 @@ class Transaction:
             return True
 
     def _create_order_package(
-        self, orders: list, package_type: OrderPackageType, market_version: int = None
-    ) -> BetfairOrderPackage:
-        # todo market_version
-        return BetfairOrderPackage(
-            client=self.market.flumine.client,
-            market_id=self.market.market_id,
-            orders=[o[0] for o in orders],  # todo mv
-            package_type=package_type,
-            bet_delay=self.market.market_book.bet_delay,
-            market_version=market_version,
-        )
+        self, orders: list, package_type: OrderPackageType
+    ) -> list[BetfairOrderPackage]:
+        # group orders by marketVersion
+        orders_grouped = defaultdict(list)
+        for o in orders:
+            orders_grouped[o[1]].append(o[0])
+        # create packages
+        packages = []
+        for market_version, package_orders in orders_grouped.items():
+            packages.append(
+                BetfairOrderPackage(
+                    client=self.market.flumine.client,
+                    market_id=self.market.market_id,
+                    orders=package_orders,
+                    package_type=package_type,
+                    bet_delay=self.market.market_book.bet_delay,
+                    market_version=market_version,
+                )
+            )
+        return packages
 
     def __enter__(self):
         return self
