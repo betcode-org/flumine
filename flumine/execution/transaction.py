@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 from ..events import events
-from ..exceptions import ControlError
+from ..exceptions import ControlError, OrderError
 from ..utils import chunks
 
 logger = logging.getLogger(__name__)
@@ -49,11 +49,9 @@ class Transaction:
             self.market.blotter[order.id] = order
             if order.trade.market_notes is None:
                 order.trade.update_market_notes(self.market)
-            self.market.flumine.log_control(
-                events.TradeEvent(order.trade)
-            )  # todo dupes?
+            self.market.flumine.log_control(events.TradeEvent(order.trade))
         else:
-            return True  # retry attempt so ignore?
+            raise OrderError("Order %s has already been placed" % order.id)
         if execute:  # handles replaceOrder
             self._pending_place.append((order, market_version))
             self._pending_orders = True

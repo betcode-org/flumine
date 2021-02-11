@@ -12,6 +12,7 @@ Release History
 - Trading controls executed on place rather than OrderPackage level (Breaking change to controls)
 - strategy order placement to be depreciated (Breaking change from version 1.18.0)
 - OrderPackage no longer processed through the queue (quicker tick to trade)
+- Error correctly raised on duplicate place calls
 
 1.16.3 (2021-02-08)
 +++++++++++++++++++

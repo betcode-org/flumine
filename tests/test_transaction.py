@@ -2,7 +2,8 @@ import unittest
 from unittest import mock
 from unittest.mock import call
 
-from flumine.execution.transaction import Transaction, OrderPackageType, ControlError
+from flumine.execution.transaction import Transaction, OrderPackageType
+from flumine.exceptions import ControlError, OrderError
 
 
 class TransactionTest(unittest.TestCase):
@@ -66,7 +67,8 @@ class TransactionTest(unittest.TestCase):
     def test_place_order_retry(self, mock__validate_controls):
         mock_order = mock.Mock()
         self.transaction.market.blotter = {mock_order.id: mock_order}
-        self.assertTrue(self.transaction.place_order(mock_order))
+        with self.assertRaises(OrderError):
+            self.transaction.place_order(mock_order)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         self.transaction._pending_place = []
         self.assertFalse(self.transaction._pending_orders)
