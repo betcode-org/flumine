@@ -1,6 +1,9 @@
 import logging
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
+from ..events import events
+from ..exceptions import ControlError
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,9 +15,6 @@ class Transaction:
     when it is used as a context manager requests can
     be batched, for example:
 
-        with transaction.Transaction(self) as t:
-            t.place_order(order, market_version)
-
         with market.transaction as t:
             market.place_order(order)  # executed immediately in separate transaction
             t.place_order(order)  # executed on transaction __exit__
@@ -24,36 +24,72 @@ class Transaction:
             ..
             t.execute()  # above order executed
             ..
-            t.cancel_order(order)  # executed on transaction __exit__
-            t.place_order(order)
+            t.cancel_order(order)
+            t.place_order(order)  # both executed on transaction __exit__
     """
 
     def __init__(self, market):
         self.market = market
-        self.open = False
         self._pending_place = []  # list of (<Order>, market_version)
         self._pending_cancel = []  # list of <Order>
         self._pending_update = []  # list of <Order>
         self._pending_replace = []  # list of (<Order>, market_version)
 
-    def place_order(self, order, market_version: int) -> None:
-        if self.open:  # open transaction
-            self._pending_place.append((order, market_version))
+    def place_order(
+        self, order, market_version: int = None, execute: bool = None
+    ) -> bool:
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.PLACE)
+        if not validated:
+            return False
+        # place
+        order.place(self.market.market_book.publish_time)
+        if order.id not in self.market.blotter:
+            self.market.blotter[order.id] = order
+            if order.trade.market_notes is None:
+                order.trade.update_market_notes(self.market)
+            self.market.flumine.log_control(
+                events.TradeEvent(order.trade)
+            )  # todo dupes?
         else:
-            package = self._create_order_package(
-                self._pending_place,
-                OrderPackageType.PLACE,  # todo market_version
-            )
-            self.market.flumine.process_order_package(package)
+            return True  # retry attempt so ignore?
+        if execute:  # handles replaceOrder
+            self._pending_place.append((order, market_version))
+            return True
+        else:
+            return True
 
-    def cancel_order(self, order) -> None:
-        pass
+    def cancel_order(self, order, size_reduction: float = None) -> bool:
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.CANCEL)
+        if not validated:
+            return False
+        # cancel
+        order.cancel(size_reduction)
+        self._pending_cancel.append((order,))
+        return True
 
-    def update_order(self, order) -> None:
-        pass
+    def update_order(self, order, new_persistence_type: str) -> bool:
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.UPDATE)
+        if not validated:
+            return False
+        # update
+        order.update(new_persistence_type)
+        self._pending_update.append((order,))
+        return True
 
-    def replace_order(self, order, market_version: int) -> None:
-        pass
+    def replace_order(
+        self, order, new_price: float, market_version: int = None
+    ) -> bool:
+        # validate controls
+        validated = self._validate_controls(order, OrderPackageType.REPLACE)
+        if not validated:
+            return False
+        # replace
+        order.replace(new_price)
+        self._pending_replace.append((order, market_version))
+        return True
 
     def execute(self) -> int:
         packages = []
@@ -75,16 +111,29 @@ class Transaction:
             # todo
             self._pending_replace.clear()
 
-        for package in packages:
-            self.market.flumine.process_order_package(package)
-        logger.info(
-            "%s order packages executed" % len(packages),
-            extra={
-                "market_id": self.market.market_id,
-                "order_packages": [o.info for o in packages],
-            },
-        )
+        if packages:
+            for package in packages:
+                self.market.flumine.process_order_package(package)
+            logger.info(
+                "%s order packages executed" % len(packages),
+                extra={
+                    "market_id": self.market.market_id,
+                    "order_packages": [o.info for o in packages],
+                },
+            )
         return len(packages)
+
+    def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
+        # return False on violation
+        try:
+            for control in self.market.flumine.trading_controls:
+                control(order, package_type)
+            for control in self.market.flumine.client.trading_controls:
+                control(order, package_type)
+        except ControlError:
+            return False
+        else:
+            return True
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, market_version: int = None
@@ -92,16 +141,14 @@ class Transaction:
         return BetfairOrderPackage(
             client=self.market.flumine.client,
             market_id=self.market.market_id,
-            orders=orders,
+            orders=[o[0] for o in orders],  # todo mv
             package_type=package_type,
             bet_delay=self.market.market_book.bet_delay,
             market_version=market_version,
         )
 
     def __enter__(self):
-        self.open = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.execute()
-        self.open = False

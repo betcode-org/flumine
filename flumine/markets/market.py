@@ -5,9 +5,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
-from ..events import events
-from ..order.orderpackage import BetfairOrderPackage, OrderPackageType
-from ..exceptions import ControlError
+from ..execution.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +48,9 @@ class Market:
             extra=self.info,
         )
 
+    def transaction(self) -> Transaction:
+        return Transaction(self)
+
     # order
     def place_order(
         self,
@@ -57,92 +58,22 @@ class Market:
         market_version: int = None,
         execute: bool = True,
     ) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.PLACE)
-        if not validated:
-            return False
-        # place
-        order.place(self.market_book.publish_time)
-        if order.id not in self.blotter:
-            self.blotter[order.id] = order
-            if order.trade.market_notes is None:
-                order.trade.update_market_notes(self)
-            self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
-        else:
-            return True  # retry attempt so ignore?
-        if execute:  # handles replaceOrder
-            # todo market.transaction() / marketVersion
-            order_package = self._create_order_package(
-                [order], OrderPackageType.PLACE, market_version
-            )
-            self.flumine.process_order_package(order_package)
-            return True
-        else:
-            return True
+        with self.transaction() as t:
+            return t.place_order(order, market_version, execute)
 
     def cancel_order(self, order, size_reduction: float = None) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.CANCEL)
-        if not validated:
-            return False
-        # cancel
-        order.cancel(size_reduction)
-        # todo market.transaction()
-        order_package = self._create_order_package([order], OrderPackageType.CANCEL)
-        self.flumine.process_order_package(order_package)
-        return True
+        with self.transaction() as t:
+            return t.cancel_order(order, size_reduction)
 
     def update_order(self, order, new_persistence_type: str) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.UPDATE)
-        if not validated:
-            return False
-        # update
-        order.update(new_persistence_type)
-        # todo market.transaction()
-        order_package = self._create_order_package([order], OrderPackageType.UPDATE)
-        self.flumine.process_order_package(order_package)
-        return True
+        with self.transaction() as t:
+            return t.update_order(order, new_persistence_type)
 
     def replace_order(
         self, order, new_price: float, market_version: int = None
     ) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.REPLACE)
-        if not validated:
-            return False
-        # replace
-        order.replace(new_price)
-        # todo market.transaction()
-        order_package = self._create_order_package(
-            [order], OrderPackageType.REPLACE, market_version
-        )
-        self.flumine.process_order_package(order_package)
-        return True
-
-    def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
-        # return False on violation
-        try:
-            for control in self.flumine.trading_controls:
-                control(order, package_type)
-            for control in self.flumine.client.trading_controls:
-                control(order, package_type)
-        except ControlError:
-            return False
-        else:
-            return True
-
-    def _create_order_package(
-        self, orders: list, package_type: OrderPackageType, market_version: int = None
-    ):
-        return BetfairOrderPackage(
-            client=self.flumine.client,
-            market_id=self.market_id,
-            orders=orders,
-            package_type=package_type,
-            bet_delay=self.market_book.bet_delay,
-            market_version=market_version,
-        )
+        with self.transaction() as t:
+            return t.replace_order(order, new_price, market_version)
 
     @property
     def event(self) -> dict:
