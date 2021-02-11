@@ -385,7 +385,8 @@ class TestStrategyExposure(unittest.TestCase):
         order2.average_price_matched = 0.0
         order2.size_matched = 0
 
-        self.market.blotter._orders = {"order1": order1, "order2": order2}
+        self.market.blotter["order1"] = order1
+        self.market.blotter["order2"] = order2
 
         self.trading_control._validate(order1, OrderPackageType.PLACE)
         self.assertEqual(1, mock_on_error.call_count)

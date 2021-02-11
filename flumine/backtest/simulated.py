@@ -35,12 +35,12 @@ class Simulated:
 
     def __call__(self, market_book: MarketBook, runner_analytics) -> None:
         # simulates order matching
-        runner = self._get_runner(market_book)
         if (
             self._bsp_reconciled is False
             and market_book.bsp_reconciled
             and self.take_sp
         ):
+            runner = self._get_runner(market_book)
             self._process_sp(market_book.publish_time_epoch, runner)
 
         elif (

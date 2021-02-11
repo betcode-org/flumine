@@ -31,7 +31,7 @@ class Market:
         self.blotter = Blotter(market_id)
 
     def __call__(self, market_book: MarketBook):
-        if market_book.version != self.market_book.version:
+        if self.market_book and market_book.version != self.market_book.version:
             self.update_market_catalogue = True
         self.market_book = market_book
 
