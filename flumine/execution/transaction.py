@@ -4,6 +4,7 @@ from collections import defaultdict
 from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 from ..events import events
 from ..exceptions import ControlError
+from ..utils import chunks
 
 logger = logging.getLogger(__name__)
 
@@ -32,16 +33,14 @@ class Transaction:
     def __init__(self, market):
         self.market = market
         self._pending_place = []  # list of (<Order>, market_version)
-        self._pending_cancel = []  # list of <Order>
-        self._pending_update = []  # list of <Order>
+        self._pending_cancel = []  # list of (<Order>, None)
+        self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
 
     def place_order(
         self, order, market_version: int = None, execute: bool = None
     ) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.PLACE)
-        if not validated:
+        if self._validate_controls(order, OrderPackageType.PLACE) is False:
             return False
         # place
         order.place(self.market.market_book.publish_time)
@@ -56,14 +55,10 @@ class Transaction:
             return True  # retry attempt so ignore?
         if execute:  # handles replaceOrder
             self._pending_place.append((order, market_version))
-            return True
-        else:
-            return True
+        return True
 
     def cancel_order(self, order, size_reduction: float = None) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.CANCEL)
-        if not validated:
+        if self._validate_controls(order, OrderPackageType.CANCEL) is False:
             return False
         # cancel
         order.cancel(size_reduction)
@@ -71,9 +66,7 @@ class Transaction:
         return True
 
     def update_order(self, order, new_persistence_type: str) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.UPDATE)
-        if not validated:
+        if self._validate_controls(order, OrderPackageType.UPDATE) is False:
             return False
         # update
         order.update(new_persistence_type)
@@ -83,9 +76,7 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None
     ) -> bool:
-        # validate controls
-        validated = self._validate_controls(order, OrderPackageType.REPLACE)
-        if not validated:
+        if self._validate_controls(order, OrderPackageType.REPLACE) is False:
             return False
         # replace
         order.replace(new_price)
@@ -150,19 +141,21 @@ class Transaction:
         orders_grouped = defaultdict(list)
         for o in orders:
             orders_grouped[o[1]].append(o[0])
-        # create packages
+        # create packages (chunked by limit)
+        limit = BetfairOrderPackage.order_limit(package_type)
         packages = []
         for market_version, package_orders in orders_grouped.items():
-            packages.append(
-                BetfairOrderPackage(
-                    client=self.market.flumine.client,
-                    market_id=self.market.market_id,
-                    orders=package_orders,
-                    package_type=package_type,
-                    bet_delay=self.market.market_book.bet_delay,
-                    market_version=market_version,
+            for chunked_orders in chunks(package_orders, limit):
+                packages.append(
+                    BetfairOrderPackage(
+                        client=self.market.flumine.client,
+                        market_id=self.market.market_id,
+                        orders=chunked_orders,
+                        package_type=package_type,
+                        bet_delay=self.market.market_book.bet_delay,
+                        market_version=market_version,
+                    )
                 )
-            )
         return packages
 
     def __enter__(self):
