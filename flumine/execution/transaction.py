@@ -32,13 +32,14 @@ class Transaction:
 
     def __init__(self, market):
         self.market = market
+        self._pending_orders = False
         self._pending_place = []  # list of (<Order>, market_version)
         self._pending_cancel = []  # list of (<Order>, None)
         self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
 
     def place_order(
-        self, order, market_version: int = None, execute: bool = None
+        self, order, market_version: int = None, execute: bool = True
     ) -> bool:
         if self._validate_controls(order, OrderPackageType.PLACE) is False:
             return False
@@ -55,6 +56,7 @@ class Transaction:
             return True  # retry attempt so ignore?
         if execute:  # handles replaceOrder
             self._pending_place.append((order, market_version))
+            self._pending_orders = True
         return True
 
     def cancel_order(self, order, size_reduction: float = None) -> bool:
@@ -63,6 +65,7 @@ class Transaction:
         # cancel
         order.cancel(size_reduction)
         self._pending_cancel.append((order, None))
+        self._pending_orders = True
         return True
 
     def update_order(self, order, new_persistence_type: str) -> bool:
@@ -71,6 +74,7 @@ class Transaction:
         # update
         order.update(new_persistence_type)
         self._pending_update.append((order, None))
+        self._pending_orders = True
         return True
 
     def replace_order(
@@ -81,6 +85,7 @@ class Transaction:
         # replace
         order.replace(new_price)
         self._pending_replace.append((order, market_version))
+        self._pending_orders = True
         return True
 
     def execute(self) -> int:
@@ -90,36 +95,32 @@ class Transaction:
                 self._pending_place,
                 OrderPackageType.PLACE,
             )
-            self._pending_place.clear()
         if self._pending_cancel:
             packages += self._create_order_package(
                 self._pending_cancel,
                 OrderPackageType.CANCEL,
             )
-            self._pending_cancel.clear()
         if self._pending_update:
             packages += self._create_order_package(
                 self._pending_update,
                 OrderPackageType.UPDATE,
             )
-            self._pending_update.clear()
         if self._pending_replace:
             packages += self._create_order_package(
                 self._pending_replace,
                 OrderPackageType.REPLACE,
             )
-            self._pending_replace.clear()
-
         if packages:
             for package in packages:
                 self.market.flumine.process_order_package(package)
             logger.info(
-                "%s order packages executed" % len(packages),
+                "%s order packages executed in transaction" % len(packages),
                 extra={
                     "market_id": self.market.market_id,
                     "order_packages": [o.info for o in packages],
                 },
             )
+            self._pending_orders = False
         return len(packages)
 
     def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
@@ -156,10 +157,12 @@ class Transaction:
                         market_version=market_version,
                     )
                 )
+        orders.clear()
         return packages
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.execute()
+        if self._pending_orders:
+            self.execute()
