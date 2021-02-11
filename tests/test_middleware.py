@@ -225,7 +225,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
     ):
         mock_runner = mock.Mock()
         self.runner_analytics(mock_runner, True)
-        mock__calculate_traded.assert_called_with(mock_runner)
+        mock__calculate_traded.assert_called_with(mock_runner.ex.traded_volume)
         mock__calculate_middle.assert_called_with(self.mock_runner)
         mock__calculate_matched.assert_called_with(mock_runner)
         self.assertEqual(
@@ -252,37 +252,32 @@ class RunnerAnalyticsTest(unittest.TestCase):
 
     def test__calculate_traded_dict_empty(self):
         self.runner_analytics._traded_volume = []
-        mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = []
-        self.assertEqual(self.runner_analytics._calculate_traded(mock_runner), {})
+        self.assertEqual(self.runner_analytics._calculate_traded([]), {})
 
     def test__calculate_traded_dict_same(self):
-        mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = [{"price": 1.01, "size": 69}]
+        traded_volume = [{"price": 1.01, "size": 69}]
         self.runner_analytics._traded_volume = [{"price": 1.01, "size": 69}]
         self.runner_analytics._p_v = {1.01: 69}
-        self.assertEqual(self.runner_analytics._calculate_traded(mock_runner), {})
+        self.assertEqual(self.runner_analytics._calculate_traded(traded_volume), {})
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
     def test__calculate_traded_dict_new(self):
-        mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = [{"price": 1.01, "size": 69}]
+        traded_volume = [{"price": 1.01, "size": 69}]
         self.runner_analytics._traded_volume = []
         self.assertEqual(
-            self.runner_analytics._calculate_traded(mock_runner), {1.01: 67.0}
+            self.runner_analytics._calculate_traded(traded_volume), {1.01: 67.0}
         )
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
     def test__calculate_traded_dict_new_multi(self):
-        mock_runner = mock.Mock()
-        mock_runner.ex.traded_volume = [
+        traded_volume = [
             {"price": 1.01, "size": 69},
             {"price": 10, "size": 32},
         ]
         self.runner_analytics._traded_volume = [{"price": 1.01, "size": 30}]
         self.runner_analytics._p_v = {1.01: 30}
         self.assertEqual(
-            self.runner_analytics._calculate_traded(mock_runner),
+            self.runner_analytics._calculate_traded(traded_volume),
             {1.01: 39.0, 10: 32},
         )
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69, 10: 32})
