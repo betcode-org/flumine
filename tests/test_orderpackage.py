@@ -42,6 +42,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertTrue(self.order_package._retry)
         self.assertEqual(self.order_package._max_retries, 3)
         self.assertEqual(self.order_package._retry_count, 0)
+        self.assertIsNone(self.order_package.simulated_delay)
 
     def test_retry(self):
         self.assertTrue(self.order_package.retry())
@@ -58,6 +59,20 @@ class OrderPackageTest(unittest.TestCase):
         self.assertFalse(self.order_package.retry())
         self.assertEqual(self.order_package._retry_count, 3)
         mock_time.sleep.assert_called()
+
+    def test_calc_simulated_delay(self):
+        self.order_package.client.execution.PLACE_LATENCY = 0.1
+        self.order_package.client.execution.CANCEL_LATENCY = 0.2
+        self.order_package.client.execution.UPDATE_LATENCY = 0.3
+        self.order_package.client.execution.REPLACE_LATENCY = 0.4
+        self.order_package.package_type = OrderPackageType.PLACE
+        self.assertEqual(self.order_package.calc_simulated_delay(), 1.1)
+        self.order_package.package_type = OrderPackageType.CANCEL
+        self.assertEqual(self.order_package.calc_simulated_delay(), 0.2)
+        self.order_package.package_type = OrderPackageType.UPDATE
+        self.assertEqual(self.order_package.calc_simulated_delay(), 0.3)
+        self.order_package.package_type = OrderPackageType.REPLACE
+        self.assertEqual(self.order_package.calc_simulated_delay(), 1.4)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):
@@ -96,6 +111,7 @@ class OrderPackageTest(unittest.TestCase):
                 "client": self.order_package.client,
                 "market_id": self.order_package.market_id,
                 "orders": [self.mock_order.id],
+                "order_count": 1,
                 "package_type": self.order_package.package_type.value,
                 "customer_strategy_ref": self.order_package.customer_strategy_ref,
                 "bet_delay": self.order_package.bet_delay,

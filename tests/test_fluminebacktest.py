@@ -94,12 +94,12 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_place(self):
         mock_client = mock.Mock()
-        mock_client.execution.PLACE_LATENCY = 2.0
         mock_order_package = mock.Mock(
             package_type=OrderPackageType.PLACE,
             elapsed_seconds=5,
             bet_delay=1,
             client=mock_client,
+            simulated_delay=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -107,12 +107,12 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_place_pending(self):
         mock_client = mock.Mock()
-        mock_client.execution.PLACE_LATENCY = 2.0
         mock_order_package = mock.Mock(
             package_type=OrderPackageType.PLACE,
             elapsed_seconds=2,
             bet_delay=1,
             client=mock_client,
+            simulated_delay=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -120,9 +120,8 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_cancel(self):
         mock_client = mock.Mock()
-        mock_client.execution.CANCEL_LATENCY = 2.0
         mock_order_package = mock.Mock(
-            package_type=OrderPackageType.CANCEL, elapsed_seconds=3, client=mock_client
+            elapsed_seconds=3, client=mock_client, simulated_delay=0.2
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -130,9 +129,8 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_cancel_pending(self):
         mock_client = mock.Mock()
-        mock_client.execution.CANCEL_LATENCY = 2.0
         mock_order_package = mock.Mock(
-            package_type=OrderPackageType.CANCEL, elapsed_seconds=2, client=mock_client
+            elapsed_seconds=2, client=mock_client, simulated_delay=0.2
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -140,9 +138,8 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_update(self):
         mock_client = mock.Mock()
-        mock_client.execution.UPDATE_LATENCY = 2.0
         mock_order_package = mock.Mock(
-            package_type=OrderPackageType.UPDATE, elapsed_seconds=3, client=mock_client
+            elapsed_seconds=3, client=mock_client, simulated_delay=0.2
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -150,9 +147,8 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_update_pending(self):
         mock_client = mock.Mock()
-        mock_client.execution.UPDATE_LATENCY = 2.0
         mock_order_package = mock.Mock(
-            package_type=OrderPackageType.UPDATE, elapsed_seconds=2, client=mock_client
+            elapsed_seconds=2, client=mock_client, simulated_delay=0.2
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -160,12 +156,12 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_replace(self):
         mock_client = mock.Mock()
-        mock_client.execution.REPLACE_LATENCY = 2.0
         mock_order_package = mock.Mock(
             package_type=OrderPackageType.REPLACE,
             elapsed_seconds=5,
             bet_delay=1,
             client=mock_client,
+            simulated_delay=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages()
@@ -173,12 +169,12 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test__check_pending_packages_replace_pending(self):
         mock_client = mock.Mock()
-        mock_client.execution.REPLACE_LATENCY = 2.0
         mock_order_package = mock.Mock(
             package_type=OrderPackageType.REPLACE,
             elapsed_seconds=2,
             bet_delay=1,
             client=mock_client,
+            simulated_delay=1.2,
         )
         self.flumine.handler_queue.append(mock_order_package)
         self.flumine._check_pending_packages()

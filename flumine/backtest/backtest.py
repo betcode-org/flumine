@@ -114,27 +114,9 @@ class FlumineBacktest(BaseFlumine):
     def _check_pending_packages(self):
         processed = []
         for order_package in self.handler_queue:
-            client = order_package.client
-            if order_package.package_type == OrderPackageType.PLACE:
-                if order_package.elapsed_seconds > (
-                    client.execution.PLACE_LATENCY + order_package.bet_delay
-                ):
-                    client.execution.handler(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.CANCEL:
-                if order_package.elapsed_seconds > client.execution.CANCEL_LATENCY:
-                    client.execution.handler(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.UPDATE:
-                if order_package.elapsed_seconds > client.execution.UPDATE_LATENCY:
-                    client.execution.handler(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.REPLACE:
-                if order_package.elapsed_seconds > (
-                    client.execution.REPLACE_LATENCY + order_package.bet_delay
-                ):
-                    client.execution.handler(order_package)
-                    processed.append(order_package)
+            if order_package.elapsed_seconds > order_package.simulated_delay:
+                order_package.client.execution.handler(order_package)
+                processed.append(order_package)
         for p in processed:
             self.handler_queue.remove(p)
 
