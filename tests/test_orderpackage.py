@@ -61,6 +61,8 @@ class OrderPackageTest(unittest.TestCase):
         mock_time.sleep.assert_called()
 
     def test_calc_simulated_delay(self):
+        self.assertIsNone(self.order_package.calc_simulated_delay())
+        self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
         self.order_package.client.execution.PLACE_LATENCY = 0.1
         self.order_package.client.execution.CANCEL_LATENCY = 0.2
         self.order_package.client.execution.UPDATE_LATENCY = 0.3
