@@ -310,7 +310,7 @@ class TestStrategyExposure(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
             mock_order,
-            "Order exposure (12.0) is greater than strategy.max_order_strategy (10)",
+            "Order exposure (12.0) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -406,7 +406,7 @@ class TestStrategyExposure(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
             mock_order,
-            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+            "Order exposure (12) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -424,7 +424,7 @@ class TestStrategyExposure(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
             mock_order,
-            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+            "Order exposure (12) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")

@@ -40,7 +40,7 @@ class MaxOrderCount(BaseControl):
         if package_type == OrderPackageType.PLACE:
             self._check_transaction_count(1)
             self.place_requests += 1
-            if not self.safe:  # and order.flumine_order_type == "initial"
+            if not self.safe:
                 self._on_error(
                     order,
                     "Max Order Count has been reached ({0}) for current hour".format(

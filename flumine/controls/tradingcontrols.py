@@ -133,7 +133,7 @@ class StrategyExposure(BaseControl):
             if exposure > strategy.max_order_exposure:
                 return self._on_error(
                     order,
-                    "Order exposure ({0}) is greater than strategy.max_order_strategy ({1})".format(
+                    "Order exposure ({0}) is greater than strategy.max_order_exposure ({1})".format(
                         exposure, strategy.max_order_exposure
                     ),
                 )
