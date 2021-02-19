@@ -13,6 +13,7 @@ Release History
 - strategy order placement to be depreciated (Breaking change from version 1.18.0)
 - OrderPackage no longer processed through the queue (quicker tick to trade)
 - Error correctly raised on duplicate place calls
+- Execution worker count bumped
 
 1.16.3 (2021-02-08)
 +++++++++++++++++++

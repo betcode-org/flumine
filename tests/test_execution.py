@@ -23,7 +23,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.execution = BaseExecution(self.mock_flumine, max_workers=2)
 
     def test_init(self):
-        self.assertEqual(MAX_WORKERS, 16)
+        self.assertEqual(MAX_WORKERS, 32)
         self.assertEqual(MAX_SESSION_AGE, 200)
         self.assertEqual(BET_ID_START, 100000000000)
         self.assertEqual(self.execution.flumine, self.mock_flumine)
