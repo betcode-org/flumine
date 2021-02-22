@@ -146,45 +146,29 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.remove_market("1.23")
         self.assertEqual(self.strategy._invested, {("1.24", 112, 7): 3})
 
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.validate_order", return_value=True
-    )
-    def test_place_order(self, mock_validate_order):
+    def test_place_order(self):
         mock_order = mock.Mock()
-        mock_order.lookup = ("1", 2, 3)
         mock_market = mock.Mock()
-        self.assertTrue(self.strategy.place_order(mock_market, mock_order, False, 123))
-        mock_market.place_order.assert_called_with(mock_order, False, 123)
-        self.assertIn(mock_order.lookup, self.strategy._invested)
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.validate_order", return_value=False
-    )
-    def test_place_order_false(self, mock_validate_order):
-        mock_order = mock.Mock()
-        mock_order.lookup = ("1", 2, 3)
-        mock_market = mock.Mock()
-        self.assertFalse(self.strategy.place_order(mock_market, mock_order))
-        mock_market.place_order.assert_not_called()
-        self.assertIn(mock_order.lookup, self.strategy._invested)
+        self.assertTrue(self.strategy.place_order(mock_market, mock_order, 123))
+        mock_market.place_order.assert_called_with(mock_order, 123)
 
     def test_cancel_order(self):
         mock_order = mock.Mock()
         mock_market = mock.Mock()
         self.strategy.cancel_order(mock_market, mock_order, 0.01)
-        mock_market.cancel_order.assert_called_with(mock_order, 0.01, True)
+        mock_market.cancel_order.assert_called_with(mock_order, 0.01)
 
     def test_update_order(self):
         mock_order = mock.Mock()
         mock_market = mock.Mock()
         self.strategy.update_order(mock_market, mock_order, "PERSIST")
-        mock_market.update_order.assert_called_with(mock_order, "PERSIST", True)
+        mock_market.update_order.assert_called_with(mock_order, "PERSIST")
 
     def test_replace_order(self):
         mock_order = mock.Mock()
         mock_market = mock.Mock()
-        self.strategy.replace_order(mock_market, mock_order, 1.01, True, 123)
-        mock_market.replace_order.assert_called_with(mock_order, 1.01, True, 123)
+        self.strategy.replace_order(mock_market, mock_order, 1.01, 123)
+        mock_market.replace_order.assert_called_with(mock_order, 1.01, 123)
 
     def test_validate_order(self):
         mock_order = mock.Mock()

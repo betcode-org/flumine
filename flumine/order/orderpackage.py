@@ -43,14 +43,16 @@ class BaseOrderPackage(BaseEvent):
         self.market_id = market_id
         self._orders = orders
         self.package_type = package_type
-        self.bet_delay = bet_delay  # used for simulated execution
         self.async_ = async_
         self._market_version = market_version
         self.customer_strategy_ref = config.hostname
-        self.processed = False  # used for simulated execution
         self._retry = True
         self._max_retries = 3  # will retry 3 times
         self._retry_count = 0
+        # following used for simulated execution
+        self.processed = False
+        self.bet_delay = bet_delay
+        self.simulated_delay = self.calc_simulated_delay()
 
     def retry(self):
         if self._retry and self._retry_count < self._max_retries:
@@ -58,6 +60,17 @@ class BaseOrderPackage(BaseEvent):
             self._retry_count += 1
             return True
         return False
+
+    def calc_simulated_delay(self) -> float:
+        if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
+            if self.package_type == OrderPackageType.PLACE:
+                return self.client.execution.PLACE_LATENCY + self.bet_delay
+            elif self.package_type == OrderPackageType.CANCEL:
+                return self.client.execution.CANCEL_LATENCY
+            elif self.package_type == OrderPackageType.UPDATE:
+                return self.client.execution.UPDATE_LATENCY
+            elif self.package_type == OrderPackageType.REPLACE:
+                return self.client.execution.REPLACE_LATENCY + self.bet_delay
 
     @property
     def place_instructions(self) -> dict:
@@ -90,6 +103,7 @@ class BaseOrderPackage(BaseEvent):
             "client": self.client,
             "market_id": self.market_id,
             "orders": [o.id for o in self._orders],
+            "order_count": len(self),
             "package_type": self.package_type.value,
             "customer_strategy_ref": self.customer_strategy_ref,
             "bet_delay": self.bet_delay,

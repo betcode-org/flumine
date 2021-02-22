@@ -47,7 +47,7 @@ class ExampleStrategy(BaseStrategy):
                 order = trade.create_order(
                     side="LAY", order_type=LimitOrder(price=1.01, size=2.00)
                 )
-                self.place_order(market, order)
+                market.place_order(order)
 
     def process_orders(self, market, orders):
         for order in orders:
@@ -55,15 +55,14 @@ class ExampleStrategy(BaseStrategy):
                 if order.elapsed_seconds and order.elapsed_seconds > 5:
                     # print(order.bet_id, order.average_price_matched, order.size_matched)
                     if order.size_remaining == 2.00:
-                        self.cancel_order(market, order, size_reduction=1.51)
-                # self.update_order(market, order, "PERSIST")
+                        market.cancel_order(order, size_reduction=1.51)
+                # market.update_order(order, "PERSIST")
                 # if order.order_type.price == 1.01 and order.size_remaining == 0.49:
-                #     self.replace_order(market, order, 1.02)
+                #     market.replace_order(order, 1.02)
                 # if order.order_type.price == 1.02:
-                #     self.replace_order(market, order, 1.03)
+                #     market.replace_order(order, 1.03)
                 # if order.order_type.price == 1.03:
-                #     self.replace_order(market, order, 1.05)
-                pass
+                #     market.replace_order(order, 1.05)
 
 
 trading = betfairlightweight.APIClient("username")

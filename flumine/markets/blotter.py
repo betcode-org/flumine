@@ -4,13 +4,10 @@ from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
 from ..utils import (
-    batch_orders,
-    chunks,
     calculate_unmatched_exposure,
     calculate_matched_exposure,
 )
 from ..order.order import BaseOrder, OrderStatus
-from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
 
 logger = logging.getLogger(__name__)
 
@@ -40,78 +37,10 @@ class Blotter:
         self._strategy_orders = defaultdict(
             list
         )  # cache list per strategy (faster lookup)
-        # pending orders, list of (<Order>, {..})
-        self.pending_place = []
-        self.pending_cancel = []
-        self.pending_update = []
-        self.pending_replace = []
 
     def strategy_orders(self, strategy) -> list:
         """Returns all orders related to a strategy."""
         return self._strategy_orders[strategy]
-
-    def process_orders(self, client, bet_delay: int = 0) -> list:
-        packages = []
-        if self.pending_place:
-            packages += self._create_packages(
-                client, self.pending_place, OrderPackageType.PLACE, bet_delay
-            )
-        if self.pending_cancel:
-            packages += self._create_packages(
-                client, self.pending_cancel, OrderPackageType.CANCEL, bet_delay
-            )
-        if self.pending_update:
-            packages += self._create_packages(
-                client, self.pending_update, OrderPackageType.UPDATE, bet_delay
-            )
-        if self.pending_replace:
-            packages += self._create_packages(
-                client, self.pending_replace, OrderPackageType.REPLACE, bet_delay
-            )
-        if packages:
-            logger.info(
-                "%s order packages created" % len(packages),
-                extra={
-                    "order_packages": [o.info for o in packages],
-                    "bet_delay": bet_delay,
-                },
-            )
-        return packages
-
-    def _create_packages(
-        self, client, orders: list, package_type: OrderPackageType, bet_delay: int
-    ) -> list:
-        packages = []
-        _package_cls = BetfairOrderPackage
-        limit = _package_cls.order_limit(package_type)
-        # batch based on request data dict
-        batched_orders = batch_orders(orders)
-        # create packages
-        for market_version, mv_batched_orders in batched_orders.items():
-            for _orders in mv_batched_orders:
-                for chunked_orders in chunks(_orders, limit):
-                    order_package = _package_cls(
-                        client=client,
-                        market_id=self.market_id,
-                        orders=chunked_orders,
-                        package_type=package_type,
-                        bet_delay=bet_delay,
-                        market_version=market_version,
-                    )
-                    packages.append(order_package)
-        orders.clear()
-        return packages
-
-    @property
-    def pending_orders(self) -> bool:
-        return any(
-            (
-                self.pending_place,
-                self.pending_cancel,
-                self.pending_update,
-                self.pending_replace,
-            )
-        )
 
     @property
     def live_orders(self):

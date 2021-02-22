@@ -12,10 +12,20 @@ logger = logging.getLogger(__name__)
 class MarketStream(BaseStream):
     @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
-        logger.info("Starting MarketStream")
-
+        logger.info(
+            "Starting MarketStream {0}".format(self.stream_id),
+            extra={
+                "stream_id": self.stream_id,
+                "market_filter": self.market_filter,
+                "market_data_filter": self.market_data_filter,
+                "conflate_ms": self.conflate_ms,
+                "streaming_timeout": self.streaming_timeout,
+            },
+        )
         if not self._output_thread.is_alive():
-            logger.info("Starting output_thread {0}".format(self._output_thread))
+            logger.info(
+                "Starting output_thread (MarketStream {0})".format(self.stream_id)
+            )
             self._output_thread.start()
 
         self._stream = self.betting_client.streaming.create_stream(
@@ -31,10 +41,14 @@ class MarketStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error("MarketStream run error", exc_info=True)
+            logger.error(
+                "MarketStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         except Exception:
-            logger.critical("MarketStream run error", exc_info=True)
+            logger.critical(
+                "MarketStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         logger.info("Stopped MarketStream {0}".format(self.stream_id))
 

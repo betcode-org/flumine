@@ -8,7 +8,7 @@ from ..events.events import OrderEvent
 
 logger = logging.getLogger(__name__)
 
-MAX_WORKERS = 16
+MAX_WORKERS = 32
 MAX_SESSION_AGE = 200  # seconds since last request
 BET_ID_START = 100000000000  # simulated start betId->
 
@@ -88,6 +88,7 @@ class BaseExecution:
                 "session": session,
                 "session_time_created": session.time_created,
                 "session_time_returned": session.time_returned,
+                "live_sessions_count": len(self._sessions),
             },
         )
         return session
@@ -103,6 +104,7 @@ class BaseExecution:
                     "session": http_session,
                     "session_time_created": http_session.time_created,
                     "session_time_returned": http_session.time_returned,
+                    "live_sessions_count": len(self._sessions),
                     "err": err,
                 },
             )
@@ -136,10 +138,6 @@ class BaseExecution:
             order.responses.placed(instruction_report)
             order.bet_id = instruction_report.bet_id
             self.flumine.log_control(OrderEvent(order))
-
-    @property
-    def handler_queue(self):
-        return self.flumine.handler_queue
 
     def shutdown(self):
         logger.info("Shutting down Execution (%s)" % self.__class__.__name__)

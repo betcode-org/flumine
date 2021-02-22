@@ -23,7 +23,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.execution = BaseExecution(self.mock_flumine, max_workers=2)
 
     def test_init(self):
-        self.assertEqual(MAX_WORKERS, 16)
+        self.assertEqual(MAX_WORKERS, 32)
         self.assertEqual(MAX_SESSION_AGE, 200)
         self.assertEqual(BET_ID_START, 100000000000)
         self.assertEqual(self.execution.flumine, self.mock_flumine)
@@ -189,9 +189,6 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
-
-    def test_handler_queue(self):
-        self.assertEqual(self.execution.handler_queue, self.mock_flumine.handler_queue)
 
     def test_shutdown(self):
         self.execution.shutdown()
@@ -694,13 +691,11 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.assert_not_called()
         mock__return_http_session.assert_called_with(mock_session)
 
-    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler_queue")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler")
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
     )
-    def test__execution_helper_error(
-        self, mock__return_http_session, mock_handler_queue
-    ):
+    def test__execution_helper_error(self, mock__return_http_session, mock_handler):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
         mock_trading_function.side_effect = BetfairError()
@@ -715,14 +710,14 @@ class BetfairExecutionTest(unittest.TestCase):
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
         mock__return_http_session.assert_called_with(mock_session, err=True)
-        mock_handler_queue.put.assert_called_with(mock_order_package)
+        mock_handler.assert_called_with(mock_order_package)
 
-    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler_queue")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler")
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
     )
     def test__execution_helper_error_no_retry(
-        self, mock__return_http_session, mock_handler_queue
+        self, mock__return_http_session, mock_handler
     ):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
@@ -738,7 +733,7 @@ class BetfairExecutionTest(unittest.TestCase):
         )
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
         mock__return_http_session.assert_called_with(mock_session, err=True)
-        mock_handler_queue.put.assert_not_called()
+        mock_handler.put.assert_not_called()
 
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"

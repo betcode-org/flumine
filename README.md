@@ -77,17 +77,17 @@ class ExampleStrategy(BaseStrategy):
                     side="LAY", 
                     order_type=LimitOrder(price=1.01, size=2.00)
                 )
-                self.place_order(market, order)
+                market.place_order(order)
 
     def process_orders(self, market: Market, orders: list) -> None:
         for order in orders:
             if order.status == OrderStatus.EXECUTABLE:
                 if order.size_remaining == 2.00:
-                    self.cancel_order(market, order, 0.02)  # reduce size to 1.98
-                if order.order_type.persistence_type == 'LAPSE':
-                    self.update_order(market, order, 'PERSIST')
+                    market.cancel_order(order, 0.02)  # reduce size to 1.98
+                if order.order_type.persistence_type == "LAPSE":
+                    market.update_order(order, "PERSIST")
                 if order.size_remaining > 0:
-                    self.replace_order(market, order, 1.02)  # move
+                    market.replace_order(order, 1.02)  # move
 
 
 strategy = ExampleStrategy(

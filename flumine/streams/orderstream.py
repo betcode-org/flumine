@@ -13,10 +13,19 @@ logger = logging.getLogger(__name__)
 class OrderStream(BaseStream):
     @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
-        logger.info("Starting OrderStream")
-
+        logger.info(
+            "Starting OrderStream {0}".format(self.stream_id),
+            extra={
+                "stream_id": self.stream_id,
+                "customer_strategy_refs": config.hostname,
+                "conflate_ms": self.conflate_ms,
+                "streaming_timeout": self.streaming_timeout,
+            },
+        )
         if not self._output_thread.is_alive():
-            logger.info("Starting output_thread {0}".format(self._output_thread))
+            logger.info(
+                "Starting output_thread (OrderStream {0})".format(self.stream_id)
+            )
             self._output_thread.start()
 
         self._stream = self.betting_client.streaming.create_stream(
@@ -33,10 +42,14 @@ class OrderStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error("OrderStream run error", exc_info=True)
+            logger.error(
+                "OrderStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         except Exception:
-            logger.critical("OrderStream run error", exc_info=True)
+            logger.critical(
+                "OrderStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         logger.info("Stopped OrderStream {0}".format(self.stream_id))
 

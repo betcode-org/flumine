@@ -3,7 +3,6 @@ from unittest import mock
 
 from flumine import Flumine, worker
 from flumine.events import events
-from flumine.order.orderpackage import BaseOrderPackage
 
 
 class FlumineTest(unittest.TestCase):
@@ -16,7 +15,6 @@ class FlumineTest(unittest.TestCase):
     @mock.patch("flumine.flumine.Flumine._process_cleared_orders")
     @mock.patch("flumine.flumine.Flumine._process_cleared_markets")
     @mock.patch("flumine.flumine.Flumine._process_close_market")
-    @mock.patch("flumine.flumine.Flumine._process_order_package")
     @mock.patch("flumine.flumine.Flumine._process_current_orders")
     @mock.patch("flumine.flumine.Flumine._process_end_flumine")
     @mock.patch("flumine.flumine.Flumine._process_market_catalogues")
@@ -29,7 +27,6 @@ class FlumineTest(unittest.TestCase):
         mock__process_market_catalogues,
         mock__process_end_flumine,
         mock__process_current_orders,
-        mock__process_order_package,
         mock__process_close_market,
         mock__process_cleared_markets,
         mock__process_cleared_orders,
@@ -41,7 +38,6 @@ class FlumineTest(unittest.TestCase):
             events.MarketBookEvent(None),
             events.RawDataEvent(None),
             events.CurrentOrdersEvent(None),
-            BaseOrderPackage(None, "1.123", [], "12", None),
             events.ClearedMarketsEvent(None),
             events.ClearedOrdersEvent(None),
             events.CloseMarketEvent(None),
@@ -58,11 +54,10 @@ class FlumineTest(unittest.TestCase):
         mock__process_market_catalogues.assert_called_with(mock_events[0])
         mock__process_end_flumine.assert_called_with()
         mock__process_current_orders.assert_called_with(mock_events[3])
-        mock__process_order_package.assert_called_with(mock_events[4])
-        mock__process_close_market.assert_called_with(mock_events[7])
-        mock__process_cleared_markets.assert_called_with(mock_events[5])
-        mock__process_cleared_orders.assert_called_with(mock_events[6])
-        mock__process_custom_event.assert_called_with(mock_events[8])
+        mock__process_close_market.assert_called_with(mock_events[6])
+        mock__process_cleared_markets.assert_called_with(mock_events[4])
+        mock__process_cleared_orders.assert_called_with(mock_events[5])
+        mock__process_custom_event.assert_called_with(mock_events[7])
         mock__add_default_workers.assert_called()
 
     @mock.patch("flumine.worker.BackgroundWorker")

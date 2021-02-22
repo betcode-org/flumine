@@ -44,3 +44,12 @@ class OrderExecutionError(FlumineException):
     """
 
     pass
+
+
+class ControlError(FlumineException):
+    """Exception raised if order voilates
+    a control.
+    """
+
+    def __init__(self, message):
+        super(ControlError, self).__init__(message)

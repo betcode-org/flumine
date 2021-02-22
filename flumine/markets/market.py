@@ -5,12 +5,19 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .blotter import Blotter
-from ..events import events
+from ..execution.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
 
 class Market:
+    """
+    Market data structure to hold latest marketBook,
+    marketCatalogue and various properties. Also
+    allows order placement through the Transaction
+    class.
+    """
+
     def __init__(
         self,
         flumine,
@@ -48,57 +55,32 @@ class Market:
             extra=self.info,
         )
 
+    def transaction(self) -> Transaction:
+        return Transaction(self)
+
     # order
     def place_order(
         self,
         order,
-        batch: bool = True,
         market_version: int = None,
         execute: bool = True,
-    ) -> None:
-        order.place(self.market_book.publish_time)
-        if order.id not in self.blotter:
-            self.blotter[order.id] = order
-            if order.trade.market_notes is None:
-                order.trade.update_market_notes(self)
-            self.flumine.log_control(events.TradeEvent(order.trade))  # todo dupes?
-        else:
-            return  # retry attempt so ignore?
-        if execute:  # handles replaceOrder
-            self.blotter.pending_place.append(
-                (order, {"batch": batch, "market_version": market_version})
-            )
+    ) -> bool:
+        with self.transaction() as t:
+            return t.place_order(order, market_version, execute)
 
-    def cancel_order(
-        self, order, size_reduction: float = None, batch: bool = True
-    ) -> None:
-        order.cancel(size_reduction)
-        self.blotter.pending_cancel.append(
-            (order, {"size_reduction": size_reduction, "batch": batch})
-        )
+    def cancel_order(self, order, size_reduction: float = None) -> bool:
+        with self.transaction() as t:
+            return t.cancel_order(order, size_reduction)
 
-    def update_order(
-        self, order, new_persistence_type: str, batch: bool = True
-    ) -> None:
-        order.update(new_persistence_type)
-        self.blotter.pending_update.append(
-            (order, {"new_persistence_type": new_persistence_type, "batch": batch})
-        )
+    def update_order(self, order, new_persistence_type: str) -> bool:
+        with self.transaction() as t:
+            return t.update_order(order, new_persistence_type)
 
     def replace_order(
-        self, order, new_price: float, batch: bool = True, market_version: int = None
-    ) -> None:
-        order.replace(new_price)
-        self.blotter.pending_replace.append(
-            (
-                order,
-                {
-                    "new_price": new_price,
-                    "batch": batch,
-                    "market_version": market_version,
-                },
-            )
-        )
+        self, order, new_price: float, market_version: int = None
+    ) -> bool:
+        with self.transaction() as t:
+            return t.replace_order(order, new_price, market_version)
 
     @property
     def event(self) -> dict:

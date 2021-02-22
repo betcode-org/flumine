@@ -46,13 +46,13 @@ class IntegrationTest(unittest.TestCase):
                             side="LAY",
                             order_type=LimitOrder(lay, 2.00),
                         )
-                        self.place_order(market, order)
+                        market.place_order(order)
 
             def process_orders(self, market, orders):
                 for order in orders:
                     if order.status == OrderStatus.EXECUTABLE:
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
-                            self.cancel_order(market, order)
+                            market.cancel_order(order)
 
         class MarketOnCloseOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
@@ -76,7 +76,7 @@ class IntegrationTest(unittest.TestCase):
                                 side="LAY",
                                 order_type=MarketOnCloseOrder(100.00),
                             )
-                            self.place_order(market, order)
+                            market.place_order(order)
 
         client = clients.BacktestClient()
         framework = FlumineBacktest(client=client)

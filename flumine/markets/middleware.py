@@ -41,8 +41,8 @@ class SimulatedMiddleware(Middleware):
         runner_updates = self._process_streaming_update(market.market_book)
 
         for runner in market.market_book.runners:
-            update = bool(runner.selection_id in runner_updates)
             if runner.status == "ACTIVE":
+                update = bool(runner.selection_id in runner_updates)
                 self._process_runner(market_analytics, runner, update)
             elif runner.status == "REMOVED":
                 _removal = (
@@ -169,28 +169,28 @@ class RunnerAnalytics:
         if update:
             self.middle = self._calculate_middle(self._runner)  # use last update
             self.matched = self._calculate_matched(runner)
-            self.traded = self._calculate_traded(runner)
+            self.traded = self._calculate_traded(runner.ex.traded_volume)
             self._traded_volume = runner.ex.traded_volume
             self._runner = runner
         else:
             self.matched = 0
             self.traded = {}
 
-    def _calculate_traded(self, runner: RunnerBook) -> dict:
-        if self._traded_volume == runner.ex.traded_volume:
+    def _calculate_traded(self, traded_volume: list) -> dict:
+        if self._traded_volume == traded_volume:
             return {}
         else:
-            c_v, p_v, traded = {}, self._p_v, {}
+            p_v, traded = self._p_v, {}
             # create dictionary
-            c_v = {i["price"]: i["size"] for i in runner.ex.traded_volume}
+            c_v = {i["price"]: i["size"] for i in traded_volume}
             # calculate difference
-            for key in c_v.keys():
+            for key, value in c_v.items():
                 if key in p_v:
-                    new_value = float(c_v[key]) - float(p_v[key])
+                    new_value = float(value) - float(p_v[key])
+                    if new_value > 0:
+                        traded[key] = round(new_value, 2)
                 else:
-                    new_value = float(c_v[key])
-                if new_value > 0:
-                    traded[key] = round(new_value, 2)
+                    traded[key] = value
             # cache for next update
             self._p_v = c_v
             return traded

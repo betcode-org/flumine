@@ -26,14 +26,12 @@ class TestOrderValidation(unittest.TestCase):
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_order"
     )
     def test_validate_betfair(self, mock_validate_betfair_order):
-        order = mock.Mock()
-        order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order.EXCHANGE = ExchangeType.BETFAIR
-        order.order_type.size = 12
-        order_package = [order]
-
-        self.trading_control._validate(order_package)
-        mock_validate_betfair_order.assert_called_with(order)
+        mock_order = mock.Mock()
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.EXCHANGE = ExchangeType.BETFAIR
+        mock_order.order_type.size = 12
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_validate_betfair_order.assert_called_with(mock_order)
 
     @mock.patch(
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_min_size"
@@ -282,21 +280,37 @@ class TestStrategyExposure(unittest.TestCase):
         self.assertEqual(self.trading_control.flumine, self.mock_flumine)
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
-    def test_validate_limit(self, mock_on_error):
-        order = mock.Mock()
-        order.trade.strategy.max_order_exposure = 10
-        order.trade.strategy.max_selection_exposure = 100
-        order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order.side = "BACK"
-        order.order_type.size = 12.0
-        order_package = mock.Mock()
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.market_id = "market_id"
-        order_package.__iter__ = mock.Mock(return_value=iter([order]))
-        self.trading_control._validate(order_package)
+    def test_validate_strategy_validate_order(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.validate_order.return_value = True
+        mock_runner_context = mock.Mock()
+        mock_order.trade.strategy.get_runner_context.return_value = mock_runner_context
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_strategy_validate_order_error(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.validate_order.return_value = False
+        mock_runner_context = mock.Mock()
+        mock_order.trade.strategy.get_runner_context.return_value = mock_runner_context
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
-            order,
-            "Order exposure (12.0) is greater than strategy.max_order_strategy (10)",
+            mock_order,
+            "strategy.validate_order failure",
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_limit(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.max_order_exposure = 10
+        mock_order.trade.strategy.max_selection_exposure = 100
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.side = "BACK"
+        mock_order.order_type.size = 12.0
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_called_with(
+            mock_order,
+            "Order exposure (12.0) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -305,12 +319,11 @@ class TestStrategyExposure(unittest.TestCase):
         The 2 orders would exceed selection_exposure limits if they were for the same strategy. But they are
         for different strategies. Assert that they do not cause a validation failure.
         """
-
         strategy = mock.Mock()
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock()
+        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy.max_order_exposure = 10
         order1.trade.strategy.max_selection_exposure = 10
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -337,12 +350,7 @@ class TestStrategyExposure(unittest.TestCase):
 
         self.market.blotter._orders = {"order1": order1, "order2": order2}
 
-        order_package = mock.Mock()
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.market_id = "market_id"
-        order_package.__iter__ = mock.Mock(return_value=iter([order1, order2]))
-        self.trading_control._validate(order_package)
-
+        self.trading_control._validate(order1, OrderPackageType.PLACE)
         mock_on_error.assert_not_called()
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -355,7 +363,7 @@ class TestStrategyExposure(unittest.TestCase):
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock()
+        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order1.side = "BACK"
@@ -380,58 +388,43 @@ class TestStrategyExposure(unittest.TestCase):
         self.market.blotter["order1"] = order1
         self.market.blotter["order2"] = order2
 
-        order_package = mock.Mock()
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.market_id = "market_id"
-        order_package.__iter__ = mock.Mock(return_value=iter([order1, order2]))
-        self.trading_control._validate(order_package)
-
-        self.assertEqual(2, mock_on_error.call_count)
-        # This asserts the 2nd call, using order2
+        self.trading_control._validate(order1, OrderPackageType.PLACE)
+        self.assertEqual(1, mock_on_error.call_count)
         mock_on_error.assert_called_with(
-            order2,
+            order1,
             "Potential selection exposure (14.0) is greater than strategy.max_selection_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
-        order = mock.Mock()
-        order.trade.strategy.max_order_exposure = 10
-        order.trade.strategy.max_selection_exposure = 100
-        order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
-        order.side = "BACK"
-        order.order_type.liability = 12
-        order_package = mock.Mock()
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.market_id = "market_id"
-        order_package.__iter__ = mock.Mock(return_value=iter([order]))
-        self.trading_control._validate(order_package)
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.max_order_exposure = 10
+        mock_order.trade.strategy.max_selection_exposure = 100
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        mock_order.side = "BACK"
+        mock_order.order_type.liability = 12
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
-            order,
-            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+            mock_order,
+            "Order exposure (12) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_market_on_close(self, mock_on_error):
-
         mock_market = mock.Mock()
         mock_market.blotter.selection_exposure.return_value = 10.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
-        order = mock.Mock()
-        order.trade.strategy.max_order_exposure = 10
-        order.trade.strategy.max_selection_exposure = 100
-        order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
-        order.side = "BACK"
-        order.order_type.liability = 12
-        order_package = mock.Mock()
-        order_package.market_id = "1.234"
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.__iter__ = mock.Mock(return_value=iter([order]))
-        self.trading_control._validate(order_package)
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
+        mock_order.trade.strategy.max_order_exposure = 10
+        mock_order.trade.strategy.max_selection_exposure = 100
+        mock_order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        mock_order.side = "BACK"
+        mock_order.order_type.liability = 12
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
-            order,
-            "Order exposure (12) is greater than strategy.max_order_strategy (10)",
+            mock_order,
+            "Order exposure (12) is greater than strategy.max_order_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -439,19 +432,15 @@ class TestStrategyExposure(unittest.TestCase):
         mock_market = mock.Mock()
         mock_market.blotter.selection_exposure.return_value = 12.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
-
-        order = mock.Mock()
-        order.trade.strategy.max_order_exposure = 10
-        order.trade.strategy.max_selection_exposure = 10
-        order_package = mock.Mock()
-        order_package.market_id = "1.234"
-        order_package.package_type = OrderPackageType.PLACE
-        order_package.__iter__ = mock.Mock(return_value=iter([order]))
-
-        mock_market.blotter._live_orders = [order]
-
-        self.trading_control._validate(order_package)
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
+        mock_order.trade.strategy.max_order_exposure = 10
+        mock_order.trade.strategy.max_selection_exposure = 10
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.size = 12.0
+        mock_order.order_type.price = 1.01
+        mock_market.blotter._live_orders = [mock_order]
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
-            order,
+            mock_order,
             "Potential selection exposure (12.0) is greater than strategy.max_selection_exposure (10)",
         )

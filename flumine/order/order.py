@@ -81,7 +81,7 @@ class BaseOrder:
         self.status_log.append(status)
         self.status = status
         logger.info("Order status update: %s" % self.status.value, extra=self.info)
-        if self.trade.complete:
+        if self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
 
     def placing(self) -> None:
@@ -299,6 +299,8 @@ class BetfairOrder(BaseOrder):
     def place(self, publish_time: int) -> None:
         self.publish_time = publish_time
         self.placing()
+        runner_context = self.trade.strategy.get_runner_context(*self.lookup)
+        runner_context.place()
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:

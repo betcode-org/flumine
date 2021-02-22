@@ -64,7 +64,7 @@ class BaseFlumine:
         self._logging_controls = []
 
         # trading controls
-        self._trading_controls = []
+        self.trading_controls = []
         # add default controls (processed in order)
         self.add_trading_control(OrderValidation)
         self.add_trading_control(StrategyExposure)
@@ -93,7 +93,7 @@ class BaseFlumine:
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
-        self._trading_controls.append(trading_control(self, **kwargs))
+        self.trading_controls.append(trading_control(self, **kwargs))
 
     def add_market_middleware(self, middleware: Middleware) -> None:
         logger.info("Adding market middleware {0}".format(middleware))
@@ -150,32 +150,9 @@ class BaseFlumine:
                         strategy.process_market_book, market, market_book
                     )
 
-            self._process_market_orders()
-
-    def _process_market_orders(self) -> None:
-        for market in self.markets:
-            if market.blotter.pending_orders:
-                if market.market_book:
-                    bet_delay = market.market_book.bet_delay
-                else:
-                    bet_delay = None
-                for order_package in market.blotter.process_orders(
-                    self.client, bet_delay
-                ):
-                    self.handler_queue.put(order_package)
-
-    def _process_order_package(self, order_package) -> None:
-        """Validate trading controls and
-        then execute.
-        """
-        for control in self._trading_controls:
-            control(order_package)
-        for control in order_package.client.trading_controls:
-            control(order_package)
-        if order_package.orders:
-            order_package.client.execution.handler(order_package)
-        else:
-            logger.warning("Empty package, not executing", extra=order_package.info)
+    def process_order_package(self, order_package) -> None:
+        """Execute through client."""
+        order_package.client.execution.handler(order_package)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
         logger.info("Adding: {0} to markets".format(market_id))
@@ -237,7 +214,6 @@ class BaseFlumine:
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     strategy.process_orders(market, strategy_orders)
-        self._process_market_orders()
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:
@@ -248,7 +224,6 @@ class BaseFlumine:
                     e, event.callback
                 )
             )
-        self._process_market_orders()
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event

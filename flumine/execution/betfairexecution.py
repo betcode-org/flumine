@@ -205,7 +205,7 @@ class BetfairExecution(BaseExecution):
                     exc_info=True,
                 )
                 if order_package.retry():
-                    self.handler_queue.put(order_package)
+                    self.handler(order_package)
 
                 self._return_http_session(http_session, err=True)
                 return

@@ -67,6 +67,48 @@ The framework can now be started:
 framework.run()
 ```
 
+### Order placement
+
+Orders can be placed as followed:
+
+```python
+from flumine.order.trade import Trade
+from flumine.order.order import LimitOrder
+
+
+class ExampleStrategy(BaseStrategy):
+    def process_market_book(self, market, market_book):
+        for runner in market_book.runners:
+            if runner.selection_id == 123:
+                trade = Trade(
+                    market_id=market_book.market_id, 
+                    selection_id=runner.selection_id,
+                    handicap=runner.handicap,
+                    strategy=self
+                )
+                order = trade.create_order(
+                    side="LAY", 
+                    order_type=LimitOrder(price=1.01, size=2.00)
+                )
+                market.place_order(order)
+```
+
+This order will be validated through controls, stored in the blotter and sent straight to the execution thread pool for execution. It is also possible to batch orders into transactions as follows:
+
+```python
+with market.transaction as t:
+    market.place_order(order)  # executed immediately in separate transaction
+    t.place_order(order)  # executed on transaction __exit__
+
+with market.transaction as t:
+    t.place_order(order)
+    
+    t.execute()  # above order executed
+    
+    t.cancel_order(order)
+    t.place_order(order)  # both executed on transaction __exit__
+```
+
 ### Stream class
 
 By default the stream class will be a MarketStream which provides a MarketBook python object, if collecting data this can be changed to a DataStream class however process_raw_data will be called and not process_market_book:

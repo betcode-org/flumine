@@ -1,9 +1,9 @@
-from typing import Type, Iterator
-
 import logging
-
+import warnings
+from typing import Type, Iterator
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
+
 from .runnercontext import RunnerContext
 from ..clients import BaseClient
 from ..markets.market import Market
@@ -131,47 +131,50 @@ class BaseStrategy:
         self,
         market: Market,
         order,
-        batch: bool = True,  # batch placeRequest with other orders
         market_version: int = None,
     ) -> bool:
-        """Returns True if passes
-        validate_order and placed.
-        """
-        runner_context = self.get_runner_context(*order.lookup)
-        if self.validate_order(runner_context, order):
-            runner_context.place()
-            market.place_order(order, batch, market_version)
-            return True
-        else:
-            return False
+        warnings.warn(
+            "strategy.place_order is deprecated and will be removed from v1.18 onwards, use market.place_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.place_order(order, market_version)
 
     def cancel_order(
         self,
         market: Market,
         order,
         size_reduction: float = None,
-        batch: bool = True,  # batch cancelRequest with other orders
-    ) -> None:
-        market.cancel_order(order, size_reduction, batch)
+    ) -> bool:
+        warnings.warn(
+            "strategy.cancel_order is deprecated and will be removed from v1.18 onwards, use market.cancel_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.cancel_order(order, size_reduction)
 
     def update_order(
         self,
         market: Market,
         order,
         new_persistence_type: str,
-        batch: bool = True,  # batch updateRequest with other orders
-    ) -> None:
-        market.update_order(order, new_persistence_type, batch)
+    ) -> bool:
+        warnings.warn(
+            "strategy.update_order is deprecated and will be removed from v1.18 onwards, use market.update_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.update_order(order, new_persistence_type)
 
     def replace_order(
         self,
         market: Market,
         order,
         new_price: float,
-        batch: bool = True,  # batch replaceRequest with other orders
         market_version: int = None,
-    ) -> None:
-        market.replace_order(order, new_price, batch, market_version)
+    ) -> bool:
+        warnings.warn(
+            "strategy.replace_order is deprecated and will be removed from v1.18 onwards, use market.replace_order instead",
+            PendingDeprecationWarning,
+        )
+        return market.replace_order(order, new_price, market_version)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
         # validate context

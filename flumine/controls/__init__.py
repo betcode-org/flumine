@@ -1,7 +1,7 @@
 import logging
 
-from ..order.orderpackage import BaseOrderPackage
-from ..order.order import BaseOrder
+from ..order.orderpackage import OrderPackageType, BaseOrder
+from ..exceptions import ControlError
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +13,10 @@ class BaseControl:
     def __init__(self, flumine, *args, **kwargs):
         self.flumine = flumine
 
-    def __call__(self, order_package: BaseOrderPackage):
-        self._validate(order_package)
+    def __call__(self, order: BaseOrder, package_type: OrderPackageType):
+        self._validate(order, package_type)
 
-    def _validate(self, order_package: BaseOrderPackage) -> None:
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         raise NotImplementedError
 
     def _on_error(self, order: BaseOrder, error: str) -> None:
@@ -26,3 +26,4 @@ class BaseControl:
             violation_msg,
             extra={"control": self.NAME, "error": error, "order": order.info},
         )
+        raise ControlError(violation_msg)

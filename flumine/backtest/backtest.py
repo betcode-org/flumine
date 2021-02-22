@@ -7,6 +7,7 @@ from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.orderpackage import OrderPackageType
+from ..order.trade import TradeStatus
 from ..order import process
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class FlumineBacktest(BaseFlumine):
 
     def __init__(self, client):
         super(FlumineBacktest, self).__init__(client)
-        self._pending_packages = []
+        self.handler_queue = []
 
     def run(self) -> None:
         if self.client.EXCHANGE != ExchangeType.SIMULATED:
@@ -42,7 +43,7 @@ class FlumineBacktest(BaseFlumine):
                 for event in stream_gen():
                     self._process_market_books(events.MarketBookEvent(event))
 
-                self._pending_packages.clear()
+                self.handler_queue.clear()
 
                 logger.info(
                     "Completed historical market '{0}'".format(stream.market_filter)
@@ -61,7 +62,7 @@ class FlumineBacktest(BaseFlumine):
             config.current_time = market_book.publish_time
 
             # check if there are orders to process
-            if self._pending_packages:
+            if self.handler_queue:
                 self._check_pending_packages()
 
             if market_book.status == "CLOSED":
@@ -92,7 +93,9 @@ class FlumineBacktest(BaseFlumine):
                         strategy.process_market_book, market, market_book
                     )
 
-            self._process_market_orders()
+    def process_order_package(self, order_package) -> None:
+        # place in pending list (wait for latency+delay)
+        self.handler_queue.append(order_package)
 
     def _process_backtest_orders(self, market) -> None:
         """Remove order from blotter live
@@ -102,50 +105,20 @@ class FlumineBacktest(BaseFlumine):
         blotter = market.blotter
         for order in blotter.live_orders:
             process.process_current_order(order)
-            if order.trade.status.value == "Complete":
+            if order.trade.status == TradeStatus.COMPLETE:
                 blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
             strategy.process_orders(market, strategy_orders)
 
-    def _process_market_orders(self) -> None:
-        """Add any packages to pending
-        packages for later execution
-        """
-        for market in self.markets:
-            if market.blotter.pending_orders:
-                bet_delay = market.market_book.bet_delay
-                for order_package in market.blotter.process_orders(
-                    self.client, bet_delay
-                ):
-                    self._pending_packages.append(order_package)
-
     def _check_pending_packages(self):
         processed = []
-        for order_package in self._pending_packages:
-            client = order_package.client
-            if order_package.package_type == OrderPackageType.PLACE:
-                if order_package.elapsed_seconds > (
-                    client.execution.PLACE_LATENCY + order_package.bet_delay
-                ):
-                    self._process_order_package(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.CANCEL:
-                if order_package.elapsed_seconds > client.execution.CANCEL_LATENCY:
-                    self._process_order_package(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.UPDATE:
-                if order_package.elapsed_seconds > client.execution.UPDATE_LATENCY:
-                    self._process_order_package(order_package)
-                    processed.append(order_package)
-            elif order_package.package_type == OrderPackageType.REPLACE:
-                if order_package.elapsed_seconds > (
-                    client.execution.REPLACE_LATENCY + order_package.bet_delay
-                ):
-                    self._process_order_package(order_package)
-                    processed.append(order_package)
+        for order_package in self.handler_queue:
+            if order_package.elapsed_seconds > order_package.simulated_delay:
+                order_package.client.execution.handler(order_package)
+                processed.append(order_package)
         for p in processed:
-            self._pending_packages.remove(p)
+            self.handler_queue.remove(p)
 
     def _monkey_patch_datetime(self):
         config.current_time = datetime.datetime.utcnow()

@@ -100,7 +100,15 @@ class DataStream(BaseStream):
 
     @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
     def run(self) -> None:
-        logger.info("Starting DataStream")
+        logger.info(
+            "Starting DataStream {0}".format(self.stream_id),
+            extra={
+                "stream_id": self.stream_id,
+                "market_filter": self.market_filter,
+                "market_data_filter": self.market_data_filter,
+                "conflate_ms": self.conflate_ms,
+            },
+        )
 
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
@@ -115,9 +123,13 @@ class DataStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error("DataStream run error", exc_info=True)
+            logger.error(
+                "DataStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         except Exception:
-            logger.critical("DataStream run error", exc_info=True)
+            logger.critical(
+                "DataStream {0} run error".format(self.stream_id), exc_info=True
+            )
             raise
         logger.info("Stopped DataStream {0}".format(self.stream_id))

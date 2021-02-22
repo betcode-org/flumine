@@ -19,7 +19,7 @@ nav:
     - Clients / Execution: 'execution.md'
     - Trades / Orders: 'trades.md'
     - Advanced Usage: 'advanced.md'
-    - Design: 'design.md'
+    - Architecture: 'architecture.md'
     - Help: 'help.md'
 
 markdown_extensions:

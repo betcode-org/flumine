@@ -15,7 +15,13 @@ class CurrentOrders:
 
 class SimulatedOrderStream(BaseStream):
     def run(self) -> None:
-        logger.info("Starting SimulatedOrderStream")
+        logger.info(
+            "Starting SimulatedOrderStream {0}".format(self.stream_id),
+            extra={
+                "stream_id": self.stream_id,
+                "streaming_timeout": self.streaming_timeout,
+            },
+        )
 
         while self.is_alive():
             if self.flumine.markets.live_orders:
