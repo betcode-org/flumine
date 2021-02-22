@@ -331,11 +331,10 @@ class TestStrategyExposure(unittest.TestCase):
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
         order1.size_remaining = 9.0
-        order1.lookup = "lookup"
         order1.average_price_matched = 0.0
         order1.size_matched = 0
 
-        order2 = mock.Mock()
+        order2 = mock.Mock(lookup=(1, 2, 3))
         order2.trade.strategy.max_order_exposure = 10
         order2.trade.strategy.max_selection_exposure = 10
         order2.trade.strategy = strategy
@@ -344,7 +343,6 @@ class TestStrategyExposure(unittest.TestCase):
         order2.order_type.price = 3.0
         order2.order_type.size = 9.0
         order2.size_remaining = 5.0
-        order2.lookup = "lookup"
         order2.average_price_matched = 0.0
         order2.size_matched = 0
 
@@ -370,18 +368,16 @@ class TestStrategyExposure(unittest.TestCase):
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
         order1.size_remaining = 9.0
-        order1.lookup = "lookup"
         order1.average_price_matched = 0.0
         order1.size_matched = 0
 
-        order2 = mock.Mock()
+        order2 = mock.Mock(lookup=(1, 2, 3))
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order2.side = "BACK"
         order2.order_type.price = 3.0
         order2.order_type.size = 9.0
         order2.size_remaining = 5.0
-        order2.lookup = "lookup"
         order2.average_price_matched = 0.0
         order2.size_matched = 0
 
