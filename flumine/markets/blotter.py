@@ -33,13 +33,10 @@ class Blotter:
     def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
-        self._live_orders = []  # cached list of live orders
-        self._strategy_orders = defaultdict(
-            list
-        )  # cache list per strategy (faster lookup)
-        self._strategy_selection_orders = defaultdict(
-            list
-        )  # cache list per strategy selection (faster lookup)
+        # cached lists/dicts for faster lookup
+        self._live_orders = []
+        self._strategy_orders = defaultdict(list)
+        self._strategy_selection_orders = defaultdict(list)
 
     def strategy_orders(self, strategy) -> list:
         """Returns all orders related to a strategy."""

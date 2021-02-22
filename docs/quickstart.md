@@ -96,11 +96,11 @@ class ExampleStrategy(BaseStrategy):
 This order will be validated through controls, stored in the blotter and sent straight to the execution thread pool for execution. It is also possible to batch orders into transactions as follows:
 
 ```python
-with market.transaction as t:
+with market.transaction() as t:
     market.place_order(order)  # executed immediately in separate transaction
     t.place_order(order)  # executed on transaction __exit__
 
-with market.transaction as t:
+with market.transaction() as t:
     t.place_order(order)
     
     t.execute()  # above order executed
