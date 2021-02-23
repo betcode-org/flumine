@@ -52,8 +52,7 @@ class MaxTransactionCount(BaseControl):
             self._on_error(
                 order,
                 "Max Transaction Count has been reached ({0}) for current hour".format(
-                    self.current_transaction_count
-                    + self.current_failed_transaction_count
+                    self.current_transaction_count_total
                 ),
             )
 
@@ -64,10 +63,11 @@ class MaxTransactionCount(BaseControl):
             logger.info(
                 "Execution new hour",
                 extra={
+                    "current_transaction_count_total": self.current_transaction_count_total,
                     "current_transaction_count": self.current_transaction_count,
                     "current_failed_transaction_count": self.current_failed_transaction_count,
-                    "transaction_count": self.transaction_count,
-                    "failed_transaction_count": self.failed_transaction_count,
+                    "total_transaction_count": self.transaction_count,
+                    "total_failed_transaction_count": self.failed_transaction_count,
                     "client": self.client,
                 },
             )
@@ -83,15 +83,15 @@ class MaxTransactionCount(BaseControl):
 
     @property
     def safe(self) -> bool:
-        current_total = self.transaction_count + self.current_failed_transaction_count
         if self.transaction_limit is None:
             return True
-        elif current_total < self.transaction_limit:
+        elif self.current_transaction_count_total <= self.transaction_limit:
             return True
         else:
             logger.error(
                 "Transaction limit reached",
                 extra={
+                    "current_transaction_count_total": self.current_transaction_count_total,
                     "current_transaction_count": self.current_transaction_count,
                     "current_failed_transaction_count": self.current_failed_transaction_count,
                     "transaction_limit": self.transaction_limit,
@@ -99,6 +99,14 @@ class MaxTransactionCount(BaseControl):
                 },
             )
             return False
+
+    @property
+    def current_transaction_count_total(self) -> int:
+        return self.current_transaction_count + self.current_failed_transaction_count
+
+    @property
+    def transaction_count_total(self) -> int:
+        return self.transaction_count + self.failed_transaction_count
 
     @property
     def transaction_limit(self) -> Optional[int]:
