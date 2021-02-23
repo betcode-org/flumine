@@ -65,6 +65,12 @@ class BaseClient:
         elif self.EXCHANGE == ExchangeType.BETFAIR:
             self.execution = flumine.betfair_execution
 
+    def add_transaction(self, count: int, failed: bool = False) -> None:
+        for control in self.trading_controls:
+            if hasattr(control, "add_transaction"):
+                control.add_transaction(count, failed)
+                # todo update client.count
+
     @property
     def min_bet_size(self) -> Optional[float]:
         raise NotImplementedError

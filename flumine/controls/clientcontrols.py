@@ -72,7 +72,6 @@ class MaxTransactionCount(BaseControl):
                 },
             )
             self._set_next_hour()
-            # todo update client
 
     def _set_next_hour(self) -> None:
         now = datetime.datetime.utcnow()

@@ -64,6 +64,12 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.simulated_execution)
 
+    def test_add_transaction(self):
+        mock_trading_control = mock.Mock()
+        self.base_client.trading_controls.append(mock_trading_control)
+        self.base_client.add_transaction(123, True)
+        mock_trading_control.add_transaction.assert_called_with(123, True)
+
     def test_min_bet_size(self):
         with self.assertRaises(NotImplementedError):
             assert self.base_client.min_bet_size
