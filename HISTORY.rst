@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.17.1 (2021-02-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Current and total transactions available from client
+- `blotter.strategy_selection_orders` func added (speed improvement on exposure calc)
+
+**Bug Fixes**
+
+- Refactor of client transaction control to correctly apply the 5000 limit
+
 1.17.0 (2021-02-22)
 +++++++++++++++++++
 
