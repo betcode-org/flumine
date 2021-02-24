@@ -33,14 +33,20 @@ class Blotter:
     def __init__(self, market_id: str):
         self.market_id = market_id
         self._orders = {}  # {Order.id: Order}
-        self._live_orders = []  # cached list of live orders
-        self._strategy_orders = defaultdict(
-            list
-        )  # cache list per strategy (faster lookup)
+        # cached lists/dicts for faster lookup
+        self._live_orders = []
+        self._strategy_orders = defaultdict(list)
+        self._strategy_selection_orders = defaultdict(list)
 
     def strategy_orders(self, strategy) -> list:
         """Returns all orders related to a strategy."""
         return self._strategy_orders[strategy]
+
+    def strategy_selection_orders(
+        self, strategy, selection_id: int, handicap: float = 0
+    ) -> list:
+        """Returns all orders related to a strategy selection."""
+        return self._strategy_selection_orders[(strategy, selection_id, handicap)]
 
     @property
     def live_orders(self):
@@ -75,37 +81,34 @@ class Blotter:
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
-        for order in self.strategy_orders(strategy):
-            if order.lookup == lookup:
-                if order.status == OrderStatus.VIOLATION:
-                    continue
-
-                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    _size_matched = order.size_matched  # cache
-                    if _size_matched:
-                        if order.side == "BACK":
-                            mb.append((order.average_price_matched, _size_matched))
-                        else:
-                            ml.append((order.average_price_matched, _size_matched))
-                    _size_remaining = order.size_remaining  # cache
-                    if order.order_type.price and _size_remaining:
-                        if order.side == "BACK":
-                            ub.append((order.order_type.price, _size_remaining))
-                        else:
-                            ul.append((order.order_type.price, _size_remaining))
-                elif order.order_type.ORDER_TYPE in (
-                    OrderTypes.LIMIT_ON_CLOSE,
-                    OrderTypes.MARKET_ON_CLOSE,
-                ):
+        for order in self.strategy_selection_orders(strategy, *lookup[1:]):
+            if order.status == OrderStatus.VIOLATION:
+                continue
+            if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                _size_matched = order.size_matched  # cache
+                if _size_matched:
                     if order.side == "BACK":
-                        moc_lose_liability -= order.order_type.liability
+                        mb.append((order.average_price_matched, _size_matched))
                     else:
-                        moc_win_liability -= order.order_type.liability
+                        ml.append((order.average_price_matched, _size_matched))
+                _size_remaining = order.size_remaining  # cache
+                if order.order_type.price and _size_remaining:
+                    if order.side == "BACK":
+                        ub.append((order.order_type.price, _size_remaining))
+                    else:
+                        ul.append((order.order_type.price, _size_remaining))
+            elif order.order_type.ORDER_TYPE in (
+                OrderTypes.LIMIT_ON_CLOSE,
+                OrderTypes.MARKET_ON_CLOSE,
+            ):
+                if order.side == "BACK":
+                    moc_lose_liability -= order.order_type.liability
                 else:
-                    raise ValueError(
-                        "Unexpected order type: %s" % order.order_type.ORDER_TYPE
-                    )
-
+                    moc_win_liability -= order.order_type.liability
+            else:
+                raise ValueError(
+                    "Unexpected order type: %s" % order.order_type.ORDER_TYPE
+                )
         matched_exposure = calculate_matched_exposure(mb, ml)
         unmatched_exposure = calculate_unmatched_exposure(ub, ul)
 
@@ -132,6 +135,9 @@ class Blotter:
         self._orders[customer_order_ref] = order
         self._live_orders.append(order)
         self._strategy_orders[order.trade.strategy].append(order)
+        self._strategy_selection_orders[
+            (order.trade.strategy, *order.lookup[1:])
+        ].append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]

@@ -14,13 +14,22 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter.market_id, "1.23")
         self.assertEqual(self.blotter._orders, {})
         self.assertEqual(self.blotter._live_orders, [])
+        self.assertEqual(self.blotter._strategy_orders, {})
+        self.assertEqual(self.blotter._strategy_selection_orders, {})
 
     def test_strategy_orders(self):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(lookup=(1, 2, 3))
         mock_order.trade.strategy = 69
         self.blotter["12345"] = mock_order
         self.assertEqual(self.blotter.strategy_orders(12), [])
         self.assertEqual(self.blotter.strategy_orders(69), [mock_order])
+
+    def test_strategy_selection_orders(self):
+        mock_order = mock.Mock(lookup=(1, 2, 3))
+        mock_order.trade.strategy = 69
+        self.blotter["12345"] = mock_order
+        self.assertEqual(self.blotter.strategy_selection_orders(12, 2, 3), [])
+        self.assertEqual(self.blotter.strategy_selection_orders(69, 2, 3), [mock_order])
 
     def test_live_orders(self):
         self.assertEqual(list(self.blotter.live_orders), [])
@@ -247,12 +256,16 @@ class BlotterTest(unittest.TestCase):
         self.assertNotIn("321", self.blotter)
 
     def test__setitem(self):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(lookup=(1, 2, 3))
         self.blotter["123"] = mock_order
         self.assertEqual(self.blotter._orders, {"123": mock_order})
         self.assertEqual(self.blotter._live_orders, [mock_order])
         self.assertEqual(
             self.blotter._strategy_orders, {mock_order.trade.strategy: [mock_order]}
+        )
+        self.assertEqual(
+            self.blotter._strategy_selection_orders,
+            {(mock_order.trade.strategy, 2, 3): [mock_order]},
         )
 
     def test__getitem(self):

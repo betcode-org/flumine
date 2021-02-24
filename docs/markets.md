@@ -32,7 +32,17 @@ Within markets you have market objects which contains current up to date market 
 - `elapsed_seconds_closed` Seconds since market was closed (543.21)
 - `market_start_datetime` Market scheduled start time
 
-### Middleware
+## Blotter
+
+The blotter is a simple and fast class to hold all orders for a particular market.
+
+### Functions
+
+- `strategy_orders(strategy)` Returns all orders related to a strategy
+- `strategy_selection_orders(strategy, selection_id, handicap)` Returns all orders related to a strategy selection
+- `selection_exposure(strategy, lookup)` Returns strategy/selection exposure
+
+## Middleware
 
 It is common that you want to carry about analysis on a market before passing through to strategies, similar to Django's middleware design flumine allows middleware to be executed.
 
