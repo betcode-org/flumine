@@ -42,7 +42,6 @@ class BaseClient:
         self.account_details = None
         self.account_funds = None
         self.commission_paid = 0
-        self.chargeable_transaction_count = 0
 
         self.execution = None  # set during flumine init
         self.trading_controls = []
@@ -65,6 +64,25 @@ class BaseClient:
         elif self.EXCHANGE == ExchangeType.BETFAIR:
             self.execution = flumine.betfair_execution
 
+    def add_transaction(self, count: int, failed: bool = False) -> None:
+        for control in self.trading_controls:
+            if hasattr(control, "add_transaction"):
+                control.add_transaction(count, failed)
+
+    @property
+    def current_transaction_count_total(self) -> Optional[int]:
+        # current hours total transaction count
+        for control in self.trading_controls:
+            if control.NAME == "MAX_TRANSACTION_COUNT":
+                return control.current_transaction_count_total
+
+    @property
+    def transaction_count_total(self) -> Optional[int]:
+        # total transaction count
+        for control in self.trading_controls:
+            if control.NAME == "MAX_TRANSACTION_COUNT":
+                return control.transaction_count_total
+
     @property
     def min_bet_size(self) -> Optional[float]:
         raise NotImplementedError
@@ -83,7 +101,8 @@ class BaseClient:
             "id": self.id,
             "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
             "betting_client": self.betting_client,
-            "chargeable_transaction_count": self.chargeable_transaction_count,
+            "current_transaction_count_total": self.current_transaction_count_total,
+            "transaction_count_total": self.transaction_count_total,
             "trading_controls": self.trading_controls,
             "order_stream": self.order_stream,
             "best_price_execution": self.best_price_execution,
