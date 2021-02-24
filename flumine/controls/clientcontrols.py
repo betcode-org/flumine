@@ -1,7 +1,7 @@
 import datetime
 import logging
+import threading
 from typing import Optional
-from betfairlightweight.metadata import transaction_limit
 
 from ..order.orderpackage import BaseOrder, OrderPackageType
 from . import BaseControl
@@ -10,105 +10,103 @@ from ..clients.baseclient import BaseClient
 logger = logging.getLogger(__name__)
 
 
-class MaxOrderCount(BaseControl):
+class MaxTransactionCount(BaseControl):
 
     """
     Counts and limits orders based on max
-    order count.
-    Only prevents placeOrders if limit is
-    reached.
+    transaction count as per:
+        - https://www.betfair.com/aboutUs/Betfair.Charges/#TranCharges2
+        - 5000 transactions per hour
+        - `A ‘transaction’ shall include all bets placed and all failed transactions`
+    Counts are updated after an execution,
+    thread safe due to the execution pool.
     """
 
-    NAME = "MAX_ORDER_COUNT"
+    NAME = "MAX_TRANSACTION_COUNT"
 
     def __init__(self, flumine, client: BaseClient):
-        super(MaxOrderCount, self).__init__(flumine)
+        super(MaxTransactionCount, self).__init__(flumine)
         self.client = client
-        self.total = 0
-        self.place_requests = 0
-        self.cancel_requests = 0
-        self.update_requests = 0
-        self.replace_requests = 0
         self._next_hour = None
+        # this hour
+        self.current_transaction_count = 0
+        self.current_failed_transaction_count = 0
+        # total since start
         self.transaction_count = 0
+        self.failed_transaction_count = 0
+        # thread lock
+        self._lock = threading.Lock()
+
+    def add_transaction(self, count: int, failed: bool = False) -> None:
+        with self._lock:
+            if failed:
+                self.failed_transaction_count += count
+                self.current_failed_transaction_count += count
+            else:
+                self.transaction_count += count
+                self.current_transaction_count += count
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if self._next_hour is None:
-            self._set_next_hour()
         self._check_hour()
-        self.total += 1
-        if package_type == OrderPackageType.PLACE:
-            self._check_transaction_count(1)
-            self.place_requests += 1
-            if not self.safe:
-                self._on_error(
-                    order,
-                    "Max Order Count has been reached ({0}) for current hour".format(
-                        self.transaction_count
-                    ),
-                )
-        elif package_type == OrderPackageType.CANCEL:
-            self.cancel_requests += 1
-        elif package_type == OrderPackageType.UPDATE:
-            self.update_requests += 1
-        elif package_type == OrderPackageType.REPLACE:
-            self.replace_requests += 1
+        if not self.safe:
+            self._on_error(
+                order,
+                "Max Transaction Count has been reached ({0}) for current hour".format(
+                    self.current_transaction_count_total
+                ),
+            )
 
     def _check_hour(self) -> None:
-        if datetime.datetime.utcnow() > self._next_hour:
+        if self._next_hour is None:
+            self._set_next_hour()
+        elif datetime.datetime.utcnow() > self._next_hour:
             logger.info(
                 "Execution new hour",
                 extra={
-                    "transaction_count": self.transaction_count,
-                    "place_requests": self.place_requests,
-                    "cancel_requests": self.cancel_requests,
-                    "update_requests": self.update_requests,
-                    "replace_requests": self.replace_requests,
+                    "current_transaction_count_total": self.current_transaction_count_total,
+                    "current_transaction_count": self.current_transaction_count,
+                    "current_failed_transaction_count": self.current_failed_transaction_count,
+                    "total_transaction_count": self.transaction_count,
+                    "total_failed_transaction_count": self.failed_transaction_count,
                     "client": self.client,
                 },
             )
             self._set_next_hour()
-            if self.transaction_count > transaction_limit:
-                self.client.chargeable_transaction_count += (
-                    self.transaction_count - transaction_limit
-                )
-            self.transaction_count = 0
-
-    def _check_transaction_count(self, transaction_count: int) -> None:
-        self.transaction_count += transaction_count
-        if self.transaction_limit and self.transaction_count > self.transaction_limit:
-            logger.error(
-                "Transaction limit reached",
-                extra={
-                    "transaction_count": self.transaction_count,
-                    "transaction_limit": self.transaction_limit,
-                    "client": self.client,
-                },
-            )
 
     def _set_next_hour(self) -> None:
         now = datetime.datetime.utcnow()
         self._next_hour = (now + datetime.timedelta(hours=1)).replace(
             minute=0, second=0, microsecond=0
         )
+        self.current_transaction_count = 0
+        self.current_failed_transaction_count = 0
 
     @property
     def safe(self) -> bool:
-        self._check_hour()
         if self.transaction_limit is None:
             return True
-        elif self.transaction_count < self.transaction_limit:
+        elif self.current_transaction_count_total <= self.transaction_limit:
             return True
         else:
             logger.error(
                 "Transaction limit reached",
                 extra={
-                    "transaction_count": self.transaction_count,
+                    "current_transaction_count_total": self.current_transaction_count_total,
+                    "current_transaction_count": self.current_transaction_count,
+                    "current_failed_transaction_count": self.current_failed_transaction_count,
                     "transaction_limit": self.transaction_limit,
                     "client": self.client,
                 },
             )
             return False
+
+    @property
+    def current_transaction_count_total(self) -> int:
+        return self.current_transaction_count + self.current_failed_transaction_count
+
+    @property
+    def transaction_count_total(self) -> int:
+        return self.transaction_count + self.failed_transaction_count
 
     @property
     def transaction_limit(self) -> Optional[int]:

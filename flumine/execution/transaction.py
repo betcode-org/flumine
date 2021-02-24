@@ -17,11 +17,11 @@ class Transaction:
     when it is used as a context manager requests can
     be batched, for example:
 
-        with market.transaction as t:
+        with market.transaction() as t:
             market.place_order(order)  # executed immediately in separate transaction
             t.place_order(order)  # executed on transaction __exit__
 
-        with market.transaction as t:
+        with market.transaction() as t:
             t.place_order(order)
             ..
             t.execute()  # above order executed
