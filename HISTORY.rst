@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.17.3 (2021-02-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Potential thread pool exhaustion logging added
+
 1.17.2 (2021-02-25)
 +++++++++++++++++++
 

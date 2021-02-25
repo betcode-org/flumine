@@ -219,6 +219,15 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
+        if order_package.elapsed_seconds > 0.1:
+            logger.warning(
+                "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
+                extra={
+                    "trading_function": trading_function.__name__,
+                    "latency": round(order_package.elapsed_seconds, 3),
+                    "order_package": order_package.info,
+                },
+            )
         if order_package.orders:
             try:
                 response = trading_function(order_package, http_session)
