@@ -68,7 +68,7 @@ class MaxTransactionCount(BaseControl):
                     "current_failed_transaction_count": self.current_failed_transaction_count,
                     "total_transaction_count": self.transaction_count,
                     "total_failed_transaction_count": self.failed_transaction_count,
-                    "client": self.client,
+                    "client": self.client.info,
                 },
             )
             self._set_next_hour()
@@ -95,7 +95,7 @@ class MaxTransactionCount(BaseControl):
                     "current_transaction_count": self.current_transaction_count,
                     "current_failed_transaction_count": self.current_failed_transaction_count,
                     "transaction_limit": self.transaction_limit,
-                    "client": self.client,
+                    "client": self.client.info,
                 },
             )
             return False
