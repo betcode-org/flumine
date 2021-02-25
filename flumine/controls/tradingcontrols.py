@@ -140,12 +140,15 @@ class StrategyExposure(BaseControl):
 
             # per selection
             market = self.flumine.markets.markets[order.market_id]
-            exposure = market.blotter.selection_exposure(strategy, lookup=order.lookup)
-            if exposure > strategy.max_selection_exposure:
+            selection_exposure = market.blotter.selection_exposure(
+                strategy, lookup=order.lookup
+            )
+            potential_exposure = selection_exposure + exposure
+            if potential_exposure > strategy.max_selection_exposure:
                 return self._on_error(
                     order,
-                    "Potential selection exposure ({0}) is greater than strategy.max_selection_exposure ({1})".format(
-                        exposure,
+                    "Potential selection exposure ({0:.2f}) is greater than strategy.max_selection_exposure ({1})".format(
+                        potential_exposure,
                         strategy.max_selection_exposure,
                     ),
                 )
