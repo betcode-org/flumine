@@ -10,6 +10,10 @@ Release History
 
 - Allow patching of stream retry wait arg
 
+**Bug Fixes**
+
+- Incorrect handling of potential exposure in control
+
 1.17.1 (2021-02-24)
 +++++++++++++++++++
 
