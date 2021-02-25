@@ -381,14 +381,13 @@ class TestStrategyExposure(unittest.TestCase):
         order2.average_price_matched = 0.0
         order2.size_matched = 0
 
-        self.market.blotter["order1"] = order1
         self.market.blotter["order2"] = order2
 
         self.trading_control._validate(order1, OrderPackageType.PLACE)
         self.assertEqual(1, mock_on_error.call_count)
         mock_on_error.assert_called_with(
             order1,
-            "Potential selection exposure (14.0) is greater than strategy.max_selection_exposure (10)",
+            "Potential selection exposure (14.00) is greater than strategy.max_selection_exposure (10)",
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
@@ -428,7 +427,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_market = mock.Mock()
         mock_market.blotter.selection_exposure.return_value = 12.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 10
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -438,5 +437,5 @@ class TestStrategyExposure(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
             mock_order,
-            "Potential selection exposure (12.0) is greater than strategy.max_selection_exposure (10)",
+            "Potential selection exposure (12.12) is greater than strategy.max_selection_exposure (10)",
         )

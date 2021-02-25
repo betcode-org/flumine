@@ -1,7 +1,7 @@
 import queue
 import logging
 from betfairlightweight import BetfairError, filters
-from tenacity import retry, wait_exponential
+from tenacity import retry
 
 from .basestream import BaseStream
 from ..events.events import CurrentOrdersEvent
@@ -9,9 +9,11 @@ from .. import config
 
 logger = logging.getLogger(__name__)
 
+RETRY_WAIT = BaseStream.RETRY_WAIT
+
 
 class OrderStream(BaseStream):
-    @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
+    @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
             "Starting OrderStream {0}".format(self.stream_id),

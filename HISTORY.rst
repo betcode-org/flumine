@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.17.2 (2021-02-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Allow patching of stream retry wait arg
+
+**Bug Fixes**
+
+- Incorrect handling of potential exposure in control
+
 1.17.1 (2021-02-24)
 +++++++++++++++++++
 

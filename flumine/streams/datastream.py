@@ -1,5 +1,5 @@
 import logging
-from tenacity import retry, wait_exponential
+from tenacity import retry
 from betfairlightweight import StreamListener
 from betfairlightweight import BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
@@ -9,6 +9,8 @@ from ..events.events import RawDataEvent
 from ..exceptions import ListenerError
 
 logger = logging.getLogger(__name__)
+
+RETRY_WAIT = BaseStream.RETRY_WAIT
 
 
 """
@@ -98,7 +100,7 @@ class DataStream(BaseStream):
         BaseStream.__init__(self, *args, **kwargs)
         self._listener = self.LISTENER(output_queue=self.flumine.handler_queue)
 
-    @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
+    @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
             "Starting DataStream {0}".format(self.stream_id),
