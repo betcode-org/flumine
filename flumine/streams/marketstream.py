@@ -1,16 +1,18 @@
 import queue
 import logging
 from betfairlightweight import BetfairError
-from tenacity import retry, wait_exponential
+from tenacity import retry
 
 from .basestream import BaseStream
 from ..events.events import MarketBookEvent
 
 logger = logging.getLogger(__name__)
 
+RETRY_WAIT = BaseStream.RETRY_WAIT
+
 
 class MarketStream(BaseStream):
-    @retry(wait=wait_exponential(multiplier=1, min=2, max=20))
+    @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
             "Starting MarketStream {0}".format(self.stream_id),
