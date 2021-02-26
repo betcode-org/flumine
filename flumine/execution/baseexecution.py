@@ -8,7 +8,6 @@ from ..events.events import OrderEvent
 
 logger = logging.getLogger(__name__)
 
-MAX_WORKERS = 32
 MAX_SESSION_AGE = 200  # seconds since last request
 BET_ID_START = 100000000000  # simulated start betId->
 
@@ -17,7 +16,7 @@ class BaseExecution:
 
     EXCHANGE = None
 
-    def __init__(self, flumine, max_workers: int = MAX_WORKERS):
+    def __init__(self, flumine, max_workers: int = None):
         self.flumine = flumine
         self._max_workers = max_workers
         self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)

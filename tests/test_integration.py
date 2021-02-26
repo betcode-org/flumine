@@ -97,21 +97,18 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(len(framework.markets), 1)
 
         for market in framework.markets:
-            limit_orders = [
-                o for o in market.blotter if o.trade.strategy == limit_strategy
-            ]
+            limit_orders = market.blotter.strategy_orders(limit_strategy)
             self.assertEqual(
                 round(sum([o.simulated.profit for o in limit_orders]), 2), 18.96
             )
             self.assertEqual(len(limit_orders), 15)
-
-            market_orders = [
-                o for o in market.blotter if o.trade.strategy == market_strategy
-            ]
+            market_orders = market.blotter.strategy_orders(market_strategy)
             self.assertEqual(
                 round(sum([o.simulated.profit for o in market_orders]), 2), -6.68
             )
             self.assertEqual(len(market_orders), 14)
+            # check transaction count
+            self.assertEqual(market._transaction_id, 180)
 
     def tearDown(self) -> None:
         config.simulated = False

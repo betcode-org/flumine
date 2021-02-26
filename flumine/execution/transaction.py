@@ -30,8 +30,9 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market):
+    def __init__(self, market, id_: int):
         self.market = market
+        self._id = id_  # unique per market only
         self._pending_orders = False
         self._pending_place = []  # list of (<Order>, market_version)
         self._pending_cancel = []  # list of (<Order>, None)
@@ -116,6 +117,7 @@ class Transaction:
                 extra={
                     "market_id": self.market.market_id,
                     "order_packages": [o.info for o in packages],
+                    "transaction_id": self._id,
                 },
             )
             self._pending_orders = False

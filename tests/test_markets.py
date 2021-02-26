@@ -130,6 +130,14 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.closed)
         self.assertIsNotNone(self.market.date_time_closed)
 
+    @mock.patch("flumine.markets.market.Transaction")
+    def test_transaction(self, mock_transaction):
+        transaction = self.market.transaction()
+        mock_transaction.assert_called_with(
+            self.market, id_=self.market._transaction_id
+        )
+        self.assertEqual(transaction, mock_transaction())
+
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction

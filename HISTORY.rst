@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.17.4 (2021-02-26)
++++++++++++++++++++
+
+**Improvements**
+
+- Transaction id and logging added
+- max_workers moved to config to allow int to be configurable
+
 1.17.3 (2021-02-25)
 +++++++++++++++++++
 

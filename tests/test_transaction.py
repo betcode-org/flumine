@@ -10,10 +10,11 @@ class TransactionTest(unittest.TestCase):
     def setUp(self) -> None:
         mock_blotter = {}
         self.mock_market = mock.Mock(blotter=mock_blotter)
-        self.transaction = Transaction(self.mock_market)
+        self.transaction = Transaction(self.mock_market, 1)
 
     def test_init(self):
         self.assertEqual(self.transaction.market, self.mock_market)
+        self.assertEqual(self.transaction._id, 1)
         self.assertFalse(self.transaction._pending_orders)
         self.assertEqual(self.transaction._pending_place, [])
         self.assertEqual(self.transaction._pending_cancel, [])
