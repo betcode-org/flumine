@@ -58,7 +58,7 @@ class BaseFlumine:
 
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
-        self.betfair_execution = BetfairExecution(self)
+        self.betfair_execution = BetfairExecution(self, config.max_workers)
 
         # logging controls (e.g. database logger)
         self._logging_controls = []

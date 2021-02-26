@@ -189,3 +189,7 @@ Used for backtesting
 ### raise_errors
 
 Raises errors on strategy functions, see [Error Handling](/advanced/#error-handling)
+
+### max_workers
+
+Max number of workers in execution thread pool

@@ -6,7 +6,6 @@ from ..events import events
 from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
-from ..order.orderpackage import OrderPackageType
 from ..order.trade import TradeStatus
 from ..order import process
 

@@ -7,7 +7,6 @@ from betfairlightweight import BetfairError
 from flumine.clients.clients import ExchangeType
 from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import (
-    MAX_WORKERS,
     MAX_SESSION_AGE,
     BET_ID_START,
     BaseExecution,
@@ -23,7 +22,6 @@ class BaseExecutionTest(unittest.TestCase):
         self.execution = BaseExecution(self.mock_flumine, max_workers=2)
 
     def test_init(self):
-        self.assertEqual(MAX_WORKERS, 32)
         self.assertEqual(MAX_SESSION_AGE, 200)
         self.assertEqual(BET_ID_START, 100000000000)
         self.assertEqual(self.execution.flumine, self.mock_flumine)
