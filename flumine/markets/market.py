@@ -34,6 +34,7 @@ class Market:
         self.update_market_catalogue = True
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
         self.blotter = Blotter(market_id)
+        self._transaction_id = 0
 
     def __call__(self, market_book: MarketBook):
         if self.market_book and market_book.version != self.market_book.version:
@@ -56,7 +57,8 @@ class Market:
         )
 
     def transaction(self) -> Transaction:
-        return Transaction(self)
+        self._transaction_id += 1
+        return Transaction(self, id_=self._transaction_id)
 
     # order
     def place_order(
