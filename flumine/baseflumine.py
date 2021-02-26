@@ -57,7 +57,7 @@ class BaseFlumine:
         self.streams.add_client(client)
 
         # order execution class
-        self.simulated_execution = SimulatedExecution(self)
+        self.simulated_execution = SimulatedExecution(self, config.max_workers)
         self.betfair_execution = BetfairExecution(self, config.max_workers)
 
         # logging controls (e.g. database logger)
