@@ -29,6 +29,64 @@ class IntegrationTest(unittest.TestCase):
     def test_backtest_pro(self):
         class LimitOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
+                if not market_book.inplay and market.seconds_to_start < 100:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                with market.transaction() as t:
+                    for runner in market_book.runners:
+                        if runner.status == "ACTIVE":
+                            back = get_price(runner.ex.available_to_back, 0)
+                            runner_context = self.get_runner_context(
+                                market.market_id, runner.selection_id
+                            )
+                            if runner_context.trade_count == 0:
+                                trade = Trade(
+                                    market_book.market_id,
+                                    runner.selection_id,
+                                    runner.handicap,
+                                    self,
+                                )
+                                order = trade.create_order(
+                                    side="BACK",
+                                    order_type=LimitOrder(back, 2.00),
+                                )
+                                t.place_order(order)
+
+        class LimitReplaceOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if not market_book.inplay and market.seconds_to_start < 100:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                with market.transaction() as t:
+                    for runner in market_book.runners:
+                        if runner.status == "ACTIVE":
+                            runner_context = self.get_runner_context(
+                                market.market_id, runner.selection_id
+                            )
+                            if runner_context.trade_count == 0:
+                                trade = Trade(
+                                    market_book.market_id,
+                                    runner.selection_id,
+                                    runner.handicap,
+                                    self,
+                                )
+                                order = trade.create_order(
+                                    side="BACK",
+                                    order_type=LimitOrder(1000, 2.00),
+                                )
+                                t.place_order(order)
+
+            def process_orders(self, market, orders: list) -> None:
+                with market.transaction() as t:
+                    for order in orders:
+                        if order.status == OrderStatus.EXECUTABLE:
+                            if order.size_matched == 0:
+                                t.replace_order(order, new_price=1.01)
+
+        class LimitOrdersInplay(BaseStrategy):
+            def check_market_book(self, market, market_book):
                 if market_book.inplay:
                     return True
 
@@ -84,8 +142,22 @@ class IntegrationTest(unittest.TestCase):
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
             max_selection_exposure=105,
+            max_trade_count=1,
         )
         framework.add_strategy(limit_strategy)
+        limit_replace_strategy = LimitReplaceOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+            max_trade_count=1,
+        )
+        framework.add_strategy(limit_replace_strategy)
+        limit_inplay_strategy = LimitOrdersInplay(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+        )
+        framework.add_strategy(limit_inplay_strategy)
         market_strategy = MarketOnCloseOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -99,16 +171,28 @@ class IntegrationTest(unittest.TestCase):
         for market in framework.markets:
             limit_orders = market.blotter.strategy_orders(limit_strategy)
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders]), 2), 18.96
+                round(sum([o.simulated.profit for o in limit_orders]), 2), -16.8
             )
-            self.assertEqual(len(limit_orders), 15)
+            self.assertEqual(len(limit_orders), 14)
+            limit_replace_orders = market.blotter.strategy_orders(
+                limit_replace_strategy
+            )
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_replace_orders]), 2), -16.8
+            )
+            self.assertEqual(len(limit_replace_orders), 28)
+            limit_inplay_orders = market.blotter.strategy_orders(limit_inplay_strategy)
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 18.96
+            )
+            self.assertEqual(len(limit_inplay_orders), 15)
             market_orders = market.blotter.strategy_orders(market_strategy)
             self.assertEqual(
                 round(sum([o.simulated.profit for o in market_orders]), 2), -6.68
             )
             self.assertEqual(len(market_orders), 14)
             # check transaction count
-            self.assertEqual(market._transaction_id, 180)
+            self.assertEqual(market._transaction_id, 25428)
 
     def tearDown(self) -> None:
         config.simulated = False
