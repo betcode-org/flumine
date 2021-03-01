@@ -8,7 +8,7 @@ Release History
 
 **Bug Fixes**
 
-- #382 replace order failure fix
+- #382 replace order failure fix (no execute)
 
 1.17.4 (2021-02-26)
 +++++++++++++++++++
