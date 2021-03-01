@@ -57,7 +57,7 @@ class TransactionTest(unittest.TestCase):
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
         )
-        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
+        mock__validate_controls.assert_not_called()
         self.transaction._pending_place = []
         self.assertFalse(self.transaction._pending_orders)
 

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.17.5 (2021-03-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #382 replace order failure fix (no execute)
+
 1.17.4 (2021-02-26)
 +++++++++++++++++++
 

@@ -42,7 +42,7 @@ class Transaction:
     def place_order(
         self, order, market_version: int = None, execute: bool = True
     ) -> bool:
-        if self._validate_controls(order, OrderPackageType.PLACE) is False:
+        if execute and self._validate_controls(order, OrderPackageType.PLACE) is False:
             return False
         # place
         order.place(self.market.market_book.publish_time)
