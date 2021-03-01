@@ -93,6 +93,7 @@ class Transaction:
             packages += self._create_order_package(
                 self._pending_place,
                 OrderPackageType.PLACE,
+                async_=True,
             )
         if self._pending_cancel:
             packages += self._create_order_package(
@@ -136,7 +137,7 @@ class Transaction:
             return True
 
     def _create_order_package(
-        self, orders: list, package_type: OrderPackageType
+        self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
@@ -155,6 +156,7 @@ class Transaction:
                         package_type=package_type,
                         bet_delay=self.market.market_book.bet_delay,
                         market_version=market_version,
+                        async_=async_,
                     )
                 )
         orders.clear()

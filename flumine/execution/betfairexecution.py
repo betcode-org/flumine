@@ -28,7 +28,10 @@ class BetfairExecution(BaseExecution):
                         order, instruction_report, OrderPackageType.PLACE
                     )
                     if instruction_report.status == "SUCCESS":
-                        order.executable()
+                        if instruction_report.order_status == "PENDING":
+                            pass  # async request pending processing
+                        else:
+                            order.executable()  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
                         order.lapsed()  # todo correct?
                     elif instruction_report.status == "TIMEOUT":

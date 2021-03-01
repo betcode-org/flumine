@@ -127,8 +127,9 @@ class BaseExecution:
         )
         if package_type == OrderPackageType.PLACE:
             order.responses.placed(instruction_report)
-            order.bet_id = instruction_report.bet_id
-            self.flumine.log_control(OrderEvent(order))
+            if instruction_report.bet_id:
+                order.bet_id = instruction_report.bet_id
+                self.flumine.log_control(OrderEvent(order))
         elif package_type == OrderPackageType.CANCEL:
             order.responses.cancelled(instruction_report)
         elif package_type == OrderPackageType.UPDATE:

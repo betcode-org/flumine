@@ -168,7 +168,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(self.transaction.execute(), 4)
         mock__create_order_package.assert_has_calls(
             [
-                call([(mock_order, 1234)], OrderPackageType.PLACE),
+                call([(mock_order, 1234)], OrderPackageType.PLACE, async_=True),
                 call([(mock_order, None)], OrderPackageType.CANCEL),
                 call([(mock_order, None)], OrderPackageType.UPDATE),
                 call([(mock_order, 1234)], OrderPackageType.REPLACE),
@@ -226,6 +226,7 @@ class TransactionTest(unittest.TestCase):
                     package_type=OrderPackageType.PLACE,
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
+                    async_=False,
                 ),
                 call(
                     client=self.transaction.market.flumine.client,
@@ -234,6 +235,7 @@ class TransactionTest(unittest.TestCase):
                     package_type=OrderPackageType.PLACE,
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=123,
+                    async_=False,
                 ),
                 call(
                     client=self.transaction.market.flumine.client,
@@ -242,6 +244,7 @@ class TransactionTest(unittest.TestCase):
                     package_type=OrderPackageType.PLACE,
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=123,
+                    async_=False,
                 ),
             ]
         )

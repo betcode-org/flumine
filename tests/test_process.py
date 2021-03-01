@@ -29,6 +29,7 @@ class BaseOrderTest(unittest.TestCase):
         config.simulated = False
 
     def test_process_current_orders_with_default_sep(self):
+        mock_log_control = mock.Mock()
         market_book = mock.Mock()
         markets = Markets()
         market = Market(
@@ -54,7 +55,12 @@ class BaseOrderTest(unittest.TestCase):
 
         event = mock.Mock(event=[mock.Mock(orders=[current_order])])
 
-        process_current_orders(markets=markets, strategies=strategies, event=event)
+        process_current_orders(
+            markets=markets,
+            strategies=strategies,
+            event=event,
+            log_control=mock_log_control,
+        )
 
         self.assertEqual(current_order, betfair_order.responses.current_order)
 
