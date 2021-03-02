@@ -9,7 +9,20 @@ from ..events.events import OrderEvent
 logger = logging.getLogger(__name__)
 
 """
-Handles orphan orders by creating empty trade and order data from CurrentOrder object/
+Various functions to update current order status
+and update status.
+
+Loop through each current order:
+    order = Lookup order in market using marketId and orderId
+    if order is None (not present locally):
+        create local order using data and make executable #todo!!!
+    if betId is None (async placement):
+        Update betId and log through logging_control
+    if order betId != current_order betId:
+        Get order using current_order betId due to replace request (new betId)
+    if order:
+        update current status
+        process
 """
 
 
@@ -43,7 +56,9 @@ def process_current_orders(
                 else:
                     continue
 
-            if order.bet_id is None:  # async bet pending processing
+            if (
+                order.bet_id is None and current_order.bet_id
+            ):  # async bet pending processing
                 order.bet_id = current_order.bet_id
                 log_control(OrderEvent(order))
                 order.executable()
@@ -61,6 +76,7 @@ def process_current_orders(
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            # todo use `order.current_order.status` ?
             if order.size_voided:
                 order.voided()
             elif order.size_lapsed:
