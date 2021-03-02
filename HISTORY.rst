@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.17.6b0 (2021-03-02)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- incorrect handling of replace on runner context fix (adds to live trade count)
+
 1.17.5 (2021-03-01)
 +++++++++++++++++++
 

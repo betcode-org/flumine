@@ -299,8 +299,6 @@ class BetfairOrder(BaseOrder):
     def place(self, publish_time: int) -> None:
         self.publish_time = publish_time
         self.placing()
-        runner_context = self.trade.strategy.get_runner_context(*self.lookup)
-        runner_context.place()
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:

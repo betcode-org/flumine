@@ -46,6 +46,9 @@ class Transaction:
             return False
         # place
         order.place(self.market.market_book.publish_time)
+        if execute:
+            runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+            runner_context.place()
         if order.id not in self.market.blotter:
             self.market.blotter[order.id] = order
             if order.trade.market_notes is None:
