@@ -88,7 +88,11 @@ class BaseStrategy:
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
         self.historic_stream_ids = []
-        self.log_validation_failures = log_validation_failures
+        if log_validation_failures:
+            warnings.warn(
+                "strategy.log_validation_failures is deprecated and will be removed from v1.18 onwards (all validation failures are now logged in the trading control)",
+                PendingDeprecationWarning,
+            )
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
@@ -197,41 +201,32 @@ class BaseStrategy:
                 return True
         # validate context
         if runner_context.trade_count >= self.max_trade_count:
-            if self.log_validation_failures:
-                logger.warning(
-                    "validate_order failed: trade_count (%s) >= max_trade_count (%s)",
-                    runner_context.trade_count,
-                    self.max_live_trade_count,
-                )
+            order.violation_msg = "strategy.validate_order failed: trade_count ({0}) >= max_trade_count ({1})".format(
+                runner_context.trade_count, self.max_live_trade_count
+            )
             return False
         elif runner_context.live_trade_count >= self.max_live_trade_count:
-            if self.log_validation_failures:
-                logger.warning(
-                    "validate_order failed: live_trade_count (%s) >= max_live_trade_count (%s)"
-                    % (runner_context.live_trade_count, self.max_live_trade_count)
-                )
+            order.violation_msg = "strategy.validate_order failed: live_trade_count ({0}) >= max_live_trade_count ({1})".format(
+                runner_context.live_trade_count, self.max_live_trade_count
+            )
             return False
         elif (
             runner_context.placed_elapsed_seconds
             and runner_context.placed_elapsed_seconds < order.trade.place_reset_seconds
         ):
-            if self.log_validation_failures:
-                logger.warning(
-                    "validate_order failed: placed_elapsed_seconds (%s) < place_reset_seconds (%s)",
-                    runner_context.placed_elapsed_seconds,
-                    order.trade.place_reset_seconds,
-                )
+            order.violation_msg = "strategy.validate_order failed: placed_elapsed_seconds ({0}) < place_reset_seconds ({1})".format(
+                runner_context.placed_elapsed_seconds,
+                order.trade.place_reset_seconds,
+            )
             return False
         elif (
             runner_context.reset_elapsed_seconds
             and runner_context.reset_elapsed_seconds < order.trade.reset_seconds
         ):
-            if self.log_validation_failures:
-                logger.warning(
-                    "validate_order failed: reset_elapsed_seconds (%s) < reset_seconds (%s)",
-                    runner_context.reset_elapsed_seconds,
-                    order.trade.reset_seconds,
-                )
+            order.violation_msg = "strategy.validate_order failed: reset_elapsed_seconds ({0}) < reset_seconds ({1})".format(
+                runner_context.reset_elapsed_seconds,
+                order.trade.reset_seconds,
+            )
             return False
         else:
             return True

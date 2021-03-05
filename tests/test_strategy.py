@@ -54,6 +54,7 @@ class BaseStrategyTest(unittest.TestCase):
             max_trade_count=3,
             max_live_trade_count=4,
             multi_order_trades=False,
+            log_validation_failures=True,
         )
 
     def test_init(self):
