@@ -31,9 +31,6 @@ trade.orders  # [<BetfairOrder>]
 - `handicap` Runner handicap
 - `strategy` Strategy object
 - `notes` Trade notes, used to store market / trigger info for later analysis
-- `fill_kill` Not implemented
-- `offset` Not implemented
-- `green` Not implemented
 - `place_reset_seconds` Seconds to wait since `runner_context.reset` before allowing another order
 - `reset_seconds` Seconds to wait since `runner_context.place` before allowing another order
 

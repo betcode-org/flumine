@@ -10,4 +10,4 @@ class ConfigTest(unittest.TestCase):
         self.assertIsInstance(config.process_id, int)
         self.assertIsNone(config.current_time)
         self.assertFalse(config.raise_errors)
-        self.assertEqual(config.max_workers, 32)
+        self.assertEqual(config.max_execution_workers, 32)

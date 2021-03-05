@@ -296,7 +296,7 @@ class TestStrategyExposure(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_called_with(
             mock_order,
-            "strategy.validate_order failure",
+            mock_order.violation_msg,
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
