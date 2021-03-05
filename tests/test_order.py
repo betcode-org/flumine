@@ -274,9 +274,6 @@ class BetfairOrderTest(unittest.TestCase):
         self.order.place(123)
         mock_placing.assert_called_with()
         self.assertEqual(self.order.publish_time, 123)
-        self.order.trade.strategy.get_runner_context.assert_called_with(
-            *self.order.lookup
-        )
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",

@@ -71,7 +71,7 @@ class TradeTest(unittest.TestCase):
         runner_context = self.mock_strategy.get_runner_context(
             self.trade.market_id, self.trade.selection_id, self.trade.handicap
         )
-        runner_context.reset.assert_called_with()
+        runner_context.reset.assert_called_with(self.trade.id)
         self.assertIsNotNone(self.trade.date_time_complete)
 
     def test_complete(self):

@@ -74,7 +74,7 @@ class Trade:
         runner_context = self.strategy.get_runner_context(
             self.market_id, self.selection_id, self.handicap
         )
-        runner_context.reset()  # todo race condition?
+        runner_context.reset(self.id)
 
     @property
     def complete(self) -> bool:
