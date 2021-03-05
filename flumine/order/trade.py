@@ -35,7 +35,7 @@ class Trade:
         place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
         reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
     ):
-        self.id = uuid.uuid1()
+        self.id = str(uuid.uuid1())
         self.market_id = market_id
         self.selection_id = selection_id
         self.handicap = handicap
@@ -158,7 +158,7 @@ class Trade:
     @property
     def info(self) -> dict:
         return {
-            "id": str(self.id),
+            "id": self.id,
             "strategy": str(self.strategy),
             "place_reset_seconds": self.place_reset_seconds,
             "reset_seconds": self.reset_seconds,

@@ -62,6 +62,7 @@ class BaseOrder:
         self.status = None
         self.status_log = []
         self.violation_msg = None
+        self.context = {}  # store order specific notes/triggers
 
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data

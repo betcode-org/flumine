@@ -37,6 +37,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.status)
         self.assertEqual(self.order.status_log, [])
         self.assertIsNone(self.order.violation_msg)
+        self.assertEqual(self.order.context, {})
         self.assertIsNone(self.order.bet_id)
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
