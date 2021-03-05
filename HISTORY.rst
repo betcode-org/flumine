@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.17.7 (2021-03-05)
++++++++++++++++++++
+
+**Improvements**
+
+- strategy.log_validation_failures marked for depreciation and logging pushed up to trading control
+- strategy.multi_order_trades var added to allow multiple orders to be placed under a single trade
+- RunnerContext trades made public
+- Docs cleanup and unused trade vars removed
+- config.max_workers renamed to max_execution_workers (*breaking change)
+
+**Bug Fixes**
+
+- Prevent double counting of trades if place called more than once
+
 1.17.6 (2021-03-05)
 +++++++++++++++++++
 
