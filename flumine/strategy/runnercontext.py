@@ -19,8 +19,10 @@ class RunnerContext:
     def place(self, trade_id) -> None:
         self.invested = True
         self.datetime_last_placed = datetime.datetime.utcnow()
-        self.trades.append(trade_id)
-        self.live_trades.append(trade_id)
+        if trade_id not in self.trades:
+            self.trades.append(trade_id)
+        if trade_id not in self.live_trades:
+            self.live_trades.append(trade_id)
 
     def reset(self, trade_id) -> None:
         self.datetime_last_reset = datetime.datetime.utcnow()

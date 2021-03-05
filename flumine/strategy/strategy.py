@@ -13,7 +13,6 @@ from ..utils import create_cheap_hash
 logger = logging.getLogger(__name__)
 
 STRATEGY_NAME_HASH_LENGTH = 13
-
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
         "EX_ALL_OFFERS",
@@ -28,6 +27,17 @@ DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
 
 
 class BaseStrategy:
+
+    """
+    Strategy object to process MarketBook data
+    from streams, order placement and handling
+    logic to be added where required. Only
+    MarketBooks from provided filter and data
+    filter are processed.
+    Runner context available to store current
+    live trades.
+    """
+
     def __init__(
         self,
         market_filter: dict,
@@ -40,22 +50,25 @@ class BaseStrategy:
         max_selection_exposure: float = 100,
         max_order_exposure: float = 10,
         client: BaseClient = None,
-        max_trade_count: int = 1e6,  # max total number of trades per runner
-        max_live_trade_count: int = 1,  # max live (with executable orders) trades per runner
+        max_trade_count: int = 1e6,
+        max_live_trade_count: int = 1,
+        multi_order_trades: bool = False,
         log_validation_failures: bool = False,
     ):
         """
-        Processes data from streams.
-
         :param market_filter: Streaming market filter
         :param market_data_filter: Streaming market data filter
         :param streaming_timeout: Streaming timeout in seconds, will call snap() on cache
         :param conflate_ms: Streaming conflation
-        :param stream_class: Can be Market or Data
-        :param name: Strategy name
-        :param context: Dictionary holding additional vars
+        :param stream_class: Can be Market or Data (raw)
+        :param name: Strategy name (will default to class name)
+        :param context: Dictionary holding additional user specific vars
         :param max_selection_exposure: Max exposure per selection
         :param max_order_exposure: Max exposure per order
+        :param client: flumine client used for order placement
+        :param max_trade_count: max total number of trades per runner
+        :param max_live_trade_count: max live (with executable orders) trades per runner
+        :param multi_order_trades: allow multiple live orders per trade
         :param log_validation_failures: determines whether or not to log validation failures
         """
         self.market_filter = market_filter
@@ -70,6 +83,7 @@ class BaseStrategy:
         self.client = client
         self.max_trade_count = max_trade_count
         self.max_live_trade_count = max_live_trade_count
+        self.multi_order_trades = multi_order_trades
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
@@ -177,6 +191,10 @@ class BaseStrategy:
         return market.replace_order(order, new_price, market_version)
 
     def validate_order(self, runner_context: RunnerContext, order) -> bool:
+        # allow multiple orders per trade
+        if self.multi_order_trades:
+            if order.trade.id in runner_context.live_trades:
+                return True
         # validate context
         if runner_context.trade_count >= self.max_trade_count:
             if self.log_validation_failures:

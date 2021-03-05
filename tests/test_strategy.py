@@ -53,6 +53,7 @@ class BaseStrategyTest(unittest.TestCase):
             client=self.mock_client,
             max_trade_count=3,
             max_live_trade_count=4,
+            multi_order_trades=False,
         )
 
     def test_init(self):
@@ -71,6 +72,22 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.streams, [])
         self.assertEqual(self.strategy.historic_stream_ids, [])
         self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
+        self.assertFalse(self.strategy.multi_order_trades)
+        self.assertEqual(strategy.STRATEGY_NAME_HASH_LENGTH, 13)
+        self.assertEqual(
+            strategy.DEFAULT_MARKET_DATA_FILTER,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()
@@ -200,6 +217,20 @@ class BaseStrategyTest(unittest.TestCase):
         runner_context.reset_elapsed_seconds = 0.49
         mock_order.trade.reset_seconds = 0.5
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+
+    def test_validate_order_multi(self):
+        mock_order = mock.Mock()
+        mock_order.trade.id = "test"
+        runner_context = mock.Mock(
+            trade_count=10,
+            live_trade_count=10,
+            live_trades=["test"],
+            placed_elapsed_seconds=None,
+            reset_elapsed_seconds=None,
+        )
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+        self.strategy.multi_order_trades = True
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
 
     def test_executable_orders(self):
         mock_context = mock.Mock(executable_orders=True)
