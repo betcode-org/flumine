@@ -3,12 +3,13 @@
 Release History
 ---------------
 
-1.17.6b0 (2021-03-02)
+1.17.6 (2021-03-05)
 +++++++++++++++++++
 
 **Bug Fixes**
 
 - incorrect handling of replace on runner context fix (adds to live trade count)
+- trade id added to context to prevent race condition and better visibility on live trades
 
 1.17.5 (2021-03-01)
 +++++++++++++++++++
