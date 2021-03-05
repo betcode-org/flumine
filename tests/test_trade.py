@@ -11,9 +11,6 @@ class TradeTest(unittest.TestCase):
         logging.disable(logging.CRITICAL)
         mock_client = mock.Mock(paper_trade=False)
         self.mock_strategy = mock.Mock(client=mock_client)
-        self.mock_fill_kill = mock.Mock()
-        self.mock_offset = mock.Mock()
-        self.mock_green = mock.Mock()
         self.notes = collections.OrderedDict({"trigger": 123})
         self.trade = Trade(
             "1.234",
@@ -21,9 +18,6 @@ class TradeTest(unittest.TestCase):
             1.0,
             self.mock_strategy,
             self.notes,
-            self.mock_fill_kill,
-            self.mock_offset,
-            self.mock_green,
             12,
             34,
         )
@@ -34,9 +28,6 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.handicap, 1.0)
         self.assertEqual(self.trade.strategy, self.mock_strategy)
         self.assertEqual(self.trade.notes, self.notes)
-        self.assertEqual(self.trade.fill_kill, self.mock_fill_kill)
-        self.assertEqual(self.trade.offset, self.mock_offset)
-        self.assertEqual(self.trade.green, self.mock_green)
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
         self.assertEqual(self.trade.offset_orders, [])

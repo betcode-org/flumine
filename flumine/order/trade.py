@@ -29,9 +29,6 @@ class Trade:
         handicap: float,
         strategy: BaseStrategy,
         notes: collections.OrderedDict = None,
-        fill_kill=None,
-        offset=None,
-        green=None,
         place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
         reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
     ):
@@ -44,9 +41,6 @@ class Trade:
             notes if notes else collections.OrderedDict()
         )  # trade notes (e.g. triggers/market state)
         self.market_notes = None  # back,lay,lpt
-        self.fill_kill = fill_kill  # todo
-        self.offset = offset  # todo
-        self.green = green  # todo
         self.place_reset_seconds = place_reset_seconds
         self.reset_seconds = reset_seconds
         self.orders = []  # all orders linked to trade
