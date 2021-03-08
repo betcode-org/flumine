@@ -74,8 +74,9 @@ class Trade:
     def complete(self) -> bool:
         if self.status != TradeStatus.LIVE:
             return False
-        if self.offset_orders:
-            return False
+        for order in self.offset_orders:
+            if not order.complete:
+                return False
         for order in self.orders:
             if not order.complete:
                 return False
@@ -87,12 +88,15 @@ class Trade:
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
         order: Type[BetfairOrder] = BetfairOrder,
+        **kwargs,
     ) -> BetfairOrder:
         if order_type.EXCHANGE != order.EXCHANGE:
             raise OrderError(
                 "Incorrect order/order_type exchange combination for trade.create_order"
             )
-        order = order(trade=self, side=side, order_type=order_type, handicap=handicap)
+        order = order(
+            trade=self, side=side, order_type=order_type, handicap=handicap, **kwargs
+        )
         self.orders.append(order)
         return order
 
@@ -157,6 +161,7 @@ class Trade:
             "place_reset_seconds": self.place_reset_seconds,
             "reset_seconds": self.reset_seconds,
             "orders": [o.id for o in self.orders],
+            "offset_orders": [o.id for o in self.offset_orders],
             "notes": self.notes_str,
             "market_notes": self.market_notes,
             "status": self.status.value if self.status else None,
