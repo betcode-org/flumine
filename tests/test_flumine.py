@@ -84,8 +84,8 @@ class FlumineTest(unittest.TestCase):
                 ),
                 mock.call(
                     self.flumine,
-                    function=worker.poll_cleared_orders,
-                    interval=10,
+                    function=worker.poll_market_closure,
+                    interval=60,
                     start_delay=10,
                 ),
             ],

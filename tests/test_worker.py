@@ -127,14 +127,35 @@ class WorkersTest(unittest.TestCase):
             mock_events.BalanceEvent(mock_flumine.client.account_funds)
         )
 
-    # @mock.patch("flumine.worker._get_cleared_market")
-    # @mock.patch("flumine.worker._get_cleared_orders")
-    # def test_poll_cleared_orders(self, mock__get_cleared_orders, mock__get_cleared_market):
-    #     mock_flumine = mock.Mock()
-    #     mock_client = mock.Mock()
-    #
-    #     worker.poll_cleared_orders(mock_flumine, mock_client)
-    #
+    @mock.patch("flumine.worker._get_cleared_market")
+    @mock.patch("flumine.worker._get_cleared_orders")
+    def test_poll_market_closure(
+        self, mock__get_cleared_orders, mock__get_cleared_market
+    ):
+        mock_client = mock.Mock(paper_trade=False)
+        mock_flumine = mock.Mock(client=mock_client)
+        market_one = mock.Mock(closed=False)
+        market_two = mock.Mock(closed=True, orders_cleared=True, market_cleared=True)
+        market_three = mock.Mock(
+            closed=True, orders_cleared=False, market_cleared=False
+        )
+        mock_flumine.markets.markets = {
+            1: market_one,
+            2: market_two,
+            3: market_three,
+        }
+        worker.poll_market_closure({}, mock_flumine)
+        mock__get_cleared_orders.assert_called_with(
+            mock_flumine, mock_client.betting_client, market_three.market_id
+        )
+        mock__get_cleared_market.assert_called_with(
+            mock_flumine, mock_client.betting_client, market_three.market_id
+        )
+
+    def test_poll_market_closure_paper(self):
+        mock_client = mock.Mock(paper_trade=True)
+        mock_flumine = mock.Mock(client=mock_client)
+        worker.poll_market_closure({}, mock_flumine)
 
     @mock.patch("flumine.worker.config")
     @mock.patch("flumine.worker.events")

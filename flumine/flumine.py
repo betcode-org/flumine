@@ -77,8 +77,8 @@ class Flumine(BaseFlumine):
         self.add_worker(
             worker.BackgroundWorker(
                 self,
-                function=worker.poll_cleared_orders,
-                interval=10,  # restart
+                function=worker.poll_market_closure,
+                interval=60,
                 start_delay=10,  # wait for login
             )
         )
