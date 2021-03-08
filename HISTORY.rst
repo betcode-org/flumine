@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.17.8 (2021-03-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Allow kwargs to be passed to `trade.create_order`
+- Correct handling off completed offset orderrs
+
+**Bug Fixes**
+
+- Prevent closure functions being called on a recorder closure
+
 1.17.7 (2021-03-05)
 +++++++++++++++++++
 

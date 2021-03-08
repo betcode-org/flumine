@@ -225,14 +225,11 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
-        mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
+        mock_market.blotter.process_closed_market.assert_not_called()
         mock_strategy.process_closed_market.assert_called_with(
             mock_market, mock_market_book
         )
         mock_log_control.assert_called_with(mock_event)
-        self.assertEqual(
-            self.base_flumine.cleared_market_queue.get(), mock_market_book["id"]
-        )
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     def test__process_close_market_no_market(self, mock_info):

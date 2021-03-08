@@ -72,8 +72,10 @@ class TradeTest(unittest.TestCase):
         self.assertFalse(self.trade.complete)
 
     def test_trade_complete_offset(self):
-        self.trade.offset_orders = [1]
+        self.trade.offset_orders = [mock.Mock(complete=False)]
         self.assertFalse(self.trade.complete)
+        self.trade.offset_orders = [mock.Mock(complete=True)]
+        self.assertTrue(self.trade.complete)
 
     def test_trade_complete_replace_order(self):
         self.assertTrue(self.trade.complete)
@@ -87,7 +89,16 @@ class TradeTest(unittest.TestCase):
         mock_order_type.EXCHANGE = "SYM"
         mock_order = mock.Mock()
         mock_order.EXCHANGE = "SYM"
-        self.trade.create_order("BACK", mock_order_type, handicap=1, order=mock_order)
+        self.trade.create_order(
+            "BACK", mock_order_type, handicap=1, order=mock_order, context={1: 2}
+        )
+        mock_order.assert_called_with(
+            trade=self.trade,
+            side="BACK",
+            order_type=mock_order_type,
+            handicap=1,
+            context={1: 2},
+        )
         self.assertEqual(self.trade.orders, [mock_order()])
 
     def test_create_order_error(self):
@@ -151,6 +162,7 @@ class TradeTest(unittest.TestCase):
             {
                 "id": str(self.trade.id),
                 "orders": [],
+                "offset_orders": [],
                 "place_reset_seconds": 12,
                 "reset_seconds": 34,
                 "strategy": str(self.mock_strategy),

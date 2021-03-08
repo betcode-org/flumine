@@ -129,15 +129,15 @@ class BaseFlumine:
                         },
                     )
 
-            if market_book.status == "CLOSED":
-                self.handler_queue.put(events.CloseMarketEvent(market_book))
-                continue
-
             market = self.markets.markets.get(market_id)
             if market is None:
                 market = self._add_market(market_id, market_book)
             elif market.closed:
                 self.markets.add_market(market_id, market)
+
+            if market_book.status == "CLOSED":
+                self.handler_queue.put(events.CloseMarketEvent(market_book))
+                continue
 
             # process market
             market(market_book)
@@ -230,9 +230,11 @@ class BaseFlumine:
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event
         if isinstance(market_book, dict):
+            recorder = True
             market_id = market_book["id"]
             stream_id = market_book["_stream_id"]
         else:
+            recorder = False
             market_id = market_book.market_id
             stream_id = market_book.streaming_unique_id
         market = self.markets.markets.get(market_id)
@@ -242,17 +244,20 @@ class BaseFlumine:
                 extra={"market_id": market_id, **self.info},
             )
             return
-        market.close_market()
-        market.blotter.process_closed_market(event.event)
+        if market.closed is False:
+            market.close_market()
+        if recorder is False:
+            market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:
             if stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
-        if self.BACKTEST or self.client.paper_trade:
-            self._process_cleared_orders(events.ClearedOrdersEvent(market))
-        else:
-            self.cleared_market_queue.put(market_id)
+        if recorder is False:
+            if self.BACKTEST or self.client.paper_trade:
+                self._process_cleared_orders(events.ClearedOrdersEvent(market))
+            else:
+                self.cleared_market_queue.put(market_id)
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
