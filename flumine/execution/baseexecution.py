@@ -97,7 +97,7 @@ class BaseExecution:
     ) -> None:
         if err or len(self._sessions) >= self._max_workers:
             logger.info(
-                "Closing and deleting requests.Session",
+                "Deleting requests.Session",
                 extra={
                     "sessions_created": self._sessions_created,
                     "session": http_session,
@@ -107,7 +107,6 @@ class BaseExecution:
                     "err": err,
                 },
             )
-            http_session.close()
             del http_session
         else:
             http_session.time_returned = time.time()
