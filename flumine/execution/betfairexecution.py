@@ -224,6 +224,7 @@ class BetfairExecution(BaseExecution):
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
                 extra={
                     "trading_function": trading_function.__name__,
+                    "session": http_session,
                     "latency": round(order_package.elapsed_seconds, 3),
                     "order_package": order_package.info,
                 },
