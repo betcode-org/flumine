@@ -109,6 +109,8 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
+        self.assertFalse(self.market.orders_cleared)
+        self.assertFalse(self.market.market_cleared)
         self.assertIsNone(self.market.date_time_closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
@@ -122,8 +124,13 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.update_market_catalogue)
 
     def test_open_market(self):
+        self.market.closed = True
+        self.market.orders_cleared = True
+        self.market.market_cleared = True
         self.market.open_market()
         self.assertFalse(self.market.closed)
+        self.assertFalse(self.market.orders_cleared)
+        self.assertFalse(self.market.market_cleared)
 
     def test_close_market(self):
         self.market.close_market()
@@ -321,5 +328,8 @@ class MarketTest(unittest.TestCase):
                 "country_code": self.market.country_code,
                 "venue": self.market.venue,
                 "race_type": self.market.race_type,
+                "orders_cleared": self.market.orders_cleared,
+                "market_cleared": self.market.market_cleared,
+                "closed": self.market.closed,
             },
         )

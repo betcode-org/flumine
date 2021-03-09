@@ -155,28 +155,23 @@ def poll_account_balance(context: dict, flumine) -> None:
         flumine.log_control(events.BalanceEvent(client))
 
 
-def poll_cleared_orders(context: dict, flumine) -> None:
+def poll_market_closure(context: dict, flumine) -> None:
     client = flumine.client
-    processed_orders, processed_markets, market_cache = [], [], []
-    while True:
-        market_id = flumine.cleared_market_queue.get()
-        if market_id not in processed_orders:
-            if _get_cleared_orders(flumine, client.betting_client, market_id):
-                processed_orders.append(market_id)
-            else:
-                time.sleep(10)
-                flumine.cleared_market_queue.put(market_id)  # try again
-
-        if market_id not in processed_markets:
-            time.sleep(32)  # takes ~30s for orders to be aggregated to market level
-            if _get_cleared_market(flumine, client.betting_client, market_id):
-                processed_markets.append(market_id)
-            else:
-                if market_cache.count(market_id) > 7:  # give up after 7 attempts
-                    market_cache = [m for m in market_cache if m != market_id]
-                else:
-                    market_cache.append(market_id)
-                    flumine.cleared_market_queue.put(market_id)  # try again
+    if client.paper_trade:
+        return
+    markets = [
+        market
+        for market in list(flumine.markets.markets.values())
+        if market.closed
+        and (market.orders_cleared is False or market.market_cleared is False)
+    ]
+    for market in markets:
+        if market.orders_cleared is False:
+            if _get_cleared_orders(flumine, client.betting_client, market.market_id):
+                market.orders_cleared = True
+        if market.market_cleared is False:
+            if _get_cleared_market(flumine, client.betting_client, market.market_id):
+                market.market_cleared = True
 
 
 def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:

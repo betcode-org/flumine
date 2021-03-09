@@ -3,13 +3,25 @@
 Release History
 ---------------
 
+1.17.9 (2021-03-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove session close in execution when removing stale sessions (very slow)
+- Refactor closure worker to check all closed markets requiring clearing
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.12.1
+
 1.17.8 (2021-03-08)
 +++++++++++++++++++
 
 **Improvements**
 
 - Allow kwargs to be passed to `trade.create_order`
-- Correct handling off completed offset orderrs
+- Correct handling off completed offset orders
 
 **Bug Fixes**
 

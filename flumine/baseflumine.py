@@ -39,7 +39,6 @@ class BaseFlumine:
 
         # queues
         self.handler_queue = queue.Queue()
-        self.cleared_market_queue = queue.Queue()
 
         # all markets
         self.markets = Markets()
@@ -256,8 +255,6 @@ class BaseFlumine:
         if recorder is False:
             if self.BACKTEST or self.client.paper_trade:
                 self._process_cleared_orders(events.ClearedOrdersEvent(market))
-            else:
-                self.cleared_market_queue.put(market_id)
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
