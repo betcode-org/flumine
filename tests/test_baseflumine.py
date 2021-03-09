@@ -208,9 +208,6 @@ class BaseFlumineTest(unittest.TestCase):
             mock_market, mock_market_book
         )
         mock_log_control.assert_called_with(mock_event)
-        self.assertEqual(
-            self.base_flumine.cleared_market_queue.get(), mock_market_book.market_id
-        )
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
