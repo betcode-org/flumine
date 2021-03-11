@@ -62,6 +62,7 @@ class BaseOrder:
         self.status = None
         self.status_log = []
         self.violation_msg = None
+        self.context = {}  # store order specific notes/triggers
 
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
@@ -299,8 +300,6 @@ class BetfairOrder(BaseOrder):
     def place(self, publish_time: int) -> None:
         self.publish_time = publish_time
         self.placing()
-        runner_context = self.trade.strategy.get_runner_context(*self.lookup)
-        runner_context.place()
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.bet_id is None:

@@ -29,13 +29,10 @@ class Trade:
         handicap: float,
         strategy: BaseStrategy,
         notes: collections.OrderedDict = None,
-        fill_kill=None,
-        offset=None,
-        green=None,
         place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
         reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
     ):
-        self.id = uuid.uuid1()
+        self.id = str(uuid.uuid1())
         self.market_id = market_id
         self.selection_id = selection_id
         self.handicap = handicap
@@ -44,9 +41,6 @@ class Trade:
             notes if notes else collections.OrderedDict()
         )  # trade notes (e.g. triggers/market state)
         self.market_notes = None  # back,lay,lpt
-        self.fill_kill = fill_kill  # todo
-        self.offset = offset  # todo
-        self.green = green  # todo
         self.place_reset_seconds = place_reset_seconds
         self.reset_seconds = reset_seconds
         self.orders = []  # all orders linked to trade
@@ -74,14 +68,15 @@ class Trade:
         runner_context = self.strategy.get_runner_context(
             self.market_id, self.selection_id, self.handicap
         )
-        runner_context.reset()  # todo race condition?
+        runner_context.reset(self.id)
 
     @property
     def complete(self) -> bool:
         if self.status != TradeStatus.LIVE:
             return False
-        if self.offset_orders:
-            return False
+        for order in self.offset_orders:
+            if not order.complete:
+                return False
         for order in self.orders:
             if not order.complete:
                 return False
@@ -93,12 +88,15 @@ class Trade:
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
         order: Type[BetfairOrder] = BetfairOrder,
+        **kwargs,
     ) -> BetfairOrder:
         if order_type.EXCHANGE != order.EXCHANGE:
             raise OrderError(
                 "Incorrect order/order_type exchange combination for trade.create_order"
             )
-        order = order(trade=self, side=side, order_type=order_type, handicap=handicap)
+        order = order(
+            trade=self, side=side, order_type=order_type, handicap=handicap, **kwargs
+        )
         self.orders.append(order)
         return order
 
@@ -158,11 +156,12 @@ class Trade:
     @property
     def info(self) -> dict:
         return {
-            "id": str(self.id),
+            "id": self.id,
             "strategy": str(self.strategy),
             "place_reset_seconds": self.place_reset_seconds,
             "reset_seconds": self.reset_seconds,
             "orders": [o.id for o in self.orders],
+            "offset_orders": [o.id for o in self.offset_orders],
             "notes": self.notes_str,
             "market_notes": self.market_notes,
             "status": self.status.value if self.status else None,

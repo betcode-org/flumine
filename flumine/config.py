@@ -15,4 +15,4 @@ current_time = None  # used for backtesting
 
 raise_errors = False  # used for call_check_market / call_process_market_book
 
-max_workers = 32  # max number of workers in execution thread pool
+max_execution_workers = 32  # max number of workers in execution thread pool

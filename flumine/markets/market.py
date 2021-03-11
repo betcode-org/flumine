@@ -32,6 +32,8 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.update_market_catalogue = True
+        self.orders_cleared = False
+        self.market_cleared = False
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
         self.blotter = Blotter(market_id)
         self._transaction_id = 0
@@ -43,6 +45,8 @@ class Market:
 
     def open_market(self) -> None:
         self.closed = False
+        self.orders_cleared = False
+        self.market_cleared = False
         logger.info(
             "Market {0} opened".format(self.market_id),
             extra=self.info,
@@ -171,4 +175,7 @@ class Market:
             "country_code": self.country_code,
             "venue": self.venue,
             "race_type": self.race_type,
+            "orders_cleared": self.orders_cleared,
+            "market_cleared": self.market_cleared,
+            "closed": self.closed,
         }

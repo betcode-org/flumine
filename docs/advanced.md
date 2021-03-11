@@ -40,10 +40,11 @@ The Flumine class can be adapted by overriding the following functions:
 - `client` Strategy client, half implemented when flumine will be migrated to multi clients
 - `max_trade_count` Max total number of trades per runner
 - `max_live_trade_count` Max live (with executable orders) trades per runner
+- `multi_order_trades` Allow multiple live orders per trade
 
 ### Functions
 
-The following functions can be overridden dependant on the strategy:
+The following functions can be overridden dependent on the strategy:
 
 `add()` Function called when strategy is added to framework
 
@@ -90,12 +91,12 @@ Before placing an order flumine will check the client and trading controls, this
 
 ### Client Controls
 
-- `MaxOrderCount`: Checks order count is not over betfair transaction limit (5000 per hour) 
+- `MaxTransactionCount`: Checks transaction count is not over betfair transaction limit (5000 per hour) 
 
 ### Trading Controls
 
 - `OrderValidation`: Checks order is valid (size/odds)
-- `StrategyExposure`: Checks order does not go over `strategy.max_order_exposure` and `strategy.max_selection_exposure`
+- `StrategyExposure`: Checks order does not invalidate `strategy.validate_order`, `strategy.max_order_exposure` or `strategy.max_selection_exposure`
 
 ## Logging Controls
 
@@ -116,8 +117,8 @@ framework.add_logging_control(control)
 
 By default flumine adds the following workers:
  
-- `keep_alive`: runs every 1200s to make sure the client is either logged in or kept alive
-- `poll_account_balance`: runs every 60s to poll account balance endpoint
+- `keep_alive`: runs every 1200s (or session_timeout/2) to make sure the client is either logged in or kept alive
+- `poll_account_balance`: runs every 120s to poll account balance endpoint
 - `poll_market_catalogue`: runs every 60s to poll listMarketCatalogue endpoint
 - `poll_cleared_orders`: runs when closed market is added to `flumine.cleared_market_queue`
 
@@ -190,6 +191,6 @@ Used for backtesting
 
 Raises errors on strategy functions, see [Error Handling](/advanced/#error-handling)
 
-### max_workers
+### max_execution_workers
 
 Max number of workers in execution thread pool

@@ -3,6 +3,56 @@
 Release History
 ---------------
 
+1.17.9 (2021-03-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove session close in execution when removing stale sessions (very slow)
+- Refactor closure worker to check all closed markets requiring clearing
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.12.1
+
+1.17.8 (2021-03-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Allow kwargs to be passed to `trade.create_order`
+- Correct handling off completed offset orders
+
+**Bug Fixes**
+
+- Prevent closure functions being called on a recorder closure
+
+1.17.7 (2021-03-05)
++++++++++++++++++++
+
+**Improvements**
+
+- strategy.log_validation_failures marked for depreciation and logging pushed up to trading control
+- strategy.multi_order_trades var added to allow multiple orders to be placed under a single trade
+- RunnerContext trades made public
+- Docs cleanup and unused trade vars removed
+- config.max_workers renamed to max_execution_workers (*breaking change)
+
+**Bug Fixes**
+
+- Prevent double counting of trades if place called more than once
+
+1.17.6 (2021-03-05)
++++++++++++++++++++
+
+**Improvements**
+
+- trade id added to context to prevent race condition and better visibility on live trades
+
+**Bug Fixes**
+
+- incorrect handling of replace on runner context fix (adds to live trade count)
+
 1.17.5 (2021-03-01)
 +++++++++++++++++++
 

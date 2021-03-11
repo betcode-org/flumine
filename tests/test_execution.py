@@ -139,16 +139,14 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution._sessions, [mock_session, mock_session])
         self.assertGreater(mock_session.time_returned, 0)
 
-    def test__return_http_session_close(self):
+    def test__return_http_session_returned(self):
         self.execution._sessions = [1, 2]
         mock_session = mock.Mock()
         self.execution._return_http_session(mock_session)
-        mock_session.close.assert_called_with()
 
     def test__return_http_session_err_close(self):
         mock_session = mock.Mock()
         self.execution._return_http_session(mock_session, err=True)
-        mock_session.close.assert_called_with()
 
     @mock.patch("flumine.execution.baseexecution.OrderEvent")
     def test__order_logger_place(self, mock_order_event):

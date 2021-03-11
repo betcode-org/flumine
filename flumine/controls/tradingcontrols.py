@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class OrderValidation(BaseControl):
 
     """
-    Checks order price and size is valid for
+    Validates order price and size is valid for
     exchange.
     """
 
@@ -99,8 +99,13 @@ class OrderValidation(BaseControl):
 class StrategyExposure(BaseControl):
 
     """
-    Checks exposure does not exceed strategy
-    max exposure.
+    Validates:
+        - `strategy.validate_order` function
+        - `strategy.max_order_exposure` is not violated if order is executed
+        - `strategy.max_selection_exposure` is not violated if order is executed
+
+    Exposure calculation includes pending,
+    executable and execution complete orders.
     """
 
     NAME = "STRATEGY_EXPOSURE"
@@ -110,7 +115,7 @@ class StrategyExposure(BaseControl):
             # strategy.validate_order
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)
             if order.trade.strategy.validate_order(runner_context, order) is False:
-                return self._on_error(order, "strategy.validate_order failure")
+                return self._on_error(order, order.violation_msg)
 
         if package_type in (
             OrderPackageType.PLACE,
