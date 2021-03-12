@@ -97,6 +97,10 @@ class BaseOrderPackage(BaseEvent):
         return [o for o in self._orders if o.status != OrderStatus.VIOLATION]
 
     @property
+    def retry_count(self) -> int:
+        return self._retry_count
+
+    @property
     def info(self) -> dict:
         return {
             "id": self.id,

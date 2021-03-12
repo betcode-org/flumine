@@ -219,7 +219,7 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
-        if order_package.elapsed_seconds > 0.1:
+        if order_package.elapsed_seconds > 0.1 and order_package.retry_count == 0:
             logger.warning(
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
                 extra={

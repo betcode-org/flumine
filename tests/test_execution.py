@@ -685,6 +685,21 @@ class BetfairExecutionTest(unittest.TestCase):
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
     )
+    def test__execution_helper_warning(self, mock__return_http_session):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock(elapsed_seconds=0.2, retry_count=0)
+        mock_order_package.info = {}
+        self.execution._execution_helper(
+            mock_trading_function, mock_order_package, mock_session
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_called_with(mock_session)
+
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
     def test__execution_helper_empty(self, mock__return_http_session):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
