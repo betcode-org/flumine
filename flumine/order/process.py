@@ -4,19 +4,31 @@ from ..markets.markets import Markets
 from ..order.order import BaseOrder, OrderStatus, OrderTypes
 from ..order.trade import Trade
 from ..strategy.strategy import Strategies, STRATEGY_NAME_HASH_LENGTH
+from ..events.events import OrderEvent
 
 logger = logging.getLogger(__name__)
 
 """
-Handles trade fillkill / green etc.
-Handles orphan orders by creating empty trade and order data from CurrentOrder object/
+Various functions to update current order status
+and update status.
+
+Loop through each current order:
+    order = Lookup order in market using marketId and orderId
+    if order is None (not present locally):
+        create local order using data and make executable #todo!!!
+    if betId is None (async placement):
+        Update betId and log through logging_control
+    if order betId != current_order betId:
+        Get order using current_order betId due to replace request (new betId)
+    if order:
+        update current status
+        process
 """
 
 
-# todo handle fillkill/green/
-
-
-def process_current_orders(markets: Markets, strategies: Strategies, event):
+def process_current_orders(
+    markets: Markets, strategies: Strategies, event, log_control
+) -> None:
     for current_orders in event.event:
         for current_order in current_orders.orders:
             order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
@@ -24,7 +36,7 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
                 market_id=current_order.market_id,
                 order_id=order_id,
             )
-            if not order:
+            if order is None:
                 logger.warning(
                     "Order %s not present in blotter" % current_order.bet_id,
                     extra={
@@ -43,7 +55,14 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
                     order.executable()  # todo correct?
                 else:
                     continue
-            if order.bet_id != current_order.bet_id:  # replaceOrder handling (hacky)
+
+            if (
+                order.bet_id is None and current_order.bet_id
+            ):  # async bet pending processing
+                order.bet_id = current_order.bet_id
+                log_control(OrderEvent(order))
+                order.executable()
+            elif order.bet_id != current_order.bet_id:  # replaceOrder handling (hacky)
                 order = markets.get_order_from_bet_id(
                     market_id=current_order.market_id,
                     bet_id=current_order.bet_id,
@@ -57,6 +76,7 @@ def process_current_orders(markets: Markets, strategies: Strategies, event):
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            # todo use `order.current_order.status` ?
             if order.size_voided:
                 order.voided()
             elif order.size_lapsed:

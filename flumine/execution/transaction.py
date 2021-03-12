@@ -30,9 +30,10 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int):
+    def __init__(self, market, id_: int, async_place_orders: bool):
         self.market = market
         self._id = id_  # unique per market only
+        self._async_place_orders = async_place_orders
         self._pending_orders = False
         self._pending_place = []  # list of (<Order>, market_version)
         self._pending_cancel = []  # list of (<Order>, None)
@@ -96,6 +97,7 @@ class Transaction:
             packages += self._create_order_package(
                 self._pending_place,
                 OrderPackageType.PLACE,
+                async_=self._async_place_orders,
             )
         if self._pending_cancel:
             packages += self._create_order_package(
@@ -139,7 +141,7 @@ class Transaction:
             return True
 
     def _create_order_package(
-        self, orders: list, package_type: OrderPackageType
+        self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
@@ -158,6 +160,7 @@ class Transaction:
                         package_type=package_type,
                         bet_delay=self.market.market_book.bet_delay,
                         market_version=market_version,
+                        async_=async_,
                     )
                 )
         orders.clear()

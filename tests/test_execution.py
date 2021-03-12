@@ -159,6 +159,16 @@ class BaseExecutionTest(unittest.TestCase):
         mock_order.responses.placed.assert_called_with(mock_instruction_report)
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
+    def test__order_logger_place_no_bet_id(self):
+        mock_order = mock.Mock(bet_id=123)
+        mock_instruction_report = mock.Mock(bet_id=None)
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, 123)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+        self.mock_flumine.log_control.assert_not_called()
+
     def test__order_logger_cancel(self):
         mock_order = mock.Mock()
         mock_instruction_report = mock.Mock()
@@ -226,6 +236,36 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
         mock_order.executable.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_package.client.add_transaction.assert_called_with(1)
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.place")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_place_success_pending(
+        self, mock__execution_helper, mock_place, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock()
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_report = mock.Mock()
+        mock_instruction_report = mock.Mock(status="SUCCESS", order_status="PENDING")
+        mock_report.place_instruction_reports = [mock_instruction_report]
+        mock__execution_helper.return_value = mock_report
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__execution_helper.assert_called_with(
+            mock_place, mock_order_package, mock_session
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        mock_order.executable.assert_not_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)
@@ -324,6 +364,39 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_order.trade.__exit__ = mock.Mock()
         mock_order.bet_id = 123
         mock_order.size_remaining = 2
+        mock_order_package = mock.Mock()
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_report = mock.Mock()
+        mock_instruction_report = mock.Mock()
+        mock_instruction_report.status = "SUCCESS"
+        mock_instruction_report.instruction.bet_id = 123
+        mock_instruction_report.size_cancelled = 2
+        mock_report.cancel_instruction_reports = [mock_instruction_report]
+        mock__execution_helper.return_value = mock_report
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__execution_helper.assert_called_with(
+            mock_cancel, mock_order_package, mock_session
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
+        mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.cancel")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_cancel_success_race(
+        self, mock__execution_helper, mock_cancel, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock()
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order.bet_id = 123
+        mock_order.size_remaining = 0
         mock_order_package = mock.Mock()
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.info = {}
@@ -675,6 +748,21 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.__name__ = "test"
         mock_session = mock.Mock()
         mock_order_package = mock.Mock(elapsed_seconds=0.001)
+        mock_order_package.info = {}
+        self.execution._execution_helper(
+            mock_trading_function, mock_order_package, mock_session
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_called_with(mock_session)
+
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_warning(self, mock__return_http_session):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock(elapsed_seconds=0.2, retry_count=0)
         mock_order_package.info = {}
         self.execution._execution_helper(
             mock_trading_function, mock_order_package, mock_session

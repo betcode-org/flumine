@@ -194,3 +194,7 @@ Raises errors on strategy functions, see [Error Handling](/advanced/#error-handl
 ### max_execution_workers
 
 Max number of workers in execution thread pool
+
+### async_place_orders
+
+Place orders sent with place orders flag, prevents waiting for bet delay

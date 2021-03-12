@@ -105,6 +105,10 @@ class OrderPackageTest(unittest.TestCase):
         ]
         self.assertEqual(len(self.order_package.orders), 2)
 
+    def test_retry_count(self):
+        self.order_package._retry_count = 1
+        self.assertEqual(self.order_package.retry_count, 1)
+
     def test_info(self):
         self.assertEqual(
             self.order_package.info,

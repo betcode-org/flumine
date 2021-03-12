@@ -28,7 +28,10 @@ class BetfairExecution(BaseExecution):
                         order, instruction_report, OrderPackageType.PLACE
                     )
                     if instruction_report.status == "SUCCESS":
-                        order.executable()
+                        if instruction_report.order_status == "PENDING":
+                            pass  # async request pending processing
+                        else:
+                            order.executable()  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
                         order.lapsed()  # todo correct?
                     elif instruction_report.status == "TIMEOUT":
@@ -66,7 +69,9 @@ class BetfairExecution(BaseExecution):
                     if instruction_report.status == "SUCCESS":
                         if (
                             instruction_report.size_cancelled == order.size_remaining
-                        ):  # todo what if?
+                            or order.size_remaining
+                            == 0  # handle orders stream update / race condition
+                        ):
                             order.execution_complete()
                         else:
                             order.executable()
@@ -219,7 +224,7 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
-        if order_package.elapsed_seconds > 0.1:
+        if order_package.elapsed_seconds > 0.1 and order_package.retry_count == 0:
             logger.warning(
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
                 extra={
