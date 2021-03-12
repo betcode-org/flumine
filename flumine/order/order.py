@@ -49,7 +49,8 @@ class BaseOrder:
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
-        sep="-",
+        sep: str = "-",
+        context: dict = None,
     ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
@@ -62,7 +63,7 @@ class BaseOrder:
         self.status = None
         self.status_log = []
         self.violation_msg = None
-        self.context = {}  # store order specific notes/triggers
+        self.context = context or {}  # store order specific notes/triggers
 
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
