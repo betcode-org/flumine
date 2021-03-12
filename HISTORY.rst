@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.17.10 (2021-03-12)
++++++++++++++++++++
+
+**Improvements**
+
+- Execution logging improvements
+
+**Bug Fixes**
+
+- Handle race condition (seen daily) where cancel is not correctly update to execution complete
+
 1.17.9 (2021-03-09)
 +++++++++++++++++++
 
