@@ -66,7 +66,9 @@ class BetfairExecution(BaseExecution):
                     if instruction_report.status == "SUCCESS":
                         if (
                             instruction_report.size_cancelled == order.size_remaining
-                        ):  # todo what if?
+                            or order.size_remaining
+                            == 0  # handle orders stream update / race condition
+                        ):
                             order.execution_complete()
                         else:
                             order.executable()
@@ -219,7 +221,7 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
-        if order_package.elapsed_seconds > 0.1:
+        if order_package.elapsed_seconds > 0.1 and order_package.retry_count == 0:
             logger.warning(
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
                 extra={
