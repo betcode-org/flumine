@@ -1,5 +1,6 @@
 import logging
 
+from .. import config
 from ..markets.markets import Markets
 from ..order.order import BaseOrder, OrderStatus, OrderTypes
 from ..order.trade import Trade
@@ -57,7 +58,9 @@ def process_current_orders(
                     continue
 
             if (
-                order.bet_id is None and current_order.bet_id
+                config.async_place_orders
+                and order.bet_id is None
+                and current_order.bet_id
             ):  # async bet pending processing
                 order.bet_id = current_order.bet_id
                 log_control(OrderEvent(order))

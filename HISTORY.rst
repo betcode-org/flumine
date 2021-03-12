@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.17.11 (2021-03-12)
++++++++++++++++++++
+
+**Improvements**
+
+- order context added
+
+**Bug Fixes**
+
+- Prevent duplicate order logging control calls
+
 1.17.10 (2021-03-12)
 +++++++++++++++++++
 
