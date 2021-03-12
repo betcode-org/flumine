@@ -21,7 +21,9 @@ class BaseOrderTest(unittest.TestCase):
             client=mock_client, market_id="1.1", selection_id=123, info={}
         )
         self.mock_order_type = mock.Mock(info={})
-        self.order = BaseOrder(self.mock_trade, "BACK", self.mock_order_type, 1, context={1: 2})
+        self.order = BaseOrder(
+            self.mock_trade, "BACK", self.mock_order_type, 1, context={1: 2}
+        )
 
     def test_init(self):
         self.assertIsNotNone(self.order.id)
