@@ -302,7 +302,9 @@ class BetfairOrder(BaseOrder):
         self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:
-        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if size_reduction and self.size_remaining - size_reduction < 0:
                 raise OrderUpdateError("Size reduction too large")
             if self.status != OrderStatus.EXECUTABLE:
@@ -311,11 +313,13 @@ class BetfairOrder(BaseOrder):
             self.cancelling()
         else:
             raise OrderUpdateError(
-                "Only LIMIT orders can be cancelled or partially cancelled once placed."
+                "Only LIMIT orders can be cancelled or partially cancelled once placed"
             )
 
     def update(self, new_persistence_type: str) -> None:
-        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if self.order_type.persistence_type == new_persistence_type:
                 raise OrderUpdateError("Persistence types match")
             elif self.status != OrderStatus.EXECUTABLE:
@@ -323,10 +327,15 @@ class BetfairOrder(BaseOrder):
             self.order_type.persistence_type = new_persistence_type
             self.updating()
         else:
-            raise OrderUpdateError("Only LIMIT orders can be updated.")
+            raise OrderUpdateError("Only LIMIT orders can be updated")
 
     def replace(self, new_price: float) -> None:
-        if self.order_type.ORDER_TYPE in [OrderTypes.LIMIT, OrderTypes.LIMIT_ON_CLOSE]:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE in [
+            OrderTypes.LIMIT,
+            OrderTypes.LIMIT_ON_CLOSE,
+        ]:
             if self.order_type.price == new_price:
                 raise OrderUpdateError("Prices match")
             elif self.status != OrderStatus.EXECUTABLE:
@@ -335,7 +344,7 @@ class BetfairOrder(BaseOrder):
             self.replacing()
         else:
             raise OrderUpdateError(
-                "Only LIMIT or LIMIT_ON_CLOSE orders can be replaced."
+                "Only LIMIT or LIMIT_ON_CLOSE orders can be replaced"
             )
 
     # instructions

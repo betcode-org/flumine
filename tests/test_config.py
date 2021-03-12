@@ -11,3 +11,4 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.current_time)
         self.assertFalse(config.raise_errors)
         self.assertEqual(config.max_execution_workers, 32)
+        self.assertFalse(config.async_place_orders)

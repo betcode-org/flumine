@@ -283,6 +283,7 @@ class BetfairOrderTest(unittest.TestCase):
     @mock.patch("flumine.order.order.BetfairOrder.cancelling")
     def test_cancel(self, mock_cancelling, mock_size_remaining):
         mock_size_remaining.return_value = 20
+        self.order.bet_id = 123
         self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.cancel(12)
@@ -293,6 +294,11 @@ class BetfairOrderTest(unittest.TestCase):
         mock_cancelling.assert_called_with()
         self.order.cancel()
         self.assertEqual(self.order.update_data, {"size_reduction": None})
+
+    def test_cancel_bet_id(self):
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",
@@ -322,6 +328,7 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.updating")
     def test_update(self, mock_updating):
+        self.order.bet_id = 123
         self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
@@ -335,6 +342,11 @@ class BetfairOrderTest(unittest.TestCase):
         with self.assertRaises(OrderUpdateError):
             self.order.update("PERSIST")
 
+    def test_update_bet_id(self):
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.update("PERSIST")
+
     def test_update_error(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order_type.persistence_type = "LAPSE"
@@ -344,6 +356,7 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.replacing")
     def test_replace(self, mock_replacing):
+        self.order.bet_id = 123
         self.order.status = OrderStatus.EXECUTABLE
         with self.assertRaises(OrderUpdateError):
             self.order.replace(1.01)
@@ -356,6 +369,11 @@ class BetfairOrderTest(unittest.TestCase):
 
         with self.assertRaises(OrderUpdateError):
             self.order.replace(2.02)
+
+    def test_replace_bet_id(self):
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.replace(1.01)
 
     def test_replace_error(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
