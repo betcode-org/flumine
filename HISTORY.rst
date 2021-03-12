@@ -8,6 +8,7 @@ Release History
 
 **Improvements**
 
+- async placeOrder handling added, defaults to False via config.py
 - Execution logging improvements
 
 **Bug Fixes**
