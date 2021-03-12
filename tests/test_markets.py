@@ -141,7 +141,7 @@ class MarketTest(unittest.TestCase):
     def test_transaction(self, mock_transaction):
         transaction = self.market.transaction()
         mock_transaction.assert_called_with(
-            self.market, id_=self.market._transaction_id
+            self.market, id_=self.market._transaction_id, async_place_orders=False
         )
         self.assertEqual(transaction, mock_transaction())
 

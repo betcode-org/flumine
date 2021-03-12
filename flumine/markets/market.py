@@ -4,6 +4,7 @@ from typing import Optional
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
+from .. import config
 from .blotter import Blotter
 from ..execution.transaction import Transaction
 
@@ -60,9 +61,13 @@ class Market:
             extra=self.info,
         )
 
-    def transaction(self) -> Transaction:
+    def transaction(
+        self, async_place_orders: bool = config.async_place_orders
+    ) -> Transaction:
         self._transaction_id += 1
-        return Transaction(self, id_=self._transaction_id)
+        return Transaction(
+            self, id_=self._transaction_id, async_place_orders=async_place_orders
+        )
 
     # order
     def place_order(
