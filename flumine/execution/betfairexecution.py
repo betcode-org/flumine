@@ -66,7 +66,9 @@ class BetfairExecution(BaseExecution):
                     if instruction_report.status == "SUCCESS":
                         if (
                             instruction_report.size_cancelled == order.size_remaining
-                        ):  # todo what if?
+                            or order.size_remaining
+                            == 0  # handle orders stream update / race condition
+                        ):
                             order.execution_complete()
                         else:
                             order.executable()
