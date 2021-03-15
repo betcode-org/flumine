@@ -59,6 +59,7 @@ def process_current_orders(
 
             if (
                 config.async_place_orders
+                and order.status == OrderStatus.PENDING
                 and order.bet_id is None
                 and current_order.bet_id
             ):  # async bet pending processing

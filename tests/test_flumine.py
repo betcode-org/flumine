@@ -42,7 +42,6 @@ class FlumineTest(unittest.TestCase):
             events.ClearedOrdersEvent(None),
             events.CloseMarketEvent(None),
             events.CustomEvent(None, None),
-            events.NewDayEvent(None),
             events.TerminationEvent(None),
         ]
         for i in mock_events:

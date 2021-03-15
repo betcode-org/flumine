@@ -43,9 +43,6 @@ class Flumine(BaseFlumine):
                 elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
                     self._process_custom_event(event)
 
-                elif event.EVENT_TYPE == EventType.NEW_DAY:
-                    logger.info(event)
-
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
 
