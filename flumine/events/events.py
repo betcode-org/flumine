@@ -22,7 +22,6 @@ class EventType(Enum):
     ORDER_PACKAGE = "Order package"
     CLOSE_MARKET = "Closed market"
     CUSTOM_EVENT = "Custom event"
-    NEW_DAY = "New day"
 
 
 class QueueType(Enum):
@@ -91,11 +90,6 @@ class CustomEvent(BaseEvent):
     def __init__(self, event, callback, *args, **kwargs):
         super(CustomEvent, self).__init__(event)
         self.callback = callback
-
-
-class NewDayEvent(BaseEvent):
-    EVENT_TYPE = EventType.NEW_DAY
-    QUEUE_TYPE = QueueType.HANDLER
 
 
 # LOGGING

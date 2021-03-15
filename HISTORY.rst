@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.17.12 (2021-03-15)
++++++++++++++++++++
+
+**Improvements**
+
+- Logging control cleanup / docs
+
 1.17.11 (2021-03-12)
 +++++++++++++++++++
 

@@ -108,13 +108,6 @@ class TestLoggingControl(unittest.TestCase):
         self.logging_control.process_event(mock_event)
         _closed_market.assert_called_with(mock_event)
 
-    @mock.patch("flumine.controls.loggingcontrols.LoggingControl._process_new_day")
-    def test_process_event_process_day(self, _end_flumine):
-        mock_event = mock.Mock()
-        mock_event.EVENT_TYPE = EventType.NEW_DAY
-        self.logging_control.process_event(mock_event)
-        _end_flumine.assert_called_with(mock_event)
-
     @mock.patch("flumine.controls.loggingcontrols.LoggingControl._process_end_flumine")
     def test_process_event_end(self, _end_flumine):
         mock_event = mock.Mock()
@@ -155,9 +148,6 @@ class TestLoggingControl(unittest.TestCase):
 
     def test_process_custom_event(self):
         self.logging_control._process_custom_event(None)
-
-    def test_process_new_day(self):
-        self.logging_control._process_new_day(None)
 
     def test_process_end_flumine(self):
         self.logging_control._process_end_flumine(None)
