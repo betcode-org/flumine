@@ -11,7 +11,7 @@ Betfair trading framework with a focus on:
 - rock-solid
 - safe
 
-[Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
+![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 
 Support for market, order and custom streaming data.
 
