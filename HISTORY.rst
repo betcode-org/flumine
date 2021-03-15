@@ -10,6 +10,10 @@ Release History
 
 - Logging control cleanup / docs
 
+**Bug Fixes**
+
+- missing if in process.py to check order status
+
 1.17.11 (2021-03-12)
 +++++++++++++++++++
 
