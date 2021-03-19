@@ -71,14 +71,14 @@ class FlumineTest(unittest.TestCase):
                 mock.call(self.flumine, function=worker.keep_alive, interval=600),
                 mock.call(
                     self.flumine,
-                    function=worker.poll_account_balance,
-                    interval=120,
+                    function=worker.poll_market_catalogue,
+                    interval=60,
                     start_delay=10,
                 ),
                 mock.call(
                     self.flumine,
-                    function=worker.poll_market_catalogue,
-                    interval=60,
+                    function=worker.poll_account_balance,
+                    interval=120,
                     start_delay=10,
                 ),
                 mock.call(

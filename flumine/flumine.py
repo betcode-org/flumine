@@ -63,7 +63,7 @@ class Flumine(BaseFlumine):
                 start_delay=10,  # wait for streams to populate
             )
         )
-        if not self.client.market_recording_mode:
+        if self.client.market_recording_mode != True:
             self.add_worker(
                 worker.BackgroundWorker(
                     self,
