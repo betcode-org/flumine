@@ -27,7 +27,7 @@ class BaseClient:
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
         paper_trade: bool = False,
-        market_recording_mode: bool = False
+        market_recording_mode: bool = False,
     ):
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
