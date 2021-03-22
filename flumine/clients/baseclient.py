@@ -27,6 +27,7 @@ class BaseClient:
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
         paper_trade: bool = False,
+        market_recording_mode: bool = False,
     ):
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
@@ -38,6 +39,7 @@ class BaseClient:
         self.best_price_execution = best_price_execution
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
         self.paper_trade = paper_trade
+        self.market_recording_mode = market_recording_mode
 
         self.account_details = None
         self.account_funds = None
