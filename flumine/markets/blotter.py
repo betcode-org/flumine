@@ -77,15 +77,15 @@ class Blotter:
             positive = potential loss
             zero = no potential loss
         """
-        (
-            worst_possible_profit_on_win,
-            worst_possible_profit_on_lose,
-        ) = self.get_worst_possible_profit(strategy=strategy, lookup=lookup)
-        exposure = -min(worst_possible_profit_on_win, worst_possible_profit_on_lose)
+        exposures = self.get_exposures(strategy=strategy, lookup=lookup)
+        exposure = -min(
+            exposures["worst_possible_profit_on_win"],
+            exposures["worst_possible_profit_on_lose"],
+        )
         return max(exposure, 0.0)
 
-    def get_worst_possible_profit(self, strategy, lookup: tuple) -> Tuple:
-        """Returns strategy/selection worst-case profit for win and loss outcomes separately."""
+    def get_exposures(self, strategy, lookup: tuple) -> dict:
+        """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
@@ -127,7 +127,15 @@ class Blotter:
         worst_possible_profit_on_lose = (
             matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability
         )
-        return worst_possible_profit_on_win, worst_possible_profit_on_lose
+
+        return {
+            "matched_profit_if_win": matched_exposure[0],
+            "matched_profit_if_lose": matched_exposure[1],
+            "worst_potential_unmatched_profit_if_win": unmatched_exposure[0],
+            "worst_potential_unmatched_profit_if_lose": unmatched_exposure[0],
+            "worst_possible_profit_on_win": worst_possible_profit_on_win,
+            "worst_possible_profit_on_lose": worst_possible_profit_on_lose,
+        }
 
     """ getters / setters """
 

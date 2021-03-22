@@ -124,31 +124,46 @@ class StrategyExposure(BaseControl):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                 if order.side == "BACK":
-                    exposure = order.order_type.size
+                    order_exposure = order.order_type.size
                 else:
-                    exposure = (order.order_type.price - 1) * order.order_type.size
+                    order_exposure = (
+                        order.order_type.price - 1
+                    ) * order.order_type.size
             elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-                exposure = order.order_type.liability  # todo correct?
+                order_exposure = order.order_type.liability  # todo correct?
             elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-                exposure = order.order_type.liability
+                order_exposure = order.order_type.liability
             else:
                 return self._on_error(order, "Unknown order_type")
 
             # per order
-            if exposure > strategy.max_order_exposure:
+            if order_exposure > strategy.max_order_exposure:
                 return self._on_error(
                     order,
                     "Order exposure ({0}) is greater than strategy.max_order_exposure ({1})".format(
-                        exposure, strategy.max_order_exposure
+                        order_exposure, strategy.max_order_exposure
                     ),
                 )
 
             # per selection
             market = self.flumine.markets.markets[order.market_id]
-            selection_exposure = market.blotter.selection_exposure(
+            current_exposures = market.blotter.get_exposures(
                 strategy, lookup=order.lookup
             )
-            potential_exposure = selection_exposure + exposure
+            """
+            We use -min(...) in the below, as "worst_possible_profit_on_X" will be negative if the position is
+            at risk of loss, while exposure values are always atleast zero.
+            Exposure refers to the largest potential loss.
+            """
+            if order.side == "BACK":
+                current_selection_exposure = -min(
+                    current_exposures["worst_possible_profit_on_lose"], 0
+                )
+            else:
+                current_selection_exposure = -min(
+                    current_exposures["worst_possible_profit_on_win"], 0
+                )
+            potential_exposure = current_selection_exposure + order_exposure
             if potential_exposure > strategy.max_selection_exposure:
                 return self._on_error(
                     order,
