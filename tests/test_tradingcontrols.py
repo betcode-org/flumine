@@ -441,3 +441,71 @@ class TestStrategyExposure(unittest.TestCase):
             mock_order,
             "Potential selection exposure (12.12) is greater than strategy.max_selection_exposure (10)",
         )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_selection2a(self, mock_on_error):
+        """
+        test_validate_selection2a expects an error, as it attempts to place a lay bet with a £36 potential
+        loss, which is more than the £10 max_selection_exposure
+        """
+        mock_market = mock.Mock()
+        mock_market.blotter = Blotter(market_id="1.234")
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
+        mock_strategy = mock.Mock()
+        mock_strategy.max_order_exposure = 100
+        mock_strategy.max_selection_exposure = 10
+
+        mock_trade = mock.Mock()
+        mock_trade.strategy = mock_strategy
+
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order.trade = mock_trade
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.size = 9.0
+        mock_order.order_type.price = 5.0
+
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_called_with(
+            mock_order,
+            "Potential selection exposure (36.00) is greater than strategy.max_selection_exposure (10)",
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_selection2b(self, mock_on_error):
+        """
+        test_validate_selection2b expects no error.
+        Unlike test_validate_selection2a, the blotter contains an existing order. The order that it attempts
+        to validate hedges the existing order, and reduces the total exposure.
+        """
+        mock_market = mock.Mock()
+        mock_market.blotter = Blotter(market_id="1.234")
+
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
+        mock_strategy = mock.Mock()
+        mock_strategy.max_order_exposure = 100
+        mock_strategy.max_selection_exposure = 10
+
+        mock_trade = mock.Mock()
+        mock_trade.strategy = mock_strategy
+
+        existing_matched_order = mock.Mock(
+            market_id="1.234", lookup=(1, 2, 3), side="BACK"
+        )
+        existing_matched_order.trade = mock_trade
+        existing_matched_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        existing_matched_order.size_matched = 9.0
+        existing_matched_order.average_price_matched = 6.0
+        existing_matched_order.size_remaining = 0.0
+
+        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order.trade = mock_trade
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.size = 9.0
+        mock_order.order_type.price = 5.0
+
+        mock_market.blotter["existing_order"] = existing_matched_order
+
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_not_called()

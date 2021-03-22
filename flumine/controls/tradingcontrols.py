@@ -156,13 +156,13 @@ class StrategyExposure(BaseControl):
             Exposure refers to the largest potential loss.
             """
             if order.side == "BACK":
-                current_selection_exposure = -min(
-                    current_exposures["worst_possible_profit_on_lose"], 0
-                )
+                current_selection_exposure = -current_exposures[
+                    "worst_possible_profit_on_lose"
+                ]
             else:
-                current_selection_exposure = -min(
-                    current_exposures["worst_possible_profit_on_win"], 0
-                )
+                current_selection_exposure = -current_exposures[
+                    "worst_possible_profit_on_win"
+                ]
             potential_exposure = current_selection_exposure + order_exposure
             if potential_exposure > strategy.max_selection_exposure:
                 return self._on_error(
