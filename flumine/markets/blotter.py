@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple
 from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
@@ -77,6 +77,15 @@ class Blotter:
             positive = potential loss
             zero = no potential loss
         """
+        (
+            worst_possible_profit_on_win,
+            worst_possible_profit_on_lose,
+        ) = self.get_worst_possible_profit(strategy=strategy, lookup=lookup)
+        exposure = -min(worst_possible_profit_on_win, worst_possible_profit_on_lose)
+        return max(exposure, 0.0)
+
+    def get_worst_possible_profit(self, strategy, lookup: tuple) -> Tuple:
+        """Returns strategy/selection worst-case profit for win and loss outcomes separately."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
@@ -118,8 +127,7 @@ class Blotter:
         worst_possible_profit_on_lose = (
             matched_exposure[1] + unmatched_exposure[1] + moc_lose_liability
         )
-        exposure = -min(worst_possible_profit_on_win, worst_possible_profit_on_lose)
-        return max(exposure, 0.0)
+        return worst_possible_profit_on_win, worst_possible_profit_on_lose
 
     """ getters / setters """
 
