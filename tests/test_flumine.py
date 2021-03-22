@@ -63,6 +63,7 @@ class FlumineTest(unittest.TestCase):
     @mock.patch("flumine.Flumine.add_worker")
     def test__add_default_workers(self, mock_add_worker, mock_worker):
         self.mock_trading.betting_client.session_timeout = 1200
+        self.flumine.client.market_recording_mode = False
         self.flumine._add_default_workers()
         self.assertEqual(len(mock_add_worker.call_args_list), 4)
         self.assertEqual(
