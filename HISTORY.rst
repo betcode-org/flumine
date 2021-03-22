@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.17.13 (2021-03-22)
++++++++++++++++++++
+
+**Improvements**
+
+- Market recorder mode added to client (@jorgegarcia7)
+- Further execution logging (trying to find time)
+
 1.17.12 (2021-03-15)
 +++++++++++++++++++
 
