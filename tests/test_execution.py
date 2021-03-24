@@ -38,7 +38,7 @@ class BaseExecutionTest(unittest.TestCase):
         mock_execute_place.__name__ = "execute_place"
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.PLACE
-        mock_thread_pool = mock.Mock()
+        mock_thread_pool = mock.Mock(_threads=())
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
@@ -52,7 +52,7 @@ class BaseExecutionTest(unittest.TestCase):
         mock_execute_cancel.__name__ = "execute_cancel"
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.PLACE.CANCEL
-        mock_thread_pool = mock.Mock()
+        mock_thread_pool = mock.Mock(_threads=())
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
@@ -66,7 +66,7 @@ class BaseExecutionTest(unittest.TestCase):
         mock_execute_replace.__name__ = "execute_replace"
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.REPLACE
-        mock_thread_pool = mock.Mock()
+        mock_thread_pool = mock.Mock(_threads=())
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
@@ -80,7 +80,7 @@ class BaseExecutionTest(unittest.TestCase):
         mock_execute_update.__name__ = "execute_update"
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.UPDATE
-        mock_thread_pool = mock.Mock()
+        mock_thread_pool = mock.Mock(_threads=())
         self.execution._thread_pool = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(

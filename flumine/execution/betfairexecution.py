@@ -232,6 +232,10 @@ class BetfairExecution(BaseExecution):
                     "session": http_session,
                     "latency": round(order_package.elapsed_seconds, 3),
                     "order_package": order_package.info,
+                    "thread_pool": {
+                        "num_threads": len(self._thread_pool._threads),
+                        "work_queue_size": self._thread_pool._work_queue.qsize(),
+                    },
                 },
             )
         if order_package.orders:
