@@ -59,12 +59,14 @@ class BlotterTest(unittest.TestCase):
         """
         Check that selection_exposure returns the absolute worse loss
         """
+
         def get_exposures(strategy, lookup):
-            if strategy=="strategy" and lookup==(1,2,3):
+            if strategy == "strategy" and lookup == (1, 2, 3):
                 return {
-                    'worst_possible_profit_on_win': -1.0,
-                    'worst_possible_profit_on_lose': -2.0,
+                    "worst_possible_profit_on_win": -1.0,
+                    "worst_possible_profit_on_lose": -2.0,
                 }
+
         self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
 
         result = self.blotter.selection_exposure("strategy", (1, 2, 3))
@@ -75,12 +77,14 @@ class BlotterTest(unittest.TestCase):
         """
         Check that selection_exposure returns zero if there is no risk of loss.
         """
+
         def get_exposures(strategy, lookup):
-            if strategy=="strategy" and lookup==(1,2,3):
+            if strategy == "strategy" and lookup == (1, 2, 3):
                 return {
-                    'worst_possible_profit_on_win': 0.0,
-                    'worst_possible_profit_on_lose': 1.0,
+                    "worst_possible_profit_on_win": 0.0,
+                    "worst_possible_profit_on_lose": 1.0,
                 }
+
         self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
 
         result = self.blotter.selection_exposure("strategy", (1, 2, 3))
@@ -103,13 +107,13 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': -2.0,
-                'matched_profit_if_win': 9.2,
-                'worst_possible_profit_on_lose': -2.0,
-                'worst_possible_profit_on_win': 9.2,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
-            }
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
     def test_get_exposures_value_error(self):
@@ -163,12 +167,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, lookup),
             {
-                'matched_profit_if_lose': -2.0,
-                'matched_profit_if_win': 9.2,
-                'worst_possible_profit_on_lose': -2.0,
-                'worst_possible_profit_on_win': 9.2,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
             },
         )
 
@@ -188,12 +192,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 0.0,
-                'matched_profit_if_win': 0.0,
-                'worst_possible_profit_on_lose': 0.0,
-                'worst_possible_profit_on_win': 0.0,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
             },
         )
 
@@ -215,12 +219,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': -2.0,
-                'matched_profit_if_win': 9.2,
-                'worst_possible_profit_on_lose': -4.0,
-                'worst_possible_profit_on_win': 9.2,
-                'worst_potential_unmatched_profit_if_lose': -2.0,
-                'worst_potential_unmatched_profit_if_win': 0
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -4.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": -2.0,
+                "worst_potential_unmatched_profit_if_win": 0,
             },
         )
 
@@ -242,12 +246,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 2.0,
-                'matched_profit_if_win': -9.2,
-                'worst_possible_profit_on_lose': 2.0,
-                'worst_possible_profit_on_win': -19.2,
-                'worst_potential_unmatched_profit_if_lose': 0,
-                'worst_potential_unmatched_profit_if_win': -10.0
+                "matched_profit_if_lose": 2.0,
+                "matched_profit_if_win": -9.2,
+                "worst_possible_profit_on_lose": 2.0,
+                "worst_possible_profit_on_win": -19.2,
+                "worst_potential_unmatched_profit_if_lose": 0,
+                "worst_potential_unmatched_profit_if_win": -10.0,
             },
         )
 
@@ -264,12 +268,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 0.0,
-                'matched_profit_if_win': 0.0,
-                'worst_possible_profit_on_lose': -10.0,
-                'worst_possible_profit_on_win': 0.0,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": -10.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
             },
         )
 
@@ -286,12 +290,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 0.0,
-                'matched_profit_if_win': 0.0,
-                'worst_possible_profit_on_lose': 0.0,
-                'worst_possible_profit_on_win': -10.0,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": -10.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
             },
         )
 
@@ -308,12 +312,12 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 0.0,
-                'matched_profit_if_win': 0.0,
-                'worst_possible_profit_on_lose': 0.0,
-                'worst_possible_profit_on_win': -10.0,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": -10.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
             },
         )
 
@@ -331,14 +335,13 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(
             self.blotter.get_exposures(mock_strategy, mock_order.lookup),
             {
-                'matched_profit_if_lose': 0.0,
-                'matched_profit_if_win': 0.0,
-                'worst_possible_profit_on_lose': 0.0,
-                'worst_possible_profit_on_win': 0.0,
-                'worst_potential_unmatched_profit_if_lose': 0.0,
-                'worst_potential_unmatched_profit_if_win': 0.0
-            }
-            ,
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
     def test_complete_order(self):
