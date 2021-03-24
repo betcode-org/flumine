@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.17.14 (2021-03-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Execution / thread pool state logging
+- Default market recorder example to not remove files on clean up
+
 1.17.13 (2021-03-22)
 +++++++++++++++++++
 

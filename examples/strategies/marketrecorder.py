@@ -21,8 +21,8 @@ class MarketRecorder(BaseStrategy):
         BaseStrategy.__init__(self, *args, **kwargs)
         self._market_expiration = self.context.get("market_expiration", 3600)  # seconds
         self._remove_file = self.context.get(
-            "remove_file", True
-        )  # remove txt file after zip
+            "remove_file", False
+        )  # remove txt/zip file during cleanup
         self._force_update = self.context.get(
             "force_update", True
         )  # update after initial closure
@@ -111,6 +111,8 @@ class MarketRecorder(BaseStrategy):
         """If zip > market_expiration old remove
         zip and txt file
         """
+        if self._remove_file is False:
+            return  # keep files
         directory = os.path.join(self.local_dir, self.recorder_id)
         for file in os.listdir(directory):
             if file.endswith(".zip"):
@@ -123,8 +125,7 @@ class MarketRecorder(BaseStrategy):
                     txt_path = os.path.join(directory, file.split(".zip")[0])
                     zip_path = os.path.join(directory, file)
                     os.remove(zip_path)
-                    if self._remove_file:
-                        os.remove(txt_path)
+                    os.remove(txt_path)
 
     @staticmethod
     def _create_metadata(market_definition: dict) -> dict:
