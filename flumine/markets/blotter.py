@@ -132,7 +132,7 @@ class Blotter:
             "matched_profit_if_win": matched_exposure[0],
             "matched_profit_if_lose": matched_exposure[1],
             "worst_potential_unmatched_profit_if_win": unmatched_exposure[0],
-            "worst_potential_unmatched_profit_if_lose": unmatched_exposure[0],
+            "worst_potential_unmatched_profit_if_lose": unmatched_exposure[1],
             "worst_possible_profit_on_win": worst_possible_profit_on_win,
             "worst_possible_profit_on_lose": worst_possible_profit_on_lose,
         }
