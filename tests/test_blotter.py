@@ -55,6 +55,38 @@ class BlotterTest(unittest.TestCase):
         mock_cleared_orders = mock.Mock()
         self.assertEqual(self.blotter.process_cleared_orders(mock_cleared_orders), [])
 
+    def test_selection_exposure(self):
+        """
+        Check that selection_exposure returns the absolute worse loss
+        """
+        def get_exposures(strategy, lookup):
+            if strategy=="strategy" and lookup==(1,2,3):
+                return {
+                    'worst_possible_profit_on_win': -1.0,
+                    'worst_possible_profit_on_lose': -2.0,
+                }
+        self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
+
+        result = self.blotter.selection_exposure("strategy", (1, 2, 3))
+
+        self.assertEqual(2.0, result)
+
+    def test_selection_exposure2(self):
+        """
+        Check that selection_exposure returns zero if there is no risk of loss.
+        """
+        def get_exposures(strategy, lookup):
+            if strategy=="strategy" and lookup==(1,2,3):
+                return {
+                    'worst_possible_profit_on_win': 0.0,
+                    'worst_possible_profit_on_lose': 1.0,
+                }
+        self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
+
+        result = self.blotter.selection_exposure("strategy", (1, 2, 3))
+
+        self.assertEqual(0.0, result)
+
     def test_get_exposures(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
