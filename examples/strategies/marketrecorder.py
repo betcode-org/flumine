@@ -24,7 +24,7 @@ class MarketRecorder(BaseStrategy):
             "remove_file", False
         )  # remove txt file during cleanup
         self._remove_gz_file = self.context.get(
-            "_remove_gz_file", False
+            "remove_gz_file", False
         )  # remove compressed file during cleanup
         self._force_update = self.context.get(
             "force_update", True
