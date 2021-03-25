@@ -2,7 +2,7 @@ import os
 import json
 import time
 import logging
-import zipfile
+import gzip
 import boto3
 from boto3.s3.transfer import S3Transfer, TransferConfig
 from botocore.exceptions import BotoCoreError
@@ -22,7 +22,10 @@ class MarketRecorder(BaseStrategy):
         self._market_expiration = self.context.get("market_expiration", 3600)  # seconds
         self._remove_file = self.context.get(
             "remove_file", False
-        )  # remove txt/zip file during cleanup
+        )  # remove txt file during cleanup
+        self._remove_gz_file = self.context.get(
+            "_remove_gz_file", False
+        )  # remove compressed file during cleanup
         self._force_update = self.context.get(
             "force_update", True
         )  # update after initial closure
@@ -82,50 +85,52 @@ class MarketRecorder(BaseStrategy):
             )
             return
 
-        # zip file
-        zip_file_dir = self._zip_file(file_dir, market_id)
+        # compress file
+        compress_file_dir = self._compress_file(file_dir)
 
         # core load code
-        self._load(market, zip_file_dir, market_definition)
+        self._load(market, compress_file_dir, market_definition)
 
         # clean up
         self._clean_up()
 
         self._loaded_markets.append(market_id)
 
-    def _zip_file(self, file_dir: str, market_id: str) -> str:
-        """zips txt file into filename.zip"""
-        zip_file_directory = os.path.join(
-            self.local_dir, self.recorder_id, "%s.zip" % market_id
-        )
-        with zipfile.ZipFile(zip_file_directory, mode="w") as zf:
-            zf.write(
-                file_dir, os.path.basename(file_dir), compress_type=zipfile.ZIP_DEFLATED
-            )
-        return zip_file_directory
+    def _compress_file(self, file_dir: str) -> str:
+        """compresses txt file into filename.gz"""
+        compressed_file_dir = "{0}.gz".format(file_dir)
+        with open(file_dir, "rb") as f:
+            with gzip.open(compressed_file_dir, "wb") as compressed_file:
+                compressed_file.writelines(f)
+        return compressed_file_dir
 
-    def _load(self, market, zip_file_dir: str, market_definition: dict) -> None:
+    def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
         pass
 
     def _clean_up(self) -> None:
-        """If zip > market_expiration old remove
-        zip and txt file
+        """If gz > market_expiration old remove
+        gz and txt file
         """
-        if self._remove_file is False:
-            return  # keep files
         directory = os.path.join(self.local_dir, self.recorder_id)
         for file in os.listdir(directory):
-            if file.endswith(".zip"):
+            if file.endswith(".gz"):
                 file_stats = os.stat(os.path.join(directory, file))
                 seconds_since = time.time() - file_stats.st_mtime
                 if seconds_since > self._market_expiration:
-                    logger.info(
-                        "Removing: %s, age: %ss" % (file, round(seconds_since, 2))
-                    )
-                    txt_path = os.path.join(directory, file.split(".zip")[0])
-                    zip_path = os.path.join(directory, file)
-                    os.remove(zip_path)
-                    os.remove(txt_path)
+                    txt_path = os.path.join(directory, file.split(".gz")[0])
+                    gz_path = os.path.join(directory, file)
+                    if self._remove_file:
+                        logger.info(
+                            "Removing: %s, age: %ss"
+                            % (txt_path, round(seconds_since, 2))
+                        )
+                        os.remove(txt_path)
+                    if self._remove_gz_file:
+                        logger.info(
+                            "Removing: %s, age: %ss"
+                            % (gz_path, round(seconds_since, 2))
+                        )
+                        os.remove(gz_path)
 
     @staticmethod
     def _create_metadata(market_definition: dict) -> dict:
@@ -149,7 +154,7 @@ class S3MarketRecorder(MarketRecorder):
         super().add()
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
-    def _load(self, market, zip_file_dir: str, market_definition: dict) -> None:
+    def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
         # note this will block the main handler queue during upload
         # todo create background worker instead?
         event_type_id = (
@@ -157,13 +162,13 @@ class S3MarketRecorder(MarketRecorder):
         )
         try:
             self.transfer.upload_file(
-                filename=zip_file_dir,
+                filename=compress_file_dir,
                 bucket=self._bucket,
                 key=os.path.join(
                     self._data_type,
                     "streaming",
                     event_type_id,
-                    os.path.basename(zip_file_dir),
+                    os.path.basename(compress_file_dir),
                 ),
                 extra_args={
                     "Metadata": self._create_metadata(market_definition)
@@ -171,7 +176,7 @@ class S3MarketRecorder(MarketRecorder):
                     else {}
                 },
             )
-            logger.info("%s successfully loaded to s3" % zip_file_dir)
+            logger.info("%s successfully loaded to s3" % compress_file_dir)
         except (BotoCoreError, Exception) as e:
             logger.error("Error loading to s3: %s" % e)
 
@@ -184,7 +189,7 @@ class S3MarketRecorder(MarketRecorder):
                 return
             try:
                 self.s3.put_object(
-                    Body=market.market_catalogue.json(),
+                    Body=market.market_catalogue.json(),  # todo compress?
                     Bucket=self._bucket,
                     Key=os.path.join(
                         "marketdata",
