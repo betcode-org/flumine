@@ -56,6 +56,42 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter.process_cleared_orders(mock_cleared_orders), [])
 
     def test_selection_exposure(self):
+        """
+        Check that selection_exposure returns the absolute worse loss
+        """
+
+        def get_exposures(strategy, lookup):
+            if strategy == "strategy" and lookup == (1, 2, 3):
+                return {
+                    "worst_possible_profit_on_win": -1.0,
+                    "worst_possible_profit_on_lose": -2.0,
+                }
+
+        self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
+
+        result = self.blotter.selection_exposure("strategy", (1, 2, 3))
+
+        self.assertEqual(2.0, result)
+
+    def test_selection_exposure2(self):
+        """
+        Check that selection_exposure returns zero if there is no risk of loss.
+        """
+
+        def get_exposures(strategy, lookup):
+            if strategy == "strategy" and lookup == (1, 2, 3):
+                return {
+                    "worst_possible_profit_on_win": 0.0,
+                    "worst_possible_profit_on_lose": 1.0,
+                }
+
+        self.blotter.get_exposures = mock.Mock(side_effect=get_exposures)
+
+        result = self.blotter.selection_exposure("strategy", (1, 2, 3))
+
+        self.assertEqual(0.0, result)
+
+    def test_get_exposures(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -69,11 +105,18 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            2.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_raises_value_error(self):
+    def test_get_exposures_value_error(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -88,16 +131,15 @@ class BlotterTest(unittest.TestCase):
         self.blotter["12345"] = mock_order
 
         with self.assertRaises(ValueError) as e:
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup)
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup)
 
         self.assertEqual("Unexpected order type: INVALID", e.exception.args[0])
 
-    def test_selection_exposure_with_price_none(self):
+    def test_get_exposures_with_price_none(self):
         """
-        Check that selection_exposure works if order.order_type.price is None.
+        Check that get_exposures works if order.order_type.price is None.
         If order.order_type.price is None, the controls will flag the order as a violation
         and it won't be set to the exchange, so there won't be any exposure and we can ignore it.
-        :return:
         """
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
@@ -123,11 +165,18 @@ class BlotterTest(unittest.TestCase):
         self.blotter["12345"] = mock_order1
         self.blotter["23456"] = mock_order2
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, lookup),
-            2.0,
+            self.blotter.get_exposures(mock_strategy, lookup),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_no_match(self):
+    def test_get_exposures_no_match(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -141,11 +190,18 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            0.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_from_unmatched_back(self):
+    def test_get_exposures_from_unmatched_back(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -161,11 +217,18 @@ class BlotterTest(unittest.TestCase):
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
         # On the lose side, we have -2.0-2.0=-4.0
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            4.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -4.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": -2.0,
+                "worst_potential_unmatched_profit_if_win": 0,
+            },
         )
 
-    def test_selection_exposure_from_unmatched_lay(self):
+    def test_get_exposures_from_unmatched_lay(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -181,11 +244,18 @@ class BlotterTest(unittest.TestCase):
         # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2
         # On the lose side, we have 2.0 from size_matched
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            19.2,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 2.0,
+                "matched_profit_if_win": -9.2,
+                "worst_possible_profit_on_lose": 2.0,
+                "worst_possible_profit_on_win": -19.2,
+                "worst_potential_unmatched_profit_if_lose": 0,
+                "worst_potential_unmatched_profit_if_win": -10.0,
+            },
         )
 
-    def test_selection_exposure_from_market_on_close_back(self):
+    def test_get_exposures_from_market_on_close_back(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -196,11 +266,18 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            10.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": -10.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_from_market_on_close_lay(self):
+    def test_get_exposures_from_market_on_close_lay(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -211,11 +288,18 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            10.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": -10.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_from_limit_on_close_lay(self):
+    def test_get_exposures_from_limit_on_close_lay(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -226,11 +310,18 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            10.0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": -10.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
-    def test_selection_exposure_voided(self):
+    def test_get_exposures_voided(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         mock_order = mock.Mock(
@@ -242,8 +333,15 @@ class BlotterTest(unittest.TestCase):
         )
         self.blotter["12345"] = mock_order
         self.assertEqual(
-            self.blotter.selection_exposure(mock_strategy, mock_order.lookup),
-            0,
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": 0.0,
+                "matched_profit_if_win": 0.0,
+                "worst_possible_profit_on_lose": 0.0,
+                "worst_possible_profit_on_win": 0.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
         )
 
     def test_complete_order(self):

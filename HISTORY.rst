@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.17.15 (2021-03-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Blotter exposure refactoring out the get_worst_possible_profit method (@jsphon)
+- Market recorder example updated to use gzip compression
+
 1.17.14 (2021-03-24)
 +++++++++++++++++++
 
