@@ -75,6 +75,8 @@ class BaseOrder:
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
 
+        self.cleared_order = None
+
         self._sep = "-"  # DEFAULT VALUE
         self.sep = sep
 

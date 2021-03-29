@@ -67,6 +67,11 @@ class Blotter:
 
     def process_cleared_orders(self, cleared_orders) -> list:
         # todo update order.cleared?
+        for cleared_order in cleared_orders.orders:
+            order_id = cleared_order.customer_order_ref.split('-')[1]  
+            if self.has_order(order_id):
+                self._orders[order_id].cleared_order = cleared_order
+
         return [order for order in self]
 
     """ position """
