@@ -90,13 +90,13 @@ class TradeTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.EXCHANGE = "SYM"
         self.trade.create_order(
-            "BACK", mock_order_type, handicap=1, order=mock_order, context={1: 2}
+            "BACK", mock_order_type, order=mock_order, context={1: 2}
         )
         mock_order.assert_called_with(
             trade=self.trade,
             side="BACK",
             order_type=mock_order_type,
-            handicap=1,
+            handicap=self.trade.handicap,
             context={1: 2},
         )
         self.assertEqual(self.trade.orders, [mock_order()])
