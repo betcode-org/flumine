@@ -194,6 +194,82 @@ class IntegrationTest(unittest.TestCase):
             # check transaction count
             self.assertEqual(market._transaction_id, 25428)
 
+    def test_event_processing(self):
+        client = clients.BacktestClient()
+        framework = FlumineBacktest(client=client)
+
+        class LimitOrdersInplay(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if market_book.inplay:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                for runner in market_book.runners:
+                    if runner.status == "ACTIVE" and runner.last_price_traded < 2:
+                        lay = get_price(runner.ex.available_to_lay, 0)
+                        trade = Trade(
+                            market_book.market_id,
+                            runner.selection_id,
+                            runner.handicap,
+                            self,
+                        )
+                        order = trade.create_order(
+                            side="LAY",
+                            order_type=LimitOrder(lay, 2.00),
+                        )
+                        market.place_order(order)
+
+            def process_orders(self, market, orders):
+                for order in orders:
+                    if order.status == OrderStatus.EXECUTABLE:
+                        if order.elapsed_seconds and order.elapsed_seconds > 2:
+                            market.cancel_order(order)
+
+        limit_inplay_strategy = LimitOrdersInplay(
+            market_filter={
+                "markets": [
+                    "tests/resources/SELF-1.181223994",
+                    "tests/resources/SELF-1.181223995",
+                    "tests/resources/PRO-1.170258213",
+                ],
+                "event_processing": True,
+            },
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+        )
+        framework.add_strategy(limit_inplay_strategy)
+        framework.run()
+
+        self.assertEqual(len(framework.markets), 3)
+
+        # Different event
+        win_market = framework.markets.markets["1.170258213"]
+        limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
+        self.assertEqual(
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 18.96
+        )
+        self.assertEqual(len(limit_inplay_orders), 15)
+        self.assertEqual(win_market._transaction_id, 166)
+
+        # Same event
+        win_market = framework.markets.markets["1.181223994"]
+        limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
+        self.assertEqual(
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 99.58
+        )
+        self.assertEqual(len(limit_inplay_orders), 88)
+        self.assertEqual(win_market._transaction_id, 1329)
+
+        place_market = framework.markets.markets["1.181223995"]
+        limit_inplay_orders = place_market.blotter.strategy_orders(
+            limit_inplay_strategy
+        )
+        self.assertEqual(
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -95.2
+        )
+        self.assertEqual(len(limit_inplay_orders), 195)
+        self.assertEqual(place_market._transaction_id, 2436)
+
     def tearDown(self) -> None:
         config.simulated = False
         config.raise_errors = False
