@@ -48,7 +48,10 @@ class StreamsTest(unittest.TestCase):
         self.streams(mock_strategy)
 
         mock_add_historical_stream.assert_called_with(
-            mock_strategy, "dubs of the mad skint and british", None, canary_yellow=True
+            mock_strategy,
+            "dubs of the mad skint and british",
+            False,
+            canary_yellow=True,
         )
         self.assertEqual(len(mock_strategy.streams), 1)
         self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
@@ -64,13 +67,14 @@ class StreamsTest(unittest.TestCase):
                 "listener_kwargs": {"canary_yellow": True},
             },
         )
-        self.streams(mock_strategy)
+        with self.assertRaises(NotImplementedError):
+            self.streams(mock_strategy)
 
-        mock_add_historical_stream.assert_called_with(
-            mock_strategy, "dubs of the mad skint and british", canary_yellow=True
-        )
-        self.assertEqual(len(mock_strategy.streams), 1)
-        self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
+        # mock_add_historical_stream.assert_called_with(
+        #     mock_strategy, "dubs of the mad skint and british", canary_yellow=True
+        # )
+        # self.assertEqual(len(mock_strategy.streams), 1)
+        # self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
 
     def test_call_backtest_markets_events(self):
         self.mock_flumine.BACKTEST = True

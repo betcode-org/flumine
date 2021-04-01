@@ -22,7 +22,7 @@ class Streams:
     def __call__(self, strategy: BaseStrategy) -> None:
         if self.flumine.BACKTEST:
             markets = strategy.market_filter.get("markets")
-            event_processing = strategy.market_filter.get("event_processing")
+            event_processing = strategy.market_filter.get("event_processing", False)
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets and events:
@@ -108,6 +108,8 @@ class Streams:
         else:
             stream_id = self._increment_stream_id()
             event_id = get_file_md(market, "eventId")
+            if event_processing and event_id is None:
+                logger.warning("Event Id not found for market %s" % market)
             logger.info(
                 "Creating new {0} ({1}) for strategy {2}".format(
                     HistoricalStream.__name__, stream_id, strategy
