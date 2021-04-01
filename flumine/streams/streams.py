@@ -109,7 +109,7 @@ class Streams:
             stream_id = self._increment_stream_id()
             event_id = get_file_md(market, "eventId")
             if event_processing and event_id is None:
-                logger.warning("Event Id not found for market %s" % market)
+                logger.warning("EventId not found for market %s" % market)
             logger.info(
                 "Creating new {0} ({1}) for strategy {2}".format(
                     HistoricalStream.__name__, stream_id, strategy

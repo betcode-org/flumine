@@ -47,7 +47,7 @@ class FlumineBacktest(BaseFlumine):
                 event_streams[event_id].append(stream)
 
             for event_id, streams in event_streams.items():
-                if event_id:
+                if event_id and len(streams) > 1:
                     logger.info(
                         "Starting historical event '{0}'".format(event_id),
                         extra={
