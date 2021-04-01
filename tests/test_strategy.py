@@ -54,7 +54,6 @@ class BaseStrategyTest(unittest.TestCase):
             max_trade_count=3,
             max_live_trade_count=4,
             multi_order_trades=False,
-            log_validation_failures=True,
         )
 
     def test_init(self):
@@ -163,30 +162,6 @@ class BaseStrategyTest(unittest.TestCase):
         }
         self.strategy.remove_market("1.23")
         self.assertEqual(self.strategy._invested, {("1.24", 112, 7): 3})
-
-    def test_place_order(self):
-        mock_order = mock.Mock()
-        mock_market = mock.Mock()
-        self.assertTrue(self.strategy.place_order(mock_market, mock_order, 123))
-        mock_market.place_order.assert_called_with(mock_order, 123)
-
-    def test_cancel_order(self):
-        mock_order = mock.Mock()
-        mock_market = mock.Mock()
-        self.strategy.cancel_order(mock_market, mock_order, 0.01)
-        mock_market.cancel_order.assert_called_with(mock_order, 0.01)
-
-    def test_update_order(self):
-        mock_order = mock.Mock()
-        mock_market = mock.Mock()
-        self.strategy.update_order(mock_market, mock_order, "PERSIST")
-        mock_market.update_order.assert_called_with(mock_order, "PERSIST")
-
-    def test_replace_order(self):
-        mock_order = mock.Mock()
-        mock_market = mock.Mock()
-        self.strategy.replace_order(mock_market, mock_order, 1.01, 123)
-        mock_market.replace_order.assert_called_with(mock_order, 1.01, 123)
 
     def test_validate_order(self):
         mock_order = mock.Mock()

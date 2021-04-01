@@ -26,13 +26,13 @@ class Streams:
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets and events:
-                logging.warning(
+                logger.warning(
                     "Markets and events found for strategy {0} skipping as flumine can only handle one type".format(
                         strategy
                     )
                 )
             elif markets is None and events is None:
-                logging.warning(
+                logger.warning(
                     "No markets or events found for strategy {0}".format(strategy)
                 )
             elif markets:

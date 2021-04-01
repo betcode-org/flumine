@@ -3,12 +3,14 @@
 Release History
 ---------------
 
-1.18.0b0 (2021-04-01)
+1.18.0b1 (2021-04-01)
 +++++++++++++++++++
 
 **Improvements**
 
 - #404 Multi market processing (concurrent event market processing)
+- strategy order placement depreciated (breaking change as per warning version 1.17.0)
+- strategy.log_validation_failures depreciated (breaking change as per warning version 1.17.7)
 
 **Bug Fixes**
 
