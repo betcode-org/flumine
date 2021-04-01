@@ -192,7 +192,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_historical_stream_old(self):
         self.mock_flumine.BACKTEST = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(spec=streams.HistoricalStream)
+        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -201,6 +201,24 @@ class StreamsTest(unittest.TestCase):
         )
         self.assertEqual(stream, mock_stream)
         self.assertEqual(len(self.streams), 1)
+
+    @mock.patch("flumine.streams.streams.get_file_md")
+    @mock.patch("flumine.streams.streams.HistoricalStream")
+    def test_add_historical_stream_event_processing(
+        self, mock_historical_stream_class, mock_get_file_md
+    ):
+        mock_historical_stream_class.__name__ = "test"
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
+        mock_stream.market_filter = "GANG"
+        self.streams._streams = [mock_stream]
+
+        stream = self.streams.add_historical_stream(
+            mock_strategy, "GANG", event_processing=True
+        )
+        self.assertEqual(stream, mock_historical_stream_class())
+        self.assertEqual(len(self.streams), 2)
 
     @mock.patch("flumine.streams.streams.OrderStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")

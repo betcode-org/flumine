@@ -103,7 +103,10 @@ class Streams:
         **listener_kwargs
     ) -> HistoricalStream:
         for stream in self:
-            if stream.market_filter == market:
+            if (
+                stream.market_filter == market
+                and stream.event_processing == event_processing
+            ):
                 return stream
         else:
             stream_id = self._increment_stream_id()

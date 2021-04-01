@@ -265,9 +265,9 @@ class IntegrationTest(unittest.TestCase):
             limit_inplay_strategy
         )
         self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -95.2
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -96.66
         )
-        self.assertEqual(len(limit_inplay_orders), 195)
+        self.assertEqual(len(limit_inplay_orders), 200)
         self.assertEqual(place_market._transaction_id, 2436)
 
     def tearDown(self) -> None:

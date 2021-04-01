@@ -7,6 +7,7 @@ from flumine.order.orderpackage import OrderPackageType
 from flumine import config
 from flumine.exceptions import RunError
 from flumine.order.trade import TradeStatus
+from flumine.markets.blotter import Blotter
 
 
 class FlumineBacktestTest(unittest.TestCase):
@@ -105,12 +106,20 @@ class FlumineBacktestTest(unittest.TestCase):
     @mock.patch("flumine.backtest.backtest.process.process_current_order")
     def test__process_backtest_orders(self, mock_process_current_order):
         mock_market = mock.Mock(context={})
+        mock_market.blotter = Blotter("1.23")
         mock_order = mock.Mock()
         mock_order.trade.status = TradeStatus.COMPLETE
-        mock_market.blotter.live_orders = [mock_order]
+        mock_order_two = mock.Mock()
+        mock_order_two.trade.status = TradeStatus.COMPLETE
+        mock_market.blotter._live_orders = [mock_order, mock_order_two]
         self.flumine._process_backtest_orders(mock_market)
-        mock_process_current_order.assert_called_with(mock_order)
-        mock_market.blotter.complete_order.assert_called_with(mock_order)
+        mock_process_current_order.assert_has_calls(
+            [
+                mock.call(mock_order),
+                mock.call(mock_order_two),
+            ]
+        )
+        self.assertEqual(mock_market.blotter._live_orders, [])
 
     def test__process_backtest_orders_strategies(self):
         mock_market = mock.Mock(context={})

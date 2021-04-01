@@ -66,9 +66,9 @@ class FlumineBacktest(BaseFlumine):
                     while cycles:
                         # order by epoch
                         cycles.sort(key=lambda x: x[0])
-                        # get next
+                        # get current
                         _, market_book, stream_gen = cycles.pop(0)
-                        # process next
+                        # process current
                         self._process_market_books(events.MarketBookEvent(market_book))
                         # gen next
                         try:
@@ -154,10 +154,13 @@ class FlumineBacktest(BaseFlumine):
         orders through strategies
         """
         blotter = market.blotter
+        completed_orders = []
         for order in blotter.live_orders:
             process.process_current_order(order)
             if order.trade.status == TradeStatus.COMPLETE:
-                blotter.complete_order(order)
+                completed_orders.append(order)
+        for order in completed_orders:
+            blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
             strategy.process_orders(market, strategy_orders)
