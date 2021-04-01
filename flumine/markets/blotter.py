@@ -6,6 +6,7 @@ from ..order.ordertype import OrderTypes
 from ..utils import (
     calculate_unmatched_exposure,
     calculate_matched_exposure,
+    STRATEGY_NAME_HASH_LENGTH,
 )
 from ..order.order import BaseOrder, OrderStatus
 
@@ -68,9 +69,9 @@ class Blotter:
     def process_cleared_orders(self, cleared_orders) -> list:
         # todo update order.cleared?
         for cleared_order in cleared_orders.orders:
-            order_id = cleared_order.customer_order_ref.split("-")[1]
-            if self.has_order(order_id):
-                self._orders[order_id].cleared_order = cleared_order
+            order_id = cleared_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
+            if order_id in self:
+                self[order_id].cleared_order = cleared_order
 
         return [order for order in self]
 
