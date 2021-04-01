@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.18.0b0 (2021-04-01)
++++++++++++++++++++
+
+**Improvements**
+
+- #404 Multi market processing (concurrent event market processing)
+
+**Bug Fixes**
+
+- Nasty bug fixed in the way live orders are completed when backtesting (will impact previous tests)
+- Trade.create_order now correctly pulls handicap from trade (was defaulting to 0)
+
 1.17.15 (2021-03-25)
 +++++++++++++++++++
 
