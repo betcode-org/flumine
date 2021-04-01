@@ -53,6 +53,7 @@ class BlotterTest(unittest.TestCase):
 
     def test_process_cleared_orders(self):
         mock_cleared_orders = mock.Mock()
+        mock_cleared_orders.orders = []
         self.assertEqual(self.blotter.process_cleared_orders(mock_cleared_orders), [])
 
     def test_selection_exposure(self):
