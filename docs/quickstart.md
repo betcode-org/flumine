@@ -196,11 +196,33 @@ The extra kwargs above will limit processing to preplay in the final 10 minutes.
 !!! tip
     Multiple strategies and markets can be passed, flumine will pass the MarketBooks to the correct strategy via its subscription.
 
+### Event Processing
+
+It is also possible to process events with multiple markets such as win/place in racing or all football markets as per live by adding the following flag:
+
+```python
+strategy = ExampleStrategy(
+    market_filter={"markets": [..], "event_processing": True},
+    context={"stake": 2},
+)
+```
+
+The `Market` object contains a helper method for accessing other event linked markets:
+
+```python
+place_market = market.event["PLACE"]
+```
+
+### Simulation
+
 Backtesting uses the `SimulatedExecution` execution class and tries to accurately simulate matching with the following:
 
 - Place/Cancel/Replace latency delay added
-- BetDelay added based on market
+- BetDelay added based on market state
 - Queue positioning based on liquidity available
+- Order lapse on market version change
+- Order lapse and reduction on runner removal
+- BSP
 
 Limitations:
 

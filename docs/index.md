@@ -120,7 +120,7 @@ framework.run()
 ```
 
 !!! danger
-    By default flumine will try and prevent coding errors which result in [flash crashes](https://en.wikipedia.org/wiki/Flash_crash) and [burnt fingers](https://www.betangel.com/forum/viewtopic.php?f=5&t=2458) but use at your own risk as per the MIT license.
+    By default flumine will try to prevent coding errors which result in [flash crashes](https://en.wikipedia.org/wiki/Flash_crash) and [burnt fingers](https://www.betangel.com/forum/viewtopic.php?f=5&t=2458) but use at your own risk as per the MIT license.
     
     Recommendation is not to remove the [trading controls](/advanced/#trading-controls) and carry out extensive testing before executing on live markets, even then only use new strategies on an account with a small balance (transfer balance to games wallet).
 
@@ -130,7 +130,8 @@ framework.run()
 - Multiple strategies
 - Order execution
 - Paper trading
-- Back testing
+- Backtesting
+- Event backtesting (multi market)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService
 
 ## Dependencies
