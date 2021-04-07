@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, Tuple
+from typing import Iterable
 from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
@@ -67,7 +67,6 @@ class Blotter:
                     order.runner_status = runner.status
 
     def process_cleared_orders(self, cleared_orders) -> list:
-        # todo update order.cleared?
         for cleared_order in cleared_orders.orders:
             order_id = cleared_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             if order_id in self:
