@@ -26,6 +26,8 @@ CUTOFFS = (
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
 
+STRATEGY_NAME_HASH_LENGTH = 13
+
 
 def create_short_uuid() -> str:
     return str(uuid.uuid4())[:8]

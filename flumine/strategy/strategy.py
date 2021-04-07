@@ -8,11 +8,10 @@ from .runnercontext import RunnerContext
 from ..clients import BaseClient
 from ..markets.market import Market
 from ..streams.marketstream import BaseStream, MarketStream
-from ..utils import create_cheap_hash
+from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)
 
-STRATEGY_NAME_HASH_LENGTH = 13
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
     fields=[
         "EX_ALL_OFFERS",

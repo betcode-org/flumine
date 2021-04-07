@@ -4,8 +4,9 @@ from .. import config
 from ..markets.markets import Markets
 from ..order.order import BaseOrder, OrderStatus, OrderTypes
 from ..order.trade import Trade
-from ..strategy.strategy import Strategies, STRATEGY_NAME_HASH_LENGTH
+from ..strategy.strategy import Strategies
 from ..events.events import OrderEvent
+from ..utils import STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)
 
