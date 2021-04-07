@@ -24,6 +24,8 @@ class BaseStream(threading.Thread):
         market_data_filter: dict = None,
         client=None,
         output_queue: bool = True,
+        event_processing: bool = False,
+        event_id: str = None,
         operation: str = "marketSubscription",
         **listener_kwargs,
     ):
@@ -37,6 +39,8 @@ class BaseStream(threading.Thread):
         self._client = client
         self._stream = None
         self._output_queue = queue.Queue() if output_queue else None
+        self.event_processing = event_processing
+        self.event_id = event_id
         self.operation = operation
         self._listener = self.LISTENER(
             output_queue=self._output_queue,
@@ -44,7 +48,7 @@ class BaseStream(threading.Thread):
             **listener_kwargs,
         )
         self._output_thread = threading.Thread(
-            name="{0}_output_thread".format(self._name),
+            name="{0}_output_thread".format(self.name),
             target=self.handle_output,
             daemon=True,
         )

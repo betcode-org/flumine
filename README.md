@@ -115,7 +115,8 @@ framework.run()
 - Multiple strategies
 - Order execution
 - Paper trading
-- Back testing
+- Backtesting
+- Event backtesting (multi market)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService
 
 ## Dependencies

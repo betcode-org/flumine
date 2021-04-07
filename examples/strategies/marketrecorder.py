@@ -187,14 +187,17 @@ class S3MarketRecorder(MarketRecorder):
                     "No marketCatalogue data available for %s" % market.market_id
                 )
                 return
+            market_catalogue_compressed = gzip.compress(
+                market.market_catalogue.json().encode("utf-8")
+            )
             try:
                 self.s3.put_object(
-                    Body=market.market_catalogue.json(),  # todo compress?
+                    Body=market_catalogue_compressed,
                     Bucket=self._bucket,
                     Key=os.path.join(
                         "marketdata",
                         "marketCatalogue",
-                        market.market_id,
+                        "{0}.gz".format(market.market_id),
                     ),
                 )
                 logger.info(

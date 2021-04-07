@@ -1,7 +1,7 @@
 import uuid
+import json
 import logging
 import hashlib
-from collections import defaultdict
 from typing import Optional, Tuple, Callable
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
@@ -26,6 +26,8 @@ CUTOFFS = (
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
 
+STRATEGY_NAME_HASH_LENGTH = 13
+
 
 def create_short_uuid() -> str:
     return str(uuid.uuid4())[:8]
@@ -36,6 +38,15 @@ def file_line_count(file_path: str) -> int:
         for i, l in enumerate(f):
             pass
     return i + 1
+
+
+def get_file_md(file_dir: str, value: str) -> Optional[str]:
+    # get value from raw streaming file marketDefinition
+    with open(file_dir, "r") as f:
+        first_line = f.readline()
+        update = json.loads(first_line)
+    md = update["mc"][0].get("marketDefinition", {})
+    return md.get(value)
 
 
 def chunks(l: list, n: int) -> list:

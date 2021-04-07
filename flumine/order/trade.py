@@ -86,7 +86,6 @@ class Trade:
         self,
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
-        handicap: float = 0,
         order: Type[BetfairOrder] = BetfairOrder,
         **kwargs,
     ) -> BetfairOrder:
@@ -95,7 +94,11 @@ class Trade:
                 "Incorrect order/order_type exchange combination for trade.create_order"
             )
         order = order(
-            trade=self, side=side, order_type=order_type, handicap=handicap, **kwargs
+            trade=self,
+            side=side,
+            order_type=order_type,
+            handicap=self.handicap,
+            **kwargs,
         )
         self.orders.append(order)
         return order

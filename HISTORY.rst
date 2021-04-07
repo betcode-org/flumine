@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.18.0 (2021-04-07)
++++++++++++++++++++
+
+**Improvements**
+
+- #404 Multi market processing (concurrent event market processing)
+- strategy order placement depreciated (breaking change as per warning version 1.17.0)
+- strategy.log_validation_failures depreciated (breaking change as per warning version 1.17.7)
+- Cleared order added to order object on closure (@arch4672)
+- gzip market catalogue data in marketrecorder.py example
+
+**Bug Fixes**
+
+- Nasty bug fixed in the way live orders are completed when backtesting (has potentially impacted previous tests)
+- Trade.create_order now correctly pulls handicap from trade (was defaulting to 0)
+
 1.17.15 (2021-03-25)
 +++++++++++++++++++
 

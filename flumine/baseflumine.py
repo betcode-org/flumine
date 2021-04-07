@@ -255,7 +255,11 @@ class BaseFlumine:
 
         if recorder is False:
             if self.BACKTEST or self.client.paper_trade:
-                self._process_cleared_orders(events.ClearedOrdersEvent(market))
+                cleared_orders = resources.ClearedOrders(
+                    clearedOrders=[], moreAvailable=False
+                )
+                cleared_orders.market_id = market_id
+                self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
