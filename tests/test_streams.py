@@ -34,8 +34,9 @@ class StreamsTest(unittest.TestCase):
         mock_add_stream.assert_called_with(mock_strategy)
         self.assertEqual(len(mock_strategy.streams), 1)
 
+    @mock.patch("flumine.streams.streams.get_file_md")
     @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
-    def test_call_backtest_markets(self, mock_add_historical_stream):
+    def test_call_backtest_markets(self, mock_add_historical_stream, mock_get_file_md):
         self.mock_flumine.BACKTEST = True
         mock_strategy = mock.Mock(
             streams=[],
@@ -55,6 +56,33 @@ class StreamsTest(unittest.TestCase):
         )
         self.assertEqual(len(mock_strategy.streams), 1)
         self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
+        mock_get_file_md.assert_called_with(
+            "dubs of the mad skint and british", "marketType"
+        )
+
+    @mock.patch("flumine.streams.streams.get_file_md", return_value="PLACE")
+    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
+    def test_call_backtest_markets_type(
+        self, mock_add_historical_stream, mock_get_file_md
+    ):
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock(
+            streams=[],
+            historic_stream_ids=[],
+            market_filter={
+                "markets": ["dubs of the mad skint and british"],
+                "listener_kwargs": {"canary_yellow": True},
+                "market_types": ["WIN"],
+            },
+        )
+        self.streams(mock_strategy)
+
+        mock_add_historical_stream.assert_not_called()
+        self.assertEqual(len(mock_strategy.streams), 0)
+        self.assertEqual(len(mock_strategy.historic_stream_ids), 0)
+        mock_get_file_md.assert_called_with(
+            "dubs of the mad skint and british", "marketType"
+        )
 
     @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
     def test_call_backtest_events(self, mock_add_historical_stream):
