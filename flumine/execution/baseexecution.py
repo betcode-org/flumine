@@ -39,9 +39,6 @@ class BaseExecution:
             func = self.execute_replace
         else:
             raise NotImplementedError()
-        # temp latency logging to find time
-        _latency_before_submit = order_package.elapsed_seconds
-        _t = time.time()
         self._thread_pool.submit(func, order_package, http_session)
         logger.info(
             "Thread pool submit",
@@ -49,12 +46,10 @@ class BaseExecution:
                 "trading_function": func.__name__,
                 "session": http_session,
                 "latency": round(order_package.elapsed_seconds, 4),
-                "latency_before_submit": round(_latency_before_submit, 4),
                 "order_package": order_package.info,
                 "thread_pool": {
                     "num_threads": len(self._thread_pool._threads),
                     "work_queue_size": self._thread_pool._work_queue.qsize(),
-                    "submit_latency": round(time.time() - _t, 4),
                 },
             },
         )

@@ -140,19 +140,9 @@ flumine.add_strategy(strategy)
 Flumine can be used to paper trade strategies live using the following code:
 
 ```python
-import betfairlightweight
-from flumine import Flumine, clients
+from flumine import clients
 
-trading = betfairlightweight.APIClient("username")
 client = clients.BetfairClient(trading, paper_trade=True)
-framework = Flumine(client=client)
-
-strategy = ExampleStrategy(
-    market_filter={"markets": ["/tmp/marketdata/1.170212754"]}
-)
-framework.add_strategy(strategy)
-
-framework.run()
 ```
 
 Market data will be recieved as per live but any orders will use Simulated execution and Simulated order polling to replicate live trading.
@@ -180,6 +170,8 @@ framework.run()
 
 Note the use of market filter to pass the file directories.
 
+### Listener kwargs
+
 Sometimes a subset of the market lifetime is required, this can be optimised by limiting the number of updates to process resulting in faster backtesting:
 
 ```python
@@ -202,8 +194,7 @@ It is also possible to process events with multiple markets such as win/place in
 
 ```python
 strategy = ExampleStrategy(
-    market_filter={"markets": [..], "event_processing": True},
-    context={"stake": 2},
+    market_filter={"markets": [..], "event_processing": True}
 )
 ```
 
@@ -211,6 +202,16 @@ The `Market` object contains a helper method for accessing other event linked ma
 
 ```python
 place_market = market.event["PLACE"]
+```
+
+### Market Type Filter
+
+When backtesting you can filter markets to be processed by using the `market_type` filter as per live:
+
+```python
+strategy = ExampleStrategy(
+    market_filter={"markets": [..], "market_type": ["MATCH_ODDS"]}
+)
 ```
 
 ### Simulation
@@ -224,7 +225,8 @@ Backtesting uses the `SimulatedExecution` execution class and tries to accuratel
 - Order lapse and reduction on runner removal
 - BSP
 
-Limitations:
+Limitations #192:
 
 - Queue cancellations
 - Double counting of liquidity
+- Currency fluctuations

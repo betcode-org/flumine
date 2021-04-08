@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.18.1 (2021-04-08)
++++++++++++++++++++
+
+**Improvements**
+
+- `market_type` filter enabled when backtesting markets
+- Remove temp logging
+
+**Bug Fixes**
+
+- Validate logging typo
+
 1.18.0 (2021-04-07)
 +++++++++++++++++++
 

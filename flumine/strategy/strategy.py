@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import Type, Iterator
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
@@ -144,7 +143,7 @@ class BaseStrategy:
         # validate context
         if runner_context.trade_count >= self.max_trade_count:
             order.violation_msg = "strategy.validate_order failed: trade_count ({0}) >= max_trade_count ({1})".format(
-                runner_context.trade_count, self.max_live_trade_count
+                runner_context.trade_count, self.max_trade_count
             )
             return False
         elif runner_context.live_trade_count >= self.max_live_trade_count:

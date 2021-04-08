@@ -22,6 +22,7 @@ class Streams:
     def __call__(self, strategy: BaseStrategy) -> None:
         if self.flumine.BACKTEST:
             markets = strategy.market_filter.get("markets")
+            market_types = strategy.market_filter.get("market_types")
             event_processing = strategy.market_filter.get("event_processing", False)
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
@@ -37,17 +38,19 @@ class Streams:
                 )
             elif markets:
                 for market in markets:
-                    stream = self.add_historical_stream(
-                        strategy, market, event_processing, **listener_kwargs
-                    )
-                    strategy.streams.append(stream)
-                    strategy.historic_stream_ids.append(stream.stream_id)
+                    market_type = get_file_md(market, "marketType")
+                    if market_types and market_type and market_type not in market_types:
+                        logger.warning(
+                            "Skipping market %s (%s) for strategy %s"
+                            % (market, market_type, strategy)
+                        )
+                    else:
+                        stream = self.add_historical_stream(
+                            strategy, market, event_processing, **listener_kwargs
+                        )
+                        strategy.streams.append(stream)
+                        strategy.historic_stream_ids.append(stream.stream_id)
             elif events:
-                for event in events:
-                    # todo?
-                    # for market in event dir
-                    # create historical stream with event_processing=True
-                    pass
                 raise NotImplementedError()
         else:
             stream = self.add_stream(strategy)
