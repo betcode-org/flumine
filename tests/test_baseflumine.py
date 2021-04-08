@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.baseflumine import BaseFlumine
+from flumine.baseflumine import BaseFlumine, FlumineException
 
 
 class BaseFlumineTest(unittest.TestCase):
@@ -189,6 +189,32 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event = mock.Mock()
         self.base_flumine._process_custom_event(mock_event)
         mock_event.callback.assert_called_with(self.base_flumine, mock_event)
+
+    def test__process_custom_event_flu_error(self):
+        mock_market = mock.Mock()
+        self.base_flumine.markets = [mock_market]
+        mock_event = mock.Mock()
+        mock_event.callback.side_effect = FlumineException()
+        self.base_flumine._process_custom_event(mock_event)
+        mock_event.callback.assert_called_with(self.base_flumine, mock_event)
+
+    def test__process_custom_event_error(self):
+        mock_market = mock.Mock()
+        self.base_flumine.markets = [mock_market]
+        mock_event = mock.Mock()
+        mock_event.callback.side_effect = ValueError()
+        self.base_flumine._process_custom_event(mock_event)
+        mock_event.callback.assert_called_with(self.base_flumine, mock_event)
+
+    @mock.patch("flumine.baseflumine.config")
+    def test__process_custom_event_error_raise(self, mock_config):
+        mock_config.raise_errors = True
+        mock_market = mock.Mock()
+        self.base_flumine.markets = [mock_market]
+        mock_event = mock.Mock()
+        mock_event.callback.side_effect = ValueError()
+        with self.assertRaises(ValueError):
+            self.base_flumine._process_custom_event(mock_event)
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
