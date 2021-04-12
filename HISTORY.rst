@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.18.2 (2021-04-12)
++++++++++++++++++++
+
+**Improvements**
+
+- #217 error handling improvements
+
+**Bug Fixes**
+
+- Blotter live orders mutable bugfix
+- MarketRecorder example clean up fix
+
 1.18.1 (2021-04-08)
 +++++++++++++++++++
 
@@ -23,7 +35,7 @@ Release History
 - #404 Multi market processing (concurrent event market processing)
 - strategy order placement depreciated (breaking change as per warning version 1.17.0)
 - strategy.log_validation_failures depreciated (breaking change as per warning version 1.17.7)
-- Cleared order added to order object on closure (@arch4672)
+- #185 Cleared order added to order object on closure (@arch4672)
 - gzip market catalogue data in marketrecorder.py example
 
 **Bug Fixes**

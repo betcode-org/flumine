@@ -133,14 +133,16 @@ class FlumineBacktest(BaseFlumine):
 
             # process middleware
             for middleware in self._market_middleware:
-                middleware(market)  # todo err handling?
+                utils.call_middleware_error_handling(middleware, market)
 
             # process current orders
             self._process_backtest_orders(market)
 
             for strategy in self.strategies:
-                if utils.call_check_market(strategy.check_market, market, market_book):
-                    utils.call_process_market_book(
+                if utils.call_strategy_error_handling(
+                    strategy.check_market, market, market_book
+                ):
+                    utils.call_strategy_error_handling(
                         strategy.process_market_book, market, market_book
                     )
 
@@ -154,16 +156,13 @@ class FlumineBacktest(BaseFlumine):
         orders through strategies
         """
         blotter = market.blotter
-        completed_orders = []
         for order in blotter.live_orders:
             process.process_current_order(order)
             if order.trade.status == TradeStatus.COMPLETE:
-                completed_orders.append(order)
-        for order in completed_orders:
-            blotter.complete_order(order)
+                blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
-            strategy.process_orders(market, strategy_orders)
+            utils.call_process_orders_error_handling(strategy, market, strategy_orders)
 
     def _check_pending_packages(self, market_id: str) -> None:
         processed = []
