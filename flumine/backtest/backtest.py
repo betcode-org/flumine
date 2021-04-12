@@ -154,13 +154,10 @@ class FlumineBacktest(BaseFlumine):
         orders through strategies
         """
         blotter = market.blotter
-        completed_orders = []
         for order in blotter.live_orders:
             process.process_current_order(order)
             if order.trade.status == TradeStatus.COMPLETE:
-                completed_orders.append(order)
-        for order in completed_orders:
-            blotter.complete_order(order)
+                blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
             strategy.process_orders(market, strategy_orders)
