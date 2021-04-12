@@ -50,8 +50,8 @@ class Blotter:
         return self._strategy_selection_orders[(strategy, selection_id, handicap)]
 
     @property
-    def live_orders(self):
-        return iter(self._live_orders)
+    def live_orders(self) -> Iterable:
+        return iter(list(self._live_orders))
 
     @property
     def has_live_orders(self) -> bool:
