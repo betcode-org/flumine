@@ -63,6 +63,8 @@ class MarketRecorder(BaseStrategy):
                 )
             else:
                 return
+        else:
+            self._loaded_markets.append(market_id)
         logger.info("Closing market %s" % market_id)
 
         file_dir = os.path.join(self.local_dir, self.recorder_id, market_id)
@@ -94,8 +96,6 @@ class MarketRecorder(BaseStrategy):
         # clean up
         self._clean_up()
 
-        self._loaded_markets.append(market_id)
-
     def _compress_file(self, file_dir: str) -> str:
         """compresses txt file into filename.gz"""
         compressed_file_dir = "{0}.gz".format(file_dir)
@@ -114,23 +114,23 @@ class MarketRecorder(BaseStrategy):
         directory = os.path.join(self.local_dir, self.recorder_id)
         for file in os.listdir(directory):
             if file.endswith(".gz"):
-                file_stats = os.stat(os.path.join(directory, file))
+                gz_path = os.path.join(directory, file)
+                file_stats = os.stat(gz_path)
                 seconds_since = time.time() - file_stats.st_mtime
                 if seconds_since > self._market_expiration:
-                    txt_path = os.path.join(directory, file.split(".gz")[0])
-                    gz_path = os.path.join(directory, file)
-                    if self._remove_file:
-                        logger.info(
-                            "Removing: %s, age: %ss"
-                            % (txt_path, round(seconds_since, 2))
-                        )
-                        os.remove(txt_path)
                     if self._remove_gz_file:
                         logger.info(
                             "Removing: %s, age: %ss"
                             % (gz_path, round(seconds_since, 2))
                         )
                         os.remove(gz_path)
+                    txt_path = os.path.join(directory, file.split(".gz")[0])
+                    if os.path.exists(txt_path) and self._remove_file:
+                        logger.info(
+                            "Removing: %s, age: %ss"
+                            % (txt_path, round(seconds_since, 2))
+                        )
+                        os.remove(txt_path)
 
     @staticmethod
     def _create_metadata(market_definition: dict) -> dict:
