@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.18.3 (2021-04-16)
++++++++++++++++++++
+
+**Improvements**
+
+- 503 errors logged as warnings to prevent duplicate log messages propagating through to services such as sentry.io
+
 1.18.2 (2021-04-12)
 +++++++++++++++++++
 

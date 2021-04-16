@@ -2,7 +2,7 @@ import time
 import threading
 import logging
 from typing import Callable
-from betfairlightweight import BetfairError, filters
+from betfairlightweight import BetfairError, filters, exceptions
 
 from . import config
 from .events import events
@@ -136,6 +136,14 @@ def poll_market_catalogue(context: dict, flumine) -> None:
                     "MARKET_DESCRIPTION",
                 ],
             )
+        except exceptions.StatusCodeError as e:
+            # log as warning to prevent duplicate logs on betfair meltdown
+            logger.warning(
+                "poll_market_catalogue StatusCodeError",
+                extra={"trading_function": "list_market_catalogue", "response": e},
+                exc_info=True,
+            )
+            continue
         except BetfairError as e:
             logger.error(
                 "poll_market_catalogue error",
@@ -184,9 +192,17 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
                 market_ids=[market_id],
                 customer_strategy_refs=[config.hostname],
             )
+        except exceptions.StatusCodeError as e:
+            # log as warning to prevent duplicate logs on betfair meltdown
+            logger.warning(
+                "_get_cleared_orders StatusCodeError",
+                extra={"trading_function": "list_cleared_orders", "response": e},
+                exc_info=True,
+            )
+            return False
         except BetfairError as e:
             logger.error(
-                "poll_cleared_orders error",
+                "_get_cleared_orders error",
                 extra={"trading_function": "list_cleared_orders", "response": e},
                 exc_info=True,
             )
@@ -215,9 +231,17 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
             customer_strategy_refs=[config.hostname],
             group_by="MARKET",
         )
+    except exceptions.StatusCodeError as e:
+        # log as warning to prevent duplicate logs on betfair meltdown
+        logger.warning(
+            "_get_cleared_market StatusCodeError",
+            extra={"trading_function": "list_cleared_orders", "response": e},
+            exc_info=True,
+        )
+        return False
     except BetfairError as e:
         logger.error(
-            "_get_cleared_markets error",
+            "_get_cleared_market error",
             extra={"trading_function": "list_cleared_orders", "response": e},
             exc_info=True,
         )
