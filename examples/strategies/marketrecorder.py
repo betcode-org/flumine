@@ -187,9 +187,10 @@ class S3MarketRecorder(MarketRecorder):
                     "No marketCatalogue data available for %s" % market.market_id
                 )
                 return
-            market_catalogue_compressed = gzip.compress(
-                market.market_catalogue.json().encode("utf-8")
-            )
+            market_catalogue_dumped = market.market_catalogue.json()
+            if isinstance(market_catalogue_dumped, str):
+                market_catalogue_dumped = market_catalogue_dumped.encode("utf-8")
+            market_catalogue_compressed = gzip.compress(market_catalogue_dumped)
             try:
                 self.s3.put_object(
                     Body=market_catalogue_compressed,

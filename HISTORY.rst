@@ -10,6 +10,10 @@ Release History
 
 - 503 errors logged as warnings to prevent duplicate log messages propagating through to services such as sentry.io
 
+**Bug Fixes**
+
+- MarketRecorder example updated to handle orjson/speed use
+
 1.18.2 (2021-04-12)
 +++++++++++++++++++
 
