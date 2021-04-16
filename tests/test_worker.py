@@ -1,7 +1,7 @@
 import logging
 import unittest
 from unittest import mock
-from betfairlightweight import BetfairError
+from betfairlightweight import BetfairError, exceptions
 
 from flumine import worker
 
@@ -117,6 +117,66 @@ class WorkersTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.worker.events")
+    def test_poll_market_catalogue_status_error(self, mock_events):
+        mock_context = mock.Mock()
+        mock_flumine = mock.Mock()
+        mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
+        mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
+        mock_flumine.markets.markets = {
+            "1.234": mock_market_one,
+            "5.678": mock_market_two,
+        }
+        mock_flumine.client.betting_client.betting.list_market_catalogue.side_effect = (
+            exceptions.StatusCodeError("503")
+        )
+
+        worker.poll_market_catalogue(mock_context, mock_flumine)
+        mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
+            filter={"marketIds": ["1.234"]},
+            market_projection=[
+                "COMPETITION",
+                "EVENT",
+                "EVENT_TYPE",
+                "RUNNER_DESCRIPTION",
+                "RUNNER_METADATA",
+                "MARKET_START_TIME",
+                "MARKET_DESCRIPTION",
+            ],
+            max_results=25,
+        )
+        mock_flumine.handler_queue.put.assert_not_called()
+
+    @mock.patch("flumine.worker.events")
+    def test_poll_market_catalogue_error(self, mock_events):
+        mock_context = mock.Mock()
+        mock_flumine = mock.Mock()
+        mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
+        mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
+        mock_flumine.markets.markets = {
+            "1.234": mock_market_one,
+            "5.678": mock_market_two,
+        }
+        mock_flumine.client.betting_client.betting.list_market_catalogue.side_effect = (
+            BetfairError()
+        )
+
+        worker.poll_market_catalogue(mock_context, mock_flumine)
+        mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
+            filter={"marketIds": ["1.234"]},
+            market_projection=[
+                "COMPETITION",
+                "EVENT",
+                "EVENT_TYPE",
+                "RUNNER_DESCRIPTION",
+                "RUNNER_METADATA",
+                "MARKET_START_TIME",
+                "MARKET_DESCRIPTION",
+            ],
+            max_results=25,
+        )
+        mock_flumine.handler_queue.put.assert_not_called()
+
+    @mock.patch("flumine.worker.events")
     def test_poll_account_balance(self, mock_events):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
@@ -185,6 +245,24 @@ class WorkersTest(unittest.TestCase):
 
     @mock.patch("flumine.worker.config")
     @mock.patch("flumine.worker.events")
+    def test__get_cleared_orders_status_error(self, mock_events, mock_config):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        mock_betting_client.betting.list_cleared_orders.side_effect = (
+            exceptions.StatusCodeError("503")
+        )
+        self.assertFalse(
+            worker._get_cleared_orders(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            from_record=0,
+            customer_strategy_refs=[mock_config.hostname],
+        )
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
     def test__get_cleared_orders_error(self, mock_events, mock_config):
         mock_flumine = mock.Mock()
         mock_betting_client = mock.Mock()
@@ -231,6 +309,24 @@ class WorkersTest(unittest.TestCase):
         mock_cleared_markets.orders = []
         mock_betting_client.betting.list_cleared_orders.return_value = (
             mock_cleared_markets
+        )
+        self.assertFalse(
+            worker._get_cleared_market(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            group_by="MARKET",
+            customer_strategy_refs=[mock_config.hostname],
+        )
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_market_status_error(self, mock_events, mock_config):
+        mock_flumine = mock.Mock()
+        mock_betting_client = mock.Mock()
+        mock_betting_client.betting.list_cleared_orders.side_effect = (
+            exceptions.StatusCodeError("503")
         )
         self.assertFalse(
             worker._get_cleared_market(mock_flumine, mock_betting_client, "1.23")
