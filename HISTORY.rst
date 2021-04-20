@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.18.4 (2021-04-20)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Duplicate Trade logging handled and has_trade added to Blotter
+
 1.18.3 (2021-04-16)
 +++++++++++++++++++
 
