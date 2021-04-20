@@ -28,7 +28,8 @@ class TransactionTest(unittest.TestCase):
     )
     @mock.patch("flumine.execution.transaction.events")
     def test_place_order(self, mock_events, mock__validate_controls):
-        self.transaction.market.blotter = {}
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
         mock_order = mock.Mock(id="123", lookup=(1, 2, 3))
         mock_order.trade.market_notes = None
         self.assertTrue(self.transaction.place_order(mock_order))
@@ -46,6 +47,9 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.strategy.get_runner_context.assert_called_with(
             *mock_order.lookup
         )
+        self.transaction.market.blotter.has_trade.assert_called_with(
+            mock_order.trade.id
+        )
 
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
@@ -53,6 +57,8 @@ class TransactionTest(unittest.TestCase):
     )
     @mock.patch("flumine.execution.transaction.events")
     def test_place_order_not_executed(self, mock_events, mock__validate_controls):
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
         mock_order = mock.Mock(id="123")
         self.assertTrue(self.transaction.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(
@@ -64,14 +70,19 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_not_called()
         self.transaction._pending_place = []
         self.assertFalse(self.transaction._pending_orders)
+        self.transaction.market.blotter.has_trade.assert_called_with(
+            mock_order.trade.id
+        )
 
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
     def test_place_order_retry(self, mock__validate_controls):
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.market.blotter.__contains__.return_value = True
         mock_order = mock.Mock(lookup=(1, 2, 3))
-        self.transaction.market.blotter = {mock_order.id: mock_order}
         with self.assertRaises(OrderError):
             self.transaction.place_order(mock_order)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)

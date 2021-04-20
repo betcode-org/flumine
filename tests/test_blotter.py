@@ -14,6 +14,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter.market_id, "1.23")
         self.assertEqual(self.blotter._orders, {})
         self.assertEqual(self.blotter._live_orders, [])
+        self.assertEqual(self.blotter._trades, {})
         self.assertEqual(self.blotter._strategy_orders, {})
         self.assertEqual(self.blotter._strategy_selection_orders, {})
 
@@ -349,6 +350,11 @@ class BlotterTest(unittest.TestCase):
         self.blotter._live_orders = ["test"]
         self.blotter.complete_order("test")
 
+    def test_has_trade(self):
+        self.assertFalse(self.blotter.has_trade("123"))
+        self.blotter._trades["123"].append(1)
+        self.assertTrue(self.blotter.has_trade("123"))
+
     def test__contains(self):
         self.blotter._orders = {"123": "test"}
         self.assertIn("123", self.blotter)
@@ -359,6 +365,7 @@ class BlotterTest(unittest.TestCase):
         self.blotter["123"] = mock_order
         self.assertEqual(self.blotter._orders, {"123": mock_order})
         self.assertEqual(self.blotter._live_orders, [mock_order])
+        self.assertEqual(self.blotter._trades, {mock_order.trade.id: [mock_order]})
         self.assertEqual(
             self.blotter._strategy_orders, {mock_order.trade.strategy: [mock_order]}
         )
