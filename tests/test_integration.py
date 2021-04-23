@@ -183,7 +183,7 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(len(limit_replace_orders), 28)
             limit_inplay_orders = market.blotter.strategy_orders(limit_inplay_strategy)
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 18.96
+                round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
             )
             self.assertEqual(len(limit_inplay_orders), 15)
             market_orders = market.blotter.strategy_orders(market_strategy)
@@ -192,7 +192,7 @@ class IntegrationTest(unittest.TestCase):
             )
             self.assertEqual(len(market_orders), 14)
             # check transaction count
-            self.assertEqual(market._transaction_id, 25428)
+            self.assertEqual(market._transaction_id, 25427)
 
     def test_event_processing(self):
         client = clients.BacktestClient()
@@ -246,16 +246,16 @@ class IntegrationTest(unittest.TestCase):
         win_market = framework.markets.markets["1.170258213"]
         limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
         self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 18.96
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
         )
         self.assertEqual(len(limit_inplay_orders), 15)
-        self.assertEqual(win_market._transaction_id, 166)
+        self.assertEqual(win_market._transaction_id, 165)
 
         # Same event
         win_market = framework.markets.markets["1.181223994"]
         limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
         self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 99.58
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 101.44
         )
         self.assertEqual(len(limit_inplay_orders), 88)
         self.assertEqual(win_market._transaction_id, 1329)
@@ -265,7 +265,7 @@ class IntegrationTest(unittest.TestCase):
             limit_inplay_strategy
         )
         self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -96.66
+            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -95.02
         )
         self.assertEqual(len(limit_inplay_orders), 200)
         self.assertEqual(place_market._transaction_id, 2436)

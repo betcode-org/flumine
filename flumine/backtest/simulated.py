@@ -59,14 +59,32 @@ class Simulated:
             )
 
     def place(
-        self, client, market_book: MarketBook, instruction: dict, bet_id: int
+        self, order_package, market_book: MarketBook, instruction: dict, bet_id: int
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
         # todo instruction/fillkill/timeInForce etc
-        # todo check marketVersion or reject entire package?
+        # validate market status
+        if market_book.status != "OPEN":
+            return self._create_place_response(
+                bet_id,
+                status="FAILURE",
+                error_code="ERROR_IN_ORDER",
+            )
 
+        # validate market version
         self.market_version = market_book.version
+        if (
+            order_package.market_version
+            and order_package.market_version["version"] != self.market_version
+        ):
+            return self._create_place_response(
+                bet_id,
+                status="FAILURE",
+                error_code="ERROR_IN_ORDER",
+            )
+
         runner = self._get_runner(market_book)
+        # validate runner status
         if runner.status == "REMOVED":
             return self._create_place_response(
                 bet_id,
@@ -79,7 +97,10 @@ class Simulated:
             price = self.order.order_type.price
             size = self.order.order_type.size
             if self.order.side == "BACK":
-                if not client.best_price_execution and available_to_back > price:
+                if (
+                    not order_package.client.best_price_execution
+                    and available_to_back > price
+                ):
                     return self._create_place_response(
                         bet_id,
                         status="FAILURE",
@@ -95,7 +116,10 @@ class Simulated:
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
-                if not client.best_price_execution and available_to_lay < price:
+                if (
+                    not order_package.client.best_price_execution
+                    and available_to_lay < price
+                ):
                     return self._create_place_response(
                         bet_id,
                         status="FAILURE",

@@ -929,7 +929,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.place.return_value = mock_sim_resp
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
-            mock_order_package.client,
+            mock_order_package,
             self.mock_market.market_book,
             1,
             self.execution._bet_id,
@@ -958,7 +958,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.simulated.place.return_value = mock_sim_resp
         self.execution.execute_place(mock_order_package, None)
         mock_order.simulated.place.assert_called_with(
-            mock_order_package.client,
+            mock_order_package,
             self.mock_market.market_book,
             1,
             self.execution._bet_id,
@@ -1132,7 +1132,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with()
         mock_replacement_order.simulated.place.assert_called_with(
-            mock_order_package.client,
+            mock_order_package,
             self.mock_market.market_book,
             {"newPrice": 2.03},
             self.execution._bet_id,
@@ -1176,7 +1176,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with()
         mock_replacement_order.simulated.place.assert_called_with(
-            mock_order_package.client,
+            mock_order_package,
             self.mock_market.market_book,
             {"newPrice": 2.54},
             self.execution._bet_id,
