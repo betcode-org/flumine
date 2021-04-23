@@ -66,16 +66,14 @@ class Simulated:
         # todo check marketVersion or reject entire package?
 
         self.market_version = market_book.version
+        runner = self._get_runner(market_book)
+        if runner.status == "REMOVED":
+            return self._create_place_response(
+                bet_id,
+                status="FAILURE",
+                error_code="RUNNER_REMOVED",
+            )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            runner = self._get_runner(market_book)
-
-            if runner.status == "REMOVED":
-                return self._create_place_response(
-                    bet_id,
-                    status="FAILURE",
-                    error_code="RUNNER_REMOVED",
-                )
-
             available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
             available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
             price = self.order.order_type.price

@@ -232,7 +232,9 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
 
     @mock.patch("flumine.backtest.simulated.Simulated._create_place_response")
-    def test_place_else(self, mock__create_place_response):
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_else(self, mock__get_runner, mock__create_place_response):
+        mock__get_runner.status = "ACTIVE"
         mock_client = mock.Mock(best_price_execution=True)
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         mock_market_book = mock.Mock()
