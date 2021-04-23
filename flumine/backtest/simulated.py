@@ -1,6 +1,6 @@
 import logging
 import datetime
-from typing import List
+from typing import List, Optional
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
 from .utils import (
@@ -66,7 +66,7 @@ class Simulated:
         # validate market status
         if market_book.status != "OPEN":
             return self._create_place_response(
-                bet_id,
+                None,
                 status="FAILURE",
                 error_code="ERROR_IN_ORDER",
             )
@@ -78,7 +78,7 @@ class Simulated:
             and order_package.market_version["version"] != self.market_version
         ):
             return self._create_place_response(
-                bet_id,
+                None,
                 status="FAILURE",
                 error_code="ERROR_IN_ORDER",
             )
@@ -87,7 +87,7 @@ class Simulated:
         # validate runner status
         if runner.status == "REMOVED":
             return self._create_place_response(
-                bet_id,
+                None,
                 status="FAILURE",
                 error_code="RUNNER_REMOVED",
             )
@@ -102,7 +102,7 @@ class Simulated:
                     and available_to_back > price
                 ):
                     return self._create_place_response(
-                        bet_id,
+                        None,
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
@@ -121,7 +121,7 @@ class Simulated:
                     and available_to_lay < price
                 ):
                     return self._create_place_response(
-                        bet_id,
+                        None,
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
@@ -149,7 +149,7 @@ class Simulated:
             # validate BSP / market not inplay
             if market_book.bsp_reconciled is True or market_book.inplay is True:
                 return self._create_place_response(
-                    bet_id,
+                    None,
                     status="FAILURE",
                     error_code="MARKET_NOT_OPEN_FOR_BSP_BETTING",
                 )
@@ -157,7 +157,7 @@ class Simulated:
 
     def _create_place_response(
         self,
-        bet_id: int,
+        bet_id: Optional[int],
         status: str = "SUCCESS",
         order_status: str = None,
         error_code: str = None,
@@ -179,6 +179,7 @@ class Simulated:
 
     def cancel(self) -> SimulatedCancelResponse:
         # simulates cancelOrder request->cancel->response
+        # todo market status
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             _size_reduction = (
                 self.order.update_data.get("size_reduction") or self.size_remaining
@@ -200,6 +201,7 @@ class Simulated:
 
     def update(self, instruction: dict):
         # simulates updateOrder request->update->response
+        # todo market status
         if (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
             and self.size_remaining > 0
