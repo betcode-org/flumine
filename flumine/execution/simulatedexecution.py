@@ -12,7 +12,7 @@ class SimulatedExecution(BaseExecution):
     EXCHANGE = ExchangeType.SIMULATED
     PLACE_LATENCY = 0.120
     CANCEL_LATENCY = 0.170
-    UPDATE_LATENCY = 0.150  # todo confirm?
+    UPDATE_LATENCY = 0.150
     REPLACE_LATENCY = 0.280
 
     def handler(self, order_package: BaseOrderPackage) -> None:

@@ -242,6 +242,17 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         mock__create_place_response.assert_called_with(1)
 
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_else_bsp_recon(self, mock__get_runner):
+        mock__get_runner.status = "ACTIVE"
+        mock_client = mock.Mock(best_price_execution=True)
+        self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        mock_market_book = mock.Mock(bsp_reconciled=True, inplay=False)
+        resp = self.simulated.place(mock_client, mock_market_book, {}, 1)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "MARKET_NOT_OPEN_FOR_BSP_BETTING")
+        self.assertEqual(self.simulated.matched, [])
+
     def test__create_place_response(self):
         resp = self.simulated._create_place_response(
             1234, "FAILURE", error_code="dubs of the mad skint and british"

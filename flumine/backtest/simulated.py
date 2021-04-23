@@ -122,6 +122,13 @@ class Simulated:
             )
             return self._create_place_response(bet_id)
         else:
+            # validate BSP / market not inplay
+            if market_book.bsp_reconciled is True or market_book.inplay is True:
+                return self._create_place_response(
+                    bet_id,
+                    status="FAILURE",
+                    error_code="MARKET_NOT_OPEN_FOR_BSP_BETTING",
+                )
             return self._create_place_response(bet_id)
 
     def _create_place_response(
