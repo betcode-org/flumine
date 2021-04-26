@@ -12,7 +12,7 @@ class SimulatedExecution(BaseExecution):
     EXCHANGE = ExchangeType.SIMULATED
     PLACE_LATENCY = 0.120
     CANCEL_LATENCY = 0.170
-    UPDATE_LATENCY = 0.150  # todo confirm?
+    UPDATE_LATENCY = 0.150
     REPLACE_LATENCY = 0.280
 
     def handler(self, order_package: BaseOrderPackage) -> None:
@@ -43,7 +43,7 @@ class SimulatedExecution(BaseExecution):
             with order.trade:
                 self._bet_id += 1
                 simulated_response = order.simulated.place(
-                    order_package.client, market.market_book, instruction, self._bet_id
+                    order_package, market.market_book, instruction, self._bet_id
                 )
                 self._order_logger(
                     order, simulated_response, order_package.package_type
@@ -61,10 +61,11 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         if order_package.client.paper_trade:
             time.sleep(self.CANCEL_LATENCY)
+        market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order in order_package:
             with order.trade:
-                simulated_response = order.simulated.cancel()
+                simulated_response = order.simulated.cancel(market.market_book)
                 self._order_logger(
                     order, simulated_response, order_package.package_type
                 )
@@ -86,10 +87,13 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         if order_package.client.paper_trade:
             time.sleep(self.UPDATE_LATENCY)
+        market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order, instruction in zip(order_package, order_package.update_instructions):
             with order.trade:
-                simulated_response = order.simulated.update(instruction)
+                simulated_response = order.simulated.update(
+                    market.market_book, instruction
+                )
                 self._order_logger(
                     order, simulated_response, order_package.package_type
                 )
@@ -110,14 +114,14 @@ class SimulatedExecution(BaseExecution):
             order_package.client.paper_trade
         ):  # todo should the cancel happen without a delay?
             time.sleep(order_package.bet_delay + self.REPLACE_LATENCY)
-        failed_transaction_count = 0
         market = self.flumine.markets.markets[order_package.market_id]
+        failed_transaction_count = 0
         for order, instruction in zip(
             order_package, order_package.replace_instructions
         ):
             with order.trade:
                 # cancel current order
-                cancel_instruction_report = order.simulated.cancel()
+                cancel_instruction_report = order.simulated.cancel(market.market_book)
                 if cancel_instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif cancel_instruction_report.status == "FAILURE":
@@ -139,7 +143,7 @@ class SimulatedExecution(BaseExecution):
                     cancel_instruction_report.size_cancelled,
                 )
                 place_instruction_report = replacement_order.simulated.place(
-                    order_package.client, market.market_book, instruction, self._bet_id
+                    order_package, market.market_book, instruction, self._bet_id
                 )
                 if place_instruction_report.status == "SUCCESS":
                     self._order_logger(

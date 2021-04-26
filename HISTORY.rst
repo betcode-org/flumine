@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.18.5 (2021-04-26)
++++++++++++++++++++
+
+**Improvements**
+
+- #121 simulation improvements and further validations
+
+**Libraries**
+
+- black upgraded to 21.4b0
+
 1.18.4 (2021-04-20)
 +++++++++++++++++++
 
