@@ -136,7 +136,7 @@ class SimulatedTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    def test_place_market_closed(self, mock__get_runner):
+    def test_place_market_status(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="SUSPENDED")
@@ -306,14 +306,23 @@ class SimulatedTest(unittest.TestCase):
 
     def test_cancel(self):
         self.simulated.order.update_data = {}
-        resp = self.simulated.cancel()
+        mock_market_book = mock.Mock(status="OPEN")
+        resp = self.simulated.cancel(mock_market_book)
         self.assertEqual(self.simulated.size_cancelled, 2.0)
         self.assertEqual(resp.status, "SUCCESS")
         self.assertEqual(resp.size_cancelled, 2.0)
 
+    def test_cancel_market_status(self):
+        mock_market_book = mock.Mock(status="SUSPENDED")
+        resp = self.simulated.cancel(mock_market_book)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "ERROR_IN_ORDER")
+        self.assertEqual(self.simulated.size_cancelled, 0)
+
     def test_cancel_reduction(self):
         self.simulated.order.update_data = {"size_reduction": 0.50}
-        resp = self.simulated.cancel()
+        mock_market_book = mock.Mock(status="OPEN")
+        resp = self.simulated.cancel(mock_market_book)
         self.assertEqual(self.simulated.size_cancelled, 0.50)
         self.assertEqual(self.simulated.size_remaining, 1.50)
         self.assertEqual(resp.status, "SUCCESS")
@@ -322,7 +331,8 @@ class SimulatedTest(unittest.TestCase):
     def test_cancel_reduction_multi(self):
         self.simulated.size_cancelled = 0.10
         self.simulated.order.update_data = {"size_reduction": 0.50}
-        resp = self.simulated.cancel()
+        mock_market_book = mock.Mock(status="OPEN")
+        resp = self.simulated.cancel(mock_market_book)
         self.assertEqual(self.simulated.size_cancelled, 0.60)
         self.assertEqual(self.simulated.size_remaining, 1.40)
         self.assertEqual(resp.status, "SUCCESS")
@@ -330,7 +340,8 @@ class SimulatedTest(unittest.TestCase):
 
     def test_cancel_reduction_greater_than(self):
         self.simulated.order.update_data = {"size_reduction": 64.0}
-        resp = self.simulated.cancel()
+        mock_market_book = mock.Mock(status="OPEN")
+        resp = self.simulated.cancel(mock_market_book)
         self.assertEqual(self.simulated.size_cancelled, 2.00)
         self.assertEqual(self.simulated.size_remaining, 0.00)
         self.assertEqual(resp.status, "SUCCESS")
@@ -338,7 +349,8 @@ class SimulatedTest(unittest.TestCase):
 
     def test_cancel_else(self):
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
-        resp = self.simulated.cancel()
+        mock_market_book = mock.Mock(status="OPEN")
+        resp = self.simulated.cancel(mock_market_book)
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "BET_ACTION_ERROR")
 

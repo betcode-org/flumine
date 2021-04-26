@@ -61,10 +61,11 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         if order_package.client.paper_trade:
             time.sleep(self.CANCEL_LATENCY)
+        market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order in order_package:
             with order.trade:
-                simulated_response = order.simulated.cancel()
+                simulated_response = order.simulated.cancel(market.market_book)
                 self._order_logger(
                     order, simulated_response, order_package.package_type
                 )
@@ -110,14 +111,14 @@ class SimulatedExecution(BaseExecution):
             order_package.client.paper_trade
         ):  # todo should the cancel happen without a delay?
             time.sleep(order_package.bet_delay + self.REPLACE_LATENCY)
-        failed_transaction_count = 0
         market = self.flumine.markets.markets[order_package.market_id]
+        failed_transaction_count = 0
         for order, instruction in zip(
             order_package, order_package.replace_instructions
         ):
             with order.trade:
                 # cancel current order
-                cancel_instruction_report = order.simulated.cancel()
+                cancel_instruction_report = order.simulated.cancel(market.market_book)
                 if cancel_instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif cancel_instruction_report.status == "FAILURE":

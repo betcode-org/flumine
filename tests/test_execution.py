@@ -988,7 +988,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock(size_cancelled=2, size_remaining=0)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock()
+        mock_order_package = mock.MagicMock(market_id="1.23")
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -996,7 +996,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_sim_resp.status = "SUCCESS"
         mock_order.simulated.cancel.return_value = mock_sim_resp
         self.execution.execute_cancel(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called_with()
+        mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
@@ -1017,7 +1017,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_sim_resp.status = "SUCCESS"
         mock_order.simulated.cancel.return_value = mock_sim_resp
         self.execution.execute_cancel(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called_with()
+        mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
@@ -1030,7 +1030,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock()
+        mock_order_package = mock.MagicMock(market_id="1.23")
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1038,7 +1038,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_sim_resp.status = "FAILURE"
         mock_order.simulated.cancel.return_value = mock_sim_resp
         self.execution.execute_cancel(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called_with()
+        mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
@@ -1049,7 +1049,7 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.time")
     def test_execute_cancel_paper_trade(self, mock_time):
-        mock_order_package = mock.Mock(bet_delay=1)
+        mock_order_package = mock.Mock(market_id="1.23", bet_delay=1)
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_cancel(mock_order_package, None)
@@ -1130,7 +1130,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_replacement_order.simulated.place.return_value = mock_sim_resp
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called_with()
+        mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
         mock_replacement_order.simulated.place.assert_called_with(
             mock_order_package,
             self.mock_market.market_book,
@@ -1174,7 +1174,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_replacement_order.simulated.place.return_value = mock_sim_resp
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
         self.execution.execute_replace(mock_order_package, None)
-        mock_order.simulated.cancel.assert_called_with()
+        mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
         mock_replacement_order.simulated.place.assert_called_with(
             mock_order_package,
             self.mock_market.market_book,

@@ -177,9 +177,13 @@ class Simulated:
             error_code=error_code,
         )
 
-    def cancel(self) -> SimulatedCancelResponse:
+    def cancel(self, market_book: MarketBook) -> SimulatedCancelResponse:
         # simulates cancelOrder request->cancel->response
-        # todo market status
+        if market_book.status != "OPEN":
+            return SimulatedCancelResponse(
+                status="FAILURE",
+                error_code="ERROR_IN_ORDER",
+            )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             _size_reduction = (
                 self.order.update_data.get("size_reduction") or self.size_remaining
