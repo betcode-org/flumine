@@ -200,12 +200,18 @@ class Simulated:
         else:
             return SimulatedCancelResponse(
                 status="FAILURE",
-                error_code="BET_ACTION_ERROR",  # todo ?
+                error_code="BET_ACTION_ERROR",
             )
 
-    def update(self, instruction: dict):
+    def update(
+        self, market_book: MarketBook, instruction: dict
+    ) -> SimulatedUpdateResponse:
         # simulates updateOrder request->update->response
-        # todo market status
+        if market_book.status != "OPEN":
+            return SimulatedUpdateResponse(
+                status="FAILURE",
+                error_code="ERROR_IN_ORDER",
+            )
         if (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
             and self.size_remaining > 0
@@ -215,7 +221,7 @@ class Simulated:
             )
             return SimulatedUpdateResponse(status="SUCCESS")
         else:
-            return SimulatedCancelResponse(
+            return SimulatedUpdateResponse(
                 status="FAILURE",
                 error_code="BET_ACTION_ERROR",
             )

@@ -87,10 +87,13 @@ class SimulatedExecution(BaseExecution):
     ) -> None:
         if order_package.client.paper_trade:
             time.sleep(self.UPDATE_LATENCY)
+        market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order, instruction in zip(order_package, order_package.update_instructions):
             with order.trade:
-                simulated_response = order.simulated.update(instruction)
+                simulated_response = order.simulated.update(
+                    market.market_book, instruction
+                )
                 self._order_logger(
                     order, simulated_response, order_package.package_type
                 )
