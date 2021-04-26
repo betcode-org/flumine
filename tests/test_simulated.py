@@ -370,6 +370,15 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "ERROR_IN_ORDER")
 
+    def test_update_market_p_enabled(self):
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_market_book.market_definition.persistence_enabled = False
+        resp = self.simulated.update(
+            mock_market_book, {"newPersistenceType": "PERSIST"}
+        )
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "INVALID_PERSISTENCE_TYPE")
+
     def test_update_else(self):
         mock_market_book = mock.Mock(status="OPEN")
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE

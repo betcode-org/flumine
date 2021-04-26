@@ -146,8 +146,12 @@ class Simulated:
             )
             return self._create_place_response(bet_id)
         else:
-            # validate BSP / market not inplay
-            if market_book.bsp_reconciled is True or market_book.inplay is True:
+            # validate BSP available, not reconciled and market not inplay
+            if (
+                market_book.market_definition.bsp_market is False
+                or market_book.bsp_reconciled is True
+                or market_book.inplay is True
+            ):
                 return self._create_place_response(
                     None,
                     status="FAILURE",
@@ -211,6 +215,12 @@ class Simulated:
             return SimulatedUpdateResponse(
                 status="FAILURE",
                 error_code="ERROR_IN_ORDER",
+            )
+        # validate BSP available
+        if market_book.market_definition.persistence_enabled is False:
+            return SimulatedUpdateResponse(
+                status="FAILURE",
+                error_code="INVALID_PERSISTENCE_TYPE",
             )
         if (
             self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
