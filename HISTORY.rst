@@ -8,7 +8,8 @@ Release History
 
 **Improvements**
 
--
+- Stream retry timeout bumped
+- Docs improved
 
 **Libraries**
 
