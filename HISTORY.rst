@@ -8,8 +8,9 @@ Release History
 
 **Improvements**
 
-- Stream retry timeout bumped
+- Stream retry timeout bumped to 60s
 - Docs improved
+- get_file_md tuple handing (race stream)
 
 **Libraries**
 
