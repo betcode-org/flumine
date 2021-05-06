@@ -32,6 +32,24 @@ Within markets you have market objects which contains current up to date market 
 - `elapsed_seconds_closed` Seconds since market was closed (543.21)
 - `market_start_datetime` Market scheduled start time
 
+## Transaction
+
+The transaction class is used by default when orders are executed, however it is possible to control the execution behaviour using the transaction class like so:
+
+```python
+with market.transaction() as t:
+    market.place_order(order)  # executed immediately in separate transaction
+    t.place_order(order)  # executed on transaction __exit__
+
+with market.transaction() as t:
+    t.place_order(order)
+    ..
+    t.execute()  # above order executed
+    ..
+    t.cancel_order(order)
+    t.place_order(order)  # both executed on transaction __exit__
+```
+
 ## Blotter
 
 The blotter is a simple and fast class to hold all orders for a particular market.
@@ -41,6 +59,11 @@ The blotter is a simple and fast class to hold all orders for a particular marke
 - `strategy_orders(strategy)` Returns all orders related to a strategy
 - `strategy_selection_orders(strategy, selection_id, handicap)` Returns all orders related to a strategy selection
 - `selection_exposure(strategy, lookup)` Returns strategy/selection exposure
+
+### Properties
+
+- `live_orders` List of live orders
+- `has_live_orders` Bool on live orders
 
 ## Middleware
 

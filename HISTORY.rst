@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.18.6 (2021-05-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Stream retry timeout bumped to 60s
+- Docs improved
+- get_file_md tuple handing (race stream)
+
+**Libraries**
+
+- black upgraded to 21.5b0
+- dependabot native added
+
 1.18.5 (2021-04-26)
 +++++++++++++++++++
 

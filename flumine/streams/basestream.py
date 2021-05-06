@@ -12,7 +12,7 @@ class BaseStream(threading.Thread):
 
     LISTENER = StreamListener
     MAX_LATENCY = 0.5
-    RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=20)
+    RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=60)
 
     def __init__(
         self,

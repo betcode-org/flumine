@@ -8,19 +8,27 @@ theme:
       primary: 'blue grey'
       accent: 'indigo'
 
+    features:
+      - navigation.tabs
+      - navigation.tabs.sticky
+
 repo_name: liampauling/flumine
 repo_url: https://github.com/liampauling/flumine
 edit_uri: ""
 
 nav:
     - Introduction: 'index.md'
-    - QuickStart: 'quickstart.md'
-    - Markets: 'markets.md'
-    - Clients / Execution: 'execution.md'
-    - Trades / Orders: 'trades.md'
-    - Advanced Usage: 'advanced.md'
-    - Architecture: 'architecture.md'
-    - Help: 'help.md'
+    - Getting started:
+      - QuickStart: 'quickstart.md'
+      - Help: 'help.md'
+    - Advanced:
+      - Stategies: 'strategies.md'
+      - Trades / Orders: 'trades.md'
+      - Markets: 'markets.md'
+      - Controls: 'controls.md'
+      - Workers: 'workers.md'
+      - Advanced Usage: 'advanced.md'
+      - Architecture: 'architecture.md'
 
 markdown_extensions:
   - admonition

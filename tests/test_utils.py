@@ -20,6 +20,12 @@ class UtilsTest(unittest.TestCase):
             utils.get_file_md("tests/resources/PRO-1.170258213", "eventId"), "29761984"
         )
 
+    def test_get_file_event_id_tuple(self):
+        self.assertEqual(
+            utils.get_file_md(("tests/resources/PRO-1.170258213", "test"), "eventId"),
+            "29761984",
+        )
+
     def test_chunks(self):
         self.assertEqual([i for i in utils.chunks([1, 2, 3], 1)], [[1], [2], [3]])
 
