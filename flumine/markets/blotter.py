@@ -90,13 +90,15 @@ class Blotter:
         )
         return max(exposure, 0.0)
 
-    def get_exposures(self, strategy, lookup: tuple) -> dict:
+    def get_exposures(self, strategy, lookup: tuple, exclusion=None) -> dict:
         """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
         for order in self.strategy_selection_orders(strategy, *lookup[1:]):
+            if order == exclusion:
+                continue
             if order.status == OrderStatus.VIOLATION:
                 continue
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
