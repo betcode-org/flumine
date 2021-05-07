@@ -509,3 +509,39 @@ class TestStrategyExposure(unittest.TestCase):
 
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_replace(self, mock_on_error):
+        """
+        Check that validating a REPLACE order does not lead to double counting of exposures.
+
+        In this test, max_selection_exposure is 10.0, and the potential liability on the order is £9.
+        If exposures are double counted, the validation would fail.
+        If exposures aren't double counted, then the validation will succeed
+        """
+
+        strategy = mock.Mock()
+        strategy.max_order_exposure = 10
+        strategy.max_selection_exposure = 10
+
+        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        order1.trade.strategy = strategy
+        order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order1.side = "BACK"
+        order1.order_type.price = 2.0
+        order1.order_type.size = 9.0
+        order1.size_remaining = 9.0
+        order1.average_price_matched = 0.0
+        order1.size_matched = 0
+        order1.selection_id=1234
+        order1.handicap = 0
+
+        self.market.blotter._strategy_selection_orders = {(strategy, 2, 3): [order1]}
+
+        # Show that the exposures aren't double counted when REPLACE is used
+        self.trading_control._validate(order1, OrderPackageType.REPLACE)
+        mock_on_error.assert_not_called()
+
+        # Just to be sure, check that the validation fails if we try to validate order1 as a PLACE
+        self.trading_control._validate(order1, OrderPackageType.PLACE)
+        mock_on_error.assert_called_once()
