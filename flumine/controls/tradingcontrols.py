@@ -147,7 +147,7 @@ class StrategyExposure(BaseControl):
 
             # per selection
             market = self.flumine.markets.markets[order.market_id]
-            if package_type==OrderPackageType.REPLACE:
+            if package_type == OrderPackageType.REPLACE:
                 exclusion = order
             else:
                 exclusion = None

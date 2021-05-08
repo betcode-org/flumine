@@ -533,7 +533,7 @@ class TestStrategyExposure(unittest.TestCase):
         order1.size_remaining = 9.0
         order1.average_price_matched = 0.0
         order1.size_matched = 0
-        order1.selection_id=1234
+        order1.selection_id = 1234
         order1.handicap = 0
 
         self.market.blotter._strategy_selection_orders = {(strategy, 2, 3): [order1]}

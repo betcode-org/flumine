@@ -142,7 +142,9 @@ class BlotterTest(unittest.TestCase):
         self.blotter["12345"] = mock_order
         self.blotter["67890"] = mock_order_excluded
         self.assertEqual(
-            self.blotter.get_exposures(mock_strategy, mock_order.lookup, exclusion=mock_order_excluded),
+            self.blotter.get_exposures(
+                mock_strategy, mock_order.lookup, exclusion=mock_order_excluded
+            ),
             {
                 "matched_profit_if_lose": -2.0,
                 "matched_profit_if_win": 9.2,
