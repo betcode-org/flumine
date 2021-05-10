@@ -2,7 +2,7 @@ import logging
 
 from .. import config
 from ..markets.markets import Markets
-from ..order.order import BaseOrder, OrderStatus, OrderTypes
+from ..order.order import BaseOrder, OrderStatus
 from ..order.trade import Trade
 from ..strategy.strategy import Strategies
 from ..events.events import OrderEvent
@@ -25,6 +25,11 @@ Loop through each current order:
     if order:
         update current status
         process
+"""
+
+
+"""
+orderStatus: PENDING, EXECUTION_COMPLETE, EXECUTABLE, EXPIRED
 """
 
 
@@ -60,7 +65,7 @@ def process_current_orders(
 
             if (
                 config.async_place_orders
-                and order.status == OrderStatus.PENDING
+                and order.status == OrderStatus.PENDING  # todo 'or'
                 and order.bet_id is None
                 and current_order.bet_id
             ):  # async bet pending processing
@@ -80,20 +85,8 @@ def process_current_orders(
 
 def process_current_order(order: BaseOrder):
     if order.status == OrderStatus.EXECUTABLE:
-        if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            # todo use `order.current_order.status` ?
-            if order.size_voided:
-                order.voided()
-            elif order.size_lapsed:
-                order.lapsed()
-            elif order.size_remaining == 0:
-                order.execution_complete()
-        elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-            if order.current_order.status == "EXECUTION_COMPLETE":
-                order.execution_complete()
-        elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-            if order.current_order.status == "EXECUTION_COMPLETE":
-                order.execution_complete()
+        if order.current_order.status == "EXECUTION_COMPLETE":
+            order.execution_complete()
 
 
 def create_order_from_current(markets: Markets, strategies: Strategies, current_order):

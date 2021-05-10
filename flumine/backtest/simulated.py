@@ -397,16 +397,16 @@ class Simulated:
 
     @property
     def status(self) -> str:
-        if self.order.status.value in [
-            "EXECUTION_COMPLETE",
-            "EXPIRED",
-            "VOIDED",
-            "LAPSED",
-            "VIOLATION",
-        ]:
-            return "EXECUTION_COMPLETE"
+        if self.take_sp:
+            if self._bsp_reconciled:
+                return "EXECUTION_COMPLETE"
+            else:
+                return "EXECUTABLE"
         else:
-            return "EXECUTABLE"
+            if self.size_remaining:
+                return "EXECUTABLE"
+            else:
+                return "EXECUTION_COMPLETE"
 
     @property
     def info(self) -> dict:

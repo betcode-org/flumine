@@ -678,11 +678,27 @@ class SimulatedTest(unittest.TestCase):
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 2.0)
 
-    def test_status(self):
-        self.mock_order.status.value = "EXECUTION_COMPLETE"
-        self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
-        self.mock_order.status.value = "PENDING"
+    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
+    def test_status_sp(self, mock_take_sp):
+        self.simulated._bsp_reconciled = False
         self.assertEqual(self.simulated.status, "EXECUTABLE")
+        self.simulated._bsp_reconciled = True
+        self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
+
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_remaining",
+        return_value=1,
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.take_sp",
+        return_value=False,
+        new_callable=mock.PropertyMock,
+    )
+    def test_status_limit(self, mock_take_sp, mock_size_remaining):
+        self.assertEqual(self.simulated.status, "EXECUTABLE")
+        mock_size_remaining.return_value = 0
+        self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
 
     def test_info(self):
         self.assertEqual(

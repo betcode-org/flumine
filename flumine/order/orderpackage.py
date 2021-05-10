@@ -114,6 +114,7 @@ class BaseOrderPackage(BaseEvent):
             "market_version": self._market_version,
             "retry": self._retry,
             "retry_count": self._retry_count,
+            "async": self.async_,
         }
 
     @property

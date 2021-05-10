@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.order.ordertype import OrderTypes
+from flumine.order.order import OrderStatus, OrderTypes
 
 from betfairlightweight.resources.bettingresources import PriceSize
 
@@ -12,7 +12,7 @@ from flumine.order.order import (
     BaseOrder,
     BetfairOrder,
 )
-from flumine.order.process import process_current_orders, create_order_from_current
+from flumine.order import process
 from flumine.strategy.strategy import Strategies
 from flumine.utils import create_cheap_hash
 
@@ -37,32 +37,32 @@ class BaseOrderTest(unittest.TestCase):
         )
 
         markets.add_market("market_id", market)
-
         strategies = Strategies()
-
         cheap_hash = create_cheap_hash("strategy_name", 13)
-
         trade = mock.Mock(market_id="market_id")
         trade.strategy.name_hash = cheap_hash
 
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123", market_id="market_id", bet_id=None
         )
-
         betfair_order = BetfairOrder(trade=trade, side="BACK", order_type=mock.Mock())
         betfair_order.id = "123"
         market.blotter = {"123": betfair_order}
-
         event = mock.Mock(event=[mock.Mock(orders=[current_order])])
 
-        process_current_orders(
+        process.process_current_orders(
             markets=markets,
             strategies=strategies,
             event=event,
             log_control=mock_log_control,
         )
-
         self.assertEqual(current_order, betfair_order.responses.current_order)
+
+    def test_process_current_order(self):
+        mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
+        mock_order.current_order.status = "EXECUTION_COMPLETE"
+        process.process_current_order(mock_order)
+        mock_order.execution_complete.assert_called()
 
     def test_create_order_from_current(self):
         market_book = mock.Mock()
@@ -72,14 +72,10 @@ class BaseOrderTest(unittest.TestCase):
         )
 
         markets.add_market("market_id", market)
-
         cheap_hash = create_cheap_hash("strategy_name", 13)
-
         strategy = mock.Mock(name_hash=cheap_hash)
-
         strategies = Strategies()
         strategies(strategy=strategy, client=mock.Mock())
-
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123",
             market_id="market_id",
@@ -91,10 +87,9 @@ class BaseOrderTest(unittest.TestCase):
             persistence_type="LAPSE",
         )
 
-        new_order = create_order_from_current(
+        new_order = process.create_order_from_current(
             markets=markets, strategies=strategies, current_order=current_order
         )
-
         self.assertEqual(market.blotter["123"], new_order)
         self.assertEqual(new_order.market_id, "market_id")
         self.assertEqual(new_order.selection_id, "selection_id")

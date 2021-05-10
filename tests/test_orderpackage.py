@@ -124,6 +124,7 @@ class OrderPackageTest(unittest.TestCase):
                 "market_version": self.order_package._market_version,
                 "retry": self.order_package._retry,
                 "retry_count": self.order_package._retry_count,
+                "async": self.order_package.async_,
             },
         )
 
