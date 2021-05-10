@@ -3,7 +3,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
-from ..utils import get_price, wap
+from ..utils import wap
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +134,11 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
-        for order in market.blotter.live_orders:
+        for order in market.blotter._live_orders:
             if order.simulated and order.status == OrderStatus.EXECUTABLE:
-                runner_analytics = market_analytics.get(
+                runner_analytics = market_analytics[
                     (order.selection_id, order.handicap)
-                )
+                ]
                 order.simulated(market.market_book, runner_analytics)
 
     @staticmethod
@@ -198,8 +198,16 @@ class RunnerAnalytics:
 
     @staticmethod
     def _calculate_middle(runner: RunnerBook) -> float:
-        back = get_price(runner.ex.available_to_back, 0) or 0
-        lay = get_price(runner.ex.available_to_lay, 0) or 1001
+        _back = runner.ex.available_to_back
+        if _back:
+            back = _back[0]["price"]
+        else:
+            back = 0
+        _lay = runner.ex.available_to_lay
+        if _lay:
+            lay = _lay[0]["price"]
+        else:
+            lay = 1001
         return (float(back) + float(lay)) / 2
 
     def _calculate_matched(self, runner: RunnerBook) -> float:
@@ -207,4 +215,7 @@ class RunnerAnalytics:
         total_matched = (
             runner.total_matched or prev_total_matched
         )  # handles non-runner -> 0
-        return round(total_matched - prev_total_matched, 2)
+        if total_matched != prev_total_matched:
+            return round(total_matched - prev_total_matched, 2)
+        else:
+            return 0.0
