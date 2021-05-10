@@ -1,7 +1,5 @@
 # Controls
 
-## BaseStrategy
-
 ## Trading Controls
 
 Before placing an order flumine will check the client and trading controls, this allows validation to occur before execution. If an order does not meet any of these validations it is not executed and status is updated to `Violation`.

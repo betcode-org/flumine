@@ -119,7 +119,7 @@ class StrategyExposure(BaseControl):
 
         if package_type in (
             OrderPackageType.PLACE,
-            OrderPackageType.REPLACE,  # todo potential bug?
+            OrderPackageType.REPLACE,
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
