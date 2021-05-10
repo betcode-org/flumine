@@ -118,6 +118,43 @@ class BlotterTest(unittest.TestCase):
             },
         )
 
+    def test_get_exposures_with_exclusion(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=0.0,
+            order_type=LimitOrder(price=5.6, size=2.0),
+        )
+        mock_order_excluded = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=0.0,
+            order_type=LimitOrder(price=5.6, size=2.0),
+        )
+        self.blotter["12345"] = mock_order
+        self.blotter["67890"] = mock_order_excluded
+        self.assertEqual(
+            self.blotter.get_exposures(
+                mock_strategy, mock_order.lookup, exclusion=mock_order_excluded
+            ),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 9.2,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
+        )
+
     def test_get_exposures_value_error(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
