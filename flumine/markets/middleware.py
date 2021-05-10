@@ -169,31 +169,32 @@ class RunnerAnalytics:
         if update:
             self.middle = self._calculate_middle(self._runner)  # use last update
             self.matched = self._calculate_matched(runner)
-            self.traded = self._calculate_traded(runner.ex.traded_volume)
-            self._traded_volume = runner.ex.traded_volume
+            _tv = runner.ex.traded_volume
+            if self._traded_volume == _tv:
+                self.traded = {}
+            else:
+                self.traded = self._calculate_traded(_tv)
+            self._traded_volume = _tv
             self._runner = runner
         else:
             self.matched = 0
             self.traded = {}
 
     def _calculate_traded(self, traded_volume: list) -> dict:
-        if self._traded_volume == traded_volume:
-            return {}
-        else:
-            p_v, traded = self._p_v, {}
-            # create dictionary
-            c_v = {i["price"]: i["size"] for i in traded_volume}
-            # calculate difference
-            for key, value in c_v.items():
-                if key in p_v:
-                    new_value = float(value) - float(p_v[key])
-                    if new_value > 0:
-                        traded[key] = round(new_value, 2)
-                else:
-                    traded[key] = value
-            # cache for next update
-            self._p_v = c_v
-            return traded
+        p_v, traded = self._p_v, {}
+        # create dictionary
+        c_v = {i["price"]: i["size"] for i in traded_volume}
+        # calculate difference
+        for key, value in c_v.items():
+            if key in p_v:
+                new_value = float(value) - float(p_v[key])
+                if new_value > 0:
+                    traded[key] = round(new_value, 2)
+            else:
+                traded[key] = value
+        # cache for next update
+        self._p_v = c_v
+        return traded
 
     @staticmethod
     def _calculate_middle(runner: RunnerBook) -> float:
