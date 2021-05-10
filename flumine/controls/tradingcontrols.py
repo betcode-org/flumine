@@ -119,7 +119,7 @@ class StrategyExposure(BaseControl):
 
         if package_type in (
             OrderPackageType.PLACE,
-            OrderPackageType.REPLACE,  # todo potential bug?
+            OrderPackageType.REPLACE,
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -147,8 +147,13 @@ class StrategyExposure(BaseControl):
 
             # per selection
             market = self.flumine.markets.markets[order.market_id]
+            if package_type == OrderPackageType.REPLACE:
+                exclusion = order
+            else:
+                exclusion = None
+
             current_exposures = market.blotter.get_exposures(
-                strategy, lookup=order.lookup
+                strategy, lookup=order.lookup, exclusion=exclusion
             )
             """
             We use -min(...) in the below, as "worst_possible_profit_on_X" will be negative if the position is
