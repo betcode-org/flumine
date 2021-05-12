@@ -59,6 +59,9 @@ class Blotter:
         return bool(self._live_orders)
 
     def process_closed_market(self, market_book) -> None:
+        number_of_winners = len(
+            [runner for runner in market_book.runners if runner.status == "WINNER"]
+        )
         for order in self:
             for runner in market_book.runners:
                 if (order.selection_id, order.handicap) == (
@@ -66,6 +69,8 @@ class Blotter:
                     runner.handicap,
                 ):
                     order.runner_status = runner.status
+                    if number_of_winners > market_book.number_of_winners:
+                        order.number_of_dead_heat_winners = number_of_winners
 
     def process_cleared_orders(self, cleared_orders) -> list:
         for cleared_order in cleared_orders.orders:

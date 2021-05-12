@@ -60,6 +60,7 @@ class BaseOrder:
         self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
+        self.number_of_dead_heat_winners = None  # number of winners if more than
         self.status = None
         self.status_log = []
         self.violation_msg = None

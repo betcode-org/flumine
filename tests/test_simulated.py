@@ -18,6 +18,7 @@ class SimulatedTest(unittest.TestCase):
             side="BACK",
             order_type=self.mock_order_type,
             trade=mock_trade,
+            number_of_dead_heat_winners=None,
         )
         self.simulated = simulated.Simulated(self.mock_order)
 
@@ -677,6 +678,41 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.profit, -18.0)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 2.0)
+
+    def test_profit_dead_heat_back(self):
+        self.simulated.order.number_of_dead_heat_winners = 2
+
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 4.0, 10.0])
+        self.assertEqual(self.simulated.profit, 10)
+
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, -10)
+
+    def test_profit_dead_heat_lay(self):
+        self.simulated.order.side = "LAY"
+        self.simulated.order.number_of_dead_heat_winners = 2
+
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 5.0, 20.0])
+        self.assertEqual(self.simulated.profit, -30)
+
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, 20)
+
+    @unittest.skip
+    def test_profit_dead_heat_four(self):
+        self.simulated.order.number_of_dead_heat_winners = 4
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 11.0, 50.0])
+        self.assertEqual(self.simulated.profit, 87.50)
+
+    @unittest.skip
+    def test_profit_dead_heat_five(self):
+        self.simulated.order.number_of_dead_heat_winners = 5
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 5.0, 50.0])
+        self.assertEqual(self.simulated.profit, 50.00)
 
     def test_status(self):
         self.mock_order.status.value = "EXECUTION_COMPLETE"
