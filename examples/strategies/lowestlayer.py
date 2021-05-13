@@ -16,46 +16,29 @@ class LowestLayer(BaseStrategy):
     """
 
     def check_market_book(self, market, market_book):
-        if market_book.status not in ["CLOSED", "SUSPENDED"] and market_book.inplay:
+        if market_book.status not in ["CLOSED", "SUSPENDED"] and (not market_book.inplay):
             return True
 
     def process_market_book(self, market, market_book):
-        # get lowest price runner
-        prices = [
-            (r.selection_id, r.last_price_traded)
-            for r in market_book.runners
-            if r.status == "ACTIVE"
-        ]
-        prices.sort(key=lambda tup: tup[1])
-        selection_id = prices[0][0]
-
-        if prices[0][1] > 3:
-            return
-
         for runner in market_book.runners:
-            if runner.selection_id == selection_id:
-                runner_context = self.get_runner_context(
-                    market.market_id, runner.selection_id
+            if runner.selection_id!=24902035:
+                continue
+            runner_context = self.get_runner_context(
+                market.market_id, runner.selection_id
+            )
+            if runner_context.live_trade_count == 0:
+                trade = Trade(
+                    market_book.market_id,
+                    runner.selection_id,
+                    runner.handicap,
+                    self,
                 )
-                if runner_context.live_trade_count == 0:
-                    # lay at current best lay price
-                    lay = get_price(runner.ex.available_to_lay, 0)
-                    trade = Trade(
-                        market_book.market_id,
-                        runner.selection_id,
-                        runner.handicap,
-                        self,
-                    )
-                    order = trade.create_order(
-                        side="LAY",
-                        order_type=LimitOrder(lay, self.context["stake"]),
-                    )
-                    market.place_order(order)
+                order = trade.create_order(
+                    side="LAY",
+                    order_type=LimitOrder(
+                        price=1.1,
+                        size=100.0,
+                        persistence_type="MARKET_ON_CLOSE"),
+                )
+                market.place_order(order)
 
-    def process_orders(self, market, orders):
-        # kill order if unmatched in market for greater than 2 seconds
-        # this logic is likely to be moved into trade.fill_kill in the future
-        for order in orders:
-            if order.status == OrderStatus.EXECUTABLE:
-                if order.elapsed_seconds and order.elapsed_seconds > 2:
-                    market.cancel_order(order)
