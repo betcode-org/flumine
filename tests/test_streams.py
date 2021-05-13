@@ -595,8 +595,16 @@ class TestFlumineMarketStream(unittest.TestCase):
             "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=False),
         }
         self.assertEqual(len(self.stream.snap()), 1)
+
+        # This one gets sent, as we always want to send the first bsp_reconciled
         self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True),
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True, _definition_bsp_reconciled=True),
+        }
+        self.assertEqual(len(self.stream.snap()), 1)
+
+        # This one does not get sent, as we always want to send the first bsp_reconciled
+        self.stream._caches = {
+            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True, _definition_bsp_reconciled=True),
         }
         self.assertEqual(len(self.stream.snap()), 0)
 

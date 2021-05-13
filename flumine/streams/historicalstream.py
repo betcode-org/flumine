@@ -22,6 +22,8 @@ class FlumineMarketStream(MarketStream):
     which reduces some function calls.
     """
 
+    has_sent_bsp_reconciled = False
+
     def _process(self, data: list, publish_time: int) -> bool:
         for market_book in data:
             market_id = market_book["id"]
@@ -71,7 +73,10 @@ class FlumineMarketStream(MarketStream):
                         continue
                 if self._listener.inplay is False:
                     if cache._definition_in_play:
-                        continue
+                        if cache._definition_bsp_reconciled and not self.has_sent_bsp_reconciled:
+                            self.has_sent_bsp_reconciled = True
+                        else:
+                            continue
             market_books.append(cache.create_resource(self.unique_id, snap=True))
         return market_books
 
