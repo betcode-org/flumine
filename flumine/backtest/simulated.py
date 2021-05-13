@@ -383,31 +383,31 @@ class Simulated:
     @property
     def profit(self) -> float:
         if self.order.runner_status == "WINNER":
-            profit = 0
-            if self.order.number_of_dead_heat_winners:
-                size_matched = (
-                    self.size_matched / self.order.number_of_dead_heat_winners
-                )
-                if self.side == "BACK":
-                    profit = profit - size_matched
-                else:
-                    profit = profit + size_matched
-            else:
-                size_matched = self.size_matched
+            number_of_dead_heat_winners = self.order.number_of_dead_heat_winners or 1
+            profit = (self.size_matched / number_of_dead_heat_winners) * (
+                self.average_price_matched - 1
+            )
 
-            if self.side == "BACK":
-                profit = profit + (self.average_price_matched - 1) * size_matched
-            else:
-                profit = profit + (self.average_price_matched - 1) * -size_matched
+            if number_of_dead_heat_winners == 2:
+                profit = profit - (self.size_matched / number_of_dead_heat_winners)
+            elif number_of_dead_heat_winners > 2:
+                profit = profit - (
+                    self.size_matched
+                    * (number_of_dead_heat_winners - 1)
+                    / number_of_dead_heat_winners
+                )
+
+            if self.side == "LAY":
+                profit = -profit
+
+            return round(profit, 2)
         elif self.order.runner_status == "LOSER":
             if self.side == "BACK":
-                profit = -self.size_matched
+                return -self.size_matched
             else:
-                profit = self.size_matched
+                return self.size_matched
         else:
-            profit = 0.0
-
-        return round(profit, 2)
+            return 0.0
 
     @property
     def status(self) -> str:
