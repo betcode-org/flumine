@@ -609,10 +609,10 @@ class TestFlumineMarketStream(unittest.TestCase):
             "1.123": mock.Mock(
                 publish_time=123,
                 market_definition={
-                    "status": "OPEN",
-                    "inPlay": False,
                     "marketTime": 456,
                 },
+                _definition_status="OPEN",
+                _definition_in_play=False,
             )
         }
         self.assertEqual(len(self.stream.snap()), 1)
@@ -620,10 +620,10 @@ class TestFlumineMarketStream(unittest.TestCase):
             "1.123": mock.Mock(
                 publish_time=123,
                 market_definition={
-                    "status": "OPEN",
-                    "inPlay": False,
                     "marketTime": 1234567,
                 },
+                _definition_status="OPEN",
+                _definition_in_play=False,
             )
         }
         self.assertEqual(len(self.stream.snap()), 0)
