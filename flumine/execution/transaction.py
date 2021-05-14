@@ -47,9 +47,6 @@ class Transaction:
             return False
         # place
         order.place(self.market.market_book.publish_time)
-        if execute:
-            runner_context = order.trade.strategy.get_runner_context(*order.lookup)
-            runner_context.place(order.trade.id)
         if order.id not in self.market.blotter:
             self.market.blotter[order.id] = order
             # update market_notes
@@ -62,6 +59,8 @@ class Transaction:
         if self.market.blotter.has_trade(order.trade.id) is False:
             self.market.flumine.log_control(events.TradeEvent(order.trade))
         if execute:  # handles replaceOrder
+            runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+            runner_context.place(order.trade.id)
             self._pending_place.append((order, market_version))
             self._pending_orders = True
         return True
