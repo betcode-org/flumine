@@ -21,6 +21,5 @@ class BaseEventTest(unittest.TestCase):
         self.assertGreaterEqual(self.base_event.elapsed_seconds, 0)
 
     def test_str(self):
-        self.base_event.EVENT_TYPE = events.EventType.MARKET_BOOK
-        self.base_event.QUEUE_TYPE = events.QueueType.HANDLER
+        self.base_event = events.MarketBookEvent(None)
         self.assertEqual(str(self.base_event), "<MARKET_BOOK [HANDLER]>")

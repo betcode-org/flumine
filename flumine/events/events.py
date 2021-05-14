@@ -29,9 +29,11 @@ class QueueType(Enum):
     LOGGING = "Logging queue"
 
 
-class BaseEvent:  # todo __slots__?
+class BaseEvent:
     EVENT_TYPE = None
     QUEUE_TYPE = None
+
+    __slots__ = ["_time_created", "event", "callback"]
 
     def __init__(self, event):
         self._time_created = datetime.datetime.utcnow()
