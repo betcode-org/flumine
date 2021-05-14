@@ -37,12 +37,6 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.place_reset_seconds, 12)
         self.assertEqual(self.trade.reset_seconds, 34)
 
-    @mock.patch("flumine.order.trade.get_market_notes")
-    def test_update_market_notes(self, mock_get_market_notes):
-        mock_market = mock.Mock()
-        self.trade.update_market_notes(mock_market)
-        self.assertEqual(self.trade.market_notes, mock_get_market_notes())
-
     @mock.patch("flumine.order.trade.Trade.complete_trade")
     @mock.patch(
         "flumine.order.trade.Trade.complete",
@@ -151,7 +145,7 @@ class TradeTest(unittest.TestCase):
 
     def test_notes_str(self):
         self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})
-        # self.assertEqual(self.trade.notes_str, "1,2,3,four")
+        self.assertEqual(self.trade.notes_str, "1,2,3,four")
         self.trade.notes = collections.OrderedDict()
         self.assertEqual(self.trade.notes_str, "")
 
