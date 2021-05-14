@@ -56,8 +56,8 @@ class FlumineMarketStream(MarketStream):
         for cache in list(self._caches.values()):
             if market_ids and cache.market_id not in market_ids:
                 continue
-            # if market has closed send regardless
-            if cache._definition_status != "CLOSED":
+            # if market is not open (closed/suspended) send regardless
+            if cache._definition_status == "OPEN":
                 if self._listener.inplay:
                     if not cache._definition_in_play:
                         continue

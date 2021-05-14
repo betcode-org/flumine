@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.18.8 (2021-05-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Simulation optimisations
+
+**Bug Fixes**
+
+- #173 dead heat profit calculation (@lunswor)
+- listenerKwargs inplay / MoC / SP orders fix (@jsphon)
+
+**Libraries**
+
+- black upgraded to 21.5b1
+
 1.18.7 (2021-05-10)
 +++++++++++++++++++
 

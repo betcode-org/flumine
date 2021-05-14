@@ -44,7 +44,7 @@ class BlotterTest(unittest.TestCase):
         self.assertTrue(self.blotter.has_live_orders)
 
     def test_process_closed_market(self):
-        mock_market_book = mock.Mock()
+        mock_market_book = mock.Mock(number_of_winners=1)
         mock_runner = mock.Mock(selection_id=123, handicap=0.0)
         mock_market_book.runners = [mock_runner]
         mock_order = mock.Mock(selection_id=123, handicap=0.0)
