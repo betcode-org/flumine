@@ -174,6 +174,13 @@ class TestOrderValidation(unittest.TestCase):
         mock_on_error.assert_called_with(order, "Order liability is less than 0")
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_liability_on_error_three(self, mock_on_error):
+        order = mock.Mock()
+        order.order_type.liability = 2.999
+        self.trading_control._validate_betfair_liability(order)
+        mock_on_error.assert_called_with(order, "Order liability has more than 2dp")
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_no_validation(self, mock_on_error):
         self.mock_flumine.client.min_bet_validation = False
         order = mock.Mock(side="BACK")
