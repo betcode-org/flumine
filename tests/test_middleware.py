@@ -17,8 +17,7 @@ class MiddlewareTest(unittest.TestCase):
         self.middleware = Middleware()
 
     def test_call(self):
-        with self.assertRaises(NotImplementedError):
-            self.middleware(None)
+        self.middleware(None)
 
     def test_add_market(self):
         mock_market = mock.Mock()
