@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.18.11b0 (2021-05-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Add order stream start delay and snap pickup
+
 1.18.10 (2021-05-17)
 +++++++++++++++++++
 

@@ -95,7 +95,7 @@ class Streams:
                 streaming_timeout=strategy.streaming_timeout,
                 conflate_ms=strategy.conflate_ms,
             )
-            self._streams.append(stream)
+            self._streams.insert(0, stream)
             return stream
 
     def add_historical_stream(
