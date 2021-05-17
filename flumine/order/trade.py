@@ -10,7 +10,6 @@ from ..strategy.strategy import BaseStrategy
 from .order import BetfairOrder
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
-from ..utils import get_market_notes
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ class Trade:
         selection_id: int,
         handicap: float,
         strategy: BaseStrategy,
-        notes: collections.OrderedDict = None,
+        notes: collections.OrderedDict = None,  # trade notes (e.g. triggers/market state)
         place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
         reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
     ):
@@ -37,9 +36,7 @@ class Trade:
         self.selection_id = selection_id
         self.handicap = handicap
         self.strategy = strategy
-        self.notes = (
-            notes if notes else collections.OrderedDict()
-        )  # trade notes (e.g. triggers/market state)
+        self.notes = notes or collections.OrderedDict()
         self.market_notes = None  # back,lay,lpt
         self.place_reset_seconds = place_reset_seconds
         self.reset_seconds = reset_seconds
@@ -49,9 +46,6 @@ class Trade:
         self.status = TradeStatus.LIVE
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_complete = None
-
-    def update_market_notes(self, market) -> None:
-        self.market_notes = get_market_notes(market, self.selection_id)
 
     # status
     def _update_status(self, status: TradeStatus) -> None:

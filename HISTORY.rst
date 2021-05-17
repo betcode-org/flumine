@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.18.9 (2021-05-17)
++++++++++++++++++++
+
+**Improvements**
+
+- Notes and market notes added to order (potential race condition fix on transaction)
+
+**Bug Fixes**
+
+- #433 Liability persistence types not checked for <= 2 decimal places (@petercoles)
+
 1.18.8 (2021-05-14)
 +++++++++++++++++++
 
