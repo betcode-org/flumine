@@ -56,6 +56,8 @@ class OrderValidation(BaseControl):
             self._on_error(order, "Order liability is None")
         elif order.order_type.liability <= 0:
             self._on_error(order, "Order liability is less than 0")
+        elif order.order_type.liability != round(order.order_type.liability, 2):
+            self._on_error(order, "Order liability has more than 2dp")
 
     def _validate_betfair_min_size(self, order, order_type):
         client = self.flumine.client
