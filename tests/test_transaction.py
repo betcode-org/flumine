@@ -22,12 +22,15 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(self.transaction._pending_update, [])
         self.assertEqual(self.transaction._pending_replace, [])
 
+    @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
     @mock.patch("flumine.execution.transaction.events")
-    def test_place_order(self, mock_events, mock__validate_controls):
+    def test_place_order(
+        self, mock_events, mock__validate_controls, mock_get_market_notes
+    ):
         self.transaction.market.blotter = mock.MagicMock()
         self.transaction.market.blotter.has_trade.return_value = False
         mock_order = mock.Mock(id="123", lookup=(1, 2, 3))
@@ -39,7 +42,9 @@ class TransactionTest(unittest.TestCase):
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
         )
-        mock_order.trade.update_market_notes.assert_called_with(self.mock_market)
+        mock_get_market_notes.assert_called_with(
+            self.mock_market, mock_order.selection_id
+        )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         self.transaction._pending_place = [(mock_order, None)]
@@ -51,12 +56,15 @@ class TransactionTest(unittest.TestCase):
             mock_order.trade.id
         )
 
+    @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
     @mock.patch("flumine.execution.transaction.events")
-    def test_place_order_not_executed(self, mock_events, mock__validate_controls):
+    def test_place_order_not_executed(
+        self, mock_events, mock__validate_controls, mock_get_market_notes
+    ):
         self.transaction.market.blotter = mock.MagicMock()
         self.transaction.market.blotter.has_trade.return_value = False
         mock_order = mock.Mock(id="123")
@@ -74,11 +82,12 @@ class TransactionTest(unittest.TestCase):
             mock_order.trade.id
         )
 
+    @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
-    def test_place_order_retry(self, mock__validate_controls):
+    def test_place_order_retry(self, mock__validate_controls, mock_get_market_notes):
         self.transaction.market.blotter = mock.MagicMock()
         self.transaction.market.blotter.has_trade.return_value = False
         self.transaction.market.blotter.__contains__.return_value = True
@@ -88,6 +97,7 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         self.transaction._pending_place = []
         self.assertFalse(self.transaction._pending_orders)
+        mock_get_market_notes.assert_not_called()
 
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
