@@ -47,6 +47,10 @@ class Transaction:
             return False
         # place
         order.place(self.market.market_book.publish_time)
+        if self.market.blotter.has_trade(order.trade.id):
+            new_trade = False
+        else:
+            new_trade = True
         if order.id not in self.market.blotter:
             self.market.blotter[order.id] = order
             # update market_notes
@@ -56,7 +60,7 @@ class Transaction:
                 order.trade.market_notes = market_notes
         else:
             raise OrderError("Order %s has already been placed" % order.id)
-        if self.market.blotter.has_trade(order.trade.id) is False:
+        if new_trade:
             self.market.flumine.log_control(events.TradeEvent(order.trade))
         if execute:  # handles replaceOrder
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.18.10 (2021-05-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Logging control fix, trade event not triggered
+
 1.18.9 (2021-05-17)
 +++++++++++++++++++
 
