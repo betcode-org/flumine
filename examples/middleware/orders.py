@@ -33,43 +33,50 @@ class OrdersMiddleware(Middleware):
                     "customer_order_ref": current_order.customer_order_ref,
                 },
             )
-            strategy_name_hash = current_order.customer_order_ref[
-                :STRATEGY_NAME_HASH_LENGTH
-            ]
-            order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
-            # get strategy
-            strategy = self.flumine.strategies.hashes.get(strategy_name_hash)
-            if strategy is None:
-                logger.warning(
-                    "OrdersMiddleware: Strategy not available to create order {0}".format(
-                        order_id
-                    ),
-                    extra={
-                        "bet_id": current_order.bet_id,
-                        "market_id": current_order.market_id,
-                        "customer_strategy_ref": current_order.customer_strategy_ref,
-                        "customer_order_ref": current_order.customer_order_ref,
-                        "strategy_name_hash": strategy_name_hash,
-                    },
-                )
-                continue
-            # add trade/order
-            trade = Trade(
-                market.market_id,
-                current_order.selection_id,
-                current_order.handicap,
-                strategy,
-            )
-            order = trade.create_order_from_current(current_order, order_id)
-            market.blotter[order.id] = order
-            order.execution_complete()
-            logger.info(
-                "OrdersMiddleware: New order trade created",
+            order = self._create_order_from_current(current_order, market)
+            if order:
+                order.execution_complete()
+
+    def _create_order_from_current(self, current_order, market):
+        strategy_name_hash = current_order.customer_order_ref[
+            :STRATEGY_NAME_HASH_LENGTH
+        ]
+        order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
+        # get strategy
+        strategy = self.flumine.strategies.hashes.get(strategy_name_hash)
+        if strategy is None:
+            logger.warning(
+                "OrdersMiddleware: Strategy not available to create order {0}".format(
+                    order_id
+                ),
                 extra={
                     "bet_id": current_order.bet_id,
                     "market_id": current_order.market_id,
                     "customer_strategy_ref": current_order.customer_strategy_ref,
                     "customer_order_ref": current_order.customer_order_ref,
-                    "strategy_name": str(strategy),
+                    "strategy_name_hash": strategy_name_hash,
                 },
             )
+            return
+        # add trade/order
+        trade = Trade(
+            market.market_id,
+            current_order.selection_id,
+            current_order.handicap,
+            strategy,
+        )
+        order = trade.create_order_from_current(current_order, order_id)
+        market.blotter[order.id] = order
+        runner_context = strategy.get_runner_context(*order.lookup)
+        runner_context.place(trade.id)
+        logger.info(
+            "OrdersMiddleware: New order trade created",
+            extra={
+                "bet_id": current_order.bet_id,
+                "market_id": current_order.market_id,
+                "customer_strategy_ref": current_order.customer_strategy_ref,
+                "customer_order_ref": current_order.customer_order_ref,
+                "strategy_name": str(strategy),
+            },
+        )
+        return order

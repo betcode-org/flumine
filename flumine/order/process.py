@@ -133,4 +133,6 @@ def create_order_from_current(markets: Markets, strategies: Strategies, current_
     )
     order = trade.create_order_from_current(current_order, order_id)
     market.blotter[order.id] = order
+    runner_context = strategy.get_runner_context(*order.lookup)
+    runner_context.place(trade.id)
     return order

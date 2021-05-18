@@ -138,6 +138,7 @@ class Trade:
         )
         order.bet_id = current_order.bet_id
         order.id = order_id
+        order.update_current_order(current_order)
         self.orders.append(order)
         return order
 
