@@ -15,22 +15,27 @@ logger = logging.getLogger(__name__)
 
 class MarketRecorder(BaseStrategy):
 
+    """
+    Simple raw streaming market recorder, context:
+
+        market_expiration: int, Seconds to wait after market closure before removing files
+        remove_file: bool, Remove txt file during cleanup
+        remove_gz_file: bool, Remove gz file during cleanup
+        force_update: bool, Update zip/closure if update received after closure
+        local_dir: str, Dir to store data
+        recorder_id: str, Directory name (defaults to random uuid)
+    """
+
     MARKET_ID_LOOKUP = "id"
 
     def __init__(self, *args, **kwargs):
         BaseStrategy.__init__(self, *args, **kwargs)
         self._market_expiration = self.context.get("market_expiration", 3600)  # seconds
-        self._remove_file = self.context.get(
-            "remove_file", False
-        )  # remove txt file during cleanup
-        self._remove_gz_file = self.context.get(
-            "remove_gz_file", False
-        )  # remove compressed file during cleanup
-        self._force_update = self.context.get(
-            "force_update", True
-        )  # update after initial closure
+        self._remove_file = self.context.get("remove_file", False)
+        self._remove_gz_file = self.context.get("remove_gz_file", False)
+        self._force_update = self.context.get("force_update", True)
         self.local_dir = self.context.get("local_dir", "/tmp")
-        self.recorder_id = create_short_uuid()
+        self.recorder_id = self.context.get("recorder_id", create_short_uuid())
         self._loaded_markets = []  # list of marketIds
 
     def add(self) -> None:
@@ -142,6 +147,15 @@ class MarketRecorder(BaseStrategy):
 
 
 class S3MarketRecorder(MarketRecorder):
+    """
+    AWS S3 version of the market recorder
+    to automate loading of compressed file
+    and marketCatalogue on closure.
+
+        bucket: str, bucket name
+        data_type: str, data type
+    """
+
     def __init__(self, *args, **kwargs):
         MarketRecorder.__init__(self, *args, **kwargs)
         self._bucket = self.context["bucket"]
