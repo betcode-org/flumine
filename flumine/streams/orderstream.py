@@ -1,3 +1,4 @@
+import time
 import queue
 import logging
 from betfairlightweight import BetfairError, filters
@@ -10,6 +11,8 @@ from .. import config
 logger = logging.getLogger(__name__)
 
 RETRY_WAIT = BaseStream.RETRY_WAIT
+START_DELAY = 2
+SNAP_DELTA = 5
 
 
 class OrderStream(BaseStream):
@@ -29,6 +32,7 @@ class OrderStream(BaseStream):
                 "Starting output_thread (OrderStream {0})".format(self.stream_id)
             )
             self._output_thread.start()
+            time.sleep(START_DELAY)  # allow market streams to start
 
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
@@ -56,19 +60,27 @@ class OrderStream(BaseStream):
         logger.info("Stopped OrderStream {0}".format(self.stream_id))
 
     def handle_output(self) -> None:
-        """Handles output from stream."""
+        """Handles output from stream, snaps
+        if live orders or time delta greater
+        than SNAP_DELTA.
+        """
+        last_snap = 1
         while self.is_alive():
             try:
                 order_books = self._output_queue.get(
                     block=True, timeout=self.streaming_timeout
                 )
-            except queue.Empty:  # todo snap every 5s or so anyway
-                if self.flumine.markets.live_orders:
+            except queue.Empty:
+                if (
+                    self.flumine.markets.live_orders
+                    or (time.time() - last_snap) > SNAP_DELTA
+                ):
                     order_books = self._listener.snap(
                         market_ids=self.flumine.markets.open_market_ids
                     )
                 else:
                     continue
+            last_snap = time.time()
             if order_books:
                 self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 

@@ -13,7 +13,7 @@ PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betf
 
 class Middleware:
     def __call__(self, market) -> None:
-        raise NotImplementedError
+        pass
 
     def add_market(self, market) -> None:
         pass

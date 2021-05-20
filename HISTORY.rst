@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.18.11 (2021-05-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Market recorder refactored to have a single processor thread to remove blocking
+
+**Bug Fixes**
+
+- Add order stream start delay and snap pickup
+- Missing update current order
+
 1.18.10 (2021-05-17)
 +++++++++++++++++++
 
