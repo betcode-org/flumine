@@ -35,6 +35,7 @@ class OrdersMiddleware(Middleware):
             )
             order = self._create_order_from_current(current_order, market)
             if order:
+                order.update_current_order(current_order)
                 order.execution_complete()
 
     def _create_order_from_current(self, current_order, market):
@@ -54,7 +55,7 @@ class OrdersMiddleware(Middleware):
                     "market_id": current_order.market_id,
                     "customer_strategy_ref": current_order.customer_strategy_ref,
                     "customer_order_ref": current_order.customer_order_ref,
-                    "strategy_name_hash": strategy_name_hash,
+                    "strategy_name": str(strategy),
                 },
             )
             return
