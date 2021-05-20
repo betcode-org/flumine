@@ -4,6 +4,8 @@ import time
 import logging
 import gzip
 import boto3
+import queue
+import threading
 from boto3.s3.transfer import S3Transfer, TransferConfig
 from botocore.exceptions import BotoCoreError
 
@@ -37,6 +39,7 @@ class MarketRecorder(BaseStrategy):
         self.local_dir = self.context.get("local_dir", "/tmp")
         self.recorder_id = self.context.get("recorder_id", create_short_uuid())
         self._loaded_markets = []  # list of marketIds
+        self._queue = queue.Queue()
 
     def add(self) -> None:
         logger.info("Adding strategy %s with id %s" % (self.name, self.recorder_id))
@@ -47,6 +50,14 @@ class MarketRecorder(BaseStrategy):
         directory = os.path.join(self.local_dir, self.recorder_id)
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+    def start(self) -> None:
+        # start load processor thread
+        threading.Thread(
+            name="{0}_load_processor".format(self.name),
+            target=self._load_processor,
+            daemon=True,
+        ).start()
 
     def process_raw_data(self, publish_time, data):
         market_id = data.get(self.MARKET_ID_LOOKUP)
@@ -92,14 +103,18 @@ class MarketRecorder(BaseStrategy):
             )
             return
 
-        # compress file
-        compress_file_dir = self._compress_file(file_dir)
+        self._queue.put((market, file_dir, market_definition))
 
-        # core load code
-        self._load(market, compress_file_dir, market_definition)
-
-        # clean up
-        self._clean_up()
+    def _load_processor(self):
+        # process compression/load in thread
+        while True:
+            market, file_dir, market_definition = self._queue.get(block=True)
+            # compress file
+            compress_file_dir = self._compress_file(file_dir)
+            # core load code
+            self._load(market, compress_file_dir, market_definition)
+            # clean up
+            self._clean_up()
 
     def _compress_file(self, file_dir: str) -> str:
         """compresses txt file into filename.gz"""
@@ -154,12 +169,14 @@ class S3MarketRecorder(MarketRecorder):
 
         bucket: str, bucket name
         data_type: str, data type
+        load_market_catalogue: bool, load marketCatalogue as well
     """
 
     def __init__(self, *args, **kwargs):
         MarketRecorder.__init__(self, *args, **kwargs)
         self._bucket = self.context["bucket"]
         self._data_type = self.context.get("data_type", "marketdata")
+        self._load_market_catalogue = self.context.get("load_market_catalogue", True)
         self.s3 = boto3.client("s3")
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
@@ -169,8 +186,7 @@ class S3MarketRecorder(MarketRecorder):
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
-        # note this will block the main handler queue during upload
-        # todo create background worker instead?
+        # load to s3
         event_type_id = (
             market_definition.get("eventTypeId", 0) if market_definition else "7"
         )
@@ -195,7 +211,7 @@ class S3MarketRecorder(MarketRecorder):
             logger.error("Error loading to s3: %s" % e)
 
         # upload marketCatalogue data
-        if market and self.context.get("load_market_catalogue", True):
+        if market and self._load_market_catalogue:
             if market.market_catalogue is None:
                 logger.warning(
                     "No marketCatalogue data available for %s" % market.market_id
