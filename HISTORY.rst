@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.18.12 (2021-05-21)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent race condition on executable/execution_complete and new orders
+
 1.18.11 (2021-05-20)
 +++++++++++++++++++
 

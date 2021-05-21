@@ -1,3 +1,4 @@
+import time
 import logging
 from typing import Union, Iterator
 
@@ -95,7 +96,7 @@ class Streams:
                 streaming_timeout=strategy.streaming_timeout,
                 conflate_ms=strategy.conflate_ms,
             )
-            self._streams.insert(0, stream)
+            self._streams.append(stream)
             return stream
 
     def add_historical_stream(
@@ -187,6 +188,11 @@ class Streams:
             logger.info("Starting streams..")
             for stream in self:
                 stream.start()
+                # wait for successful start
+                while stream.name != "SimulatedOrderStream" and (
+                    not stream._stream or not stream._stream._running
+                ):
+                    time.sleep(0.25)
 
     def stop(self) -> None:
         for stream in self:

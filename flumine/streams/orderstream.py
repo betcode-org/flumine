@@ -32,7 +32,6 @@ class OrderStream(BaseStream):
                 "Starting output_thread (OrderStream {0})".format(self.stream_id)
             )
             self._output_thread.start()
-            time.sleep(START_DELAY)  # allow market streams to start
 
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
