@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from .. import config
 from ..markets.markets import Markets
@@ -29,7 +30,7 @@ Loop through each current order:
 
 
 def process_current_orders(
-    markets: Markets, strategies: Strategies, event, log_control
+    markets: Markets, strategies: Strategies, event, log_control, add_market
 ) -> None:
     for current_orders in event.event:
         for current_order in current_orders.orders:
@@ -48,7 +49,9 @@ def process_current_orders(
                         "customer_order_ref": current_order.customer_order_ref,
                     },
                 )
-                order = create_order_from_current(markets, strategies, current_order)
+                order = create_order_from_current(
+                    markets, strategies, current_order, add_market
+                )
                 if order:
                     logger.info(
                         "Order %s added to blotter" % current_order.bet_id,
@@ -96,23 +99,11 @@ def process_current_order(order: BaseOrder):
                 order.execution_complete()
 
 
-def create_order_from_current(markets: Markets, strategies: Strategies, current_order):
+def create_order_from_current(
+    markets: Markets, strategies: Strategies, current_order, add_market
+) -> Optional[BaseOrder]:
     strategy_name_hash = current_order.customer_order_ref[:STRATEGY_NAME_HASH_LENGTH]
     order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
-    # get market
-    market = markets.markets.get(current_order.market_id)
-    if market is None:
-        logger.warning(
-            "Market not available to create order {0}".format(order_id),
-            extra={
-                "bet_id": current_order.bet_id,
-                "market_id": current_order.market_id,
-                "customer_strategy_ref": current_order.customer_strategy_ref,
-                "customer_order_ref": current_order.customer_order_ref,
-                "strategy_name_hash": strategy_name_hash,
-            },
-        )
-        return
     # get strategy
     strategy = strategies.hashes.get(strategy_name_hash)
     if strategy is None:
@@ -127,6 +118,11 @@ def create_order_from_current(markets: Markets, strategies: Strategies, current_
             },
         )
         return
+    # get market
+    market = markets.markets.get(current_order.market_id)
+    if market is None:
+        # create market
+        market = add_market(current_order.market_id, market_book=None)
     # add trade/order
     trade = Trade(
         market.market_id, current_order.selection_id, current_order.handicap, strategy
