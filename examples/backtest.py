@@ -9,7 +9,7 @@ logger = logging.getLogger()
 
 custom_format = "%(asctime) %(levelname) %(message)"
 log_handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter(custom_format)
+formatter = jsonlogger.JsonFormatter()
 formatter.converter = time.gmtime
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
@@ -19,10 +19,10 @@ client = clients.BacktestClient()
 
 framework = FlumineBacktest(client=client)
 
-_market = "tests/resources/PRO-1.170258213"
+markets = ["tests/resources/PRO-1.170258213"]
 
 strategy = LowestLayer(
-    market_filter={"markets": [_market]},
+    market_filter={"markets": markets},
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},
