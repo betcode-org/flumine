@@ -3,6 +3,7 @@ import uuid
 import logging
 import datetime
 import string
+import collections
 from enum import Enum
 from typing import Union, Optional
 from betfairlightweight import filters
@@ -51,6 +52,7 @@ class BaseOrder:
         handicap: float = 0,
         sep: str = "-",
         context: dict = None,
+        notes: collections.OrderedDict = None,  # order notes (e.g. triggers/market state)
     ):
         self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
@@ -60,10 +62,13 @@ class BaseOrder:
         self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
+        self.number_of_dead_heat_winners = None
         self.status = None
         self.status_log = []
         self.violation_msg = None
         self.context = context or {}  # store order specific notes/triggers
+        self.notes = notes or collections.OrderedDict()
+        self.market_notes = None  # back,lay,lpt
 
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
@@ -252,6 +257,10 @@ class BaseOrder:
         return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
 
     @property
+    def notes_str(self) -> str:
+        return ",".join(str(x) for x in self.notes.values())
+
+    @property
     def info(self) -> dict:
         return {
             "market_id": self.market_id,
@@ -284,6 +293,8 @@ class BaseOrder:
             "status_log": ", ".join([s.value for s in self.status_log]),
             "violation_msg": self.violation_msg,
             "simulated": self.simulated.info,
+            "notes": self.notes_str,
+            "market_notes": self.market_notes,
         }
 
     def json(self) -> str:

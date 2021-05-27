@@ -3,6 +3,59 @@
 Release History
 ---------------
 
+1.18.12 (2021-05-21)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent race condition on executable/execution_complete and new orders
+
+1.18.11 (2021-05-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Market recorder refactored to have a single processor thread to remove blocking
+
+**Bug Fixes**
+
+- Add order stream start delay and snap pickup
+- Missing update current order
+
+1.18.10 (2021-05-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Logging control fix, trade event not triggered
+
+1.18.9 (2021-05-17)
++++++++++++++++++++
+
+**Improvements**
+
+- Notes and market notes added to order (potential race condition fix on transaction)
+
+**Bug Fixes**
+
+- #433 Liability persistence types not checked for <= 2 decimal places (@petercoles)
+
+1.18.8 (2021-05-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Simulation optimisations
+
+**Bug Fixes**
+
+- #173 dead heat profit calculation (@lunswor)
+- listenerKwargs inplay / MoC / SP orders fix (@jsphon)
+
+**Libraries**
+
+- black upgraded to 21.5b1
+
 1.18.7 (2021-05-10)
 +++++++++++++++++++
 

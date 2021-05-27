@@ -3,7 +3,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
-from ..utils import get_price, wap
+from ..utils import wap
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betf
 
 class Middleware:
     def __call__(self, market) -> None:
-        raise NotImplementedError
+        pass
 
     def add_market(self, market) -> None:
         pass
@@ -134,11 +134,11 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
-        for order in market.blotter.live_orders:
+        for order in market.blotter._live_orders:
             if order.simulated and order.status == OrderStatus.EXECUTABLE:
-                runner_analytics = market_analytics.get(
+                runner_analytics = market_analytics[
                     (order.selection_id, order.handicap)
-                )
+                ]
                 order.simulated(market.market_book, runner_analytics)
 
     @staticmethod
@@ -169,36 +169,45 @@ class RunnerAnalytics:
         if update:
             self.middle = self._calculate_middle(self._runner)  # use last update
             self.matched = self._calculate_matched(runner)
-            self.traded = self._calculate_traded(runner.ex.traded_volume)
-            self._traded_volume = runner.ex.traded_volume
+            _tv = runner.ex.traded_volume
+            if self._traded_volume == _tv:
+                self.traded = {}
+            else:
+                self.traded = self._calculate_traded(_tv)
+            self._traded_volume = _tv
             self._runner = runner
         else:
             self.matched = 0
             self.traded = {}
 
     def _calculate_traded(self, traded_volume: list) -> dict:
-        if self._traded_volume == traded_volume:
-            return {}
-        else:
-            p_v, traded = self._p_v, {}
-            # create dictionary
-            c_v = {i["price"]: i["size"] for i in traded_volume}
-            # calculate difference
-            for key, value in c_v.items():
-                if key in p_v:
-                    new_value = float(value) - float(p_v[key])
-                    if new_value > 0:
-                        traded[key] = round(new_value, 2)
-                else:
-                    traded[key] = value
-            # cache for next update
-            self._p_v = c_v
-            return traded
+        p_v, traded = self._p_v, {}
+        # create dictionary
+        c_v = {i["price"]: i["size"] for i in traded_volume}
+        # calculate difference
+        for key, value in c_v.items():
+            if key in p_v:
+                new_value = float(value) - float(p_v[key])
+                if new_value > 0:
+                    traded[key] = round(new_value, 2)
+            else:
+                traded[key] = value
+        # cache for next update
+        self._p_v = c_v
+        return traded
 
     @staticmethod
     def _calculate_middle(runner: RunnerBook) -> float:
-        back = get_price(runner.ex.available_to_back, 0) or 0
-        lay = get_price(runner.ex.available_to_lay, 0) or 1001
+        _back = runner.ex.available_to_back
+        if _back:
+            back = _back[0]["price"]
+        else:
+            back = 0
+        _lay = runner.ex.available_to_lay
+        if _lay:
+            lay = _lay[0]["price"]
+        else:
+            lay = 1001
         return (float(back) + float(lay)) / 2
 
     def _calculate_matched(self, runner: RunnerBook) -> float:
@@ -206,4 +215,7 @@ class RunnerAnalytics:
         total_matched = (
             runner.total_matched or prev_total_matched
         )  # handles non-runner -> 0
-        return round(total_matched - prev_total_matched, 2)
+        if total_matched != prev_total_matched:
+            return round(total_matched - prev_total_matched, 2)
+        else:
+            return 0.0

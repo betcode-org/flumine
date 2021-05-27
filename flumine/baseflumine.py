@@ -213,7 +213,9 @@ class BaseFlumine:
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
-        process_current_orders(self.markets, self.strategies, event, self.log_control)
+        process_current_orders(
+            self.markets, self.strategies, event, self.log_control, self._add_market
+        )
         for market in self.markets:
             if market.closed is False:
                 for strategy in self.strategies:

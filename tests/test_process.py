@@ -30,18 +30,17 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_process_current_orders_with_default_sep(self):
         mock_log_control = mock.Mock()
+        mock_add_market = mock.Mock()
         market_book = mock.Mock()
         markets = Markets()
         market = Market(
             flumine=mock.Mock(), market_id="market_id", market_book=market_book
         )
-
         markets.add_market("market_id", market)
         strategies = Strategies()
         cheap_hash = create_cheap_hash("strategy_name", 13)
         trade = mock.Mock(market_id="market_id")
         trade.strategy.name_hash = cheap_hash
-
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123", market_id="market_id", bet_id=None
         )
@@ -55,6 +54,7 @@ class BaseOrderTest(unittest.TestCase):
             strategies=strategies,
             event=event,
             log_control=mock_log_control,
+            add_market=mock_add_market,
         )
         self.assertEqual(current_order, betfair_order.responses.current_order)
 
@@ -65,12 +65,12 @@ class BaseOrderTest(unittest.TestCase):
         mock_order.execution_complete.assert_called()
 
     def test_create_order_from_current(self):
+        mock_add_market = mock.Mock()
         market_book = mock.Mock()
         markets = Markets()
         market = Market(
             flumine=mock.Mock(), market_id="market_id", market_book=market_book
         )
-
         markets.add_market("market_id", market)
         cheap_hash = create_cheap_hash("strategy_name", 13)
         strategy = mock.Mock(name_hash=cheap_hash)
@@ -88,7 +88,10 @@ class BaseOrderTest(unittest.TestCase):
         )
 
         new_order = process.create_order_from_current(
-            markets=markets, strategies=strategies, current_order=current_order
+            markets=markets,
+            strategies=strategies,
+            current_order=current_order,
+            add_market=mock_add_market,
         )
         self.assertEqual(market.blotter["123"], new_order)
         self.assertEqual(new_order.market_id, "market_id")

@@ -1,3 +1,4 @@
+import time
 import logging
 from typing import Union, Iterator
 
@@ -187,6 +188,11 @@ class Streams:
             logger.info("Starting streams..")
             for stream in self:
                 stream.start()
+                # wait for successful start
+                while stream.name != "SimulatedOrderStream" and (
+                    not stream._stream or not stream._stream._running
+                ):
+                    time.sleep(0.25)
 
     def stop(self) -> None:
         for stream in self:

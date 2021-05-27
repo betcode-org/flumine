@@ -17,8 +17,7 @@ class MiddlewareTest(unittest.TestCase):
         self.middleware = Middleware()
 
     def test_call(self):
-        with self.assertRaises(NotImplementedError):
-            self.middleware(None)
+        self.middleware(None)
 
     def test_add_market(self):
         mock_market = mock.Mock()
@@ -170,15 +169,17 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 
     def test__process_simulated_orders(self):
         mock_market_book = mock.Mock()
-        mock_order = mock.Mock()
-        mock_order.status = OrderStatus.EXECUTABLE
         mock_market = mock.Mock()
-        mock_order_two = mock.Mock()
-        mock_order_two.status = OrderStatus.PENDING
-        mock_order_three = mock.Mock()
-        mock_order_three.status = OrderStatus.EXECUTABLE
-        mock_order_three._simulated = False
-        mock_market.blotter.live_orders = [
+        mock_order = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE
+        )
+        mock_order_two = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.PENDING
+        )
+        mock_order_three = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE, simulated=False
+        )
+        mock_market.blotter._live_orders = [
             mock_order,
             mock_order_two,
             mock_order_three,

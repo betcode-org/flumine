@@ -4,6 +4,7 @@ from unittest import mock
 from flumine.streams import streams, datastream, historicalstream
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
+from flumine.streams import orderstream
 from flumine.exceptions import ListenerError
 
 
@@ -609,10 +610,10 @@ class TestFlumineMarketStream(unittest.TestCase):
             "1.123": mock.Mock(
                 publish_time=123,
                 market_definition={
-                    "status": "OPEN",
-                    "inPlay": False,
                     "marketTime": 456,
                 },
+                _definition_status="OPEN",
+                _definition_in_play=False,
             )
         }
         self.assertEqual(len(self.stream.snap()), 1)
@@ -620,10 +621,10 @@ class TestFlumineMarketStream(unittest.TestCase):
             "1.123": mock.Mock(
                 publish_time=123,
                 market_definition={
-                    "status": "OPEN",
-                    "inPlay": False,
                     "marketTime": 1234567,
                 },
+                _definition_status="OPEN",
+                _definition_in_play=False,
             )
         }
         self.assertEqual(len(self.stream.snap()), 0)
@@ -701,6 +702,8 @@ class TestOrderStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
+        self.assertEqual(orderstream.START_DELAY, 2)
+        self.assertEqual(orderstream.SNAP_DELTA, 5)
 
     # def test_run(self):
     #     pass
