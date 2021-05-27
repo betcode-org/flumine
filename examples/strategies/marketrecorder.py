@@ -193,7 +193,6 @@ class S3MarketRecorder(MarketRecorder):
 
         bucket: str, bucket name
         data_type: str, data type
-        load_market_catalogue: bool, load marketCatalogue as well
     """
 
     def __init__(self, *args, **kwargs):
