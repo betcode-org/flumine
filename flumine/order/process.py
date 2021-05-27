@@ -70,13 +70,15 @@ def process_current_orders(
             process_current_order(order, current_order, log_control)
 
 
-def process_current_order(order: BaseOrder, current_order, log_control):
+def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     # update
     order.update_current_order(current_order)
     # pickup async orders
     if config.async_place_orders and order.bet_id is None and current_order.bet_id:
         order.bet_id = current_order.bet_id
         log_control(OrderEvent(order))
+    if not config.async_place_orders and order.bet_id is None:
+        return  # wait for execution to complete (order received through stream before)
     # update status
     if order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":
