@@ -145,6 +145,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "ERROR_IN_ORDER")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_voided, 2)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_market_version(self, mock__get_runner):
@@ -157,6 +158,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "ERROR_IN_ORDER")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_voided, 2)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_back_unmatched(self, mock__get_runner):
@@ -191,6 +193,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_lapsed, 2)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_lay(self, mock__get_runner):
@@ -244,6 +247,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_lapsed, 2)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_limit_removed_runner(self, mock__get_runner):
@@ -260,6 +264,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "RUNNER_REMOVED")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_voided, 2)
 
     @mock.patch("flumine.backtest.simulated.Simulated._create_place_response")
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -284,6 +289,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "MARKET_NOT_OPEN_FOR_BSP_BETTING")
         self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_voided, 0)
 
     def test__create_place_response(self):
         resp = self.simulated._create_place_response(
@@ -485,7 +491,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_lapsed, 0.10)
         self.assertTrue(self.simulated._bsp_reconciled)
-        self.simulated.order.lapsed.assert_called()
+        self.simulated.order.execution_complete.assert_called()
 
     def test__process_sp_none(self):
         mock_runner = mock.Mock()
@@ -706,8 +712,19 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._update_matched([1234, 11.0, 50.0])
         self.assertEqual(self.simulated.profit, 87.50)
 
-    def test_status(self):
-        self.mock_order.status.value = "EXECUTION_COMPLETE"
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.size_remaining",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.backtest.simulated.Simulated.take_sp",
+        new_callable=mock.PropertyMock,
+        return_value=False,
+    )
+    def test_status(self, mock_take_sp, mock_size_remaining):
+        mock_size_remaining.return_value = 1
+        self.assertEqual(self.simulated.status, "EXECUTABLE")
+        mock_size_remaining.return_value = 0
         self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
 
     @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)

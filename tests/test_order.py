@@ -96,20 +96,6 @@ class BaseOrderTest(unittest.TestCase):
         mock__update_status.assert_called_with(OrderStatus.REPLACING)
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
-    def test_lapsed(self, mock__update_status):
-        self.order.update_data = {123: 456}
-        self.order.lapsed()
-        mock__update_status.assert_called_with(OrderStatus.LAPSED)
-        self.assertEqual(self.order.update_data, {})
-
-    @mock.patch("flumine.order.order.BaseOrder._update_status")
-    def test_voided(self, mock__update_status):
-        self.order.update_data = {123: 456}
-        self.order.voided()
-        mock__update_status.assert_called_with(OrderStatus.VOIDED)
-        self.assertEqual(self.order.update_data, {})
-
-    @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_violation(self, mock__update_status):
         self.order.update_data = {123: 456}
         self.order.violation("the murder capital")
@@ -185,8 +171,6 @@ class BaseOrderTest(unittest.TestCase):
         for s in [
             OrderStatus.EXECUTION_COMPLETE,
             OrderStatus.EXPIRED,
-            OrderStatus.VOIDED,
-            OrderStatus.LAPSED,
             OrderStatus.VIOLATION,
         ]:
             self.order.status = s

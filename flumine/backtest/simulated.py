@@ -65,6 +65,7 @@ class Simulated:
         # todo instruction/fillkill/timeInForce etc
         # validate market status
         if market_book.status != "OPEN":
+            self.size_voided += self.size_remaining
             return self._create_place_response(
                 None,
                 status="FAILURE",
@@ -77,6 +78,7 @@ class Simulated:
             order_package.market_version
             and order_package.market_version["version"] != self.market_version
         ):
+            self.size_voided += self.size_remaining
             return self._create_place_response(
                 None,
                 status="FAILURE",
@@ -86,6 +88,7 @@ class Simulated:
         runner = self._get_runner(market_book)
         # validate runner status
         if runner.status == "REMOVED":
+            self.size_voided += self.size_remaining
             return self._create_place_response(
                 None,
                 status="FAILURE",
@@ -101,6 +104,7 @@ class Simulated:
                     not order_package.client.best_price_execution
                     and available_to_back > price
                 ):
+                    self.size_lapsed += self.size_remaining
                     return self._create_place_response(
                         None,
                         status="FAILURE",
@@ -120,6 +124,7 @@ class Simulated:
                     not order_package.client.best_price_execution
                     and available_to_lay < price
                 ):
+                    self.size_lapsed += self.size_remaining
                     return self._create_place_response(
                         None,
                         status="FAILURE",
@@ -152,6 +157,7 @@ class Simulated:
                 or market_book.bsp_reconciled is True
                 or market_book.inplay is True
             ):
+                self.size_voided += self.size_remaining
                 return self._create_place_response(
                     None,
                     status="FAILURE",
@@ -283,7 +289,7 @@ class Simulated:
                         self.size_cancelled += round(self.size_remaining - size, 2)
                     else:  # lapse
                         self.size_lapsed += self.size_remaining
-                        self.order.lapsed()
+                        self.order.execution_complete()
                         return
             elif _order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 if self.side == "BACK":

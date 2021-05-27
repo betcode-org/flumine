@@ -33,7 +33,7 @@ class BetfairExecution(BaseExecution):
                         else:
                             order.executable()  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
-                        order.lapsed()  # todo correct?
+                        order.execution_complete()
                     elif instruction_report.status == "TIMEOUT":
                         # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus
                         pass

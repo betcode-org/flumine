@@ -61,7 +61,10 @@ class BaseOrderTest(unittest.TestCase):
     def test_process_current_order(self):
         mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
         mock_order.current_order.status = "EXECUTION_COMPLETE"
-        process.process_current_order(mock_order)
+        mock_current_order = mock.Mock()
+        mock_log_control = mock.Mock()
+        process.process_current_order(mock_order, mock_current_order, mock_log_control)
+        mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.execution_complete.assert_called()
 
     def test_create_order_from_current(self):

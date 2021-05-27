@@ -26,17 +26,15 @@ VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
 
 
 class OrderStatus(Enum):
-    # Pending
-    PENDING = "Pending"  # pending exchange processing
-    CANCELLING = "Cancelling"  # waiting for response
-    UPDATING = "Updating"  # waiting for response
-    REPLACING = "Replacing"  # waiting for response
+    # Pending exchange processing
+    PENDING = "Pending"
+    CANCELLING = "Cancelling"
+    UPDATING = "Updating"
+    REPLACING = "Replacing"
     # Completed
     EXECUTABLE = "Executable"  # an order that has a remaining unmatched portion
     EXECUTION_COMPLETE = "Execution complete"  # an order that does not have any remaining unmatched portion
     EXPIRED = "Expired"  # order is no longer available for execution due to its time in force constraint
-    VOIDED = "Voided"
-    LAPSED = "Lapsed"
     VIOLATION = "Violation"  # order never placed due to failing controls
 
 
@@ -114,14 +112,6 @@ class BaseOrder:
     def replacing(self) -> None:
         self._update_status(OrderStatus.REPLACING)
 
-    def lapsed(self) -> None:
-        self._update_status(OrderStatus.LAPSED)
-        self.update_data.clear()
-
-    def voided(self) -> None:
-        self._update_status(OrderStatus.VOIDED)
-        self.update_data.clear()
-
     def violation(self, violation_msg: str) -> None:
         self._update_status(OrderStatus.VIOLATION)
         self.violation_msg = violation_msg
@@ -181,8 +171,6 @@ class BaseOrder:
         elif self.status in [
             OrderStatus.EXECUTION_COMPLETE,
             OrderStatus.EXPIRED,
-            OrderStatus.VOIDED,
-            OrderStatus.LAPSED,
             OrderStatus.VIOLATION,
         ]:
             return True

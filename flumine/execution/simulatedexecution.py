@@ -51,7 +51,7 @@ class SimulatedExecution(BaseExecution):
                 if simulated_response.status == "SUCCESS":
                     order.executable()
                 elif simulated_response.status == "FAILURE":
-                    order.lapsed()
+                    order.execution_complete()
 
         # update transaction counts
         order_package.client.add_transaction(len(order_package))
@@ -128,7 +128,7 @@ class SimulatedExecution(BaseExecution):
                     order.executable()  # todo do not carry out replace
                     failed_transaction_count += 1
                 else:
-                    order.lapsed()  # todo do not carry out replace
+                    order.execution_complete()  # todo do not carry out replace
                 self._order_logger(
                     order,
                     cancel_instruction_report,

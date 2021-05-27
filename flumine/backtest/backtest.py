@@ -8,7 +8,7 @@ from .. import config, utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.trade import TradeStatus
-from ..order import process
+from ..order.order import OrderTypes
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +157,15 @@ class FlumineBacktest(BaseFlumine):
         """
         blotter = market.blotter
         for order in blotter.live_orders:
-            process.process_current_order(order)
+            if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                if order.size_remaining == 0:
+                    order.execution_complete()
+            elif order.order_type.ORDER_TYPE in [
+                OrderTypes.LIMIT_ON_CLOSE,
+                OrderTypes.MARKET_ON_CLOSE,
+            ]:
+                if order.current_order.status == "EXECUTION_COMPLETE":
+                    order.execution_complete()
             if order.trade.status == TradeStatus.COMPLETE:
                 blotter.complete_order(order)
         for strategy in self.strategies:
