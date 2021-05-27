@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.19.0 (2021-05-27)
++++++++++++++++++++
+
+**Improvements**
+
+- Process refactor to use current_order status (remove void/lapse to match betfair)
+- Examples improvements
+
 1.18.12 (2021-05-21)
 +++++++++++++++++++
 

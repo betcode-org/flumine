@@ -8,6 +8,7 @@ from flumine import config
 from flumine.exceptions import RunError
 from flumine.order.trade import TradeStatus
 from flumine.markets.blotter import Blotter
+from flumine.order.order import OrderTypes
 
 
 class FlumineBacktestTest(unittest.TestCase):
@@ -103,23 +104,20 @@ class FlumineBacktestTest(unittest.TestCase):
         self.flumine.process_order_package(mock_order_package)
         self.assertEqual(self.flumine.handler_queue, [mock_order_package])
 
-    @mock.patch("flumine.backtest.backtest.process.process_current_order")
-    def test__process_backtest_orders(self, mock_process_current_order):
+    def test__process_backtest_orders(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter = Blotter("1.23")
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(size_remaining=0)
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.trade.status = TradeStatus.COMPLETE
-        mock_order_two = mock.Mock()
+        mock_order_two = mock.Mock(size_remaining=1)
+        mock_order_two.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order_two.trade.status = TradeStatus.COMPLETE
         mock_market.blotter._live_orders = [mock_order, mock_order_two]
         self.flumine._process_backtest_orders(mock_market)
-        mock_process_current_order.assert_has_calls(
-            [
-                mock.call(mock_order),
-                mock.call(mock_order_two),
-            ]
-        )
         self.assertEqual(mock_market.blotter._live_orders, [])
+        mock_order.execution_complete.assert_called()
+        mock_order_two.execution_complete.assert_not_called()
 
     def test__process_backtest_orders_strategies(self):
         mock_market = mock.Mock(context={})

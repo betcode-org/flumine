@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.order.ordertype import OrderTypes
+from flumine.order.order import OrderStatus, OrderTypes
 
 from betfairlightweight.resources.bettingresources import PriceSize
 
@@ -12,7 +12,7 @@ from flumine.order.order import (
     BaseOrder,
     BetfairOrder,
 )
-from flumine.order.process import process_current_orders, create_order_from_current
+from flumine.order import process
 from flumine.strategy.strategy import Strategies
 from flumine.utils import create_cheap_hash
 
@@ -48,7 +48,8 @@ class BaseOrderTest(unittest.TestCase):
         betfair_order.id = "123"
         market.blotter = {"123": betfair_order}
         event = mock.Mock(event=[mock.Mock(orders=[current_order])])
-        process_current_orders(
+
+        process.process_current_orders(
             markets=markets,
             strategies=strategies,
             event=event,
@@ -56,6 +57,15 @@ class BaseOrderTest(unittest.TestCase):
             add_market=mock_add_market,
         )
         self.assertEqual(current_order, betfair_order.responses.current_order)
+
+    def test_process_current_order(self):
+        mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
+        mock_order.current_order.status = "EXECUTION_COMPLETE"
+        mock_current_order = mock.Mock()
+        mock_log_control = mock.Mock()
+        process.process_current_order(mock_order, mock_current_order, mock_log_control)
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.execution_complete.assert_called()
 
     def test_create_order_from_current(self):
         mock_add_market = mock.Mock()
@@ -79,7 +89,8 @@ class BaseOrderTest(unittest.TestCase):
             price_size=PriceSize(price=10.0, size=2.0),
             persistence_type="LAPSE",
         )
-        new_order = create_order_from_current(
+
+        new_order = process.create_order_from_current(
             markets=markets,
             strategies=strategies,
             current_order=current_order,

@@ -300,7 +300,7 @@ class BetfairExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
-        mock_order.lapsed.assert_called_with()
+        mock_order.execution_complete.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)
@@ -331,7 +331,6 @@ class BetfairExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
-        # mock_order.lapsed.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)
@@ -966,7 +965,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, mock_order_package.package_type
         )
-        mock_order.lapsed.assert_called_with()
+        mock_order.execution_complete.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)

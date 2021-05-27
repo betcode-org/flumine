@@ -19,10 +19,10 @@ client = clients.BacktestClient()
 
 framework = FlumineBacktest(client=client)
 
-_market = "tests/resources/PRO-1.170258213"
+markets = ["tests/resources/PRO-1.170258213"]
 
 strategy = LowestLayer(
-    market_filter={"markets": [_market]},
+    market_filter={"markets": markets},
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},
