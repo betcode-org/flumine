@@ -9,7 +9,7 @@ logger = logging.getLogger()
 
 custom_format = "%(asctime) %(levelname) %(message)"
 log_handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter()
+formatter = jsonlogger.JsonFormatter(custom_format)
 formatter.converter = time.gmtime
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
