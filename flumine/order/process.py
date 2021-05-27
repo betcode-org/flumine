@@ -77,10 +77,8 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     if config.async_place_orders and order.bet_id is None and current_order.bet_id:
         order.bet_id = current_order.bet_id
         log_control(OrderEvent(order))
-    if not config.async_place_orders and order.bet_id is None:
-        return  # wait for execution to complete (order received through stream before)
     # update status
-    if order.status == OrderStatus.PENDING:
+    if order.bet_id and order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":
             order.executable()
         elif order.current_order.status in ["EXECUTION_COMPLETE", "EXPIRED"]:
