@@ -24,6 +24,7 @@ class MarketRecorder(BaseStrategy):
         remove_file: bool, Remove txt file during cleanup
         remove_gz_file: bool, Remove gz file during cleanup
         force_update: bool, Update zip/closure if update received after closure
+        load_market_catalogue: bool, Store marketCatalogue as {marketId}.json
         local_dir: str, Dir to store data
         recorder_id: str, Directory name (defaults to random uuid)
     """
@@ -36,6 +37,7 @@ class MarketRecorder(BaseStrategy):
         self._remove_file = self.context.get("remove_file", False)
         self._remove_gz_file = self.context.get("remove_gz_file", False)
         self._force_update = self.context.get("force_update", True)
+        self._load_market_catalogue = self.context.get("load_market_catalogue", True)
         self.local_dir = self.context.get("local_dir", "/tmp")
         self.recorder_id = self.context.get("recorder_id", create_short_uuid())
         self._loaded_markets = []  # list of marketIds
@@ -125,7 +127,29 @@ class MarketRecorder(BaseStrategy):
         return compressed_file_dir
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
-        pass
+        # store marketCatalogue data `{marketId}.json.gz`
+        if market and self._load_market_catalogue:
+            if market.market_catalogue is None:
+                logger.warning(
+                    "No marketCatalogue data available for %s" % market.market_id
+                )
+                return
+            market_catalogue_compressed = self._compress_catalogue(
+                market.market_catalogue
+            )
+            # save to file
+            file_dir = os.path.join(
+                self.local_dir, self.recorder_id, "{0}.json.gz".format(market.market_id)
+            )
+            with open(file_dir, "wb") as f:
+                f.write(market_catalogue_compressed)
+
+    @staticmethod
+    def _compress_catalogue(market_catalogue) -> bytes:
+        market_catalogue_dumped = market_catalogue.json()
+        if isinstance(market_catalogue_dumped, str):
+            market_catalogue_dumped = market_catalogue_dumped.encode("utf-8")
+        return gzip.compress(market_catalogue_dumped)
 
     def _clean_up(self) -> None:
         """If gz > market_expiration old remove
@@ -169,14 +193,12 @@ class S3MarketRecorder(MarketRecorder):
 
         bucket: str, bucket name
         data_type: str, data type
-        load_market_catalogue: bool, load marketCatalogue as well
     """
 
     def __init__(self, *args, **kwargs):
         MarketRecorder.__init__(self, *args, **kwargs)
         self._bucket = self.context["bucket"]
         self._data_type = self.context.get("data_type", "marketdata")
-        self._load_market_catalogue = self.context.get("load_market_catalogue", True)
         self.s3 = boto3.client("s3")
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
@@ -217,10 +239,9 @@ class S3MarketRecorder(MarketRecorder):
                     "No marketCatalogue data available for %s" % market.market_id
                 )
                 return
-            market_catalogue_dumped = market.market_catalogue.json()
-            if isinstance(market_catalogue_dumped, str):
-                market_catalogue_dumped = market_catalogue_dumped.encode("utf-8")
-            market_catalogue_compressed = gzip.compress(market_catalogue_dumped)
+            market_catalogue_compressed = self._compress_catalogue(
+                market.market_catalogue
+            )
             try:
                 self.s3.put_object(
                     Body=market_catalogue_compressed,
