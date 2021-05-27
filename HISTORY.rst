@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.1 (2021-05-27)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent race condition between execution and order stream
+
 1.19.0 (2021-05-27)
 +++++++++++++++++++
 

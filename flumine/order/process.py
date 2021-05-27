@@ -70,7 +70,7 @@ def process_current_orders(
             process_current_order(order, current_order, log_control)
 
 
-def process_current_order(order: BaseOrder, current_order, log_control):
+def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     # update
     order.update_current_order(current_order)
     # pickup async orders
@@ -78,7 +78,7 @@ def process_current_order(order: BaseOrder, current_order, log_control):
         order.bet_id = current_order.bet_id
         log_control(OrderEvent(order))
     # update status
-    if order.status == OrderStatus.PENDING:
+    if order.bet_id and order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":
             order.executable()
         elif order.current_order.status in ["EXECUTION_COMPLETE", "EXPIRED"]:
