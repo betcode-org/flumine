@@ -4,6 +4,8 @@ from unittest import mock
 from unittest.mock import call
 
 from betfairlightweight import BetfairError
+
+from flumine import config
 from flumine.clients.clients import ExchangeType
 from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import (
@@ -861,6 +863,10 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
+        self.assertEqual(self.execution.PLACE_LATENCY, config.place_latency)
+        self.assertEqual(self.execution.CANCEL_LATENCY, config.cancel_latency)
+        self.assertEqual(self.execution.UPDATE_LATENCY, config.update_latency)
+        self.assertEqual(self.execution.REPLACE_LATENCY, config.replace_latency)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
     def test_handler_paper_trade(self, mock_execute_place):
