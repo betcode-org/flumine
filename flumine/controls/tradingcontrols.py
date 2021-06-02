@@ -98,6 +98,23 @@ class OrderValidation(BaseControl):
                 )
 
 
+class MarketValidation(BaseControl):
+    """
+    Validates market is open for orders
+    """
+
+    NAME = "MARKET_VALIDATION"
+
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+        if order.EXCHANGE == ExchangeType.BETFAIR:
+            self._validate_betfair_market_status(order)
+
+    def _validate_betfair_market_status(self, order):
+        market = self.flumine.markets.markets.get(order.market_id)
+        if market and market.market_book.status != "OPEN":
+            self._on_error(order, "Market is not open")
+
+
 class StrategyExposure(BaseControl):
 
     """

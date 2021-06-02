@@ -7,6 +7,7 @@ from flumine.controls.tradingcontrols import (
     OrderTypes,
     ExchangeType,
     OrderPackageType,
+    MarketValidation,
 )
 from flumine.markets.blotter import Blotter
 
@@ -272,6 +273,39 @@ class TestOrderValidation(unittest.TestCase):
         mock_on_error.assert_called_with(
             order, "Liability is less than min BSP payout (10) for currency"
         )
+
+
+class TestMarketValidation(unittest.TestCase):
+    def setUp(self):
+        self.mock_market = mock.Mock(market_book=mock.Mock(status="OPEN"))
+        self.mock_flumine = mock.Mock()
+        self.mock_flumine.markets.markets = {"market_id": self.mock_market}
+        self.trading_control = MarketValidation(self.mock_flumine)
+        self.mock_order = mock.Mock()
+        self.mock_order.market_id = "market_id"
+
+    @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
+    def test__validate_betfair_market_status(self, mock_on_error):
+        self.trading_control._validate_betfair_market_status(self.mock_order)
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
+    def test__validate_betfair_market_status_closed(self, mock_on_error):
+        self.mock_market.market_book.status = "CLOSED"
+        self.trading_control._validate_betfair_market_status(self.mock_order)
+        mock_on_error.assert_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
+    def test__validate_betfair_market_status_suspended(self, mock_on_error):
+        self.mock_market.market_book.status = "SUSPENDED"
+        self.trading_control._validate_betfair_market_status(self.mock_order)
+        mock_on_error.assert_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
+    def test__validate_betfair_market_not_found(self, mock_on_error):
+        self.mock_flumine.markets.markets = {}
+        self.trading_control._validate_betfair_market_status(self.mock_order)
+        mock_on_error.assert_not_called()
 
 
 class TestStrategyExposure(unittest.TestCase):
