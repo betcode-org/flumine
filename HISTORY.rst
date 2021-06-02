@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.2 (2021-06-02)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- MarketRecorder race condition on file load / remove txt only if aged
+
 1.19.1 (2021-05-27)
 +++++++++++++++++++
 
