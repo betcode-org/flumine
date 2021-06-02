@@ -15,7 +15,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._market_middleware, [])
         self.assertEqual(self.base_flumine._logging_controls, [])
-        self.assertEqual(len(self.base_flumine.trading_controls), 2)
+        self.assertEqual(len(self.base_flumine.trading_controls), 3)
         self.assertEqual(self.base_flumine._workers, [])
 
     @mock.patch("flumine.baseflumine.SimulatedMiddleware")
@@ -67,7 +67,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_trading_control(self):
         mock_control = mock.Mock()
         self.base_flumine.add_trading_control(mock_control)
-        self.assertEqual(len(self.base_flumine.trading_controls), 3)
+        self.assertEqual(len(self.base_flumine.trading_controls), 4)
 
     def test_add_market_middleware(self):
         mock_middleware = mock.Mock()
