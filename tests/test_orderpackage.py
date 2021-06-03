@@ -1,5 +1,6 @@
 import unittest
 from unittest import mock
+
 from flumine import config
 from flumine.order.orderpackage import (
     OrderPackageType,
