@@ -17,7 +17,11 @@ from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
-from .controls.tradingcontrols import OrderValidation, StrategyExposure
+from .controls.tradingcontrols import (
+    OrderValidation,
+    StrategyExposure,
+    MarketValidation,
+)
 from .controls.loggingcontrols import LoggingControl
 from .exceptions import FlumineException
 from . import config, utils
@@ -69,6 +73,7 @@ class BaseFlumine:
         self.trading_controls = []
         # add default controls (processed in order)
         self.add_trading_control(OrderValidation)
+        self.add_trading_control(MarketValidation)
         self.add_trading_control(StrategyExposure)
         # register default client controls (processed in order)
         self.add_client_control(MaxTransactionCount)
