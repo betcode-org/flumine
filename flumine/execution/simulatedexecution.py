@@ -11,10 +11,6 @@ from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 class SimulatedExecution(BaseExecution):
 
     EXCHANGE = ExchangeType.SIMULATED
-    PLACE_LATENCY = config.place_latency
-    CANCEL_LATENCY = config.cancel_latency
-    UPDATE_LATENCY = config.update_latency
-    REPLACE_LATENCY = config.replace_latency
 
     def handler(self, order_package: BaseOrderPackage) -> None:
         """Only uses _thread_pool if paper_trade"""
@@ -38,7 +34,7 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(order_package.bet_delay + self.PLACE_LATENCY)
+            time.sleep(order_package.bet_delay + config.place_latency)
         market = self.flumine.markets.markets[order_package.market_id]
         for order, instruction in zip(order_package, order_package.place_instructions):
             with order.trade:
@@ -61,7 +57,7 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(self.CANCEL_LATENCY)
+            time.sleep(config.cancel_latency)
         market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order in order_package:
@@ -87,7 +83,7 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(self.UPDATE_LATENCY)
+            time.sleep(config.update_latency)
         market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order, instruction in zip(order_package, order_package.update_instructions):
@@ -114,7 +110,7 @@ class SimulatedExecution(BaseExecution):
         if (
             order_package.client.paper_trade
         ):  # todo should the cancel happen without a delay?
-            time.sleep(order_package.bet_delay + self.REPLACE_LATENCY)
+            time.sleep(order_package.bet_delay + config.replace_latency)
         market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order, instruction in zip(
