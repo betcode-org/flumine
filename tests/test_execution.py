@@ -863,10 +863,6 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
-        self.assertEqual(self.execution.PLACE_LATENCY, config.place_latency)
-        self.assertEqual(self.execution.CANCEL_LATENCY, config.cancel_latency)
-        self.assertEqual(self.execution.UPDATE_LATENCY, config.update_latency)
-        self.assertEqual(self.execution.REPLACE_LATENCY, config.replace_latency)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
     def test_handler_paper_trade(self, mock_execute_place):
@@ -985,7 +981,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_place(mock_order_package, None)
-        mock_time.sleep.assert_called_with(self.execution.PLACE_LATENCY + 1)
+        mock_time.sleep.assert_called_with(config.place_latency + 1)
         mock_order_package.client.add_transaction.assert_called_with(1)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
@@ -1058,7 +1054,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_cancel(mock_order_package, None)
-        mock_time.sleep.assert_called_with(self.execution.CANCEL_LATENCY)
+        mock_time.sleep.assert_called_with(config.cancel_latency)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update(self, mock__order_logger):
@@ -1117,7 +1113,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_update(mock_order_package, None)
-        mock_time.sleep.assert_called_with(self.execution.UPDATE_LATENCY)
+        mock_time.sleep.assert_called_with(config.update_latency)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
@@ -1209,4 +1205,4 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_replace(mock_order_package, None)
-        mock_time.sleep.assert_called_with(self.execution.REPLACE_LATENCY + 1)
+        mock_time.sleep.assert_called_with(config.replace_latency + 1)

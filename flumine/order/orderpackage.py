@@ -64,13 +64,13 @@ class BaseOrderPackage(BaseEvent):
     def calc_simulated_delay(self) -> float:
         if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
-                return self.client.execution.PLACE_LATENCY + self.bet_delay
+                return config.place_latency + self.bet_delay
             elif self.package_type == OrderPackageType.CANCEL:
-                return self.client.execution.CANCEL_LATENCY
+                return config.cancel_latency
             elif self.package_type == OrderPackageType.UPDATE:
-                return self.client.execution.UPDATE_LATENCY
+                return config.update_latency
             elif self.package_type == OrderPackageType.REPLACE:
-                return self.client.execution.REPLACE_LATENCY + self.bet_delay
+                return config.replace_latency + self.bet_delay
 
     @property
     def place_instructions(self) -> dict:

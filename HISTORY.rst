@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.4 (2021-06-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Updates simulation class to use config latencies
+
 1.19.3 (2021-06-03)
 +++++++++++++++++++
 

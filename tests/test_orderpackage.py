@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 
+from flumine import config
 from flumine.order.orderpackage import (
     OrderPackageType,
     BaseOrderPackage,
@@ -61,12 +62,13 @@ class OrderPackageTest(unittest.TestCase):
         mock_time.sleep.assert_called()
 
     def test_calc_simulated_delay(self):
+        config.place_latency = 0.1
+        config.cancel_latency = 0.2
+        config.update_latency = 0.3
+        config.replace_latency = 0.4
+
         self.assertIsNone(self.order_package.calc_simulated_delay())
         self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
-        self.order_package.client.execution.PLACE_LATENCY = 0.1
-        self.order_package.client.execution.CANCEL_LATENCY = 0.2
-        self.order_package.client.execution.UPDATE_LATENCY = 0.3
-        self.order_package.client.execution.REPLACE_LATENCY = 0.4
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_delay(), 1.1)
         self.order_package.package_type = OrderPackageType.CANCEL
