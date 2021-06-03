@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.19.2 (2021-06-03)
++++++++++++++++++++
+
+**Improvements**
+
+- Move simulated latencies to config (@lunswor)
+- Add control to validate market status  (@lunswor)
+
+**Bug Fixes**
+
+- MarketRecorder race condition on file load / remove txt only if aged
+
+**Libraries**
+
+- black upgraded to black==21.5b2
+
 1.19.1 (2021-05-27)
 +++++++++++++++++++
 

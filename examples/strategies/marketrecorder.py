@@ -111,6 +111,12 @@ class MarketRecorder(BaseStrategy):
         # process compression/load in thread
         while True:
             market, file_dir, market_definition = self._queue.get(block=True)
+            # check file still exists (potential race condition)
+            if not os.path.isfile(file_dir):
+                logger.warning(
+                    "File: %s does not exist in %s" % (market.market_id, file_dir)
+                )
+                continue
             # compress file
             compress_file_dir = self._compress_file(file_dir)
             # core load code
@@ -170,11 +176,14 @@ class MarketRecorder(BaseStrategy):
                         os.remove(gz_path)
                     txt_path = os.path.join(directory, file.split(".gz")[0])
                     if os.path.exists(txt_path) and self._remove_file:
-                        logger.info(
-                            "Removing: %s, age: %ss"
-                            % (txt_path, round(seconds_since, 2))
-                        )
-                        os.remove(txt_path)
+                        file_stats = os.stat(txt_path)
+                        seconds_since = time.time() - file_stats.st_mtime
+                        if seconds_since > self._market_expiration:
+                            logger.info(
+                                "Removing: %s, age: %ss"
+                                % (txt_path, round(seconds_since, 2))
+                            )
+                            os.remove(txt_path)
 
     @staticmethod
     def _create_metadata(market_definition: dict) -> dict:

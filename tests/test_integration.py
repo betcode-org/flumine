@@ -185,7 +185,7 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(
                 round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
             )
-            self.assertEqual(len(limit_inplay_orders), 15)
+            self.assertEqual(len(limit_inplay_orders), 14)
             market_orders = market.blotter.strategy_orders(market_strategy)
             self.assertEqual(
                 round(sum([o.simulated.profit for o in market_orders]), 2), -6.68
@@ -248,7 +248,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(
             round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
         )
-        self.assertEqual(len(limit_inplay_orders), 15)
+        self.assertEqual(len(limit_inplay_orders), 14)
         self.assertEqual(win_market._transaction_id, 165)
 
         # Same event
@@ -257,7 +257,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(
             round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 101.44
         )
-        self.assertEqual(len(limit_inplay_orders), 88)
+        self.assertEqual(len(limit_inplay_orders), 86)
         self.assertEqual(win_market._transaction_id, 1329)
 
         place_market = framework.markets.markets["1.181223995"]

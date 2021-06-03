@@ -3,6 +3,7 @@ import requests
 from typing import Optional
 
 from .baseexecution import BaseExecution
+from .. import config
 from ..clients.clients import ExchangeType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
@@ -10,10 +11,10 @@ from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 class SimulatedExecution(BaseExecution):
 
     EXCHANGE = ExchangeType.SIMULATED
-    PLACE_LATENCY = 0.120
-    CANCEL_LATENCY = 0.170
-    UPDATE_LATENCY = 0.150
-    REPLACE_LATENCY = 0.280
+    PLACE_LATENCY = config.place_latency
+    CANCEL_LATENCY = config.cancel_latency
+    UPDATE_LATENCY = config.update_latency
+    REPLACE_LATENCY = config.replace_latency
 
     def handler(self, order_package: BaseOrderPackage) -> None:
         """Only uses _thread_pool if paper_trade"""
