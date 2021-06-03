@@ -288,24 +288,28 @@ class TestMarketValidation(unittest.TestCase):
     def test__validate_betfair_market_status(self, mock_on_error):
         self.trading_control._validate_betfair_market_status(self.mock_order)
         mock_on_error.assert_not_called()
+        self.mock_order.executable.assert_not_called()
 
     @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
     def test__validate_betfair_market_status_closed(self, mock_on_error):
         self.mock_market.market_book.status = "CLOSED"
         self.trading_control._validate_betfair_market_status(self.mock_order)
         mock_on_error.assert_called()
+        self.mock_order.executable.assert_called()
 
     @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
     def test__validate_betfair_market_status_suspended(self, mock_on_error):
         self.mock_market.market_book.status = "SUSPENDED"
         self.trading_control._validate_betfair_market_status(self.mock_order)
         mock_on_error.assert_called()
+        self.mock_order.executable.assert_called()
 
     @mock.patch("flumine.controls.tradingcontrols.MarketValidation._on_error")
     def test__validate_betfair_market_not_found(self, mock_on_error):
         self.mock_flumine.markets.markets = {}
         self.trading_control._validate_betfair_market_status(self.mock_order)
         mock_on_error.assert_not_called()
+        self.mock_order.executable.assert_not_called()
 
 
 class TestStrategyExposure(unittest.TestCase):

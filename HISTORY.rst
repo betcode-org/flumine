@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.3 (2021-06-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Set order to be executable after violating on market status  (@lunswor)
+
 1.19.2 (2021-06-03)
 +++++++++++++++++++
 

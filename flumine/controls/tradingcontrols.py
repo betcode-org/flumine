@@ -113,6 +113,7 @@ class MarketValidation(BaseControl):
         market = self.flumine.markets.markets.get(order.market_id)
         if market and market.market_book.status != "OPEN":
             self._on_error(order, "Market is not open")
+            order.executable()
 
 
 class StrategyExposure(BaseControl):
