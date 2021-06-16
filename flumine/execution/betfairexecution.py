@@ -76,7 +76,10 @@ class BetfairExecution(BaseExecution):
                         else:
                             order.executable()
                     elif instruction_report.status == "FAILURE":
-                        order.executable()
+                        if instruction_report.error_code == "BET_TAKEN_OR_LAPSED":
+                            order.execution_complete()
+                        else:
+                            order.executable()
                         failed_transaction_count += 1
                     elif instruction_report.status == "TIMEOUT":
                         order.executable()
