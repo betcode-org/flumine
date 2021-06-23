@@ -3,6 +3,7 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
+from ..order.ordertype import MarketOnCloseOrder
 from ..utils import wap
 
 logger = logging.getLogger(__name__)
@@ -99,7 +100,26 @@ class SimulatedMiddleware(Middleware):
                         extra=order.info,
                     )
                 else:
-                    if (
+                    # TODO: "Where an SP lay bet in a win market has a maximum odds limit specified,..."
+                    if isinstance(order.order_type, MarketOnCloseOrder):
+                        if market.market_type == "WIN":
+                            runner = [
+                                x
+                                for x in market.market_book.runners
+                                if x.selection_id == order.selection_id
+                                and x.handicap == order.handicap
+                            ][0]
+                            runner_adjustment_factor = runner.adjustment_factor
+                            # See https://github.com/liampauling/flumine/issues/454
+                            multiplier = 1 - (
+                                removal_adjustment_factor
+                                / (100 - runner_adjustment_factor)
+                            )
+                        elif market.market_type in {"PLACE", "OTHER_PLACE"}:
+                            multiplier = (100 - removal_adjustment_factor) * 0.01
+                        order.order_type.liability *= multiplier
+
+                    elif (
                         removal_adjustment_factor
                         and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
                     ):
