@@ -138,14 +138,10 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
 
     def test__process_runner_removal_sp_win(self):
-        mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])
-        mock_simulated.__bool__.return_value = True
         order_type = MarketOnCloseOrder(liability=200)
         mock_order = mock.Mock(
             selection_id=1234,
             handicap=0,
-            simulated=mock_simulated,
-            info={},
             order_type=order_type,
         )
 
