@@ -143,6 +143,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
             selection_id=1234,
             handicap=0,
             order_type=order_type,
+            info={},
         )
 
         mock_market_book = mock.Mock()
@@ -160,7 +161,9 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 
     def test__process_runner_removal_sp_place(self):
         order_type = MarketOnCloseOrder(liability=200)
-        mock_order = mock.Mock(selection_id=1234, handicap=0, order_type=order_type)
+        mock_order = mock.Mock(
+            selection_id=1234, handicap=0, order_type=order_type, info={}
+        )
 
         mock_market_book = mock.Mock()
         mock_market_book.runners = [

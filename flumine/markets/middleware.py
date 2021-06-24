@@ -121,8 +121,6 @@ class SimulatedMiddleware(Middleware):
                             logger.warning(
                                 "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
                                     order.selection_id
-                                ).format(
-                                    order.selection_id
                                 ),
                                 extra=order.info,
                             )
@@ -134,8 +132,6 @@ class SimulatedMiddleware(Middleware):
 
                             logger.warning(
                                 "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
-                                    order.selection_id
-                                ).format(
                                     order.selection_id
                                 ),
                                 extra=order.info,
@@ -156,7 +152,7 @@ class SimulatedMiddleware(Middleware):
                         logger.warning(
                             "Order adjusted due to non runner {0}".format(
                                 order.selection_id
-                            ).format(order.selection_id),
+                            ),
                             extra=order.info,
                         )
 
