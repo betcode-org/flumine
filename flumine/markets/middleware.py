@@ -115,9 +115,31 @@ class SimulatedMiddleware(Middleware):
                                 removal_adjustment_factor
                                 / (100 - runner_adjustment_factor)
                             )
+
+                            order.order_type.liability *= multiplier
+
+                            logger.warning(
+                                "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ).format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
+
                         elif market.market_type in {"PLACE", "OTHER_PLACE"}:
                             multiplier = (100 - removal_adjustment_factor) * 0.01
-                        order.order_type.liability *= multiplier
+
+                            order.order_type.liability *= multiplier
+
+                            logger.warning(
+                                "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ).format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
 
                     elif (
                         removal_adjustment_factor
