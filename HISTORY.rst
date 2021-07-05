@@ -6,12 +6,9 @@ Release History
 1.19.5 (2021-07-05)
 +++++++++++++++++++
 
-**Improvements**
-
--
-
 **Bug Fixes**
 
+- #453 Replace Orders drop custom separator from order_id field
 - Docs typo (@petercoles)
 
 **Libraries**

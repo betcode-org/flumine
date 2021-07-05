@@ -24,3 +24,5 @@ place_latency = 0.120
 cancel_latency = 0.170
 update_latency = 0.150
 replace_latency = 0.280
+
+order_sep = "-"  # customer_order_ref separator

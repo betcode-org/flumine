@@ -79,19 +79,19 @@ class TradeTest(unittest.TestCase):
         self.assertFalse(self.trade.complete)
 
     def test_create_order(self):
-        mock_order_type = mock.Mock()
-        mock_order_type.EXCHANGE = "SYM"
-        mock_order = mock.Mock()
-        mock_order.EXCHANGE = "SYM"
+        mock_order_type = mock.Mock(EXCHANGE="SYM")
+        mock_order = mock.Mock(EXCHANGE="SYM")
         self.trade.create_order(
-            "BACK", mock_order_type, order=mock_order, context={1: 2}
+            "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
         )
         mock_order.assert_called_with(
             trade=self.trade,
             side="BACK",
             order_type=mock_order_type,
             handicap=self.trade.handicap,
+            sep="-",
             context={1: 2},
+            notes=None,
         )
         self.assertEqual(self.trade.orders, [mock_order()])
 
@@ -101,12 +101,10 @@ class TradeTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.EXCHANGE = "MYS"
         with self.assertRaises(OrderError):
-            self.trade.create_order(
-                "BACK", mock_order_type, handicap=1, order=mock_order
-            )
+            self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
     def test_create_order_replacement(self):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(sep="-")
         replacement_order = self.trade.create_order_replacement(mock_order, 12, 2.00)
         self.assertEqual(self.trade.orders, [replacement_order])
 
