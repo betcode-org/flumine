@@ -3,7 +3,6 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
-from ..order.ordertype import MarketOnCloseOrder
 from ..utils import wap
 
 logger = logging.getLogger(__name__)
@@ -101,7 +100,9 @@ class SimulatedMiddleware(Middleware):
                     )
                 else:
                     # TODO: "Where an SP lay bet in a win market has a maximum odds limit specified,..."
-                    if isinstance(order.order_type, MarketOnCloseOrder):
+                    if (
+                        order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
+                    ) and order.side == "LAY":
                         if market.market_type == "WIN":
                             runner = [
                                 x
@@ -115,28 +116,22 @@ class SimulatedMiddleware(Middleware):
                                 removal_adjustment_factor
                                 / (100 - runner_adjustment_factor)
                             )
-
                             order.order_type.liability *= multiplier
-
                             logger.warning(
                                 "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
                                     order.selection_id
                                 ),
                                 extra=order.info,
                             )
-
                         elif market.market_type in {"PLACE", "OTHER_PLACE"}:
                             multiplier = (100 - removal_adjustment_factor) * 0.01
-
                             order.order_type.liability *= multiplier
-
                             logger.warning(
                                 "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
                                     order.selection_id
                                 ),
                                 extra=order.info,
                             )
-
                     elif (
                         removal_adjustment_factor
                         and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
