@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+1.19.5 (2021-07-05)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+- Docs typo (@petercoles)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.12.2
+- black upgraded to black==21.6b0
+
 1.19.4 (2021-06-03)
 +++++++++++++++++++
 
