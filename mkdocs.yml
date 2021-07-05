@@ -22,7 +22,7 @@ nav:
       - QuickStart: 'quickstart.md'
       - Help: 'help.md'
     - Advanced:
-      - Stategies: 'strategies.md'
+      - Strategies: 'strategies.md'
       - Trades / Orders: 'trades.md'
       - Markets: 'markets.md'
       - Controls: 'controls.md'
