@@ -14,6 +14,7 @@ from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderT
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 from ..backtest.simulated import Simulated
+from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class BaseOrder:
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
-        sep: str = "-",
+        sep: str = config.order_sep,
         context: dict = None,
         notes: collections.OrderedDict = None,  # order notes (e.g. triggers/market state)
     ):
@@ -80,7 +81,7 @@ class BaseOrder:
 
         self.cleared_order = None
 
-        self._sep = "-"  # DEFAULT VALUE
+        self._sep = config.order_sep
         self.sep = sep
 
     # status

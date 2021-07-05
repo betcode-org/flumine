@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.19.5 (2021-07-05)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #453 Replace Orders drop custom separator from order_id field
+- Docs typo (@petercoles)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.12.2
+- black upgraded to black==21.6b0
+
 1.19.4 (2021-06-03)
 +++++++++++++++++++
 

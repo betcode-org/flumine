@@ -16,3 +16,4 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config.cancel_latency, 0.170)
         self.assertEqual(config.update_latency, 0.150)
         self.assertEqual(config.replace_latency, 0.280)
+        self.assertEqual(config.order_sep, "-")
