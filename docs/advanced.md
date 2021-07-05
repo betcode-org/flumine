@@ -111,3 +111,23 @@ Max number of workers in execution thread pool
 ### async_place_orders
 
 Place orders sent with place orders flag, prevents waiting for bet delay
+
+### place_latency
+
+Place latency used for backtesting / simulation execution
+
+### cancel_latency
+
+Cancel latency used for backtesting / simulation execution
+
+### update_latency
+
+Update latency used for backtesting / simulation execution
+
+### replace_latency
+
+Replace latency used for backtesting / simulation execution
+
+### order_sep 
+
+customer_order_ref separator

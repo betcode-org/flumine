@@ -10,6 +10,7 @@ from ..strategy.strategy import BaseStrategy
 from .order import BetfairOrder
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
 from ..exceptions import OrderError
+from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,9 @@ class Trade:
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         order: Type[BetfairOrder] = BetfairOrder,
-        **kwargs,
+        sep: str = config.order_sep,
+        context: dict = None,
+        notes: collections.OrderedDict = None,
     ) -> BetfairOrder:
         if order_type.EXCHANGE != order.EXCHANGE:
             raise OrderError(
@@ -92,7 +95,9 @@ class Trade:
             side=side,
             order_type=order_type,
             handicap=self.handicap,
-            **kwargs,
+            sep=sep,
+            context=context,
+            notes=notes,
         )
         self.orders.append(order)
         return order
@@ -108,7 +113,13 @@ class Trade:
             persistence_type=order.order_type.persistence_type,
         )
         order = BetfairOrder(
-            trade=self, side=order.side, order_type=order_type, handicap=order.handicap
+            trade=self,
+            side=order.side,
+            order_type=order_type,
+            handicap=order.handicap,
+            sep=order.sep,
+            context=order.context,
+            notes=order.notes,
         )
         self.orders.append(order)
         return order
