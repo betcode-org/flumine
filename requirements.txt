@@ -1,4 +1,4 @@
 betfairlightweight==2.12.2
-tenacity==5.0.3
+tenacity==8.0.0
 python-json-logger==2.0.1
 requests
