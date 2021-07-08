@@ -47,6 +47,8 @@ def get_file_md(file_dir: str, value: str) -> Optional[str]:
     with open(file_dir, "r") as f:
         first_line = f.readline()
         update = json.loads(first_line)
+    if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:
+        return None
     md = update["mc"][0].get("marketDefinition", {})
     return md.get(value)
 
