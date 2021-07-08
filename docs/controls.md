@@ -6,7 +6,7 @@ Before placing an order flumine will check the client and trading controls, this
 
 ### Client Controls
 
-- `MaxTransactionCount`: Checks transaction count is not over betfair transaction limit (5000 per hour)
+- `MaxTransactionCount`: Checks transaction count is not over betfair transaction limit (5000 per hour) 
 
 ### Trading Controls
 
@@ -37,4 +37,4 @@ framework.add_logging_control(control)
 ```
 
 !!! tip
-More than one control can be added, for example a csv logger and db logger.
+    More than one control can be added, for example a csv logger and db logger.
