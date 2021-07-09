@@ -99,7 +99,40 @@ class SimulatedMiddleware(Middleware):
                         extra=order.info,
                     )
                 else:
+                    # TODO: "Where an SP lay bet in a win market has a maximum odds limit specified,..."
                     if (
+                        order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
+                    ) and order.side == "LAY":
+                        if market.market_type == "WIN":
+                            runner = [
+                                x
+                                for x in market.market_book.runners
+                                if x.selection_id == order.selection_id
+                                and x.handicap == order.handicap
+                            ][0]
+                            runner_adjustment_factor = runner.adjustment_factor
+                            # See https://github.com/liampauling/flumine/issues/454
+                            multiplier = 1 - (
+                                removal_adjustment_factor
+                                / (100 - runner_adjustment_factor)
+                            )
+                            order.order_type.liability *= multiplier
+                            logger.warning(
+                                "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
+                        elif market.market_type in {"PLACE", "OTHER_PLACE"}:
+                            multiplier = (100 - removal_adjustment_factor) * 0.01
+                            order.order_type.liability *= multiplier
+                            logger.warning(
+                                "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
+                    elif (
                         removal_adjustment_factor
                         and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
                     ):
@@ -114,7 +147,7 @@ class SimulatedMiddleware(Middleware):
                         logger.warning(
                             "Order adjusted due to non runner {0}".format(
                                 order.selection_id
-                            ).format(order.selection_id),
+                            ),
                             extra=order.info,
                         )
 

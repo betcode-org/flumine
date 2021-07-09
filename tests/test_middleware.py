@@ -10,6 +10,7 @@ from flumine.markets.middleware import (
     WIN_MINIMUM_ADJUSTMENT_FACTOR,
     PLACE_MINIMUM_ADJUSTMENT_FACTOR,
 )
+from flumine.order.ordertype import MarketOnCloseOrder
 
 
 class MiddlewareTest(unittest.TestCase):
@@ -135,6 +136,43 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_market = mock.Mock(blotter=[mock_order])
         self.middleware._process_runner_removal(mock_market, 12345, 0, None)
         self.assertEqual(mock_order.simulated.matched, [[123, 8.6, 10]])
+
+    def test__process_runner_removal_sp_win(self):
+        order_type = MarketOnCloseOrder(liability=200)
+        mock_order = mock.Mock(
+            selection_id=1234, handicap=0, order_type=order_type, info={}, side="LAY"
+        )
+
+        mock_market_book = mock.Mock()
+        mock_market_book.runners = [
+            mock.Mock(selection_id=1234, handicap=0, adjustment_factor=20)
+        ]
+        mock_market = mock.Mock(
+            market_type="WIN", blotter=[mock_order], market_book=mock_market_book
+        )
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 50)
+
+        # The liability of £200 is adjusted by the multiplier of 37.5%, which s
+        # defined in the example here: https://github.com/liampauling/flumine/issues/454
+        self.assertEqual(mock_order.order_type.liability, 75)
+
+    def test__process_runner_removal_sp_place(self):
+        order_type = MarketOnCloseOrder(liability=200)
+        mock_order = mock.Mock(
+            selection_id=1234, handicap=0, order_type=order_type, info={}, side="LAY"
+        )
+
+        mock_market_book = mock.Mock()
+        mock_market_book.runners = [
+            mock.Mock(selection_id=1234, handicap=0, adjustment_factor=20)
+        ]
+        mock_market = mock.Mock(
+            market_type="PLACE", blotter=[mock_order], market_book=mock_market_book
+        )
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 50)
+
+        # The liability of £200 is reduced by the non runner's adjustment factor of 50%
+        self.assertEqual(mock_order.order_type.liability, 100)
 
     def test__process_streaming_update(self):
         mock_market_book = mock.Mock(
