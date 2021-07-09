@@ -41,9 +41,17 @@ class Transaction:
         self._pending_replace = []  # list of (<Order>, market_version)
 
     def place_order(
-        self, order, market_version: int = None, execute: bool = True
+        self,
+        order,
+        market_version: int = None,
+        execute: bool = True,
+        force: bool = False,
     ) -> bool:
-        if execute and self._validate_controls(order, OrderPackageType.PLACE) is False:
+        if (
+            execute
+            and not force
+            and self._validate_controls(order, OrderPackageType.PLACE) is False
+        ):
             return False
         # place
         order.place(self.market.market_book.publish_time)
@@ -69,8 +77,13 @@ class Transaction:
             self._pending_orders = True
         return True
 
-    def cancel_order(self, order, size_reduction: float = None) -> bool:
-        if self._validate_controls(order, OrderPackageType.CANCEL) is False:
+    def cancel_order(
+        self, order, size_reduction: float = None, force: bool = False
+    ) -> bool:
+        if (
+            not force
+            and self._validate_controls(order, OrderPackageType.CANCEL) is False
+        ):
             return False
         # cancel
         order.cancel(size_reduction)
@@ -78,8 +91,13 @@ class Transaction:
         self._pending_orders = True
         return True
 
-    def update_order(self, order, new_persistence_type: str) -> bool:
-        if self._validate_controls(order, OrderPackageType.UPDATE) is False:
+    def update_order(
+        self, order, new_persistence_type: str, force: bool = False
+    ) -> bool:
+        if (
+            not force
+            and self._validate_controls(order, OrderPackageType.UPDATE) is False
+        ):
             return False
         # update
         order.update(new_persistence_type)
@@ -88,9 +106,12 @@ class Transaction:
         return True
 
     def replace_order(
-        self, order, new_price: float, market_version: int = None
+        self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
-        if self._validate_controls(order, OrderPackageType.REPLACE) is False:
+        if (
+            not force
+            and self._validate_controls(order, OrderPackageType.REPLACE) is False
+        ):
             return False
         # replace
         order.replace(new_price)

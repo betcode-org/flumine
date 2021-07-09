@@ -75,23 +75,28 @@ class Market:
         order,
         market_version: int = None,
         execute: bool = True,
+        force: bool = False,
     ) -> bool:
         with self.transaction() as t:
-            return t.place_order(order, market_version, execute)
+            return t.place_order(order, market_version, execute, force)
 
-    def cancel_order(self, order, size_reduction: float = None) -> bool:
+    def cancel_order(
+        self, order, size_reduction: float = None, force: bool = False
+    ) -> bool:
         with self.transaction() as t:
-            return t.cancel_order(order, size_reduction)
+            return t.cancel_order(order, size_reduction, force)
 
-    def update_order(self, order, new_persistence_type: str) -> bool:
+    def update_order(
+        self, order, new_persistence_type: str, force: bool = False
+    ) -> bool:
         with self.transaction() as t:
-            return t.update_order(order, new_persistence_type)
+            return t.update_order(order, new_persistence_type, force)
 
     def replace_order(
-        self, order, new_price: float, market_version: int = None
+        self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
         with self.transaction() as t:
-            return t.replace_order(order, new_price, market_version)
+            return t.replace_order(order, new_price, market_version, force)
 
     @property
     def event(self) -> dict:

@@ -149,29 +149,29 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.place_order(mock_order, 2, False))
-        mock_transaction.place_order.assert_called_with(mock_order, 2, False)
+        self.assertTrue(self.market.place_order(mock_order, 2, False, force=True))
+        mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_cancel_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.cancel_order(mock_order, 2.02))
-        mock_transaction.cancel_order.assert_called_with(mock_order, 2.02)
+        self.assertTrue(self.market.cancel_order(mock_order, 2.02, force=True))
+        mock_transaction.cancel_order.assert_called_with(mock_order, 2.02, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_update_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.update_order(mock_order, "test"))
-        mock_transaction.update_order.assert_called_with(mock_order, "test")
+        self.assertTrue(self.market.update_order(mock_order, "test", force=True))
+        mock_transaction.update_order.assert_called_with(mock_order, "test", True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_replace_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.replace_order(mock_order, 2, False))
-        mock_transaction.replace_order.assert_called_with(mock_order, 2, False)
+        self.assertTrue(self.market.replace_order(mock_order, 2, False, force=True))
+        mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):
         mock_market_catalogue = mock.Mock()
