@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.19.6 (2021-07-09)
++++++++++++++++++++
+
+**Improvements**
+
+- #452 transaction force parameter (@flxbe)
+
+**Bug Fixes**
+
+- #454 SP nr adjustments (@jsphon)
+- Handle missing mc from historic files (@mlabour)
+
 1.19.5 (2021-07-05)
 +++++++++++++++++++
 
