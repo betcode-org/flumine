@@ -109,13 +109,16 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
-        self.assertFalse(self.market.orders_cleared)
-        self.assertFalse(self.market.market_cleared)
+        self.assertIsNotNone(self.market.date_time_created)
         self.assertIsNone(self.market.date_time_closed)
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
         self.assertTrue(self.market.update_market_catalogue)
+        self.assertFalse(self.market.orders_cleared)
+        self.assertFalse(self.market.market_cleared)
         self.assertEqual(self.market.context, {"simulated": {}})
+        self.assertIsNotNone(self.market.blotter)
+        self.assertEqual(self.market._transaction_id, 0)
 
     def test_call(self):
         mock_market_book = mock.Mock()

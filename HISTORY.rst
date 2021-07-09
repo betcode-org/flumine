@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #452 transaction force parameter (@flxbe)
+- market `date_time_created` added
 
 **Bug Fixes**
 

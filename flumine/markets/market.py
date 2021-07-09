@@ -29,6 +29,7 @@ class Market:
         self.flumine = flumine
         self.market_id = market_id
         self.closed = False
+        self.date_time_created = datetime.datetime.utcnow()
         self.date_time_closed = None
         self.market_book = market_book
         self.market_catalogue = market_catalogue
