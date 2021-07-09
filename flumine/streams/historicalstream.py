@@ -24,6 +24,8 @@ class FlumineMarketStream(MarketStream):
 
     def _process(self, data: list, publish_time: int) -> bool:
         for market_book in data:
+            if "id" not in market_book:
+                continue
             market_id = market_book["id"]
             full_image = market_book.get("img", False)
             market_book_cache = self._caches.get(market_id)
