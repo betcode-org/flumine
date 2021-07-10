@@ -117,6 +117,13 @@ class SimulatedMiddleware(Middleware):
                                 / (100 - runner_adjustment_factor)
                             )
                             order.order_type.liability *= multiplier
+                            if order.average_price_matched:
+                                # We will get here if the NR is declared inplay
+                                order.current_order.size_matched = round(
+                                    order.order_type.liability
+                                    / (order.average_price_matched - 1),
+                                    2,
+                                )
                             logger.warning(
                                 "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
                                     order.selection_id
@@ -126,6 +133,13 @@ class SimulatedMiddleware(Middleware):
                         elif market.market_type in {"PLACE", "OTHER_PLACE"}:
                             multiplier = (100 - removal_adjustment_factor) * 0.01
                             order.order_type.liability *= multiplier
+                            if order.average_price_matched:
+                                # We will get here if the NR is declared inplay
+                                order.current_order.size_matched = round(
+                                    order.order_type.liability
+                                    / (order.average_price_matched - 1),
+                                    2,
+                                )
                             logger.warning(
                                 "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
                                     order.selection_id
