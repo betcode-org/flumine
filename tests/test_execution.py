@@ -117,8 +117,8 @@ class BaseExecutionTest(unittest.TestCase):
         mock_session_one = mock.Mock(time_returned=time.time())
         mock_session_two = mock.Mock(time_returned=time.time())
         self.execution._sessions = [mock_session_one, mock_session_two]
-        self.assertEqual(self.execution._get_http_session(), mock_session_two)
         self.assertEqual(self.execution._get_http_session(), mock_session_one)
+        self.assertEqual(self.execution._get_http_session(), mock_session_two)
         self.assertEqual(self.execution._get_http_session(), mock__create_new_session())
 
     @mock.patch("flumine.execution.baseexecution.BaseExecution._return_http_session")
@@ -833,6 +833,33 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.assert_called_with(mock_order_package, mock_session)
         mock__return_http_session.assert_called_with(mock_session, err=True)
         mock_handler.put.assert_not_called()
+        mock_order_package.reset_orders.assert_called_with()
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.handler")
+    @mock.patch(
+        "flumine.execution.betfairexecution.BetfairExecution._return_http_session"
+    )
+    def test__execution_helper_error_no_retry_place(
+        self, mock__return_http_session, mock_handler
+    ):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_trading_function.side_effect = BetfairError()
+        mock_session = mock.Mock()
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, package_type=OrderPackageType.PLACE
+        )
+        mock_order_package.info = {}
+        mock_order_package.retry.return_value = False
+        self.assertIsNone(
+            self.execution._execution_helper(
+                mock_trading_function, mock_order_package, mock_session
+            )
+        )
+        mock_trading_function.assert_called_with(mock_order_package, mock_session)
+        mock__return_http_session.assert_called_with(mock_session, err=True)
+        mock_handler.put.assert_not_called()
+        mock_order_package.reset_orders.assert_called_with(complete=True)
 
     @mock.patch(
         "flumine.execution.betfairexecution.BetfairExecution._return_http_session"

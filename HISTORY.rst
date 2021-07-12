@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.19.7 (2021-07-12)
++++++++++++++++++++
+
+**Improvements**
+
+- #464 get session handling refactor to take oldest session
+
+**Bug Fixes**
+
+- #454 SP nr size adjustment (@jsphon)
+- #464 wrong order state after multiple connection reset errors
+
 1.19.6 (2021-07-09)
 +++++++++++++++++++
 

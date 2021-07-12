@@ -61,6 +61,14 @@ class BaseOrderPackage(BaseEvent):
             return True
         return False
 
+    def reset_orders(self, complete: bool = False) -> None:
+        for order in self:
+            with order.trade:
+                if complete:
+                    order.execution_complete()
+                else:
+                    order.executable()
+
     def calc_simulated_delay(self) -> float:
         if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
