@@ -12,6 +12,7 @@ Release History
 **Bug Fixes**
 
 - #454 SP nr size adjustment (@jsphon)
+- #464 wrong order state after multiple connection reset errors
 
 1.19.6 (2021-07-09)
 +++++++++++++++++++

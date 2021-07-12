@@ -253,6 +253,12 @@ class BetfairExecution(BaseExecution):
                 )
                 if order_package.retry():
                     self.handler(order_package)
+                else:
+                    # reset orders
+                    if order_package.package_type == OrderPackageType.PLACE:
+                        order_package.reset_orders(complete=True)
+                    else:
+                        order_package.reset_orders()
 
                 self._return_http_session(http_session, err=True)
                 return
