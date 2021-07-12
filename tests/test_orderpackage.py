@@ -61,6 +61,15 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package._retry_count, 3)
         mock_time.sleep.assert_called()
 
+    def test_reset_orders(self):
+        mock_order = mock.MagicMock()
+        self.order_package._orders = [mock_order]
+        self.order_package.reset_orders()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called()
+        self.order_package.reset_orders(True)
+        mock_order.execution_complete.assert_called()
+
     def test_calc_simulated_delay(self):
         config.place_latency = 0.1
         config.cancel_latency = 0.2
