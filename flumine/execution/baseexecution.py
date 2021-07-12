@@ -77,7 +77,7 @@ class BaseExecution:
     def _get_http_session(self) -> requests.Session:
         while self._sessions:
             try:
-                _session = self._sessions.pop()
+                _session = self._sessions.pop(0)
                 if (time.time() - _session.time_returned) > MAX_SESSION_AGE:
                     self._return_http_session(_session, err=True)
                     continue

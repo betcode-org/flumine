@@ -117,8 +117,8 @@ class BaseExecutionTest(unittest.TestCase):
         mock_session_one = mock.Mock(time_returned=time.time())
         mock_session_two = mock.Mock(time_returned=time.time())
         self.execution._sessions = [mock_session_one, mock_session_two]
-        self.assertEqual(self.execution._get_http_session(), mock_session_two)
         self.assertEqual(self.execution._get_http_session(), mock_session_one)
+        self.assertEqual(self.execution._get_http_session(), mock_session_two)
         self.assertEqual(self.execution._get_http_session(), mock__create_new_session())
 
     @mock.patch("flumine.execution.baseexecution.BaseExecution._return_http_session")

@@ -8,7 +8,8 @@ Release History
 
 **Improvements**
 
--
+- #464 get session handling refactor to take oldest session
+
 **Bug Fixes**
 
 - #454 SP nr size adjustment (@jsphon)
