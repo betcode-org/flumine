@@ -3,6 +3,16 @@
 Release History
 ---------------
 
+1.19.7 (2021-07-12)
++++++++++++++++++++
+
+**Improvements**
+
+-
+**Bug Fixes**
+
+- #454 SP nr size adjustment (@jsphon)
+
 1.19.6 (2021-07-09)
 +++++++++++++++++++
 
