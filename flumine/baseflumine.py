@@ -42,21 +42,21 @@ class BaseFlumine:
         self.client = client
         self._running = False
 
-        # queues
+        # FIFO queue
         self.handler_queue = queue.Queue()
 
-        # all markets
+        # markets
         self.markets = Markets()
-        self._market_middleware = []
 
         # middleware
+        self._market_middleware = []
         if self.BACKTEST or self.client.paper_trade:
             self.add_market_middleware(SimulatedMiddleware())
 
-        # all strategies
+        # strategies
         self.strategies = Strategies()
 
-        # all streams (market/order)
+        # streams (market/order)
         self.streams = Streams(self)
         self.streams.add_client(client)
 
@@ -92,6 +92,7 @@ class BaseFlumine:
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
+        logger.info("Adding worker {0}".format(worker.name))
         self._workers.append(worker)
 
     def add_client_control(self, client_control: Type[BaseControl], **kwargs) -> None:

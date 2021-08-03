@@ -19,18 +19,72 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter._strategy_selection_orders, {})
 
     def test_strategy_orders(self):
-        mock_order = mock.Mock(lookup=(1, 2, 3))
-        mock_order.trade.strategy = 69
-        self.blotter["12345"] = mock_order
+        mock_order_one = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTABLE, size_matched=1
+        )
+        mock_order_one.trade.strategy = 69
+        self.blotter["12345"] = mock_order_one
+        mock_order_two = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=0
+        )
+        mock_order_two.trade.strategy = 69
+        self.blotter["12345"] = mock_order_two
+        mock_order_three = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=1
+        )
+        mock_order_three.trade.strategy = 69
+        self.blotter["12345"] = mock_order_three
         self.assertEqual(self.blotter.strategy_orders(12), [])
-        self.assertEqual(self.blotter.strategy_orders(69), [mock_order])
+        self.assertEqual(
+            self.blotter.strategy_orders(69),
+            [mock_order_one, mock_order_two, mock_order_three],
+        )
+        self.assertEqual(
+            self.blotter.strategy_orders(
+                69, order_status=OrderStatus.EXECUTION_COMPLETE
+            ),
+            [mock_order_two, mock_order_three],
+        )
+        self.assertEqual(
+            self.blotter.strategy_orders(
+                69, order_status=OrderStatus.EXECUTION_COMPLETE, matched_only=True
+            ),
+            [mock_order_three],
+        )
 
     def test_strategy_selection_orders(self):
-        mock_order = mock.Mock(lookup=(1, 2, 3))
-        mock_order.trade.strategy = 69
-        self.blotter["12345"] = mock_order
+        mock_order_one = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTABLE, size_matched=1
+        )
+        mock_order_one.trade.strategy = 69
+        self.blotter["12345"] = mock_order_one
+        mock_order_two = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=0
+        )
+        mock_order_two.trade.strategy = 69
+        self.blotter["12345"] = mock_order_two
+        mock_order_three = mock.Mock(
+            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=1
+        )
+        mock_order_three.trade.strategy = 69
+        self.blotter["12345"] = mock_order_three
         self.assertEqual(self.blotter.strategy_selection_orders(12, 2, 3), [])
-        self.assertEqual(self.blotter.strategy_selection_orders(69, 2, 3), [mock_order])
+        self.assertEqual(
+            self.blotter.strategy_selection_orders(69, 2, 3),
+            [mock_order_one, mock_order_two, mock_order_three],
+        )
+        self.assertEqual(
+            self.blotter.strategy_selection_orders(
+                69, 2, 3, order_status=OrderStatus.EXECUTION_COMPLETE
+            ),
+            [mock_order_two, mock_order_three],
+        )
+        self.assertEqual(
+            self.blotter.strategy_selection_orders(
+                69, 2, 3, order_status=OrderStatus.EXECUTION_COMPLETE, matched_only=True
+            ),
+            [mock_order_three],
+        )
 
     def test_live_orders(self):
         self.assertEqual(list(self.blotter.live_orders), [])

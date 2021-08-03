@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.8 (2021-08-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #472 Add order status and matched filter to blotter
+
 1.19.7 (2021-07-12)
 +++++++++++++++++++
 
