@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.19.8 (2021-08-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #472 Add order status and matched filter to blotter
+- Assert on trading client lightweight
+- OrderDataStream added to allow order stream data to be recorded as per market/race
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.13.0
+- black upgraded to 21.7b0
+- python-json-logger upgraded to 2.0.2
+
 1.19.7 (2021-07-12)
 +++++++++++++++++++
 

@@ -12,7 +12,7 @@ class ClientsTest(unittest.TestCase):
 
 class BaseClientTest(unittest.TestCase):
     def setUp(self):
-        self.mock_betting_client = mock.Mock()
+        self.mock_betting_client = mock.Mock(lightweight=False)
         self.base_client = BaseClient(self.mock_betting_client, 1024, 100, 0.02, True)
 
     def test_init(self):
@@ -30,6 +30,10 @@ class BaseClientTest(unittest.TestCase):
         self.assertTrue(self.base_client.best_price_execution)
         self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)
+
+    def test_init_assert(self):
+        with self.assertRaises(AssertionError):
+            BaseClient(mock.Mock(lightweight=True), 1024, 100, 0.02, True)
 
     def test_login(self):
         with self.assertRaises(NotImplementedError):
@@ -103,7 +107,7 @@ class BaseClientTest(unittest.TestCase):
 
 class BetfairClientTest(unittest.TestCase):
     def setUp(self):
-        self.mock_betting_client = mock.Mock()
+        self.mock_betting_client = mock.Mock(lightweight=False)
         self.betfair_client = BetfairClient(self.mock_betting_client)
 
     def test_login(self):

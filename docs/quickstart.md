@@ -135,6 +135,19 @@ strategy = ExampleDataStrategy(
 flumine.add_strategy(strategy)
 ```
 
+The OrderDataStream class can be used to record order data as per market:
+
+```python
+from flumine.streams.datastream import OrderDataStream
+
+strategy = ExampleDataStrategy(
+    market_filter=None,
+    stream_class=OrderDataStream
+)
+
+flumine.add_strategy(strategy)
+```
+
 ## Paper Trading
 
 Flumine can be used to paper trade strategies live using the following code:

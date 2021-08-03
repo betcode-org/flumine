@@ -429,17 +429,18 @@ class TestDataStream(unittest.TestCase):
     #     pass
 
     @mock.patch("flumine.streams.datastream.FlumineRaceStream")
+    @mock.patch("flumine.streams.datastream.FlumineOrderStream")
     @mock.patch("flumine.streams.datastream.FlumineMarketStream")
-    def test_flumine_listener(self, mock_market_stream, mock_race_stream):
+    def test_flumine_listener(
+        self, mock_market_stream, mock_order_stream, mock_race_stream
+    ):
         listener = datastream.FlumineListener()
         self.assertEqual(
             listener._add_stream(123, "marketSubscription"), mock_market_stream()
         )
-
-        with self.assertRaises(ListenerError):
-            listener._add_stream(123, "orderSubscription")
-
-        listener = datastream.FlumineListener()
+        self.assertEqual(
+            listener._add_stream(123, "orderSubscription"), mock_order_stream()
+        )
         self.assertEqual(
             listener._add_stream(123, "raceSubscription"), mock_race_stream()
         )
@@ -482,6 +483,20 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(stream._updates_processed, 1)
         mock_on_process.assert_called_with(
             [mock_listener.stream_unique_id, 123, market_books]
+        )
+
+    @mock.patch("flumine.streams.datastream.FlumineOrderStream.on_process")
+    def test_flumine_order_stream(self, mock_on_process):
+        mock_listener = mock.Mock(stream_unique_id=0)
+        stream = datastream.FlumineOrderStream(mock_listener, 0)
+        order_updates = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
+        stream._process(order_updates, 123)
+
+        self.assertEqual(stream._lookup, "oc")
+        self.assertEqual(len(stream._caches), 2)
+        self.assertEqual(stream._updates_processed, 3)
+        mock_on_process.assert_called_with(
+            [mock_listener.stream_unique_id, 123, order_updates]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")

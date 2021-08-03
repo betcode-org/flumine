@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Optional
 from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
@@ -40,15 +40,35 @@ class Blotter:
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
 
-    def strategy_orders(self, strategy) -> list:
+    def strategy_orders(
+        self,
+        strategy,
+        order_status: Optional[OrderStatus] = None,
+        matched_only: Optional[bool] = None,
+    ) -> list:
         """Returns all orders related to a strategy."""
-        return self._strategy_orders[strategy]
+        orders = self._strategy_orders[strategy]
+        if order_status:
+            orders = [o for o in orders if o.status == order_status]
+        if matched_only:
+            orders = [o for o in orders if o.size_matched > 0]
+        return orders
 
     def strategy_selection_orders(
-        self, strategy, selection_id: int, handicap: float = 0
+        self,
+        strategy,
+        selection_id: int,
+        handicap: float = 0,
+        order_status: Optional[OrderStatus] = None,
+        matched_only: Optional[bool] = None,
     ) -> list:
         """Returns all orders related to a strategy selection."""
-        return self._strategy_selection_orders[(strategy, selection_id, handicap)]
+        orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
+        if order_status:
+            orders = [o for o in orders if o.status == order_status]
+        if matched_only:
+            orders = [o for o in orders if o.size_matched > 0]
+        return orders
 
     @property
     def live_orders(self) -> Iterable:

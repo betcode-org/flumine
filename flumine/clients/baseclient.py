@@ -29,6 +29,10 @@ class BaseClient:
         paper_trade: bool = False,
         market_recording_mode: bool = False,
     ):
+        if hasattr(betting_client, "lightweight"):
+            assert (
+                betting_client.lightweight is False
+            ), "flumine requires resources, please set lightweight to False"
         self.id = id_ or create_short_uuid()
         self.betting_client = betting_client
         self.transaction_limit = transaction_limit
