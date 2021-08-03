@@ -12,6 +12,7 @@ Release History
 
 **Libraries**
 
+- betfairlightweight upgraded to 2.13.0
 - black upgraded to 21.7b0
 - python-json-logger upgraded to 2.0.2
 
