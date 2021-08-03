@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #472 Add order status and matched filter to blotter
+- Assert on trading client lightweight
 
 **Libraries**
 
