@@ -10,6 +10,7 @@ Release History
 
 - #472 Add order status and matched filter to blotter
 - Assert on trading client lightweight
+- OrderDataStream added to allow order stream data to be recorded as per market/race
 
 **Libraries**
 

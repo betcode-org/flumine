@@ -1,12 +1,11 @@
 import logging
 from tenacity import retry
-from betfairlightweight import StreamListener
-from betfairlightweight import BetfairError
+from betfairlightweight import StreamListener, filters, BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
 
 from .basestream import BaseStream
 from ..events.events import RawDataEvent
-from ..exceptions import ListenerError
+from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ class FlumineListener(StreamListener):
         if operation == "marketSubscription":
             return FlumineMarketStream(self, unique_id)
         elif operation == "orderSubscription":
-            raise ListenerError("Unable to process order stream")
+            return FlumineOrderStream(self, unique_id)
         elif operation == "raceSubscription":
             return FlumineRaceStream(self, unique_id)
 
@@ -72,6 +71,26 @@ class FlumineMarketStream(FlumineStream):
         return False
 
 
+class FlumineOrderStream(FlumineStream):
+
+    _lookup = "oc"
+
+    def _process(self, data: list, publish_time: int) -> bool:
+        for update in data:
+            market_id = update["id"]
+            if self._caches.get(market_id) is None:
+                # adds empty object to cache to track live market count
+                self._caches[market_id] = object()
+                logger.info(
+                    "[OrderStream: %s] %s added, %s markets in cache"
+                    % (self.unique_id, market_id, len(self._caches))
+                )
+            self._updates_processed += 1
+
+        self.on_process([self.unique_id, publish_time, data])
+        return False
+
+
 class FlumineRaceStream(FlumineStream):
 
     _lookup = "rc"
@@ -111,7 +130,6 @@ class DataStream(BaseStream):
                 "conflate_ms": self.conflate_ms,
             },
         )
-
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
@@ -135,3 +153,41 @@ class DataStream(BaseStream):
             )
             raise
         logger.info("Stopped DataStream {0}".format(self.stream_id))
+
+
+class OrderDataStream(DataStream):
+    @retry(wait=RETRY_WAIT)
+    def run(self) -> None:
+        logger.info(
+            "Starting OrderDataStream {0}".format(self.stream_id),
+            extra={
+                "stream_id": self.stream_id,
+                "customer_strategy_refs": config.hostname,
+                "conflate_ms": self.conflate_ms,
+                "streaming_timeout": self.streaming_timeout,
+            },
+        )
+        self._stream = self.betting_client.streaming.create_stream(
+            unique_id=self.stream_id, listener=self._listener
+        )
+        try:
+            self.stream_id = self._stream.subscribe_to_orders(
+                order_filter=filters.streaming_order_filter(
+                    customer_strategy_refs=[config.hostname],
+                    partition_matched_by_strategy_ref=True,
+                    include_overall_position=False,
+                ),
+                conflate_ms=self.conflate_ms,
+            )
+            self._stream.start()
+        except BetfairError:
+            logger.error(
+                "OrderDataStream {0} run error".format(self.stream_id), exc_info=True
+            )
+            raise
+        except Exception:
+            logger.critical(
+                "OrderDataStream {0} run error".format(self.stream_id), exc_info=True
+            )
+            raise
+        logger.info("Stopped OrderDataStream {0}".format(self.stream_id))
