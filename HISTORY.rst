@@ -10,6 +10,11 @@ Release History
 
 - #472 Add order status and matched filter to blotter
 
+**Libraries**
+
+- black upgraded to 21.7b0
+- python-json-logger upgraded to 2.0.2
+
 1.19.7 (2021-07-12)
 +++++++++++++++++++
 
