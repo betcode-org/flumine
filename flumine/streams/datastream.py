@@ -58,7 +58,7 @@ class FlumineMarketStream(FlumineStream):
                         "[MarketStream: %s] %s removed, %s markets in cache"
                         % (self.unique_id, market_id, len(self._caches))
                     )
-            elif self._caches.get(market_id) is None:
+            elif market_id not in self._caches:
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
@@ -78,7 +78,7 @@ class FlumineOrderStream(FlumineStream):
     def _process(self, data: list, publish_time: int) -> bool:
         for update in data:
             market_id = update["id"]
-            if self._caches.get(market_id) is None:
+            if market_id not in self._caches:
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
@@ -98,7 +98,7 @@ class FlumineRaceStream(FlumineStream):
     def _process(self, data: list, publish_time: int) -> bool:
         for update in data:
             market_id = update["mid"]
-            if self._caches.get(market_id) is None:
+            if market_id not in self._caches:
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
