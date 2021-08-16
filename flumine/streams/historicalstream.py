@@ -41,7 +41,11 @@ class FlumineMarketStream(MarketStream):
                         % (self, self.unique_id, market_id)
                     )
                 market_book_cache = MarketBookCache(
-                    market_id, publish_time, self._lightweight
+                    market_id,
+                    publish_time,
+                    self._lightweight,
+                    self._calculate_market_tv,
+                    self._cumulative_runner_tv,
                 )
                 self._caches[market_id] = market_book_cache
                 logger.info(

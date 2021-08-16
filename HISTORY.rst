@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.19.9 (2021-08-16)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #476 fixes and docs update for bflw 2.13.1
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.13.1
+- tenacity upgraded to ?
+
 1.19.8 (2021-08-03)
 +++++++++++++++++++
 

@@ -581,7 +581,13 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
-        mock_cache.assert_called_with("1.23", 12345, self.stream._listener.lightweight)
+        mock_cache.assert_called_with(
+            "1.23",
+            12345,
+            self.stream._lightweight,
+            self.stream._calculate_market_tv,
+            self.stream._cumulative_runner_tv,
+        )
         mock_cache().update_cache.assert_called_with(
             {"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}, 12345
         )

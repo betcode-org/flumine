@@ -196,6 +196,11 @@ strategy = ExampleStrategy(
 )
 ```
 
+- inplay: Filter inplay flag
+- seconds_to_start: Filter market seconds to start
+- calculate_market_tv: As per bflw listener arg
+- cumulative_runner_tv: As per bflw listener arg
+
 The extra kwargs above will limit processing to preplay in the final 10 minutes.
 
 !!! tip
