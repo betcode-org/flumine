@@ -13,7 +13,7 @@ Release History
 **Libraries**
 
 - betfairlightweight upgraded to 2.13.1
-- tenacity upgraded to ?
+- tenacity upgraded to 8.0.1
 
 1.19.8 (2021-08-03)
 +++++++++++++++++++
