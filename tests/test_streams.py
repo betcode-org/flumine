@@ -221,15 +221,51 @@ class StreamsTest(unittest.TestCase):
     def test_add_historical_stream_old(self):
         self.mock_flumine.BACKTEST = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
+        mock_stream = mock.Mock(
+            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
+        )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
         stream = self.streams.add_historical_stream(
-            mock_strategy, "GANG", event_processing=False
+            mock_strategy, "GANG", event_processing=False, **{}
         )
         self.assertEqual(stream, mock_stream)
         self.assertEqual(len(self.streams), 1)
+
+    @mock.patch("flumine.streams.streams.get_file_md")
+    @mock.patch("flumine.streams.streams.HistoricalStream")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_historical_stream_kwargs(
+        self, mock_increment, mock_historical_stream_class, mock_get_file_md
+    ):
+        mock_historical_stream_class.__name__ = "test"
+        self.mock_flumine.BACKTEST = True
+        mock_strategy = mock.Mock()
+        mock_stream = mock.Mock(
+            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
+        )
+        mock_stream.market_filter = "GANG"
+        self.streams._streams = [mock_stream]
+
+        self.streams.add_historical_stream(
+            mock_strategy, "GANG", event_processing=False, **{"inplay": True}
+        )
+        self.assertEqual(len(self.streams), 2)
+        mock_increment.assert_called_with()
+        mock_get_file_md.assert_called_with("GANG", "eventId")
+        mock_historical_stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            market_filter="GANG",
+            market_data_filter=mock_strategy.market_data_filter,
+            streaming_timeout=mock_strategy.streaming_timeout,
+            conflate_ms=mock_strategy.conflate_ms,
+            output_queue=False,
+            event_processing=False,
+            event_id=mock_get_file_md(),
+            inplay=True,
+        )
 
     @mock.patch("flumine.streams.streams.get_file_md")
     @mock.patch("flumine.streams.streams.HistoricalStream")
@@ -333,6 +369,7 @@ class TestBaseStream(unittest.TestCase):
             event_processing=True,
             event_id="123",
             operation="test",
+            **{"calculate_market_tv": True},
         )
 
     def test_init(self):
@@ -349,6 +386,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertTrue(self.stream.event_processing)
         self.assertEqual(self.stream.event_id, "123")
         self.assertEqual(self.stream.operation, "test")
+        self.assertEqual(self.stream.listener_kwargs, {"calculate_market_tv": True})
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):

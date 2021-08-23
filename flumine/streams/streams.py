@@ -110,6 +110,7 @@ class Streams:
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
+                and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
         else:
