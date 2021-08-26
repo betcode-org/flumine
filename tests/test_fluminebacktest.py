@@ -244,6 +244,7 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
         mock_market.market_book.streaming_unique_id = 2
         mock_market.blotter.process_cleared_orders.return_value = []
+        mock_market.cleared.return_value = {}
         self.flumine.markets._markets = {
             "1.23": mock_market,
             "4.56": mock.Mock(market_id="4.56", closed=True, elapsed_seconds_closed=25),

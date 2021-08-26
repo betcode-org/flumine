@@ -290,12 +290,18 @@ class BaseFlumineTest(unittest.TestCase):
 
         self.assertEqual(len(self.base_flumine.markets._markets), 3)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine._process_cleared_markets")
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine._process_cleared_orders")
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_close_market_closed_paper(
-        self, mock_log_control, mock_info, mock__process_cleared_orders, mock_events
+        self,
+        mock_log_control,
+        mock_info,
+        mock__process_cleared_orders,
+        mock_events,
+        mock__process_cleared_markets,
     ):
         self.base_flumine.client.paper_trade = True
         mock_strategy = mock.Mock()
@@ -303,6 +309,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
         mock_market.market_book.streaming_unique_id = 2
+        mock_market.cleared.return_value = {}
         self.base_flumine.markets._markets = {
             "1.23": mock_market,
             "4.56": mock.Mock(market_id="4.56", closed=True, elapsed_seconds_closed=25),
@@ -320,6 +327,10 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(len(self.base_flumine.markets._markets), 4)
         mock__process_cleared_orders.assert_called_with(
             mock_events.ClearedOrdersEvent()
+        )
+        mock_market.cleared.assert_called_with(self.base_flumine.client.commission_base)
+        mock__process_cleared_markets.assert_called_with(
+            mock_events.ClearedMarketsEvent()
         )
 
     @mock.patch("flumine.baseflumine.events")
@@ -350,10 +361,12 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._process_cleared_orders(mock_event)
         mock_market.blotter.process_cleared_orders.assert_not_called()
 
-    def test__process_cleared_markets(self):
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test__process_cleared_markets(self, mock_log_control):
         mock_event = mock.Mock()
         mock_event.event.orders = []
         self.base_flumine._process_cleared_markets(mock_event)
+        mock_log_control.assert_called_with(mock_event)
 
     def test__process_end_flumine(self):
         self.base_flumine._process_end_flumine()
