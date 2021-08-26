@@ -278,11 +278,20 @@ class BaseFlumine:
 
         if recorder is False:
             if self.BACKTEST or self.client.paper_trade:
+                # simulate ClearedOrdersEvent
                 cleared_orders = resources.ClearedOrders(
-                    clearedOrders=[], moreAvailable=False
+                    moreAvailable=False, clearedOrders=[]
                 )
                 cleared_orders.market_id = market_id
                 self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
+                # simulate ClearedMarketsEvent
+                cleared_markets = resources.ClearedOrders(
+                    moreAvailable=False,
+                    clearedOrders=[market.cleared(self.client.commission_base)],
+                )
+                self._process_cleared_markets(
+                    events.ClearedMarketsEvent(cleared_markets)
+                )
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
@@ -332,6 +341,7 @@ class BaseFlumine:
                     "bet_count": cleared_market.bet_count,
                 },
             )
+        self.log_control(event)
 
     def _process_end_flumine(self) -> None:
         for strategy in self.strategies:

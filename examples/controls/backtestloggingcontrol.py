@@ -68,3 +68,16 @@ class BacktestLoggingControl(LoggingControl):
                     )
 
         logger.info("Orders updated", extra={"order_count": len(orders)})
+
+    def _process_cleared_markets(self, event):
+        cleared_markets = event.event
+        for cleared_market in cleared_markets.orders:
+            logger.info(
+                "Cleared market",
+                extra={
+                    "market_id": cleared_market.market_id,
+                    "bet_count": cleared_market.bet_count,
+                    "profit": cleared_market.profit,
+                    "commission": cleared_market.commission,
+                },
+            )

@@ -4,6 +4,7 @@ from unittest import mock
 
 from flumine.markets.markets import Markets
 from flumine.markets.market import Market
+from flumine import config
 
 
 class MarketsTest(unittest.TestCase):
@@ -316,6 +317,26 @@ class MarketTest(unittest.TestCase):
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.race_type, mock_market_book.market_definition.race_type
+        )
+
+    @mock.patch("flumine.markets.market.Market.event_type_id")
+    @mock.patch("flumine.markets.market.Market.event_id")
+    def test_cleared(self, mock_event_id, mock_event_type_id):
+        self.assertEqual(
+            self.market.cleared(0.05),
+            {
+                "betCount": 0,
+                "betOutcome": "WON",
+                "commission": 0.0,
+                "customerStrategyRef": config.hostname,
+                "eventId": mock_event_id,
+                "eventTypeId": mock_event_type_id,
+                "lastMatchedDate": None,
+                "marketId": "1.234",
+                "placedDate": None,
+                "profit": 0,
+                "settledDate": None,
+            },
         )
 
     def test_info(self):

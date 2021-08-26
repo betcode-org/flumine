@@ -296,7 +296,6 @@ class WorkersTest(unittest.TestCase):
             group_by="MARKET",
             customer_strategy_refs=[mock_config.hostname],
         )
-        mock_flumine.log_control.assert_called_with(mock_events.ClearedMarketsEvent())
         mock_flumine.handler_queue.put.assert_called_with(
             mock_events.ClearedMarketsEvent()
         )
