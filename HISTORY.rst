@@ -6,6 +6,10 @@ Release History
 1.19.11 (2021-08-26)
 +++++++++++++++++++
 
+**Improvements**
+
+- #480 Correctly simulate ClearedMarket event when backtesting/paper trading
+
 **Libraries**
 
 - betfairlightweight upgraded to 2.13.2
