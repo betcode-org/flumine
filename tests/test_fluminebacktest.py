@@ -107,15 +107,14 @@ class FlumineBacktestTest(unittest.TestCase):
     def test__process_backtest_orders(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter = Blotter("1.23")
-        mock_order = mock.Mock(size_remaining=0)
+        mock_order = mock.Mock(size_remaining=0, complete=False)
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.trade.status = TradeStatus.COMPLETE
-        mock_order_two = mock.Mock(size_remaining=1)
+        mock_order_two = mock.Mock(size_remaining=1, complete=False)
         mock_order_two.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order_two.trade.status = TradeStatus.COMPLETE
         mock_market.blotter._live_orders = [mock_order, mock_order_two]
         self.flumine._process_backtest_orders(mock_market)
-        self.assertEqual(mock_market.blotter._live_orders, [])
         mock_order.execution_complete.assert_called()
         mock_order_two.execution_complete.assert_not_called()
 
