@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.12 (2021-08-27)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent duplicate EC calls when backtesting
+
 1.19.11 (2021-08-26)
 +++++++++++++++++++
 
