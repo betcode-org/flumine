@@ -45,7 +45,7 @@ class BaseOrderPackage(BaseEvent):
         self.package_type = package_type
         self.async_ = async_
         self._market_version = market_version
-        self.customer_strategy_ref = config.hostname
+        self.customer_strategy_ref = config.customer_strategy_ref
         self._retry = True
         self._max_retries = 3  # will retry 3 times
         self._retry_count = 0

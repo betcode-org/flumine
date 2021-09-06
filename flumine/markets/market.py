@@ -181,7 +181,7 @@ class Market:
             "marketId": self.market_id,
             "eventId": self.event_id,
             "eventTypeId": self.event_type_id,
-            "customerStrategyRef": config.hostname,
+            "customerStrategyRef": config.customer_strategy_ref,
             "lastMatchedDate": None,
             "placedDate": None,
             "settledDate": None,

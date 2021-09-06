@@ -20,7 +20,7 @@ class OrdersMiddleware(Middleware):
 
     def add_market(self, market) -> None:
         resp = self.flumine.client.betting_client.betting.list_current_orders(
-            customer_strategy_refs=[config.hostname],
+            customer_strategy_refs=[config.customer_strategy_ref],
             order_projection="EXECUTION_COMPLETE",
         )
         for current_order in resp.orders:
