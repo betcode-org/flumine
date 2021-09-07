@@ -9,6 +9,8 @@ customer_strategy_ref = socket.gethostname()[
     :15
 ]  # ie. docker container id (used as order customerStrategyRefs)
 
+hostname = customer_strategy_ref
+
 process_id = os.getpid()  # process id of app
 
 current_time = None  # used for backtesting
