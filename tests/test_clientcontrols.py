@@ -90,6 +90,20 @@ class TestMaxTransactionCount(unittest.TestCase):
         self.trading_control._check_hour()
         mock_set_next_hour.assert_called_with()
 
+    def test_check_hour_prev_time(self):
+        self.trading_control._set_next_hour()
+        self.trading_control.current_transaction_count = 5069
+        self.trading_control.current_failed_transaction_count = 5069
+        now = datetime.datetime.utcnow()
+        now_1 = (now + datetime.timedelta(days=1)).replace(
+            minute=0, second=0, microsecond=0
+        )
+        self.trading_control._next_hour = now_1
+        self.trading_control._check_hour()
+
+        self.assertEqual(self.trading_control.current_transaction_count, 0)
+        self.assertEqual(self.trading_control.current_failed_transaction_count, 0)
+
     def test_set_next_hour(self):
         self.trading_control.current_transaction_count = 5069
         self.trading_control.current_failed_transaction_count = 5069

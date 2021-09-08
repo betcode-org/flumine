@@ -39,6 +39,8 @@ class Streams:
                     "No markets or events found for strategy {0}".format(strategy)
                 )
             elif markets:
+                # order markets by name as an attempt to process in chronological order
+                markets.sort()
                 for market in markets:
                     market_type = get_file_md(market, "marketType")
                     country_code = get_file_md(market, "countryCode")

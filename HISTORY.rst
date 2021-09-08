@@ -6,12 +6,16 @@ Release History
 1.19.13 (2021-09-08)
 +++++++++++++++++++
 
-** Improvements**
+**Improvements**
 
 - #489 countryCode filter added to backtesting
 - Renamed config.hostname to config.customer_strategy_ref. This makes the use of the variable more explicit.
 - WARNING: This change will affect users who set config.hostname. From this version onwards, they should set config.customer_strategy_ref.
 - Docs / logging control updated
+
+**Bug Fixes**
+
+- #487 Backtesting transaction count maxing out (markets not ordered)
 
 **Libraries**
 
