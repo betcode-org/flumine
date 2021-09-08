@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-1.19.12 (2021-08-27)
+1.19.13 (2021-09-08)
 +++++++++++++++++++
 
 ** Improvements**
@@ -11,6 +11,11 @@ Release History
  - Renamed config.hostname to config.customer_strategy_ref. This makes the use of the variable more explicit.
  - WARNING: This change will affect users who set config.hostname. From this version onwards, they should set
             config.customer_strategy_ref.
+ - Docs / logging control updated
+
+**Libraries**
+
+- black upgraded to 21.8b0
 
 1.19.12 (2021-08-27)
 +++++++++++++++++++

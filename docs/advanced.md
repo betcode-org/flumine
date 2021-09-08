@@ -44,7 +44,7 @@ This is created on a per market basis when backtesting.
 
 ### Order Stream
 
-Subscribes to all orders per running instance using the `config.hostname`
+Subscribes to all orders per running instance using the `config.customer_strategy_ref`
 
 ## Custom Event
 
@@ -80,15 +80,15 @@ logger.setLevel(logging.INFO)
 
 ## Config
 
-### simulated
+#### simulated
 
 Updated to True when backtesting or paper trading
 
-### instance_id
+#### instance_id
 
 Store server id or similar (e.g. AWS ec2 instanceId)
 
-#### hostname
+#### customer_strategy_ref
 
 Used as customerStrategyRefs so that only orders created by the running instance are returned.
 
