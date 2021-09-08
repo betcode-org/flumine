@@ -34,6 +34,7 @@ strategy = MarketRecorder(
         "local_dir": "/tmp",
         "force_update": False,
         "remove_file": True,
+        "remove_gz_file": True,
     },
 )
 
