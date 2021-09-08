@@ -228,7 +228,7 @@ When backtesting you can filter markets to be processed by using the `market_typ
 
 ```python
 strategy = ExampleStrategy(
-    market_filter={"markets": [..], "market_type": ["MATCH_ODDS"]}
+    market_filter={"markets": [..], "market_types": ["MATCH_ODDS"]}
 )
 ```
 

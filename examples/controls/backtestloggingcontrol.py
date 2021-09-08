@@ -20,7 +20,8 @@ FIELDNAMES = [
     "elapsed_seconds_executable",
     "order_status",
     "market_note",
-    "notes",
+    "trade_notes",
+    "order_notes",
 ]
 
 
@@ -57,7 +58,8 @@ class BacktestLoggingControl(LoggingControl):
                         "elapsed_seconds_executable": order.elapsed_seconds_executable,
                         "order_status": order.status.value,
                         "market_note": order.trade.market_notes,
-                        "notes": order.trade.notes_str,
+                        "trade_notes": order.trade.notes_str,
+                        "order_notes": order.notes_str,
                     }
                     csv_writer = csv.DictWriter(m, delimiter=",", fieldnames=FIELDNAMES)
                     csv_writer.writerow(order_data)
