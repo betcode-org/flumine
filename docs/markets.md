@@ -89,3 +89,9 @@ class CustomMiddleware(Middleware):
     def remove_market(self, market) -> None:
         print("market {0} removed".format(market.market_id))
 ```
+
+The above middleware can then be added to the framework:
+
+```python
+framework.add_logging_control(CustomMiddleware())
+```

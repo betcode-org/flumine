@@ -44,7 +44,7 @@ This is created on a per market basis when backtesting.
 
 ### Order Stream
 
-Subscribes to all orders per running instance using the `config.hostname`
+Subscribes to all orders per running instance using the `config.customer_strategy_ref`
 
 ## Custom Event
 
@@ -80,54 +80,54 @@ logger.setLevel(logging.INFO)
 
 ## Config
 
-### simulated
+#### simulated
 
 Updated to True when backtesting or paper trading
 
-### instance_id
+#### instance_id
 
 Store server id or similar (e.g. AWS ec2 instanceId)
 
-### hostname
+#### customer_strategy_ref
 
 Used as customerStrategyRefs so that only orders created by the running instance are returned.
 
-### process_id
+#### process_id
 
 OS process id of running application.
 
-### current_time
+#### current_time
 
 Used for backtesting
 
-### raise_errors
+#### raise_errors
 
 Raises errors on strategy functions, see [Error Handling](/advanced/#error-handling)
 
-### max_execution_workers
+#### max_execution_workers
 
 Max number of workers in execution thread pool
 
-### async_place_orders
+#### async_place_orders
 
 Place orders sent with place orders flag, prevents waiting for bet delay
 
-### place_latency
+#### place_latency
 
 Place latency used for backtesting / simulation execution
 
-### cancel_latency
+#### cancel_latency
 
 Cancel latency used for backtesting / simulation execution
 
-### update_latency
+#### update_latency
 
 Update latency used for backtesting / simulation execution
 
-### replace_latency
+#### replace_latency
 
 Replace latency used for backtesting / simulation execution
 
-### order_sep 
+#### order_sep 
 
 customer_order_ref separator

@@ -328,7 +328,7 @@ class MarketTest(unittest.TestCase):
                 "betCount": 0,
                 "betOutcome": "WON",
                 "commission": 0.0,
-                "customerStrategyRef": config.hostname,
+                "customerStrategyRef": config.customer_strategy_ref,
                 "eventId": mock_event_id,
                 "eventTypeId": mock_event_type_id,
                 "lastMatchedDate": None,

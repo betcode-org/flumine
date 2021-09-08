@@ -22,7 +22,7 @@ class OrderStream(BaseStream):
             "Starting OrderStream {0}".format(self.stream_id),
             extra={
                 "stream_id": self.stream_id,
-                "customer_strategy_refs": config.hostname,
+                "customer_strategy_refs": config.customer_strategy_ref,
                 "conflate_ms": self.conflate_ms,
                 "streaming_timeout": self.streaming_timeout,
             },
@@ -39,7 +39,7 @@ class OrderStream(BaseStream):
         try:
             self.stream_id = self._stream.subscribe_to_orders(
                 order_filter=filters.streaming_order_filter(
-                    customer_strategy_refs=[config.hostname],
+                    customer_strategy_refs=[config.customer_strategy_ref],
                     partition_matched_by_strategy_ref=True,
                     include_overall_position=False,
                 ),

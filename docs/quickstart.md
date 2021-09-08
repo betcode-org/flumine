@@ -222,13 +222,13 @@ The `Market` object contains a helper method for accessing other event linked ma
 place_market = market.event["PLACE"]
 ```
 
-### Market Type Filter
+### Market Filter
 
-When backtesting you can filter markets to be processed by using the `market_type` filter as per live:
+When backtesting you can filter markets to be processed by using the `market_type` and `country_code` filter as per live:
 
 ```python
 strategy = ExampleStrategy(
-    market_filter={"markets": [..], "market_type": ["MATCH_ODDS"]}
+    market_filter={"markets": [..], "market_types": ["MATCH_ODDS"], "country_codes": ["GB"]}
 )
 ```
 

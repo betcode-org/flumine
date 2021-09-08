@@ -24,6 +24,7 @@ class Streams:
         if self.flumine.BACKTEST:
             markets = strategy.market_filter.get("markets")
             market_types = strategy.market_filter.get("market_types")
+            country_codes = strategy.market_filter.get("country_codes")
             event_processing = strategy.market_filter.get("event_processing", False)
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
@@ -38,12 +39,24 @@ class Streams:
                     "No markets or events found for strategy {0}".format(strategy)
                 )
             elif markets:
+                # order markets by name as an attempt to process in chronological order
+                markets.sort()
                 for market in markets:
                     market_type = get_file_md(market, "marketType")
+                    country_code = get_file_md(market, "countryCode")
                     if market_types and market_type and market_type not in market_types:
                         logger.warning(
-                            "Skipping market %s (%s) for strategy %s"
+                            "Skipping market %s (%s) for strategy %s due to marketType filter"
                             % (market, market_type, strategy)
+                        )
+                    elif (
+                        country_codes
+                        and country_code
+                        and country_code not in country_codes
+                    ):
+                        logger.warning(
+                            "Skipping market %s (%s) for strategy %s due to countryCode filter"
+                            % (market, country_code, strategy)
                         )
                     else:
                         stream = self.add_historical_stream(

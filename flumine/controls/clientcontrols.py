@@ -57,9 +57,14 @@ class MaxTransactionCount(BaseControl):
             )
 
     def _check_hour(self) -> None:
+        now = datetime.datetime.utcnow()
+        next_hour = now + datetime.timedelta(hours=1)
         if self._next_hour is None:
             self._set_next_hour()
-        elif datetime.datetime.utcnow() > self._next_hour:
+        elif (
+            self._next_hour.date() != next_hour.date()
+            or self._next_hour.hour != next_hour.hour
+        ):
             logger.info(
                 "Execution new hour",
                 extra={
