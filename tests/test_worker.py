@@ -236,7 +236,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             from_record=0,
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
         mock_flumine.log_control.assert_called_with(mock_events.ClearedOrdersEvent())
         mock_flumine.handler_queue.put.assert_called_with(
@@ -258,7 +258,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             from_record=0,
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
 
     @mock.patch("flumine.worker.config")
@@ -274,7 +274,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             from_record=0,
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
 
     @mock.patch("flumine.worker.config")
@@ -294,7 +294,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             group_by="MARKET",
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
         mock_flumine.handler_queue.put.assert_called_with(
             mock_events.ClearedMarketsEvent()
@@ -316,7 +316,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             group_by="MARKET",
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
 
     @mock.patch("flumine.worker.config")
@@ -334,7 +334,7 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             group_by="MARKET",
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
 
     @mock.patch("flumine.worker.config")
@@ -350,5 +350,5 @@ class WorkersTest(unittest.TestCase):
             bet_status="SETTLED",
             market_ids=["1.23"],
             group_by="MARKET",
-            customer_strategy_refs=[mock_config.hostname],
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
         )

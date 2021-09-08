@@ -6,6 +6,15 @@ Release History
 1.19.12 (2021-08-27)
 +++++++++++++++++++
 
+** Improvements**
+
+ - Renamed config.hostname to config.customer_strategy_ref. This makes the use of the variable more explicit.
+ - WARNING: This change will affect users who set config.hostname. From this version onwards, they should set
+            config.customer_strategy_ref.
+
+1.19.12 (2021-08-27)
++++++++++++++++++++
+
 **Bug Fixes**
 
 - Prevent duplicate EC calls when backtesting
