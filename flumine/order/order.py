@@ -29,6 +29,7 @@ VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
 class OrderStatus(Enum):
     # Pending exchange processing
     PENDING = "Pending"
+    PENDING_DELAY = "Pending delay"  # local delay
     CANCELLING = "Cancelling"
     UPDATING = "Updating"
     REPLACING = "Replacing"
@@ -64,6 +65,7 @@ class BaseOrder:
         self.number_of_dead_heat_winners = None
         self.status = None
         self.status_log = []
+        self.delay = None
         self.violation_msg = None
         self.context = context or {}  # store order specific notes/triggers
         self.notes = notes or collections.OrderedDict()
@@ -75,6 +77,7 @@ class BaseOrder:
         self.simulated = Simulated(self)  # used in simulated execution
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
+        self.market_version = None  # marketBook.version
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
@@ -92,8 +95,11 @@ class BaseOrder:
         if self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
 
-    def placing(self) -> None:
-        self._update_status(OrderStatus.PENDING)
+    def placing(self, delay: float = None) -> None:
+        if delay:
+            self._update_status(OrderStatus.PENDING_DELAY)
+        else:
+            self._update_status(OrderStatus.PENDING)
 
     def executable(self) -> None:
         self._update_status(OrderStatus.EXECUTABLE)
@@ -119,7 +125,7 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(self, publish_time: int) -> None:
+    def place(self, publish_time: int, market_version: int, delay: float) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -227,6 +233,10 @@ class BaseOrder:
             return
 
     @property
+    def elapsed_seconds_created(self) -> float:
+        return (datetime.datetime.utcnow() - self.date_time_created).total_seconds()
+
+    @property
     def elapsed_seconds_executable(self) -> Optional[float]:
         if self.date_time_execution_complete and self.responses.date_time_placed:
             return (
@@ -300,9 +310,11 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(self, publish_time: int) -> None:
+    def place(self, publish_time: int, market_version: int, delay: float) -> None:
         self.publish_time = publish_time
-        self.placing()
+        self.market_version = market_version
+        self.delay = delay
+        self.placing(delay)
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.bet_id is None:

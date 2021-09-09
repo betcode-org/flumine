@@ -46,6 +46,7 @@ class Transaction:
         market_version: int = None,
         execute: bool = True,
         force: bool = False,
+        delay: float = None,
     ) -> bool:
         if (
             execute
@@ -54,7 +55,7 @@ class Transaction:
         ):
             return False
         # place
-        order.place(self.market.market_book.publish_time)
+        order.place(self.market.market_book.publish_time, market_version, delay)
         if self.market.blotter.has_trade(order.trade.id):
             new_trade = False
         else:
@@ -73,8 +74,9 @@ class Transaction:
         if execute:  # handles replaceOrder
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)
             runner_context.place(order.trade.id)
-            self._pending_place.append((order, market_version))
-            self._pending_orders = True
+            if not delay:
+                self._pending_place.append((order, market_version))
+                self._pending_orders = True
         return True
 
     def cancel_order(

@@ -44,10 +44,16 @@ class BaseOrderTest(unittest.TestCase):
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123", market_id="market_id", bet_id=None
         )
-        betfair_order = BetfairOrder(trade=trade, side="BACK", order_type=mock.Mock())
-        betfair_order.id = "123"
-        market.blotter = {"123": betfair_order}
-        event = mock.Mock(event=[mock.Mock(orders=[current_order])])
+        mock_order = BetfairOrder(trade=trade, side="BACK", order_type=mock.Mock())
+        mock_order.id = "123"
+        market.blotter = mock.MagicMock()
+        d = {"123": mock_order}
+        market.blotter.__getitem__.side_effect = d.__getitem__
+        event = mock.Mock(
+            event=[
+                mock.Mock(orders=[current_order], streaming_update={"id": "market_id"})
+            ]
+        )
 
         process.process_current_orders(
             markets=markets,
@@ -56,7 +62,7 @@ class BaseOrderTest(unittest.TestCase):
             log_control=mock_log_control,
             add_market=mock_add_market,
         )
-        self.assertEqual(current_order, betfair_order.responses.current_order)
+        self.assertEqual(current_order, mock_order.responses.current_order)
 
     def test_process_current_order(self):
         mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)

@@ -219,16 +219,29 @@ class BaseFlumine:
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
-        process_current_orders(
-            self.markets, self.strategies, event, self.log_control, self._add_market
-        )
+        if event.event:
+            process_current_orders(
+                self.markets, self.strategies, event, self.log_control, self._add_market
+            )
         for market in self.markets:
             if market.closed is False:
+                # check for pending orders (delay)
+                if market.blotter.has_pending_orders:
+                    self._check_pending_orders(market)
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     utils.call_process_orders_error_handling(
                         strategy, market, strategy_orders
                     )
+
+    def _check_pending_orders(self, market):
+        for order in market.blotter.pending_orders:
+            if order.elapsed_seconds_created > order.delay:
+                order.placing(delay=None)
+                with market.transaction() as t:
+                    t._pending_place.append((order, order.market_version))
+                    t._pending_orders = True
+                market.blotter.placed_pending(order)
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:

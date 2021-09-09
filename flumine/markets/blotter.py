@@ -37,6 +37,7 @@ class Blotter:
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade.id: [Order,]}
         self._live_orders = []
+        self._pending_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
 
@@ -69,6 +70,14 @@ class Blotter:
         if matched_only:
             orders = [o for o in orders if o.size_matched > 0]
         return orders
+
+    @property
+    def pending_orders(self) -> Iterable:
+        return iter(list(self._pending_orders))
+
+    @property
+    def has_pending_orders(self) -> bool:
+        return bool(self._pending_orders)
 
     @property
     def live_orders(self) -> Iterable:
@@ -172,6 +181,9 @@ class Blotter:
 
     """ getters / setters """
 
+    def placed_pending(self, order) -> None:
+        self._pending_orders.remove(order)
+
     def complete_order(self, order) -> None:
         self._live_orders.remove(order)
 
@@ -191,6 +203,8 @@ class Blotter:
         self._strategy_selection_orders[
             (order.trade.strategy, *order.lookup[1:])
         ].append(order)
+        if order.status == OrderStatus.PENDING_DELAY:
+            self._pending_orders.append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]

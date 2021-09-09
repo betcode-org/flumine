@@ -39,6 +39,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.runner_status)
         self.assertIsNone(self.order.status)
         self.assertEqual(self.order.status_log, [])
+        self.assertIsNone(self.order.delay)
         self.assertIsNone(self.order.violation_msg)
         self.assertEqual(self.order.context, {1: 2})
         self.assertEqual(self.order.notes, {})
@@ -47,6 +48,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
         self.assertIsNone(self.order.publish_time)
+        self.assertIsNone(self.order.market_version)
         self.assertIsNotNone(self.order.date_time_created)
         self.assertIsNone(self.order.date_time_execution_complete)
         self.assertFalse(self.order.simulated)
@@ -64,6 +66,11 @@ class BaseOrderTest(unittest.TestCase):
     def test_placing(self, mock__update_status):
         self.order.placing()
         mock__update_status.assert_called_with(OrderStatus.PENDING)
+
+    @mock.patch("flumine.order.order.BaseOrder._update_status")
+    def test_placing_delay(self, mock__update_status):
+        self.order.placing(1.0)
+        mock__update_status.assert_called_with(OrderStatus.PENDING_DELAY)
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_executable(self, mock__update_status):
@@ -105,7 +112,7 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):
-            self.order.place(123)
+            self.order.place(123, 456, 7)
 
     def test_cancel(self):
         with self.assertRaises(NotImplementedError):
@@ -207,6 +214,9 @@ class BaseOrderTest(unittest.TestCase):
         self.order.responses = mock_responses
         self.assertGreaterEqual(self.order.elapsed_seconds, 0)
 
+    def elapsed_seconds_created(self):
+        self.assertGreaterEqual(self.order.elapsed_seconds_created, 0)
+
     def test_elapsed_seconds_executable(self):
         self.assertIsNone(self.order.elapsed_seconds_executable)
         mock_responses = mock.Mock()
@@ -267,9 +277,11 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
-        self.order.place(123)
-        mock_placing.assert_called_with()
+        self.order.place(123, 456, 7)
+        mock_placing.assert_called_with(7)
         self.assertEqual(self.order.publish_time, 123)
+        self.assertEqual(self.order.market_version, 456)
+        self.assertEqual(self.order.delay, 7)
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",

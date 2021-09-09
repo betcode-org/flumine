@@ -37,7 +37,7 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.market_notes = None
         self.assertTrue(self.transaction.place_order(mock_order))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time
+            self.transaction.market.market_book.publish_time, None, None
         )
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
@@ -47,8 +47,42 @@ class TransactionTest(unittest.TestCase):
         )
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
-        self.transaction._pending_place = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_place, [(mock_order, None)])
         self.assertTrue(self.transaction._pending_orders)
+        mock_order.trade.strategy.get_runner_context.assert_called_with(
+            *mock_order.lookup
+        )
+        self.transaction.market.blotter.has_trade.assert_called_with(
+            mock_order.trade.id
+        )
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    @mock.patch(
+        "flumine.execution.transaction.Transaction._validate_controls",
+        return_value=True,
+    )
+    @mock.patch("flumine.execution.transaction.events")
+    def test_place_order_delay(
+        self, mock_events, mock__validate_controls, mock_get_market_notes
+    ):
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        mock_order = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order.trade.market_notes = None
+        self.assertTrue(self.transaction.place_order(mock_order, delay=1.0))
+        mock_order.place.assert_called_with(
+            self.transaction.market.market_book.publish_time, None, 1.0
+        )
+        self.transaction.market.flumine.log_control.assert_called_with(
+            mock_events.TradeEvent()
+        )
+        mock_get_market_notes.assert_called_with(
+            self.mock_market, mock_order.selection_id
+        )
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
+        self.assertEqual(self.transaction._pending_place, [])
+        self.assertFalse(self.transaction._pending_orders)
         mock_order.trade.strategy.get_runner_context.assert_called_with(
             *mock_order.lookup
         )
@@ -70,13 +104,13 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock(id="123")
         self.assertTrue(self.transaction.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time
+            self.transaction.market.market_book.publish_time, None, None
         )
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
         )
         mock__validate_controls.assert_not_called()
-        self.transaction._pending_place = []
+        self.assertEqual(self.transaction._pending_place, [])
         self.assertFalse(self.transaction._pending_orders)
         self.transaction.market.blotter.has_trade.assert_called_with(
             mock_order.trade.id
@@ -95,7 +129,7 @@ class TransactionTest(unittest.TestCase):
         with self.assertRaises(OrderError):
             self.transaction.place_order(mock_order)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
-        self.transaction._pending_place = []
+        self.assertEqual(self.transaction._pending_place, [])
         self.assertFalse(self.transaction._pending_orders)
         mock_get_market_notes.assert_not_called()
 
@@ -107,7 +141,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertFalse(self.transaction.place_order(mock_order))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
-        self.transaction._pending_place = []
+        self.assertEqual(self.transaction._pending_place, [])
         self.assertFalse(self.transaction._pending_orders)
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
@@ -124,7 +158,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock(id="123", lookup=(1, 2, 3))
         self.assertTrue(self.transaction.place_order(mock_order, force=True))
         mock__validate_controls.assert_not_called()
-        self.transaction._pending_place = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_place, [(mock_order, None)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch(
@@ -147,7 +181,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertFalse(self.transaction.cancel_order(mock_order))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.CANCEL)
-        self.transaction._pending_cancel = []
+        self.assertEqual(self.transaction._pending_cancel, [])
         self.assertFalse(self.transaction._pending_orders)
 
     @mock.patch(
@@ -159,7 +193,7 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction.cancel_order(mock_order, 0.01, force=True))
         mock_order.cancel.assert_called_with(0.01)
         mock__validate_controls.assert_not_called()
-        self.transaction._pending_cancel = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_cancel, [(mock_order, None)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch(
@@ -171,7 +205,7 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction.update_order(mock_order, "PERSIST"))
         mock_order.update.assert_called_with("PERSIST")
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
-        self.transaction._pending_update = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_update, [(mock_order, None)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch(
@@ -182,7 +216,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertFalse(self.transaction.update_order(mock_order, "test"))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
-        self.transaction._pending_update = []
+        self.assertEqual(self.transaction._pending_update, [])
         self.assertFalse(self.transaction._pending_orders)
 
     @mock.patch(
@@ -196,7 +230,7 @@ class TransactionTest(unittest.TestCase):
         )
         mock_order.update.assert_called_with("PERSIST")
         mock__validate_controls.assert_not_called()
-        self.transaction._pending_update = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_update, [(mock_order, None)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch(
@@ -208,7 +242,7 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction.replace_order(mock_order, 1.01, 321))
         mock_order.replace.assert_called_with(1.01)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
-        self.transaction._pending_replace = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_replace, [(mock_order, 321)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch(
@@ -219,7 +253,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertFalse(self.transaction.replace_order(mock_order, 2.02))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
-        self.transaction._pending_replace = []
+        self.assertEqual(self.transaction._pending_replace, [])
         self.assertFalse(self.transaction._pending_orders)
 
     @mock.patch(
@@ -233,7 +267,7 @@ class TransactionTest(unittest.TestCase):
         )
         mock_order.replace.assert_called_with(1.01)
         mock__validate_controls.assert_not_called()
-        self.transaction._pending_replace = [(mock_order, None)]
+        self.assertEqual(self.transaction._pending_replace, [(mock_order, 321)])
         self.assertTrue(self.transaction._pending_orders)
 
     @mock.patch("flumine.execution.transaction.Transaction._create_order_package")

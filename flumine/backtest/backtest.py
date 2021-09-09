@@ -155,6 +155,9 @@ class FlumineBacktest(BaseFlumine):
         orders through strategies
         """
         blotter = market.blotter
+        # check for pending orders (delay)
+        if blotter.has_pending_orders:
+            self._check_pending_orders(market)
         for order in blotter.live_orders:
             if not order.complete:
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:

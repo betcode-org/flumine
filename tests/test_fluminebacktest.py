@@ -118,15 +118,28 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_order.execution_complete.assert_called()
         mock_order_two.execution_complete.assert_not_called()
 
-    def test__process_backtest_orders_strategies(self):
+    @mock.patch("flumine.backtest.backtest.FlumineBacktest._check_pending_orders")
+    def test__process_backtest_orders_strategies(self, mock__check_pending_orders):
         mock_market = mock.Mock(context={})
         mock_market.blotter.live_orders = []
+        mock_market.blotter.has_pending_orders = True
         mock_strategy = mock.Mock()
         self.flumine.strategies = [mock_strategy]
         self.flumine._process_backtest_orders(mock_market)
         mock_strategy.process_orders.assert_called_with(
             mock_market, mock_market.blotter.strategy_orders(mock_strategy)
         )
+        mock__check_pending_orders.assert_called_with(mock_market)
+
+    def test__check_pending_orders(self):
+        mock_order_one = mock.Mock(delay=1.0, elapsed_seconds_created=1.2)
+        mock_order_two = mock.Mock(delay=1.0, elapsed_seconds_created=0.2)
+        mock_market = mock.MagicMock()
+        mock_market.blotter.pending_orders = [mock_order_one, mock_order_two]
+        self.flumine._check_pending_orders(mock_market)
+        mock_order_one.placing.assert_called_with(delay=None)
+        mock_order_two.placing.assert_not_called()
+        mock_market.blotter.placed_pending.assert_called_with(mock_order_one)
 
     def test__check_pending_packages_place(self):
         mock_client = mock.Mock()

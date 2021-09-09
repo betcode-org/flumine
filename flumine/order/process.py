@@ -35,6 +35,7 @@ def process_current_orders(
     markets: Markets, strategies: Strategies, event, log_control, add_market
 ) -> None:
     for current_orders in event.event:
+        market = markets.markets.get(current_orders.streaming_update["id"])
         for current_order in current_orders.orders:
             order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
@@ -68,6 +69,8 @@ def process_current_orders(
                     continue
 
             process_current_order(order, current_order, log_control)
+            if order in market.blotter.live_orders and order.complete:
+                market.blotter.complete_order(order)
 
 
 def process_current_order(order: BaseOrder, current_order, log_control) -> None:

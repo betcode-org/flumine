@@ -176,12 +176,20 @@ class BaseFlumineTest(unittest.TestCase):
         mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
         self.assertFalse(mock_market.update_market_catalogue)
 
-    def test__process_current_orders(self):
+    @mock.patch("flumine.baseflumine.process_current_orders")
+    def test__process_current_orders(self, mock_process_current_orders):
         mock_event = mock.Mock()
         mock_current_orders = mock.Mock()
         mock_current_orders.orders = []
         mock_event.event = [mock_current_orders]
         self.base_flumine._process_current_orders(mock_event)
+        mock_process_current_orders.assert_called_with(
+            self.base_flumine.markets,
+            self.base_flumine.strategies,
+            mock_event,
+            self.base_flumine.log_control,
+            self.base_flumine._add_market,
+        )
 
     def test__process_custom_event(self):
         mock_market = mock.Mock()

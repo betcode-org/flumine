@@ -77,9 +77,10 @@ class Market:
         market_version: int = None,
         execute: bool = True,
         force: bool = False,
+        delay: float = None,
     ) -> bool:
         with self.transaction() as t:
-            return t.place_order(order, market_version, execute, force)
+            return t.place_order(order, market_version, execute, force, delay)
 
     def cancel_order(
         self, order, size_reduction: float = None, force: bool = False
