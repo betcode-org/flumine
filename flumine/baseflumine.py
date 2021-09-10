@@ -224,7 +224,7 @@ class BaseFlumine:
                 self.markets, self.strategies, event, self.log_control, self._add_market
             )
         for market in self.markets:
-            if market.closed is False and market.blotter:
+            if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     utils.call_process_orders_error_handling(
