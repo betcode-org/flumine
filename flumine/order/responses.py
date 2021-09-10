@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 
 class Responses:
@@ -11,17 +12,24 @@ class Responses:
         self.cancel_responses = []
         self.replace_responses = []
         self.update_responses = []
-        self.date_time_placed = None
+        self._date_time_placed = None
 
-    def placed(self, response):
+    def placed(self, response) -> None:
         self.place_response = response
-        self.date_time_placed = datetime.datetime.utcnow()
+        self._date_time_placed = datetime.datetime.utcnow()
 
-    def cancelled(self, response):
+    def cancelled(self, response) -> None:
         self.cancel_responses.append(response)
 
-    def replaced(self, response):
+    def replaced(self, response) -> None:
         self.replace_responses.append(response)
 
-    def updated(self, response):
+    def updated(self, response) -> None:
         self.update_responses.append(response)
+
+    @property
+    def date_time_placed(self) -> Optional[datetime.datetime]:
+        if self._date_time_placed:
+            return self._date_time_placed
+        elif self.current_order:
+            return self.current_order.placed_date
