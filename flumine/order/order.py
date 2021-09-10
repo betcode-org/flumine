@@ -76,6 +76,7 @@ class BaseOrder:
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
         self.market_version = None  # marketBook.version
+        self.async_ = None
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
@@ -120,7 +121,7 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(self, publish_time: int, market_version: int) -> None:
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -266,6 +267,7 @@ class BaseOrder:
             "date_time_created": str(self.date_time_created),
             "publish_time": str(self.publish_time) if self.publish_time else None,
             "market_version": self.market_version,
+            "async": self.async_,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
             "info": {
@@ -306,9 +308,10 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(self, publish_time: int, market_version: int) -> None:
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         self.publish_time = publish_time
         self.market_version = market_version
+        self.async_ = async_
         self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:
