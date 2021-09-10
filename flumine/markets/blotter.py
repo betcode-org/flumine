@@ -33,6 +33,7 @@ class Blotter:
 
     def __init__(self, market_id: str):
         self.market_id = market_id
+        self.active = False
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade.id: [Order,]}
@@ -184,6 +185,7 @@ class Blotter:
     __contains__ = has_order
 
     def __setitem__(self, customer_order_ref: str, order) -> None:
+        self.active = True
         self._orders[customer_order_ref] = order
         self._live_orders.append(order)
         self._trades[order.trade.id].append(order)

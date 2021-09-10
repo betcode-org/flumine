@@ -47,6 +47,8 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.EXCHANGE)
         self.assertEqual(self.order.update_data, {})
         self.assertIsNone(self.order.publish_time)
+        self.assertIsNone(self.order.market_version)
+        self.assertIsNone(self.order.async_)
         self.assertIsNotNone(self.order.date_time_created)
         self.assertIsNone(self.order.date_time_execution_complete)
         self.assertFalse(self.order.simulated)
@@ -105,7 +107,7 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):
-            self.order.place(123)
+            self.order.place(123, 456, False)
 
     def test_cancel(self):
         with self.assertRaises(NotImplementedError):
@@ -207,6 +209,9 @@ class BaseOrderTest(unittest.TestCase):
         self.order.responses = mock_responses
         self.assertGreaterEqual(self.order.elapsed_seconds, 0)
 
+    def elapsed_seconds_created(self):
+        self.assertGreaterEqual(self.order.elapsed_seconds_created, 0)
+
     def test_elapsed_seconds_executable(self):
         self.assertIsNone(self.order.elapsed_seconds_executable)
         mock_responses = mock.Mock()
@@ -267,9 +272,11 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
-        self.order.place(123)
+        self.order.place(123, 456, False)
         mock_placing.assert_called_with()
         self.assertEqual(self.order.publish_time, 123)
+        self.assertEqual(self.order.market_version, 456)
+        self.assertFalse(self.order.async_)
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",
@@ -504,6 +511,8 @@ class BetfairOrderTest(unittest.TestCase):
                 "market_id": self.mock_trade.market_id,
                 "selection_id": self.mock_trade.selection_id,
                 "publish_time": None,
+                "market_version": None,
+                "async": None,
                 "status": None,
                 "status_log": "Pending, Execution complete",
                 "trade": self.mock_trade.info,

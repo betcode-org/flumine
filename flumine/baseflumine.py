@@ -219,13 +219,18 @@ class BaseFlumine:
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
-        process_current_orders(
-            self.markets, self.strategies, event, self.log_control, self._add_market
-        )
+        if event.event:
+            process_current_orders(
+                self.markets, self.strategies, event, self.log_control, self._add_market
+            )
         for market in self.markets:
-            if market.closed is False:
+            if market.closed is False and market.blotter.active:
+                blotter = market.blotter
+                for order in blotter.live_orders:
+                    if order.complete:
+                        blotter.complete_order(order)
                 for strategy in self.strategies:
-                    strategy_orders = market.blotter.strategy_orders(strategy)
+                    strategy_orders = blotter.strategy_orders(strategy)
                     utils.call_process_orders_error_handling(
                         strategy, market, strategy_orders
                     )

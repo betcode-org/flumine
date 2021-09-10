@@ -80,7 +80,7 @@ class OrderStream(BaseStream):
                 else:
                     continue
             last_snap = time.time()
-            if order_books:
+            if order_books or self.flumine.markets.live_orders:
                 self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 
         logger.info("Stopped output_thread (OrderStream {0})".format(self.stream_id))

@@ -75,6 +75,8 @@ class BaseOrder:
         self.simulated = Simulated(self)  # used in simulated execution
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
+        self.market_version = None  # marketBook.version
+        self.async_ = None
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
@@ -119,7 +121,7 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(self, publish_time: int) -> None:
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -227,6 +229,10 @@ class BaseOrder:
             return
 
     @property
+    def elapsed_seconds_created(self) -> float:
+        return (datetime.datetime.utcnow() - self.date_time_created).total_seconds()
+
+    @property
     def elapsed_seconds_executable(self) -> Optional[float]:
         if self.date_time_execution_complete and self.responses.date_time_placed:
             return (
@@ -260,6 +266,8 @@ class BaseOrder:
             "bet_id": self.bet_id,
             "date_time_created": str(self.date_time_created),
             "publish_time": str(self.publish_time) if self.publish_time else None,
+            "market_version": self.market_version,
+            "async": self.async_,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
             "info": {
@@ -300,8 +308,10 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(self, publish_time: int) -> None:
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         self.publish_time = publish_time
+        self.market_version = market_version
+        self.async_ = async_
         self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:

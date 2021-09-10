@@ -178,18 +178,19 @@ class MarketTest(unittest.TestCase):
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):
-        mock_market_catalogue = mock.Mock()
+        mock_market_catalogue = mock.Mock(market_start_time=12)
         mock_market_catalogue.event.id = 12
         self.market.market_catalogue = mock_market_catalogue
 
         self.market.flumine.markets = []
         self.assertEqual(self.market.event, {})
 
-        m_one = mock.Mock(market_type=1, event_id=12)
-        m_two = mock.Mock(market_type=2, event_id=12)
-        m_three = mock.Mock(market_type=3, event_id=123)
-        m_four = mock.Mock(market_type=1, event_id=12)
-        self.market.flumine.markets = [m_one, m_two, m_three, m_four]
+        m_one = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
+        m_two = mock.Mock(market_type=2, event_id=12, market_start_datetime=12)
+        m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
+        m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
+        m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
+        self.market.flumine.markets = [m_one, m_two, m_three, m_four, m_five]
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
 
     def test_event_type_id_mc(self):

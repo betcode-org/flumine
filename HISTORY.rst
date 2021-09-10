@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.19.14 (2021-09-10)
++++++++++++++++++++
+
+**Improvements**
+
+- `process_current_orders` optimisation
+- `market_version` and `elapsed_seconds_created` added to order
+- `OrderStream` logic improvement
+- `market.event` refactored to filter on start time as well as eventId (FORECAST limitation)
+- Example improvement (@petercoles)
+
+**Bug Fixes**
+
+- Correctly complete order in blotter when live
+
 1.19.13 (2021-09-08)
 +++++++++++++++++++
 
