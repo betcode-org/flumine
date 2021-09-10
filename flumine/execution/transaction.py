@@ -54,7 +54,7 @@ class Transaction:
         ):
             return False
         # place
-        order.place(self.market.market_book.publish_time)
+        order.place(self.market.market_book.publish_time, market_version)
         if self.market.blotter.has_trade(order.trade.id):
             new_trade = False
         else:
