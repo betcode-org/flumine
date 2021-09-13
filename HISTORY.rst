@@ -10,6 +10,10 @@ Release History
 
 - Backtest speed improvements
 
+**Bug Fixes**
+
+- async not correctly pulled from config during transaction
+
 1.19.14 (2021-09-10)
 +++++++++++++++++++
 
