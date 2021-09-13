@@ -135,7 +135,8 @@ class FlumineBacktest(BaseFlumine):
                 utils.call_middleware_error_handling(middleware, market)
 
             # process current orders
-            self._process_backtest_orders(market)
+            if market.blotter.active:
+                self._process_backtest_orders(market)
 
             for strategy in self.strategies:
                 if utils.call_strategy_error_handling(
