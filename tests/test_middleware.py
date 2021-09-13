@@ -282,7 +282,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_order_three = mock.Mock(
             selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE, simulated=False
         )
-        mock_market.blotter._live_orders = [
+        mock_market.blotter.live_orders = [
             mock_order,
             mock_order_two,
             mock_order_three,

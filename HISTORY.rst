@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.19.15 (2021-09-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest speed improvements
+- Raise error in controls when market or marketBook not available
+
+**Bug Fixes**
+
+- async not correctly pulled from config during transaction
+
 1.19.14 (2021-09-10)
 +++++++++++++++++++
 

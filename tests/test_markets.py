@@ -149,6 +149,15 @@ class MarketTest(unittest.TestCase):
         )
         self.assertEqual(transaction, mock_transaction())
 
+    @mock.patch("flumine.markets.market.Transaction")
+    def test_transaction_async(self, mock_transaction):
+        config.async_place_orders = True
+        transaction = self.market.transaction()
+        mock_transaction.assert_called_with(
+            self.market, id_=self.market._transaction_id, async_place_orders=True
+        )
+        self.assertEqual(transaction, mock_transaction())
+
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
