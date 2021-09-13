@@ -88,6 +88,7 @@ def make_prices(min_price, cutoffs):
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
+PRICES_FLOAT = [float(price) for price in PRICES]
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):
@@ -138,10 +139,11 @@ def get_sp(runner: RunnerBook) -> Optional[float]:
 
 def price_ticks_away(price: float, n_ticks: int) -> float:
     try:
-        price_index = PRICES.index(as_dec(price))
-        if price_index + n_ticks < 0:
+        price_index = PRICES_FLOAT.index(price)
+        new_index = price_index + n_ticks
+        if new_index < 0:
             return 1.01
-        return float(PRICES[price_index + n_ticks])
+        return PRICES_FLOAT[new_index]
     except IndexError:
         return 1000
 

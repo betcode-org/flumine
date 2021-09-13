@@ -752,7 +752,9 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
         mock_session = mock.Mock()
-        mock_order_package = mock.Mock(elapsed_seconds=0.001)
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
         mock_order_package.info = {}
         self.execution._execution_helper(
             mock_trading_function, mock_order_package, mock_session
@@ -767,7 +769,11 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function = mock.Mock()
         mock_trading_function.__name__ = "test"
         mock_session = mock.Mock()
-        mock_order_package = mock.Mock(elapsed_seconds=0.2, retry_count=0)
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.2,
+            retry_count=0,
+            orders=[mock.Mock(elapsed_seconds_created=1)],
+        )
         mock_order_package.info = {}
         self.execution._execution_helper(
             mock_trading_function, mock_order_package, mock_session
@@ -799,7 +805,9 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.__name__ = "test"
         mock_trading_function.side_effect = BetfairError()
         mock_session = mock.Mock()
-        mock_order_package = mock.Mock(elapsed_seconds=0.001)
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
         mock_order_package.info = {}
         mock_order_package.retry.return_value = True
         self.assertIsNone(
@@ -822,7 +830,9 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.__name__ = "test"
         mock_trading_function.side_effect = BetfairError()
         mock_session = mock.Mock()
-        mock_order_package = mock.Mock(elapsed_seconds=0.001)
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
         mock_order_package.info = {}
         mock_order_package.retry.return_value = False
         self.assertIsNone(
@@ -847,7 +857,9 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.side_effect = BetfairError()
         mock_session = mock.Mock()
         mock_order_package = mock.Mock(
-            elapsed_seconds=0.001, package_type=OrderPackageType.PLACE
+            elapsed_seconds=0.001,
+            package_type=OrderPackageType.PLACE,
+            orders=[mock.Mock(elapsed_seconds_created=1)],
         )
         mock_order_package.info = {}
         mock_order_package.retry.return_value = False
@@ -869,7 +881,9 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_trading_function.__name__ = "test"
         mock_trading_function.side_effect = ValueError()
         mock_session = mock.Mock()
-        mock_order_package = mock.Mock(elapsed_seconds=0.001)
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
         mock_order_package.info = {}
         mock_order_package.retry.return_value = True
         self.assertIsNone(
