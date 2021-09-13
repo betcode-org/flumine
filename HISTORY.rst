@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - Backtest speed improvements
+- Raise error in controls when market or marketBook not available
 
 **Bug Fixes**
 
