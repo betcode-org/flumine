@@ -43,9 +43,7 @@ class Simulated:
             runner = self._get_runner(market_book)
             self._process_sp(market_book.publish_time_epoch, runner)
 
-        elif (
-            self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT and self.size_remaining
-        ):
+        elif self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if market_book.version != self.market_version:
                 self.market_version = market_book.version  # update for next time
                 if market_book.status == "SUSPENDED":  # Material change

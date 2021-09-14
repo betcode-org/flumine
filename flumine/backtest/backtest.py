@@ -157,18 +157,20 @@ class FlumineBacktest(BaseFlumine):
         """
         blotter = market.blotter
         for order in blotter.live_orders:
-            if not order.complete:
+            if order.complete:
+                blotter.complete_order(order)
+            else:
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                     if order.size_remaining == 0:
                         order.execution_complete()
+                        blotter.complete_order(order)
                 elif order.order_type.ORDER_TYPE in [
                     OrderTypes.LIMIT_ON_CLOSE,
                     OrderTypes.MARKET_ON_CLOSE,
                 ]:
                     if order.current_order.status == "EXECUTION_COMPLETE":
                         order.execution_complete()
-            if order.complete:
-                blotter.complete_order(order)
+                        blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
             utils.call_process_orders_error_handling(strategy, market, strategy_orders)
