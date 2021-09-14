@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.19.17 (2021-09-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest speed improvements
+
 1.19.16 (2021-09-13)
 +++++++++++++++++++
 
