@@ -94,7 +94,7 @@ class BaseOrder:
         self.status = status
         self.complete = self._is_complete()
         logger.info("Order status update: %s" % self.status.value, extra=self.info)
-        if self.trade.complete and status != OrderStatus.VIOLATION:
+        if self.complete and self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
 
     def placing(self) -> None:
