@@ -57,12 +57,14 @@ class BaseOrder:
         self.trade = trade
         self.side = side
         self.order_type = order_type
+        self.selection_id = trade.selection_id
         self.handicap = handicap
         self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
         self.number_of_dead_heat_winners = None
         self.status = None
+        self.complete = False
         self.status_log = []
         self.violation_msg = None
         self.context = context or {}  # store order specific notes/triggers
@@ -90,6 +92,7 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
+        self.complete = self._is_complete()
         logger.info("Order status update: %s" % self.status.value, extra=self.info)
         if self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
@@ -150,17 +153,7 @@ class BaseOrder:
     def update_current_order(self, current_order: CurrentOrder) -> None:
         self.responses.current_order = current_order
 
-    @property
-    def current_order(self) -> Union[CurrentOrder, Simulated]:
-        if self._simulated:
-            return self.simulated
-        elif self.responses.current_order:
-            return self.responses.current_order
-        elif self.responses.place_response:
-            return self.responses.place_response
-
-    @property
-    def complete(self) -> bool:
+    def _is_complete(self) -> bool:
         """Returns False if order is
         live or pending in the market"""
         if self.status in [
@@ -179,6 +172,15 @@ class BaseOrder:
             return True
         else:
             return False  # default to False
+
+    @property
+    def current_order(self) -> Union[CurrentOrder, Simulated]:
+        if self._simulated:
+            return self.simulated
+        elif self.responses.current_order:
+            return self.responses.current_order
+        elif self.responses.place_response:
+            return self.responses.place_response
 
     @property
     def average_price_matched(self) -> float:
@@ -242,10 +244,6 @@ class BaseOrder:
     @property
     def market_id(self) -> str:
         return self.trade.market_id
-
-    @property
-    def selection_id(self) -> int:
-        return self.trade.selection_id
 
     @property
     def customer_order_ref(self) -> str:

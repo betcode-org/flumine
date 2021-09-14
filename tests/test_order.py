@@ -31,6 +31,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order.trade, self.mock_trade)
         self.assertEqual(self.order.side, "BACK")
         self.assertEqual(self.order.order_type, self.mock_order_type)
+        self.assertEqual(self.order.selection_id, self.mock_trade.selection_id)
         self.assertEqual(self.order.handicap, 1)
         self.assertEqual(
             self.order.lookup,
@@ -38,6 +39,7 @@ class BaseOrderTest(unittest.TestCase):
         )
         self.assertIsNone(self.order.runner_status)
         self.assertIsNone(self.order.status)
+        self.assertFalse(self.order.complete)
         self.assertEqual(self.order.status_log, [])
         self.assertIsNone(self.order.violation_msg)
         self.assertEqual(self.order.context, {1: 2})
@@ -54,13 +56,15 @@ class BaseOrderTest(unittest.TestCase):
         self.assertFalse(self.order.simulated)
         self.assertFalse(self.order._simulated)
 
+    @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")
-    def test__update_status(self, mock_info):
+    def test__update_status(self, mock_info, mock__is_complete):
         self.mock_trade.complete = True
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
         self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
         self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
         self.mock_trade.complete_trade.assert_called()
+        mock__is_complete.assert_called()
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
@@ -158,9 +162,9 @@ class BaseOrderTest(unittest.TestCase):
         self.assertTrue(order.simulated)
         self.assertTrue(order._simulated)
 
-    def test_complete(self):
+    def test__is_complete(self):
         self.order.status = None
-        self.assertFalse(self.order.complete)
+        self.assertFalse(self.order._is_complete())
         for s in [
             OrderStatus.PENDING,
             OrderStatus.CANCELLING,
@@ -169,14 +173,14 @@ class BaseOrderTest(unittest.TestCase):
             OrderStatus.EXECUTABLE,
         ]:
             self.order.status = s
-            self.assertFalse(self.order.complete)
+            self.assertFalse(self.order._is_complete())
         for s in [
             OrderStatus.EXECUTION_COMPLETE,
             OrderStatus.EXPIRED,
             OrderStatus.VIOLATION,
         ]:
             self.order.status = s
-            self.assertTrue(self.order.complete)
+            self.assertTrue(self.order._is_complete())
 
     def test_average_price_matched(self):
         with self.assertRaises(NotImplementedError):
@@ -222,9 +226,6 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_market_id(self):
         self.assertEqual(self.order.market_id, self.mock_trade.market_id)
-
-    def test_selection_id(self):
-        self.assertEqual(self.order.selection_id, self.mock_trade.selection_id)
 
     def test_lookup(self):
         self.assertEqual(
