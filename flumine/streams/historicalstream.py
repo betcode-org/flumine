@@ -58,11 +58,15 @@ class FlumineMarketStream(MarketStream):
             if "marketDefinition" in market_book:
                 _definition_status = market_book["marketDefinition"].get("status")
                 _definition_in_play = market_book["marketDefinition"].get("inPlay")
-                _definition_market_time = market_book["marketDefinition"].get("marketTime")
+                _definition_market_time = market_book["marketDefinition"].get(
+                    "marketTime"
+                )
             else:
                 _definition_status = market_book_cache._definition_status
                 _definition_in_play = market_book_cache._definition_in_play
-                _definition_market_time = market_book_cache.market_definition["marketTime"]
+                _definition_market_time = market_book_cache.market_definition[
+                    "marketTime"
+                ]
 
             # if market is not open (closed/suspended) process regardless
             if _definition_status == "OPEN":
@@ -71,9 +75,7 @@ class FlumineMarketStream(MarketStream):
                         active = False
                 elif self._listener.seconds_to_start:
                     _now = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
-                    _market_time = BaseResource.strip_datetime(
-                        _definition_market_time
-                    )
+                    _market_time = BaseResource.strip_datetime(_definition_market_time)
                     seconds_to_start = (_market_time - _now).total_seconds()
                     if seconds_to_start > self._listener.seconds_to_start:
                         active = False

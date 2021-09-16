@@ -666,7 +666,13 @@ class TestFlumineMarketStream(unittest.TestCase):
     @mock.patch("flumine.streams.historicalstream.MarketBookCache")
     def test__process_inplay(self, mock_cache):
         self.stream._listener.inplay = True
-        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "inPlay": False, "runners": []}}]
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": False, "runners": []},
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
@@ -676,7 +682,17 @@ class TestFlumineMarketStream(unittest.TestCase):
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=False)
 
         self.stream._listener.inplay = True
-        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "SUSPENDED", "inPlay": False, "runners": []}}]
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "SUSPENDED",
+                    "inPlay": False,
+                    "runners": [],
+                },
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
@@ -685,7 +701,13 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
-        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []}}]
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
@@ -698,7 +720,17 @@ class TestFlumineMarketStream(unittest.TestCase):
     def test__process_seconds_to_start(self, mock_cache):
         self.stream._listener.inplay = None
         self.stream._listener.seconds_to_start = 600
-        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "marketTime": 456, "runners": []}}]
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "marketTime": 456,
+                    "runners": [],
+                },
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
@@ -708,7 +740,16 @@ class TestFlumineMarketStream(unittest.TestCase):
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
         update = [
-            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "marketTime": 1234567, "runners": []}}]
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "marketTime": 1234567,
+                    "runners": [],
+                },
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
@@ -718,7 +759,16 @@ class TestFlumineMarketStream(unittest.TestCase):
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=False)
 
         update = [
-            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "SUSPENDED", "marketTime": 1234567, "runners": []}}]
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "SUSPENDED",
+                    "marketTime": 1234567,
+                    "runners": [],
+                },
+            }
+        ]
         self.assertFalse(
             self.stream._process(
                 update,
