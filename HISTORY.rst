@@ -12,7 +12,7 @@ Release History
 
 **Libraries**
 
-- betfairlightweight upgraded to 2.14.0b0
+- betfairlightweight upgraded to 2.14.0
 
 1.19.17 (2021-09-14)
 +++++++++++++++++++

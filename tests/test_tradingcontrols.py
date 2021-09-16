@@ -10,6 +10,7 @@ from flumine.controls.tradingcontrols import (
     MarketValidation,
 )
 from flumine.markets.blotter import Blotter
+from flumine.order.order import OrderStatus
 
 
 class TestOrderValidation(unittest.TestCase):
@@ -408,25 +409,34 @@ class TestStrategyExposure(unittest.TestCase):
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        order1 = mock.Mock(
+            market_id="market_id",
+            lookup=(1, 2, 3),
+            side="BACK",
+            size_remaining=9.0,
+            average_price_matched=0.0,
+            size_matched=0,
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
+        )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order1.side = "BACK"
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
-        order1.size_remaining = 9.0
-        order1.average_price_matched = 0.0
-        order1.size_matched = 0
 
-        order2 = mock.Mock(lookup=(1, 2, 3))
+        order2 = mock.Mock(
+            lookup=(1, 2, 3),
+            side="BACK",
+            size_remaining=5.0,
+            average_price_matched=0.0,
+            size_matched=0,
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
+        )
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order2.side = "BACK"
         order2.order_type.price = 3.0
         order2.order_type.size = 9.0
-        order2.size_remaining = 5.0
-        order2.average_price_matched = 0.0
-        order2.size_matched = 0
 
         self.market.blotter["order2"] = order2
 
@@ -571,17 +581,22 @@ class TestStrategyExposure(unittest.TestCase):
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
 
-        order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        order1 = mock.Mock(
+            market_id="market_id",
+            lookup=(1, 2, 3),
+            selection_id=1234,
+            side="BACK",
+            average_price_matched=0.0,
+            size_matched=0,
+            handicap=0,
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
+        )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        order1.side = "BACK"
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
         order1.size_remaining = 9.0
-        order1.average_price_matched = 0.0
-        order1.size_matched = 0
-        order1.selection_id = 1234
-        order1.handicap = 0
 
         self.market.blotter._strategy_selection_orders = {(strategy, 2, 3): [order1]}
 

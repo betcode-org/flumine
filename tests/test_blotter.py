@@ -306,6 +306,8 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
         )
         self.blotter["12345"] = mock_order
         # On the win side, we have 2.0 * (5.6-1.0) = 9.2
@@ -333,6 +335,8 @@ class BlotterTest(unittest.TestCase):
             size_matched=2.0,
             size_remaining=2.0,
             order_type=LimitOrder(price=6, size=4.0),
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
         )
         self.blotter["12345"] = mock_order
         # On the win side, we have -2.0 * (5.6-1.0) -2.0 * (6.0-1.0) = -19.2
