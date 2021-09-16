@@ -115,7 +115,7 @@ class FlumineRaceStream(RaceStream):
                 )
             race_cache.update_cache(update, publish_time)
             self._updates_processed += 1
-        return False
+        return True
 
 
 class HistoricListener(StreamListener):

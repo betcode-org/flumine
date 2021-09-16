@@ -785,7 +785,7 @@ class TestFlumineRaceStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.historicalstream.RaceCache")
     def test__process(self, mock_cache):
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 [{"mid": "1.23", "id": 1, "img": {1: 2}}],
                 12345,
