@@ -23,6 +23,7 @@ class FlumineMarketStream(MarketStream):
     """
 
     def _process(self, data: list, publish_time: int) -> bool:
+        active = False
         for market_book in data:
             if "id" not in market_book:
                 continue
@@ -88,7 +89,7 @@ class FlumineMarketStream(MarketStream):
 
             market_book_cache.update_cache(market_book, publish_time, active=active)
             self._updates_processed += 1
-        return False
+        return active
 
 
 class FlumineRaceStream(RaceStream):
@@ -147,7 +148,7 @@ class HistoricListener(StreamListener):
 
         # skip on_change / on_update as we know it is always an update
         publish_time = data["pt"]
-        self.stream._process(data[self.stream._lookup], publish_time)
+        return self.stream._process(data[self.stream._lookup], publish_time)
 
 
 class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
@@ -159,10 +160,8 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
         stream_snap = self.listener.stream.snap
         with open(self.file_path, "r") as f:
             for update in f:
-                listener_on_data(update)
-                data = stream_snap()
-                if data:  # can return empty list
-                    yield data
+                if listener_on_data(update):
+                    yield stream_snap()
 
 
 class HistoricalStream(BaseStream):

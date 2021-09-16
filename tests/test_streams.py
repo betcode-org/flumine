@@ -646,7 +646,7 @@ class TestFlumineMarketStream(unittest.TestCase):
     @mock.patch("flumine.streams.historicalstream.MarketBookCache")
     def test__process(self, mock_cache):
         update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}]
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 update,
                 12345,
@@ -693,7 +693,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 },
             }
         ]
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 update,
                 12345,
@@ -708,7 +708,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
             }
         ]
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 update,
                 12345,
@@ -731,7 +731,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 },
             }
         ]
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 update,
                 12345,
@@ -769,7 +769,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 },
             }
         ]
-        self.assertFalse(
+        self.assertTrue(
             self.stream._process(
                 update,
                 12345,
