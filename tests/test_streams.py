@@ -645,9 +645,10 @@ class TestFlumineMarketStream(unittest.TestCase):
 
     @mock.patch("flumine.streams.historicalstream.MarketBookCache")
     def test__process(self, mock_cache):
+        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}]
         self.assertFalse(
             self.stream._process(
-                [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}],
+                update,
                 12345,
             )
         )
@@ -660,67 +661,71 @@ class TestFlumineMarketStream(unittest.TestCase):
             self.stream._calculate_market_tv,
             self.stream._cumulative_runner_tv,
         )
-        mock_cache().update_cache.assert_called_with(
-            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}, 12345
-        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
-    def test_snap_inplay(self):
-        # inPlay
-        self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=True, seconds_to_start=None), 0
-        )
-        self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=False),
-        }
-        self.assertEqual(len(self.stream.snap()), 0)
-        self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True),
-        }
-        self.assertEqual(len(self.stream.snap()), 1)
-        self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="CLOSED", _definition_in_play=False),
-        }
-        self.assertEqual(len(self.stream.snap()), 1)
-
-        self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=False, seconds_to_start=None), 0
-        )
-        self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=False),
-        }
-        self.assertEqual(len(self.stream.snap()), 1)
-        self.stream._caches = {
-            "1.123": mock.Mock(_definition_status="OPEN", _definition_in_play=True),
-        }
-        self.assertEqual(len(self.stream.snap()), 0)
-
-    def test_snap_seconds_to_start(self):
-        # secondsToStart
-        self.stream = historicalstream.FlumineMarketStream(
-            mock.Mock(inplay=None, seconds_to_start=600), 0
-        )
-        self.stream._caches = {
-            "1.123": mock.Mock(
-                publish_time=123,
-                market_definition={
-                    "marketTime": 456,
-                },
-                _definition_status="OPEN",
-                _definition_in_play=False,
+    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    def test__process_inplay(self, mock_cache):
+        self.stream._listener.inplay = True
+        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "inPlay": False, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
             )
-        }
-        self.assertEqual(len(self.stream.snap()), 1)
-        self.stream._caches = {
-            "1.123": mock.Mock(
-                publish_time=123,
-                market_definition={
-                    "marketTime": 1234567,
-                },
-                _definition_status="OPEN",
-                _definition_in_play=False,
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=False)
+
+        self.stream._listener.inplay = True
+        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "SUSPENDED", "inPlay": False, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
             )
-        }
-        self.assertEqual(len(self.stream.snap()), 0)
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
+
+        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
+            )
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
+
+    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    def test__process_seconds_to_start(self, mock_cache):
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = 600
+        update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "marketTime": 456, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
+            )
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
+
+        update = [
+            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "OPEN", "marketTime": 1234567, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
+            )
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=False)
+
+        update = [
+            {"id": "1.23", "img": {1: 2}, "marketDefinition": {"status": "SUSPENDED", "marketTime": 1234567, "runners": []}}]
+        self.assertFalse(
+            self.stream._process(
+                update,
+                12345,
+            )
+        )
+        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
 
 class TestFlumineRaceStream(unittest.TestCase):

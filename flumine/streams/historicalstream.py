@@ -53,33 +53,40 @@ class FlumineMarketStream(MarketStream):
                     % (self, self.unique_id, market_id, len(self._caches))
                 )
 
-            market_book_cache.update_cache(market_book, publish_time)
-            self._updates_processed += 1
-        return False
+            # listener_kwargs filtering
+            active = True
+            if "marketDefinition" in market_book:
+                _definition_status = market_book["marketDefinition"].get("status")
+                _definition_in_play = market_book["marketDefinition"].get("inPlay")
+                _definition_market_time = market_book["marketDefinition"].get("marketTime")
+            else:
+                _definition_status = market_book_cache._definition_status
+                _definition_in_play = market_book_cache._definition_in_play
+                _definition_market_time = market_book_cache.market_definition["marketTime"]
 
-    def snap(self, market_ids: list = None) -> list:
-        market_books = []
-        for cache in list(self._caches.values()):
-            if market_ids and cache.market_id not in market_ids:
-                continue
-            # if market is not open (closed/suspended) send regardless
-            if cache._definition_status == "OPEN":
+            # if market is not open (closed/suspended) process regardless
+            if _definition_status == "OPEN":
                 if self._listener.inplay:
-                    if not cache._definition_in_play:
-                        continue
+                    if not _definition_in_play:
+                        active = False
                 elif self._listener.seconds_to_start:
-                    _now = datetime.datetime.utcfromtimestamp(cache.publish_time / 1e3)
+                    _now = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
                     _market_time = BaseResource.strip_datetime(
-                        cache.market_definition["marketTime"]
+                        _definition_market_time
                     )
                     seconds_to_start = (_market_time - _now).total_seconds()
                     if seconds_to_start > self._listener.seconds_to_start:
-                        continue
+                        active = False
                 if self._listener.inplay is False:
-                    if cache._definition_in_play:
-                        continue
-            market_books.append(cache.create_resource(self.unique_id, snap=True))
-        return market_books
+                    if _definition_in_play:
+                        active = False
+            # check if refresh required
+            if active and not market_book_cache.active:
+                market_book_cache.refresh_cache()
+
+            market_book_cache.update_cache(market_book, publish_time, active=active)
+            self._updates_processed += 1
+        return False
 
 
 class FlumineRaceStream(RaceStream):

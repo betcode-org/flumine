@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.19.18 (2021-09-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Update to use `listener_kwargs` in `_process` rather than `snap`
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.14.0b0
+
 1.19.17 (2021-09-14)
 +++++++++++++++++++
 
