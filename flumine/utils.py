@@ -2,6 +2,7 @@ import uuid
 import json
 import logging
 import hashlib
+import datetime
 from typing import Optional, Tuple, Callable
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
@@ -284,3 +285,10 @@ def get_event_ids(markets: list, event_type_id: str) -> list:
         if not market.closed and market.event_type_id == event_type_id:
             event_ids.append(market.event_id)
     return list(set(event_ids))
+
+
+def create_time(publish_time: int, id_: str) -> datetime.datetime:
+    pt_datetime = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+    event_id, start_time = id_.split(".")
+    hour, minute = int(start_time[:2]), int(start_time[2:])
+    return pt_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)

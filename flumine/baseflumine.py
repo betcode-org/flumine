@@ -272,6 +272,8 @@ class BaseFlumine:
                 extra={"market_id": market_id, **self.info},
             )
             return
+        # process market
+        market(market_book)
         if market.closed is False:
             market.close_market()
         if recorder is False:

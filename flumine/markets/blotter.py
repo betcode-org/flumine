@@ -125,7 +125,11 @@ class Blotter:
         for order in self.strategy_selection_orders(strategy, *lookup[1:]):
             if order == exclusion:
                 continue
-            if order.status == OrderStatus.VIOLATION:
+            if order.status in [
+                OrderStatus.PENDING,
+                OrderStatus.VIOLATION,
+                OrderStatus.EXPIRED,
+            ]:
                 continue
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                 _size_matched = order.size_matched  # cache
@@ -134,12 +138,13 @@ class Blotter:
                         mb.append((order.average_price_matched, _size_matched))
                     else:
                         ml.append((order.average_price_matched, _size_matched))
-                _size_remaining = order.size_remaining  # cache
-                if order.order_type.price and _size_remaining:
-                    if order.side == "BACK":
-                        ub.append((order.order_type.price, _size_remaining))
-                    else:
-                        ul.append((order.order_type.price, _size_remaining))
+                if not order.complete:
+                    _size_remaining = order.size_remaining  # cache
+                    if order.order_type.price and _size_remaining:
+                        if order.side == "BACK":
+                            ub.append((order.order_type.price, _size_remaining))
+                        else:
+                            ul.append((order.order_type.price, _size_remaining))
             elif order.order_type.ORDER_TYPE in (
                 OrderTypes.LIMIT_ON_CLOSE,
                 OrderTypes.MARKET_ON_CLOSE,

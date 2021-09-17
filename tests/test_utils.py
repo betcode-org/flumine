@@ -1,5 +1,6 @@
 import logging
 import unittest
+import datetime
 from unittest import mock
 
 from flumine import utils, FlumineException
@@ -316,3 +317,8 @@ class UtilsTest(unittest.TestCase):
             mock.Mock(event_id=4, event_type_id="7", closed=False),
         ]
         self.assertEqual(utils.get_event_ids(mock_markets, "1"), [1, 2])
+
+    def test_create_time(self):
+        self.assertEqual(
+            utils.create_time(123, "12345.1310"), datetime.datetime(1970, 1, 1, 13, 10)
+        )
