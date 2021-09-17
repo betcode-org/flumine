@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from unittest import mock
 from unittest.mock import call
 
@@ -783,22 +784,35 @@ class TestFlumineRaceStream(unittest.TestCase):
         self.listener = mock.Mock()
         self.stream = historicalstream.FlumineRaceStream(self.listener, 0)
 
-    @mock.patch("flumine.streams.historicalstream.RaceCache")
-    def test__process(self, mock_cache):
+    @mock.patch(
+        "flumine.streams.historicalstream.create_time",
+        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+    )
+    def test__process(self, mock_create_time):
         self.assertTrue(
             self.stream._process(
-                [{"mid": "1.23", "id": 1, "img": {1: 2}}],
-                12345,
+                [{"mid": "1.23", "id": "13.10", "img": {1: 2}}],
+                11111111111111,
             )
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
-        mock_cache.assert_called_with(
-            "1.23", 12345, 1, self.stream._listener.lightweight
+        mock_create_time.assert_called_with(11111111111111, "13.10")
+
+    @mock.patch(
+        "flumine.streams.historicalstream.create_time",
+        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+    )
+    def test__process_false(self, mock_create_time):
+        self.assertFalse(
+            self.stream._process(
+                [{"mid": "1.23", "id": "13.10", "img": {1: 2}}],
+                1234,
+            )
         )
-        mock_cache().update_cache.assert_called_with(
-            {"mid": "1.23", "id": 1, "img": {1: 2}}, 12345
-        )
+        self.assertEqual(len(self.stream._caches), 1)
+        self.assertEqual(self.stream._updates_processed, 1)
+        mock_create_time.assert_called_with(1234, "13.10")
 
 
 class TestHistoricListener(unittest.TestCase):

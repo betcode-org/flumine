@@ -9,6 +9,7 @@ from betfairlightweight.compat import json
 
 from .basestream import BaseStream
 from ..exceptions import ListenerError
+from ..utils import create_time
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +97,10 @@ class FlumineRaceStream(RaceStream):
     """
     `_process` updated to not call `on_process`
     which reduces some function calls.
-    # todo snap optimisation?
     """
 
     def _process(self, race_updates: list, publish_time: int) -> bool:
+        active = False
         for update in race_updates:
             market_id = update["mid"]
             race_cache = self._caches.get(market_id)
@@ -115,7 +116,19 @@ class FlumineRaceStream(RaceStream):
                 )
             race_cache.update_cache(update, publish_time)
             self._updates_processed += 1
-        return True
+
+            # filter after start time
+            if not hasattr(race_cache, "start_time"):
+                race_cache.start_time = create_time(
+                    race_cache.publish_time, race_cache.race_id
+                )
+            diff = (
+                race_cache.start_time
+                - datetime.datetime.utcfromtimestamp(race_cache.publish_time / 1e3)
+            ).total_seconds()
+            if diff <= 0:
+                active = True
+        return active
 
 
 class HistoricListener(StreamListener):

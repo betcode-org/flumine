@@ -183,7 +183,7 @@ class SimulatedMiddleware(Middleware):
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
         for order in market.blotter.live_orders:
-            if order.simulated and order.status == OrderStatus.EXECUTABLE:
+            if order.status == OrderStatus.EXECUTABLE and order.simulated:
                 runner_analytics = market_analytics[
                     (order.selection_id, order.handicap)
                 ]
