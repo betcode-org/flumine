@@ -234,6 +234,7 @@ class BaseFlumineTest(unittest.TestCase):
             mock_market, mock_market_book
         )
         mock_log_control.assert_called_with(mock_event)
+        mock_market.assert_called_with(mock_market_book)
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

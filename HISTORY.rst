@@ -10,6 +10,10 @@ Release History
 
 - Update to use `listener_kwargs` in `_process` rather than `snap`
 
+**Bug Fixes**
+
+- #499 missing market call on closure
+
 **Libraries**
 
 - betfairlightweight upgraded to 2.14.0
