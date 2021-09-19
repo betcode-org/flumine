@@ -273,10 +273,10 @@ class BaseFlumine:
             )
             return
         # process market
-        market(market_book)
         if market.closed is False:
             market.close_market()
         if recorder is False:
+            market(market_book)
             market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:

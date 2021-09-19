@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.20.1 (2021-09-19)
++++++++++++++++++++
+
+**Improvements**
+
+- RaceCache optimisation
+
+**Bug Fixes**
+
+- #499 bugfix on market recording
+
 1.20.0 (2021-09-17)
 +++++++++++++++++++
 
