@@ -109,24 +109,21 @@ class FlumineRaceStream(RaceStream):
                 race_cache = RaceCache(
                     market_id, publish_time, race_id, self._lightweight
                 )
+                race_cache.start_time = create_time(publish_time, race_id)
                 self._caches[market_id] = race_cache
                 logger.info(
                     "[%s: %s]: %s added, %s markets in cache"
                     % (self, self.unique_id, market_id, len(self._caches))
                 )
-            race_cache.update_cache(update, publish_time)
-            self._updates_processed += 1
 
             # filter after start time
-            if not hasattr(race_cache, "start_time"):
-                race_cache.start_time = create_time(
-                    race_cache.publish_time, race_cache.race_id
-                )
             diff = (
                 race_cache.start_time
-                - datetime.datetime.utcfromtimestamp(race_cache.publish_time / 1e3)
+                - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
             ).total_seconds()
             if diff <= 0:
+                race_cache.update_cache(update, publish_time)
+                self._updates_processed += 1
                 active = True
         return active
 

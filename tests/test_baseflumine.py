@@ -254,6 +254,7 @@ class BaseFlumineTest(unittest.TestCase):
             mock_market, mock_market_book
         )
         mock_log_control.assert_called_with(mock_event)
+        mock_market.assert_not_called()
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     def test__process_close_market_no_market(self, mock_info):

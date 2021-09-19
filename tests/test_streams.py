@@ -811,7 +811,7 @@ class TestFlumineRaceStream(unittest.TestCase):
             )
         )
         self.assertEqual(len(self.stream._caches), 1)
-        self.assertEqual(self.stream._updates_processed, 1)
+        self.assertEqual(self.stream._updates_processed, 0)
         mock_create_time.assert_called_with(1234, "13.10")
 
 
