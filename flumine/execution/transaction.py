@@ -149,14 +149,15 @@ class Transaction:
         if packages:
             for package in packages:
                 self.market.flumine.process_order_package(package)
-            logger.info(
-                "%s order packages executed in transaction" % len(packages),
-                extra={
-                    "market_id": self.market.market_id,
-                    "order_packages": [o.info for o in packages],
-                    "transaction_id": self._id,
-                },
-            )
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(
+                    "%s order packages executed in transaction" % len(packages),
+                    extra={
+                        "market_id": self.market.market_id,
+                        "order_packages": [o.info for o in packages],
+                        "transaction_id": self._id,
+                    },
+                )
             self._pending_orders = False
         return len(packages)
 

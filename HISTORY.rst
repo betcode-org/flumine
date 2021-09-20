@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.20.2 (2021-09-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Restrict logging calls based on level to prevent `info` being called (slow)
+
 1.20.1 (2021-09-19)
 +++++++++++++++++++
 

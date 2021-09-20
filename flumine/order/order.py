@@ -93,7 +93,8 @@ class BaseOrder:
         self.status_log.append(status)
         self.status = status
         self.complete = self._is_complete()
-        logger.info("Order status update: %s" % self.status.value, extra=self.info)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("Order status update: %s" % self.status.value, extra=self.info)
         if self.complete and self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
 
