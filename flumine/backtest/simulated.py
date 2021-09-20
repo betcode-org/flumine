@@ -35,15 +35,15 @@ class Simulated:
 
     def __call__(self, market_book: MarketBook, runner_analytics) -> None:
         # simulates order matching
-        if (
-            self._bsp_reconciled is False
-            and market_book.bsp_reconciled
-            and self.take_sp
-        ):
-            runner = self._get_runner(market_book)
-            self._process_sp(market_book.publish_time_epoch, runner)
+        if self._bsp_reconciled is False and market_book.bsp_reconciled:
+            if self.take_sp:
+                runner = self._get_runner(market_book)
+                self._process_sp(market_book.publish_time_epoch, runner)
+                return
+            else:
+                self._bsp_reconciled = True
 
-        elif self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if market_book.version != self.market_version:
                 self.market_version = market_book.version  # update for next time
                 if market_book.status == "SUSPENDED":  # Material change
@@ -52,9 +52,10 @@ class Simulated:
                         return
 
             # todo estimated piq cancellations
-            self._process_traded(
-                market_book.publish_time_epoch, runner_analytics.traded
-            )
+            if runner_analytics.traded:
+                self._process_traded(
+                    market_book.publish_time_epoch, runner_analytics.traded
+                )
 
     def place(
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int

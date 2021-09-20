@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - Restrict logging calls based on level to prevent `info` being called (slow)
+- Restrict `process` and `take_sp` calls in simulated.py
 
 1.20.1 (2021-09-19)
 +++++++++++++++++++
