@@ -35,15 +35,15 @@ class Simulated:
 
     def __call__(self, market_book: MarketBook, runner_analytics) -> None:
         # simulates order matching
-        if (
-            self._bsp_reconciled is False
-            and market_book.bsp_reconciled
-            and self.take_sp
-        ):
-            runner = self._get_runner(market_book)
-            self._process_sp(market_book.publish_time_epoch, runner)
+        if self._bsp_reconciled is False and market_book.bsp_reconciled:
+            if self.take_sp:
+                runner = self._get_runner(market_book)
+                self._process_sp(market_book.publish_time_epoch, runner)
+                return
+            else:
+                self._bsp_reconciled = True
 
-        elif self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+        if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if market_book.version != self.market_version:
                 self.market_version = market_book.version  # update for next time
                 if market_book.status == "SUSPENDED":  # Material change
@@ -52,9 +52,10 @@ class Simulated:
                         return
 
             # todo estimated piq cancellations
-            self._process_traded(
-                market_book.publish_time_epoch, runner_analytics.traded
-            )
+            if runner_analytics.traded:
+                self._process_traded(
+                    market_book.publish_time_epoch, runner_analytics.traded
+                )
 
     def place(
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int
@@ -321,15 +322,17 @@ class Simulated:
     def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update
         price = self.order.order_type.price
+        side = self.side
         for traded_price, traded_size in traded.items():
-            logger.debug(
-                "Simulated order {0} traded: {1} - {2}".format(
-                    self.order.id, traded_price, traded_size
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Simulated order {0} traded: {1} - {2}".format(
+                        self.order.id, traded_price, traded_size
+                    )
                 )
-            )
-            if self.side == "BACK" and traded_price >= price:
+            if side == "BACK" and traded_price >= price:
                 self._calculate_process_traded(publish_time, traded_size)
-            elif self.side == "LAY" and traded_price <= price:
+            elif side == "LAY" and traded_price <= price:
                 self._calculate_process_traded(publish_time, traded_size)
 
     def _calculate_process_traded(self, publish_time: int, traded_size: float) -> None:
@@ -348,9 +351,10 @@ class Simulated:
             self._piq = 0
         else:
             self._piq -= traded_size
-            logger.debug(
-                "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
-            )
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
+                )
 
     @property
     def take_sp(self) -> bool:

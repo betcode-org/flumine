@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.20.2 (2021-09-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Restrict logging calls based on level to prevent `info` being called (slow)
+- Restrict `process` and `take_sp` calls in simulated.py
+- lru cache added to `price_ticks_away`
+
 1.20.1 (2021-09-19)
 +++++++++++++++++++
 
