@@ -3,6 +3,7 @@ import json
 import logging
 import hashlib
 import datetime
+import functools
 from typing import Optional, Tuple, Callable
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
@@ -138,6 +139,7 @@ def get_sp(runner: RunnerBook) -> Optional[float]:
         return runner.sp.actual_sp
 
 
+@functools.lru_cache(maxsize=2048)
 def price_ticks_away(price: float, n_ticks: int) -> float:
     try:
         price_index = PRICES_FLOAT.index(price)
