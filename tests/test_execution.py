@@ -156,23 +156,36 @@ class BaseExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.baseexecution.OrderEvent")
     def test__order_logger_place(self, mock_order_event):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(async_=False)
         mock_instruction_report = mock.Mock()
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report, dt=True)
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
+
+    @mock.patch("flumine.execution.baseexecution.OrderEvent")
+    def test__order_logger_place_async(self, mock_order_event):
+        mock_order = mock.Mock(async_=True)
+        mock_instruction_report = mock.Mock()
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(
+            mock_instruction_report, dt=False
+        )
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
     def test__order_logger_place_no_bet_id(self):
-        mock_order = mock.Mock(bet_id=123)
+        mock_order = mock.Mock(bet_id=123, async_=False)
         mock_instruction_report = mock.Mock(bet_id=None)
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
         self.assertEqual(mock_order.bet_id, 123)
-        mock_order.responses.placed.assert_called_with(mock_instruction_report)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report, dt=True)
         self.mock_flumine.log_control.assert_not_called()
 
     def test__order_logger_cancel(self):

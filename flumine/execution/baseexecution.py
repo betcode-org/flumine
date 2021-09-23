@@ -137,7 +137,8 @@ class BaseExecution:
             },
         )
         if package_type == OrderPackageType.PLACE:
-            order.responses.placed(instruction_report)
+            dt = False if order.async_ else True
+            order.responses.placed(instruction_report, dt=dt)
             if instruction_report.bet_id:
                 order.bet_id = instruction_report.bet_id
                 self.flumine.log_control(OrderEvent(order))

@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.20.3 (2021-09-23)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #486 elapsed_seconds bug when async
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.14.1
+
 1.20.2 (2021-09-20)
 +++++++++++++++++++
 

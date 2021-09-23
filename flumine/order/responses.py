@@ -14,9 +14,11 @@ class Responses:
         self.update_responses = []
         self._date_time_placed = None
 
-    def placed(self, response) -> None:
-        self.place_response = response
-        self._date_time_placed = datetime.datetime.utcnow()
+    def placed(self, response=None, dt: bool = True) -> None:
+        if response:
+            self.place_response = response
+        if dt:
+            self._date_time_placed = datetime.datetime.utcnow()
 
     def cancelled(self, response) -> None:
         self.cancel_responses.append(response)
