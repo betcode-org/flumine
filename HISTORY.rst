@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.20.4 (2021-10-20)
++++++++++++++++++++
+
+**Improvements**
+
+- #511 Make background worker function callable once
+- #512 Allow access to real datetime via context manager
+
+**Libraries**
+
+- python 3.10 testing added
+- betfairlightweight upgraded to 2.15.0
+- black upgraded to 21.9b0
+
 1.20.3 (2021-09-23)
 +++++++++++++++++++
 

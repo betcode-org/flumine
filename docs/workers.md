@@ -9,6 +9,17 @@ Background workers run in their own thread allowing cleanup / cron like workers 
 - `poll_market_catalogue`: runs every 60s to poll listMarketCatalogue endpoint
 - `poll_market_closure`: checks for closed markets to get cleared orders at order and market level
 
+## Variables
+
+- `flumine`: Framework
+- `function`: Function to be called
+- `interval`: Interval in seconds, set to None for single call
+- `func_args`: Function args
+- `func_kwargs`: Function kwargs
+- `start_delay`: Start delay in seconds
+- `context`: Worker context
+- `name`: Worker name
+
 ## Custom Workers
 
 Further workers can be added as per:
