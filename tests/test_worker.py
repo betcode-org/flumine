@@ -31,8 +31,20 @@ class BackgroundWorkerTest(unittest.TestCase):
         self.assertEqual(self.worker.name, "test")
         self.assertFalse(self.worker._running)
 
-    # def test_run(self):
-    #     self.worker.run()
+    def test_run_none(self):
+        worker_ = worker.BackgroundWorker(
+            self.mock_flumine,
+            self.mock_function,
+            None,
+            (1, 2),
+            {"hello": "world"},
+            0,
+            {1: 2},
+        )
+        worker_.run()
+        self.mock_function.assert_called_with(
+            {1: 2}, self.mock_flumine, 1, 2, hello="world"
+        )
 
     def test_shutdown(self):
         self.worker.start()

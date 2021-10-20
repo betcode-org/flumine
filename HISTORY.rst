@@ -6,6 +6,10 @@ Release History
 1.20.4 (2021-10-20)
 +++++++++++++++++++
 
+**Improvements**
+
+- #511 Make background worker function callable once
+
 **Libraries**
 
 - betfairlightweight upgraded to 2.15.0
