@@ -1,4 +1,35 @@
 import datetime
+from contextlib import contextmanager
+
+from .. import config
+
+
+class NewDateTime(datetime.datetime):
+    @classmethod
+    def utcnow(cls):
+        return config.current_time
+
+
+class SimulatedDateTime:
+    def __init__(self):
+        self._real_datetime = None
+
+    @contextmanager
+    def real_time(self):
+        datetime.datetime = self._real_datetime
+        try:
+            yield datetime.datetime
+        finally:
+            datetime.datetime = NewDateTime
+
+    def __enter__(self):
+        config.current_time = datetime.datetime.utcnow()
+        self._real_datetime = datetime.datetime
+        datetime.datetime = NewDateTime
+        return datetime.datetime
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        datetime.datetime = self._real_datetime
 
 
 class SimulatedPlaceResponse:

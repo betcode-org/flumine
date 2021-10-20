@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #511 Make background worker function callable once
+- #512 Allow access to real datetime via context manager
 
 **Libraries**
 
