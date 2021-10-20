@@ -12,6 +12,7 @@ Release History
 
 **Libraries**
 
+- python 3.10 testing added
 - betfairlightweight upgraded to 2.15.0
 - black upgraded to 21.9b0
 
