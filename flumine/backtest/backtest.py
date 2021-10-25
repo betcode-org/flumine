@@ -4,7 +4,7 @@ from collections import defaultdict
 from .utils import SimulatedDateTime
 from ..baseflumine import BaseFlumine
 from ..events import events
-from .. import config, utils
+from .. import utils
 from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.order import OrderTypes
@@ -88,9 +88,7 @@ class FlumineBacktest(BaseFlumine):
                                 "Starting historical market '{0}'".format(
                                     stream.market_filter
                                 ),
-                                extra={
-                                    "market": stream.market_filter,
-                                },
+                                extra={"market": stream.market_filter},
                             )
                             stream_gen = stream.create_generator()
                             for event in stream_gen():
@@ -110,7 +108,7 @@ class FlumineBacktest(BaseFlumine):
         # todo DRY!
         for market_book in event.event:
             market_id = market_book.market_id
-            config.current_time = market_book.publish_time
+            self.simulated_datetime(market_book.publish_time)
 
             # check if there are orders to process (limited to current market only)
             if self.handler_queue:
