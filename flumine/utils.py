@@ -6,7 +6,7 @@ import hashlib
 import datetime
 import functools
 from pathlib import Path
-from typing import Optional, Tuple, Callable
+from typing import Optional, Tuple, Callable, Union
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
@@ -34,7 +34,9 @@ EVENT_ID_REGEX = re.compile(r"\d{8}")
 STRATEGY_NAME_HASH_LENGTH = 13
 
 
-def detect_file_type(file_path: str) -> str:
+def detect_file_type(file_path: Union[str, tuple]) -> str:
+    if isinstance(file_path, tuple):
+        file_path = file_path[0]
     path_name = Path(file_path).name
     market_match = bool(MARKET_ID_REGEX.match(path_name))
     event_match = bool(EVENT_ID_REGEX.match(path_name))
@@ -57,7 +59,7 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def get_file_md(file_dir: str, value: str) -> Optional[str]:
+def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
     # get value from raw streaming file marketDefinition
     if isinstance(file_dir, tuple):
         file_dir = file_dir[0]
