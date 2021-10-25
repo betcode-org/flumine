@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.20.6 (2021-10-25)
++++++++++++++++++++
+
+**Improvements**
+
+- SimulatedDateTime minor improvement
+- detect_file_type added to log warning when backtesting
+
 1.20.5 (2021-10-22)
 +++++++++++++++++++
 

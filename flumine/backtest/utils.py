@@ -14,6 +14,9 @@ class SimulatedDateTime:
     def __init__(self):
         self._real_datetime = None
 
+    def __call__(self, pt: datetime.datetime):
+        config.current_time = pt
+
     @contextmanager
     def real_time(self):
         datetime.datetime = self._real_datetime
