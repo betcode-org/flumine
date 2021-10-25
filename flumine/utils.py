@@ -1,9 +1,11 @@
+import re
 import uuid
 import json
 import logging
 import hashlib
 import datetime
 import functools
+from pathlib import Path
 from typing import Optional, Tuple, Callable
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
@@ -27,8 +29,21 @@ CUTOFFS = (
 )
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
-
+MARKET_ID_REGEX = re.compile(r"1.\d{9}")
+EVENT_ID_REGEX = re.compile(r"\d{8}")
 STRATEGY_NAME_HASH_LENGTH = 13
+
+
+def detect_file_type(file_path: str) -> str:
+    path_name = Path(file_path).name
+    market_match = bool(MARKET_ID_REGEX.match(path_name))
+    event_match = bool(EVENT_ID_REGEX.match(path_name))
+    if market_match and not event_match:
+        return "MARKET"
+    elif not market_match and event_match:
+        return "EVENT"
+    else:
+        return "UNKNOWN"
 
 
 def create_short_uuid() -> str:

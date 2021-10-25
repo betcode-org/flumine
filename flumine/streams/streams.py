@@ -9,7 +9,7 @@ from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from ..clients import ExchangeType, BaseClient
-from ..utils import get_file_md
+from ..utils import get_file_md, detect_file_type
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ class Streams:
                 for market in markets:
                     market_type = get_file_md(market, "marketType")
                     country_code = get_file_md(market, "countryCode")
+                    file_type = detect_file_type(market)
                     if market_types and market_type and market_type not in market_types:
                         logger.warning(
                             "Skipping market %s (%s) for strategy %s due to marketType filter"
@@ -57,6 +58,14 @@ class Streams:
                         logger.warning(
                             "Skipping market %s (%s) for strategy %s due to countryCode filter"
                             % (market, country_code, strategy)
+                        )
+                    elif file_type == "MARKET" and event_processing:
+                        logger.warning(
+                            "Market file type detected whilst `event_processing` is True"
+                        )
+                    elif file_type == "EVENT" and not event_processing:
+                        logger.warning(
+                            "Event file type detected whilst `event_processing` is False"
                         )
                     else:
                         stream = self.add_historical_stream(
