@@ -14,8 +14,10 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.detect_file_type("hello/world"), "UNKNOWN")
         self.assertEqual(utils.detect_file_type("hello/12345678.gz"), "EVENT")
         self.assertEqual(utils.detect_file_type("hello/12345678"), "EVENT")
+        self.assertEqual(utils.detect_file_type(("hello/12345678.gz", "")), "EVENT")
         self.assertEqual(utils.detect_file_type("hello/1.234567891.gz"), "MARKET")
         self.assertEqual(utils.detect_file_type("hello/1.234567891"), "MARKET")
+        self.assertEqual(utils.detect_file_type(("hello/1.234567891.gz", "")), "MARKET")
 
     def test_create_short_uuid(self):
         self.assertTrue(utils.create_short_uuid())
