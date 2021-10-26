@@ -1,4 +1,5 @@
 import logging
+import operator
 from typing import Iterable, Optional
 from collections import defaultdict
 
@@ -102,6 +103,19 @@ class Blotter:
         return [order for order in self]
 
     """ position """
+
+    def market_exposure(self, strategy, num_winners) -> float:
+        """Returns worst-case exposure for market, which is the maximum potential loss (negative),
+        arising from the worst race outcome, or the minimum potential profit (positive).
+        """
+        orders = self.strategy_orders(strategy)
+        runners = set([order.lookup for order in orders])
+        worst_possible_profits_on_wins = [self.get_exposures(strategy, lookup)["worst_possible_profit_on_win"] for lookup in runners]
+        worst_possible_profits_on_loses = [self.get_exposures(strategy, lookup)["worst_possible_profit_on_lose"] for lookup in runners]
+        differences = map(operator.sub, worst_possible_profits_on_wins, worst_possible_profits_on_loses)
+        worst_differences = sorted(differences)[:num_winners] # sorted puts smallest (i.e. biggest negative) first
+        return sum(worst_possible_profits_on_loses) + sum(worst_differences)
+
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case loss arising
