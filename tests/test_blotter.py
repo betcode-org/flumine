@@ -475,7 +475,7 @@ class BlotterTest(unittest.TestCase):
                 complete=order[7],
             )
         self.assertEqual(  # single winner
-            self.blotter.market_exposure(mock_strategy, 1), -20.2
+            self.blotter.market_exposure(mock_strategy), -20.2
         )
         self.assertEqual(  # muliple winners
             self.blotter.market_exposure(mock_strategy, 2), -24.6

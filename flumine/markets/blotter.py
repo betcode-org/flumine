@@ -104,7 +104,7 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, num_winners) -> float:
+    def market_exposure(self, strategy, num_winners: int = 1) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
         """
