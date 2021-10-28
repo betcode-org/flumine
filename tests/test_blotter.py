@@ -488,14 +488,13 @@ class BlotterTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
         orders = [
-            # (order_id, selection_id, side, average_price_matched, size_matched, size_remaining, order_type, complete) 
+            # (order_id, selection_id, side, average_price_matched, size_matched, size_remaining, order_type, complete)
             (1001, 123, "BACK", 5.6, 2.0, 0.0, LimitOrder(price=5.6, size=2.0), True),
             (1002, 123, "LAY", 5.2, 2.1, 0.0, LimitOrder(price=5.2, size=2.1), True),
-            (1003, 234, "BACK", 4.8, 4.0, 1.0, LimitOrder(price=4.8, size=5.0), True),
-            (1004, 234, "LAY", 4, 4.2, 1.0, LimitOrder(price=4, size=5.2), True),
-            (1005, 345, "BACK", 10, 2.0, 0.0, LimitOrder(price=10, size=2.0), False),
-            (1006, 345, "LAY", 8, 2.2, 0.0, LimitOrder(price=8, size=2.2), False),
-
+            (1003, 234, "BACK", 4.8, 4.0, 1.0, LimitOrder(price=4.8, size=5.0), False),
+            (1004, 234, "LAY", 4, 4.2, 1.0, LimitOrder(price=4, size=5.2), False),
+            (1005, 345, "BACK", 10, 2.0, 0.0, LimitOrder(price=10, size=2.0), True),
+            (1006, 345, "LAY", 8, 2.2, 0.0, LimitOrder(price=8, size=2.2), True),
         ]
         for order in orders:
             self.blotter[order[0]] = mock.Mock(
