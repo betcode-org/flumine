@@ -110,19 +110,18 @@ class Blotter:
         """
         orders = self.strategy_orders(strategy)
         runners = set([order.lookup for order in orders])
-        worst_possible_profits_on_wins = [
-            self.get_exposures(strategy, lookup)["worst_possible_profit_on_win"]
+        worst_possible_profits = [
+            self.get_exposures(strategy, lookup)
             for lookup in runners
         ]
         worst_possible_profits_on_loses = [
-            self.get_exposures(strategy, lookup)["worst_possible_profit_on_lose"]
-            for lookup in runners
+            wpp["worst_possible_profit_on_lose"]
+            for wpp in worst_possible_profits
         ]
-        differences = map(
-            operator.sub,
-            worst_possible_profits_on_wins,
-            worst_possible_profits_on_loses,
-        )
+        differences = [
+            wpp["worst_possible_profit_on_win"] - wpp["worst_possible_profit_on_lose"]
+            for wpp in worst_possible_profits
+        ]
         worst_differences = sorted(differences)[:num_winners]
         return sum(worst_possible_profits_on_loses) + sum(worst_differences)
 
