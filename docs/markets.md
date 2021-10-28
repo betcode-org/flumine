@@ -59,7 +59,7 @@ The blotter is a simple and fast class to hold all orders for a particular marke
 - `strategy_orders(strategy)` Returns all orders related to a strategy
 - `strategy_selection_orders(strategy, selection_id, handicap)` Returns all orders related to a strategy selection
 - `selection_exposure(strategy, lookup)` Returns strategy/selection exposure
-- `market_exposure(strategy, num_winners)` Returns strategy/market exposure (default num_winners=1)
+- `market_exposure(strategy, num_runners, num_winners)` Returns strategy/market exposure (default num_winners=1)
 
 ### Properties
 
