@@ -2,7 +2,6 @@ import logging
 from typing import Iterable, Optional
 from collections import defaultdict
 
-from ..markets.market import Market
 from ..order.ordertype import OrderTypes
 from ..utils import (
     calculate_unmatched_exposure,
@@ -104,12 +103,10 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, market: Market) -> float:
+    def market_exposure(self, strategy, num_runners, num_winners: int = 1) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
         """
-        num_runners = market.market_book.number_of_runners
-        num_winners = market.market_book.number_of_winners
         orders = self.strategy_orders(strategy)
         runners = set([order.lookup for order in orders])
         worst_possible_profits = [
