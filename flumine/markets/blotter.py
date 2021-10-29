@@ -1,5 +1,4 @@
 import logging
-import operator
 from typing import Iterable, Optional
 from collections import defaultdict
 
