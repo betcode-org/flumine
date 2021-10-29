@@ -6,6 +6,10 @@ Release History
 1.20.8 (2021-10-29)
 +++++++++++++++++++
 
+**Improvements**
+
+- Handle list of market filters in strategy
+
 **Bug Fixes**
 
 - #519 reset real datetime added to allow s3 download (RequestTimeTooSkewed)
