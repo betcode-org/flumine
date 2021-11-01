@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-1.20.8 (2021-10-29)
+1.20.8 (2021-11-01)
 +++++++++++++++++++
 
 **Improvements**
@@ -13,6 +13,10 @@ Release History
 **Bug Fixes**
 
 - #519 reset real datetime added to allow s3 download (RequestTimeTooSkewed)
+
+**Libraries**
+
+- black upgraded to 21.10b0
 
 1.20.7 (2021-10-25)
 +++++++++++++++++++
