@@ -25,17 +25,13 @@ class StreamsTest(unittest.TestCase):
     def test_call(self, mock_add_stream):
         mock_strategy = mock.Mock(streams=[], raw_data=False)
         self.streams(mock_strategy)
-
         mock_add_stream.assert_called_with(mock_strategy)
-        self.assertEqual(len(mock_strategy.streams), 1)
 
     @mock.patch("flumine.streams.streams.Streams.add_stream")
     def test_call_data_stream(self, mock_add_stream):
         mock_strategy = mock.Mock(streams=[], stream_class=datastream.DataStream)
         self.streams(mock_strategy)
-
         mock_add_stream.assert_called_with(mock_strategy)
-        self.assertEqual(len(mock_strategy.streams), 1)
 
     @mock.patch("flumine.streams.streams.get_file_md")
     @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
@@ -181,7 +177,7 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
-        mock_strategy = mock.Mock()
+        mock_strategy = mock.Mock(market_filter={})
         mock_stream_class = mock.Mock()
         mock_strategy.stream_class = mock_stream_class
 
@@ -198,25 +194,32 @@ class StreamsTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_stream_multi(self, mock_increment):
+        mock_strategy = mock.Mock(
+            market_filter=[{1: 2}, {3: 4}], stream_class=streams.MarketStream
+        )
+        self.streams.add_stream(mock_strategy)
+        self.assertEqual(len(self.streams), 2)
+        mock_increment.assert_called_with()
+
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_old(self, mock_increment):
-        mock_strategy = mock.Mock()
-        mock_strategy.market_filter = 1
+        mock_strategy = mock.Mock(market_filter={})
         mock_strategy.market_data_filter = 2
         mock_strategy.streaming_timeout = 3
         mock_strategy.conflate_ms = 4
         mock_strategy.stream_class = streams.MarketStream
 
         stream = mock.Mock(spec=streams.MarketStream)
-        stream.market_filter = 1
+        stream.market_filter = {}
         stream.market_data_filter = 2
         stream.streaming_timeout = 3
         stream.conflate_ms = 4
         stream.stream_id = 1001
         self.streams._streams = [stream]
 
-        new_stream = self.streams.add_stream(mock_strategy)
+        self.streams.add_stream(mock_strategy)
         self.assertEqual(len(self.streams), 1)
-        self.assertEqual(stream, new_stream)
         mock_increment.assert_not_called()
 
     @mock.patch("flumine.streams.streams.get_file_md")

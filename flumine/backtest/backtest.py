@@ -55,6 +55,7 @@ class FlumineBacktest(BaseFlumine):
                                 "markets": [s.market_filter for s in streams],
                             },
                         )
+                        self.simulated_datetime.reset_real_datetime()
                         # create cycles
                         cycles = []  # [[epoch, [MarketBook], gen], ..]
                         for stream in streams:
@@ -90,6 +91,7 @@ class FlumineBacktest(BaseFlumine):
                                 ),
                                 extra={"market": stream.market_filter},
                             )
+                            self.simulated_datetime.reset_real_datetime()
                             stream_gen = stream.create_generator()
                             for event in stream_gen():
                                 self._process_market_books(

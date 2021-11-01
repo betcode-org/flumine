@@ -20,6 +20,14 @@ class SimulatedDateTimeTest(unittest.TestCase):
         self.assertIsNone(self.s._real_datetime)
 
     @mock.patch("flumine.backtest.utils.config")
+    def test_reset_real_datetime(self, mock_config):
+        mock_real_datetime = mock.Mock()
+        self.s._real_datetime = mock_real_datetime
+        self.s.reset_real_datetime()
+        mock_real_datetime.utcnow.assert_called()
+        self.assertEqual(mock_config.current_time, mock_real_datetime.utcnow())
+
+    @mock.patch("flumine.backtest.utils.config")
     def test_call(self, mock_config):
         mock_dt = mock.Mock()
         self.s(mock_dt)

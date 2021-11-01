@@ -6,7 +6,7 @@ The base strategy class should be used for all strategies and contains the follo
 
 ### Parameters
 
-- `market_filter` Streaming market filter required
+- `market_filter` Streaming market filter or list of filters required
 - `market_data_filter` Streaming market data filter required
 - `streaming_timeout` Streaming timeout, will call snap() on cache every x seconds
 - `conflate_ms` Streaming conflate
