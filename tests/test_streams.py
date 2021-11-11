@@ -567,6 +567,7 @@ class TestDataStream(unittest.TestCase):
     def test_flumine_order_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
         stream = datastream.FlumineOrderStream(mock_listener, 0)
+        stream._clk = "AAA"
         order_updates = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
         stream._process(order_updates, 123)
 
@@ -574,13 +575,14 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
-            [mock_listener.stream_unique_id, 123, order_updates]
+            [mock_listener.stream_unique_id, "AAA", 123, order_updates]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")
     def test_flumine_race_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
         stream = datastream.FlumineRaceStream(mock_listener, 0)
+        stream._clk = "AAA"
         race_updates = [{"mid": "1.123"}, {"mid": "1.456"}, {"mid": "1.123"}]
         stream._process(race_updates, 123)
 
@@ -588,7 +590,7 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
-            [mock_listener.stream_unique_id, 123, race_updates]
+            [mock_listener.stream_unique_id, "AAA", 123, race_updates]
         )
 
 
