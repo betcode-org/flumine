@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.20.9 (2021-11-11)
++++++++++++++++++++
+
+**Improvements**
+
+- #522 add clk to output in market recorder
+
 1.20.8 (2021-11-01)
 +++++++++++++++++++
 
