@@ -86,7 +86,7 @@ class FlumineOrderStream(FlumineStream):
                 )
             self._updates_processed += 1
 
-        self.on_process([self.unique_id, publish_time, data])
+        self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
 
@@ -106,7 +106,7 @@ class FlumineRaceStream(FlumineStream):
                 )
             self._updates_processed += 1
 
-        self.on_process([self.unique_id, publish_time, data])
+        self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
 

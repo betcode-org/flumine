@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.20.10 (2021-11-11)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Missing clk handling in order and race stream
+
 1.20.9 (2021-11-11)
 +++++++++++++++++++
 
