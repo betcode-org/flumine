@@ -143,7 +143,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.process_market_book(None, None)
 
     def test_process_raw_data(self):
-        self.strategy.process_raw_data(None, None)
+        self.strategy.process_raw_data(None, None, None)
 
     def test_process_orders(self):
         self.strategy.process_orders(None, None)

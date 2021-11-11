@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.20.9 (2021-11-11)
++++++++++++++++++++
+
+**Improvements**
+
+- #522 add clk to output in market recorder (Breaking Change)
+- #517 Extend selection exposures to whole market (@petercoles)
+- Example strategies updated to remove whitespace on dump (1mb saved per raw file)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.15.1
+
 1.20.8 (2021-11-01)
 +++++++++++++++++++
 

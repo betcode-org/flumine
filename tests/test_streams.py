@@ -537,13 +537,14 @@ class TestDataStream(unittest.TestCase):
     def test_flumine_market_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
         stream = datastream.FlumineMarketStream(mock_listener, 0)
+        stream._clk = "AAA"
         market_books = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
         stream._process(market_books, 123)
 
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
-            [mock_listener.stream_unique_id, 123, market_books]
+            [mock_listener.stream_unique_id, "AAA", 123, market_books]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
@@ -551,6 +552,7 @@ class TestDataStream(unittest.TestCase):
         mock_listener = mock.Mock(stream_unique_id=0)
         stream = datastream.FlumineMarketStream(mock_listener, 0)
         stream._caches = {"1.123": object}
+        stream._clk = "AAA"
         market_books = [{"id": "1.123", "marketDefinition": {"status": "CLOSED"}}]
         stream._process(market_books, 123)
 
@@ -558,7 +560,7 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(len(stream._caches), 0)
         self.assertEqual(stream._updates_processed, 1)
         mock_on_process.assert_called_with(
-            [mock_listener.stream_unique_id, 123, market_books]
+            [mock_listener.stream_unique_id, "AAA", 123, market_books]
         )
 
     @mock.patch("flumine.streams.datastream.FlumineOrderStream.on_process")

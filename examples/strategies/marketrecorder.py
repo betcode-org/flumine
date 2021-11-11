@@ -61,12 +61,15 @@ class MarketRecorder(BaseStrategy):
             daemon=True,
         ).start()
 
-    def process_raw_data(self, publish_time, data):
+    def process_raw_data(self, clk: str, publish_time: int, data: dict):
         market_id = data.get(self.MARKET_ID_LOOKUP)
         file_directory = os.path.join(self.local_dir, self.recorder_id, market_id)
         with open(file_directory, "a") as f:
             f.write(
-                json.dumps({"op": "mcm", "clk": None, "pt": publish_time, "mc": [data]})
+                json.dumps(
+                    {"op": "mcm", "clk": clk, "pt": publish_time, "mc": [data]},
+                    separators=(",", ":"),
+                )
                 + "\n"
             )
 

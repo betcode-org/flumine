@@ -132,7 +132,7 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
     def test__process_raw_data(self, mock__add_market):
         mock_event = mock.Mock()
-        mock_event.event = (12, 12345, [{"id": "1.23"}])
+        mock_event.event = (12, "AAA", 12345, [{"id": "1.23"}])
         self.base_flumine._process_raw_data(mock_event)
         mock__add_market.assert_called_with("1.23", None)
 
@@ -144,18 +144,19 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event = mock.Mock()
         mock_event.event = (
             12,
+            "AAA",
             12345,
             [{"id": "1.23", "marketDefinition": {"status": "CLOSED"}}],
         )
         self.base_flumine._process_raw_data(mock_event)
         mock__add_market.assert_called_with("1.23", None)
         mock_queue.put.assert_called_with(mock_events.CloseMarketEvent())
-        self.assertEqual(mock_event.event[2][0]["_stream_id"], mock_event.event[0])
+        self.assertEqual(mock_event.event[3][0]["_stream_id"], mock_event.event[0])
 
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
     def test__process_raw_data_no_id(self, mock__add_market):
         mock_event = mock.Mock()
-        mock_event.event = (12, 12345, [{"mid": "1.23"}])
+        mock_event.event = (12, "AAA", 12345, [{"mid": "1.23"}])
         self.base_flumine._process_raw_data(mock_event)
         mock__add_market.assert_not_called()
 
