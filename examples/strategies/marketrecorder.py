@@ -66,7 +66,10 @@ class MarketRecorder(BaseStrategy):
         file_directory = os.path.join(self.local_dir, self.recorder_id, market_id)
         with open(file_directory, "a") as f:
             f.write(
-                json.dumps({"op": "mcm", "clk": clk, "pt": publish_time, "mc": [data]})
+                json.dumps(
+                    {"op": "mcm", "clk": clk, "pt": publish_time, "mc": [data]},
+                    separators=(",", ":"),
+                )
                 + "\n"
             )
 

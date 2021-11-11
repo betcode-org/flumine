@@ -69,7 +69,7 @@ class JupyterLoggingControl(LoggingControl):
     def _create_json(self, data):
         # save json to file
         with open(self.file_name, "w") as f:
-            json.dump(data, f)
+            json.dump(data, f, separators=(",", ":"))
 
     @staticmethod
     def launch(self, argv=None, **kwargs):

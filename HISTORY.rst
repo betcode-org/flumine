@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #522 add clk to output in market recorder
+- Example strategies updated to remove whitespace on dump (1mb saved per raw file)
 
 1.20.8 (2021-11-01)
 +++++++++++++++++++
