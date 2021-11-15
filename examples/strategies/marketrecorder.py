@@ -222,19 +222,11 @@ class S3MarketRecorder(MarketRecorder):
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
         # load to s3
-        event_type_id = (
-            market_definition.get("eventTypeId", 0) if market_definition else self._default_event_type_id
-        )
         try:
             self.transfer.upload_file(
                 filename=compress_file_dir,
                 bucket=self._bucket,
-                key=os.path.join(
-                    self._data_type,
-                    "streaming",
-                    event_type_id,
-                    os.path.basename(compress_file_dir),
-                ),
+                key=self._make_prices_file_s3_key(compress_file_dir, market_definition),
                 extra_args={
                     "Metadata": self._create_metadata(market_definition)
                     if market_definition
@@ -272,5 +264,21 @@ class S3MarketRecorder(MarketRecorder):
             self._data_type,
             "marketCatalogue",
             "{0}.gz".format(market.market_id),
+        )
+        return key
+
+    def _make_prices_file_s3_key(
+        self, compress_file_dir: str, market_definition: dict
+    ) -> str:
+        event_type_id = (
+            market_definition.get("eventTypeId", 0)
+            if market_definition
+            else self._default_event_type_id
+        )
+        key = os.path.join(
+            self._data_type,
+            "streaming",
+            event_type_id,
+            os.path.basename(compress_file_dir),
         )
         return key
