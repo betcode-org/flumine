@@ -259,14 +259,18 @@ class S3MarketRecorder(MarketRecorder):
                 self.s3.put_object(
                     Body=market_catalogue_compressed,
                     Bucket=self._bucket,
-                    Key=os.path.join(
-                        self._data_type,
-                        "marketCatalogue",
-                        "{0}.gz".format(market.market_id),
-                    ),
+                    Key=self._make_market_catalogue_s3_key(market),
                 )
                 logger.info(
                     "%s successfully loaded marketCatalogue to s3" % market.market_id
                 )
             except (BotoCoreError, Exception) as e:
                 logger.error("Error loading to s3: %s" % e)
+
+    def _make_market_catalogue_s3_key(self, market) -> str:
+        key = os.path.join(
+            self._data_type,
+            "marketCatalogue",
+            "{0}.gz".format(market.market_id),
+        )
+        return key
