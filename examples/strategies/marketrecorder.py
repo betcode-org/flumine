@@ -211,6 +211,7 @@ class S3MarketRecorder(MarketRecorder):
         MarketRecorder.__init__(self, *args, **kwargs)
         self._bucket = self.context["bucket"]
         self._data_type = self.context.get("data_type", "marketdata")
+        self._default_event_type_id = self.context.get("default_event_type_id", "7")
         self.s3 = boto3.client("s3")
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
@@ -222,7 +223,7 @@ class S3MarketRecorder(MarketRecorder):
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
         # load to s3
         event_type_id = (
-            market_definition.get("eventTypeId", 0) if market_definition else "7"
+            market_definition.get("eventTypeId", 0) if market_definition else self._default_event_type_id
         )
         try:
             self.transfer.upload_file(
