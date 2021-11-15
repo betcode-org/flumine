@@ -259,7 +259,7 @@ class S3MarketRecorder(MarketRecorder):
                     Body=market_catalogue_compressed,
                     Bucket=self._bucket,
                     Key=os.path.join(
-                        "marketdata",
+                        self._data_type,
                         "marketCatalogue",
                         "{0}.gz".format(market.market_id),
                     ),
