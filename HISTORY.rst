@@ -10,6 +10,7 @@ Release History
 
 - #528 MarketOnCloseOrders not included in BacktestLoggingControl example
 - #531 Include SP values in jupyterloggingcontrol
+- MarketRecorder updates (@mberk)
 
 1.20.10 (2021-11-11)
 +++++++++++++++++++
