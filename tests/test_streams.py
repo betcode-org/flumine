@@ -359,7 +359,7 @@ class StreamsTest(unittest.TestCase):
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
-            custom=True
+            custom=True,
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
