@@ -62,11 +62,11 @@ Sometimes a download from the betfair site will include market and event files i
 
 Backtesting is CPU bound so can therefore be improved through the use of multiprocessing, threading offers no improvement due to the limitations of the GIL.
 
-The example code below will:
+The multiprocessing example code below will:
 
 - run a process per core
 - each `run_process` will process 8 markets at a time (prevents memory leaks)
-- will wait for result before completing
+- will wait for all results before completing
 
 ```python
 import os
@@ -74,9 +74,8 @@ import math
 import smart_open
 from concurrent import futures
 from unittest.mock import patch as mock_patch
-from flumine import FlumineBacktest, clients
+from flumine import FlumineBacktest, clients, utils
 from strategies.lowestlayer import LowestLayer
-from flumine.utils import chunks
 
 
 def run_process(markets):
@@ -93,14 +92,14 @@ def run_process(markets):
 
 
 if __name__ == "__main__":
-    markets = [...]
+    all_markets = [...]
     processes = os.cpu_count()
     markets_per_process = 8  # optimal
 
     _process_jobs = []
     with futures.ProcessPoolExecutor(max_workers=processes) as p:
-        chunk = min(markets_per_process, math.ceil(len(markets) / processes))
-        for i, m in enumerate((chunks(markets, chunk)), 1):
+        chunk = min(markets_per_process, math.ceil(len(all_markets) / processes))
+        for m in (utils.chunks(all_markets, chunk)):
             _process_jobs.append(
                 p.submit(
                     run_process,
@@ -110,6 +109,9 @@ if __name__ == "__main__":
         for job in futures.as_completed(_process_jobs):
             job.result()  # wait for result
 ```
+
+!!! tip
+    If the code above is failing add logging to the `run_process` function to find the error or run the strategy in a single process with logging
 
 ### Strategy
 
