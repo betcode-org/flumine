@@ -359,7 +359,15 @@ class StreamsTest(unittest.TestCase):
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
+            custom=True
         )
+
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_custom_stream(self, mock_increment):
+        mock_stream = mock.Mock()
+        self.streams.add_custom_stream(mock_stream)
+        mock_increment.assert_called_with()
+        self.assertEqual(self.streams._streams, [mock_stream])
 
     def test_start(self):
         mock_stream = mock.Mock()
@@ -417,6 +425,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream.market_data_filter, {"please": "now"})
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertFalse(self.stream.custom)
         self.assertIsNone(self.stream._stream)
         self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
