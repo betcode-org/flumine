@@ -11,6 +11,10 @@ Release History
 - #527 custom stream funcs / docs added
 - #525 UML diagrams added to docs (@shashikhaya)
 
+**Bug Fixes**
+
+- File type regression
+
 **Libraries**
 
 - betfairlightweight upgraded to 2.15.2
