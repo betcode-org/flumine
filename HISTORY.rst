@@ -10,6 +10,7 @@ Release History
 
 - #527 custom stream funcs / docs added
 - #525 UML diagrams added to docs (@shashikhaya)
+- `get_order_from_bet_id` optimisation (very slow with high order count)
 
 **Bug Fixes**
 
