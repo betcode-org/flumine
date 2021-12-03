@@ -37,9 +37,16 @@ class Blotter:
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade.id: [Order,]}
+        self._bet_id_lookup = {}  # {Order.bet_id: Order, }
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
+
+    def get_order_bet_id(self, bet_id: str) -> Optional[BaseOrder]:
+        try:
+            return self._bet_id_lookup[bet_id]
+        except KeyError:
+            return
 
     def strategy_orders(
         self,
@@ -211,6 +218,7 @@ class Blotter:
     def __setitem__(self, customer_order_ref: str, order) -> None:
         self.active = True
         self._orders[customer_order_ref] = order
+        self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
         self._trades[order.trade.id].append(order)
         self._strategy_orders[order.trade.strategy].append(order)

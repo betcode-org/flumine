@@ -7,6 +7,16 @@ Typical to most trading frameworks flumine uses an event driven design with the 
 - handles all events in order one by one
 - runs in __main__
 
+### UML Diagrams
+
+#### Packages
+
+[![Placeholder](images/uml_packages.png)](images/uml_packages.png)
+
+#### Classes
+
+[![Placeholder](images/uml_classes.png)](images/uml_classes.png)
+
 ### Events:
 
 - `MARKET_CATALOGUE` Betfair MarketCatalogue object
@@ -56,9 +66,7 @@ Backtesting is achieved by monkeypatching the datetime function utcnow(), this a
     - Polling (scores/raceCard etc)
     - CurrentOrders / ClearedOrders
     - database connection/logging
-
-
-
+    
 ### notes
 - market middleware (analytics/logging)
 - order middleware (controls)

@@ -46,9 +46,37 @@ This is created on a per market basis when backtesting.
 
 Subscribes to all orders per running instance using the `config.customer_strategy_ref`
 
-## Custom Event
+## Custom Streams
+
+Custom streams (aka threads) can be added as per:
+
+```python
+from flumine.streams.basestream import BaseStream
 
 
+class CustomStream(BaseStream):
+    def run(self) -> None:
+        """
+        # connect to stream / make API requests etc.
+        response = api_call()
+
+        # callback func
+        def callback(framework, event):
+            for strategy in framework.strategies:
+                strategy.process_my_event(event)
+
+        # push results through using custom event
+        event = events.CustomEvent(response, callback)
+
+        # put in main queue
+        self.flumine.handler_queue.put(event)
+        """
+        pass
+
+
+custom_stream = CustomStream(framework, custom=True)
+framework.streams.add_custom_stream(custom_stream)
+```
 
 
 ## Error Handling

@@ -81,12 +81,11 @@ from strategies.lowestlayer import LowestLayer
 def run_process(markets):
     client = clients.BacktestClient()
     framework = FlumineBacktest(client=client)
+    strategy = LowestLayer(
+        market_filter={"markets": markets},
+        context={"stake": 2},
+    )
     with mock_patch("builtins.open", smart_open.open):
-        strategy = LowestLayer(
-            market_filter={"markets": markets, "listener_kwargs": {"inplay": True}},
-            context={"stake": 2},
-            max_live_trade_count=2,
-        )
         framework.add_strategy(strategy)
         framework.run()
 
@@ -98,7 +97,9 @@ if __name__ == "__main__":
 
     _process_jobs = []
     with futures.ProcessPoolExecutor(max_workers=processes) as p:
-        chunk = min(markets_per_process, math.ceil(len(all_markets) / processes))
+        chunk = min(
+            markets_per_process, math.ceil(len(all_markets) / processes)
+        )
         for m in (utils.chunks(all_markets, chunk)):
             _process_jobs.append(
                 p.submit(

@@ -17,11 +17,12 @@ class BaseStream(threading.Thread):
     def __init__(
         self,
         flumine,
-        stream_id: int,
-        streaming_timeout: float,  # snaps listener if no update
-        conflate_ms: int,
+        stream_id: int = None,
+        streaming_timeout: float = None,  # snaps listener if no update
+        conflate_ms: int = None,
         market_filter: dict = None,
         market_data_filter: dict = None,
+        custom: bool = False,
         client=None,
         output_queue: bool = True,
         event_processing: bool = False,
@@ -37,6 +38,7 @@ class BaseStream(threading.Thread):
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self._client = client
+        self.custom = custom
         self._stream = None
         self._output_queue = queue.Queue() if output_queue else None
         self.event_processing = event_processing

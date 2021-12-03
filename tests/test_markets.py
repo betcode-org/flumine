@@ -49,15 +49,11 @@ class MarketsTest(unittest.TestCase):
         self.assertIsNone(self.markets.get_order("1.2", "test"))
 
     def test_get_order_from_bet_id(self):
-        mock_order = mock.Mock()
-        mock_order.bet_id = "321"
-        mock_market = mock.Mock()
-        mock_market.closed = False
-        mock_market.blotter.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_blotter = mock.Mock()
+        mock_market = mock.Mock(closed=False, blotter=mock_blotter)
         self.markets._markets = {"1.1": mock_market}
-
-        self.assertEqual(self.markets.get_order_from_bet_id("1.1", "321"), mock_order)
-        self.assertIsNone(self.markets.get_order("1.2", "test"))
+        self.markets.get_order_from_bet_id("1.1", "321")
+        mock_blotter.get_order_bet_id.assert_called_with("321")
 
     def test_markets(self):
         self.assertEqual(self.markets.markets, {})

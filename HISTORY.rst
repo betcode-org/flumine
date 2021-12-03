@@ -3,6 +3,24 @@
 Release History
 ---------------
 
+1.20.13 (2021-12-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #527 custom stream funcs / docs added
+- #525 UML diagrams added to docs (@shashikhaya)
+- `get_order_from_bet_id` optimisation (very slow with high order count)
+
+**Bug Fixes**
+
+- File type regression
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.15.2
+- black upgraded to 21.11b1
+
 1.20.12 (2021-11-26)
 +++++++++++++++++++
 

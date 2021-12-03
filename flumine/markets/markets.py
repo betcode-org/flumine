@@ -37,11 +37,7 @@ class Markets:
         self, market_id: str, bet_id: str
     ) -> Optional[BetfairOrder]:
         blotter = self.markets[market_id].blotter
-        lookup = {order.bet_id: order for order in blotter}
-        try:
-            return lookup[bet_id]
-        except KeyError:
-            return
+        return blotter.get_order_bet_id(bet_id)
 
     @property
     def markets(self) -> dict:
