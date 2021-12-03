@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - #527 custom stream funcs / docs added
+- #525 UML diagrams added to docs (@shashikhaya)
 
 **Libraries**
 
