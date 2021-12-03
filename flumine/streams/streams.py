@@ -207,7 +207,15 @@ class Streams:
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
+            custom=True,
         )
+        self._streams.append(stream)
+        return stream
+
+    """ custom stream """
+
+    def add_custom_stream(self, stream):
+        stream.stream_id = self._increment_stream_id()
         self._streams.append(stream)
         return stream
 
@@ -217,7 +225,7 @@ class Streams:
             for stream in self:
                 stream.start()
                 # wait for successful start
-                while stream.name != "SimulatedOrderStream" and (
+                while not stream.custom and (
                     not stream._stream or not stream._stream._running
                 ):
                     time.sleep(0.25)
