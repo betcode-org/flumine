@@ -100,7 +100,7 @@ class OrderValidation(BaseControl):
 
 class MarketValidation(BaseControl):
     """
-    Validates market is open for orders
+    Validates market is available and open for orders
     """
 
     NAME = "MARKET_VALIDATION"
@@ -111,9 +111,12 @@ class MarketValidation(BaseControl):
 
     def _validate_betfair_market_status(self, order):
         market = self.flumine.markets.markets.get(order.market_id)
-        if market and market.market_book.status != "OPEN":
+        if market is None:
+            self._on_error(order, "Market is not available")
+        elif market.market_book is None:
+            self._on_error(order, "MarketBook is not available")
+        elif market.market_book.status != "OPEN":
             self._on_error(order, "Market is not open")
-            order.executable()
 
 
 class StrategyExposure(BaseControl):

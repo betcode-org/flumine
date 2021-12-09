@@ -3,6 +3,198 @@
 Release History
 ---------------
 
+1.20.13 (2021-12-03)
++++++++++++++++++++
+
+**Improvements**
+
+- #527 custom stream funcs / docs added
+- #525 UML diagrams added to docs (@shashikhaya)
+- `get_order_from_bet_id` optimisation (very slow with high order count)
+
+**Bug Fixes**
+
+- File type regression
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.15.2
+- black upgraded to 21.11b1
+
+1.20.12 (2021-11-26)
++++++++++++++++++++
+
+**Improvements**
+
+- Performance docs added
+
+1.20.11 (2021-11-25)
++++++++++++++++++++
+
+**Improvements**
+
+- #528 MarketOnCloseOrders not included in BacktestLoggingControl example
+- #531 Include SP values in jupyterloggingcontrol
+- MarketRecorder updates (@mberk)
+
+1.20.10 (2021-11-11)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Missing clk handling in order and race stream
+
+1.20.9 (2021-11-11)
++++++++++++++++++++
+
+**Improvements**
+
+- #522 add clk to output in market recorder (Breaking Change)
+- #517 Extend selection exposures to whole market (@petercoles)
+- Example strategies updated to remove whitespace on dump (1mb saved per raw file)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.15.1
+
+1.20.8 (2021-11-01)
++++++++++++++++++++
+
+**Improvements**
+
+- Handle list of market filters in strategy
+
+**Bug Fixes**
+
+- #519 reset real datetime added to allow s3 download (RequestTimeTooSkewed)
+
+**Libraries**
+
+- black upgraded to 21.10b0
+
+1.20.7 (2021-10-25)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- detect_file_type handle tuple
+
+1.20.6 (2021-10-25)
++++++++++++++++++++
+
+**Improvements**
+
+- SimulatedDateTime minor improvement
+- detect_file_type added to log warning when backtesting
+
+1.20.5 (2021-10-22)
++++++++++++++++++++
+
+**Libraries**
+
+- relax tenacity pinning >=7.0.0 <=8.0.1
+
+1.20.4 (2021-10-20)
++++++++++++++++++++
+
+**Improvements**
+
+- #511 Make background worker function callable once
+- #512 Allow access to real datetime via context manager
+
+**Libraries**
+
+- python 3.10 testing added
+- betfairlightweight upgraded to 2.15.0
+- black upgraded to 21.9b0
+
+1.20.3 (2021-09-23)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #486 elapsed_seconds bug when async
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.14.1
+
+1.20.2 (2021-09-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Restrict logging calls based on level to prevent `info` being called (slow)
+- Restrict `process` and `take_sp` calls in simulated.py
+- lru cache added to `price_ticks_away`
+
+1.20.1 (2021-09-19)
++++++++++++++++++++
+
+**Improvements**
+
+- RaceCache optimisation
+
+**Bug Fixes**
+
+- #499 bugfix on market recording
+
+1.20.0 (2021-09-17)
++++++++++++++++++++
+
+**Improvements**
+
+- Update to use `listener_kwargs` in `_process` rather than `snap`
+
+**Bug Fixes**
+
+- #499 missing market call on closure
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.14.0
+
+1.19.17 (2021-09-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest speed improvements
+
+1.19.16 (2021-09-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Temporary logging added for testing
+
+1.19.15 (2021-09-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Backtest speed improvements
+- Raise error in controls when market or marketBook not available
+
+**Bug Fixes**
+
+- async not correctly pulled from config during transaction
+
+1.19.14 (2021-09-10)
++++++++++++++++++++
+
+**Improvements**
+
+- `process_current_orders` optimisation
+- `market_version` and `elapsed_seconds_created` added to order
+- `OrderStream` logic improvement
+- `market.event` refactored to filter on start time as well as eventId (FORECAST limitation)
+- Example improvement (@petercoles)
+
+**Bug Fixes**
+
+- Correctly complete order in blotter when live
+
 1.19.13 (2021-09-08)
 +++++++++++++++++++
 

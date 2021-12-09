@@ -61,12 +61,15 @@ class MarketRecorder(BaseStrategy):
             daemon=True,
         ).start()
 
-    def process_raw_data(self, publish_time, data):
+    def process_raw_data(self, clk: str, publish_time: int, data: dict):
         market_id = data.get(self.MARKET_ID_LOOKUP)
         file_directory = os.path.join(self.local_dir, self.recorder_id, market_id)
         with open(file_directory, "a") as f:
             f.write(
-                json.dumps({"op": "mcm", "clk": None, "pt": publish_time, "mc": [data]})
+                json.dumps(
+                    {"op": "mcm", "clk": clk, "pt": publish_time, "mc": [data]},
+                    separators=(",", ":"),
+                )
                 + "\n"
             )
 
@@ -208,6 +211,7 @@ class S3MarketRecorder(MarketRecorder):
         MarketRecorder.__init__(self, *args, **kwargs)
         self._bucket = self.context["bucket"]
         self._data_type = self.context.get("data_type", "marketdata")
+        self._default_event_type_id = self.context.get("default_event_type_id", "7")
         self.s3 = boto3.client("s3")
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
@@ -218,19 +222,11 @@ class S3MarketRecorder(MarketRecorder):
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
         # load to s3
-        event_type_id = (
-            market_definition.get("eventTypeId", 0) if market_definition else "7"
-        )
         try:
             self.transfer.upload_file(
                 filename=compress_file_dir,
                 bucket=self._bucket,
-                key=os.path.join(
-                    self._data_type,
-                    "streaming",
-                    event_type_id,
-                    os.path.basename(compress_file_dir),
-                ),
+                key=self._make_prices_file_s3_key(compress_file_dir, market_definition),
                 extra_args={
                     "Metadata": self._create_metadata(market_definition)
                     if market_definition
@@ -255,14 +251,34 @@ class S3MarketRecorder(MarketRecorder):
                 self.s3.put_object(
                     Body=market_catalogue_compressed,
                     Bucket=self._bucket,
-                    Key=os.path.join(
-                        "marketdata",
-                        "marketCatalogue",
-                        "{0}.gz".format(market.market_id),
-                    ),
+                    Key=self._make_market_catalogue_s3_key(market),
                 )
                 logger.info(
                     "%s successfully loaded marketCatalogue to s3" % market.market_id
                 )
             except (BotoCoreError, Exception) as e:
                 logger.error("Error loading to s3: %s" % e)
+
+    def _make_market_catalogue_s3_key(self, market) -> str:
+        key = os.path.join(
+            self._data_type,
+            "marketCatalogue",
+            "{0}.gz".format(market.market_id),
+        )
+        return key
+
+    def _make_prices_file_s3_key(
+        self, compress_file_dir: str, market_definition: dict
+    ) -> str:
+        event_type_id = (
+            market_definition.get("eventTypeId", 0)
+            if market_definition
+            else self._default_event_type_id
+        )
+        key = os.path.join(
+            self._data_type,
+            "streaming",
+            event_type_id,
+            os.path.basename(compress_file_dir),
+        )
+        return key

@@ -18,6 +18,7 @@ class FlumineBacktestTest(unittest.TestCase):
 
     def test_init(self):
         self.assertTrue(self.flumine.BACKTEST)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test_run_error(self):
         mock_client = mock.Mock()
@@ -26,18 +27,14 @@ class FlumineBacktestTest(unittest.TestCase):
         with self.assertRaises(RunError):
             self.flumine.run()
 
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._unpatch_datetime")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_end_flumine")
     @mock.patch("flumine.backtest.backtest.events")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_books")
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._monkey_patch_datetime")
     def test_run(
         self,
-        mock__monkey_patch_datetime,
         mock__process_market_books,
         mock_events,
         mock__process_end_flumine,
-        mock__unpatch_datetime,
     ):
         mock_stream = mock.Mock(event_processing=False)
         mock_market_book = mock.Mock()
@@ -45,23 +42,17 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_stream.create_generator.return_value = mock_gen
         self.flumine.streams._streams = [mock_stream]
         self.flumine.run()
-        mock__monkey_patch_datetime.assert_called_with()
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
         mock__process_end_flumine.assert_called_with()
-        mock__unpatch_datetime.assert_called_with()
 
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._unpatch_datetime")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_end_flumine")
     @mock.patch("flumine.backtest.backtest.events")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_books")
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._monkey_patch_datetime")
     def test_run_event(
         self,
-        mock__monkey_patch_datetime,
         mock__process_market_books,
         mock_events,
         mock__process_end_flumine,
-        mock__unpatch_datetime,
     ):
         mock_stream_one = mock.Mock(event_processing=True, event_id=123)
         mock_market_book_one = mock.Mock(publish_time_epoch=321)
@@ -75,10 +66,8 @@ class FlumineBacktestTest(unittest.TestCase):
 
         self.flumine.streams._streams = [mock_stream_one, mock_stream_two]
         self.flumine.run()
-        mock__monkey_patch_datetime.assert_called_with()
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
         mock__process_end_flumine.assert_called_with()
-        mock__unpatch_datetime.assert_called_with()
 
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_backtest_orders")
     @mock.patch("flumine.backtest.backtest.FlumineBacktest._check_pending_packages")

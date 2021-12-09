@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 
-from .. import config
 from ..markets.markets import Markets
 from ..order.order import BaseOrder, OrderStatus
 from ..order.trade import Trade
@@ -77,7 +76,8 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     # update
     order.update_current_order(current_order)
     # pickup async orders
-    if config.async_place_orders and order.bet_id is None and current_order.bet_id:
+    if order.async_ and order.bet_id is None and current_order.bet_id:
+        order.responses.placed()
         order.bet_id = current_order.bet_id
         log_control(OrderEvent(order))
     # update status

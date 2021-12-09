@@ -9,6 +9,7 @@ from betfairlightweight.compat import json
 
 from .basestream import BaseStream
 from ..exceptions import ListenerError
+from ..utils import create_time
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class FlumineMarketStream(MarketStream):
     """
 
     def _process(self, data: list, publish_time: int) -> bool:
+        active = False
         for market_book in data:
             if "id" not in market_book:
                 continue
@@ -53,43 +55,52 @@ class FlumineMarketStream(MarketStream):
                     % (self, self.unique_id, market_id, len(self._caches))
                 )
 
-            market_book_cache.update_cache(market_book, publish_time)
-            self._updates_processed += 1
-        return False
+            # listener_kwargs filtering
+            active = True
+            if "marketDefinition" in market_book:
+                _definition_status = market_book["marketDefinition"].get("status")
+                _definition_in_play = market_book["marketDefinition"].get("inPlay")
+                _definition_market_time = market_book["marketDefinition"].get(
+                    "marketTime"
+                )
+            else:
+                _definition_status = market_book_cache._definition_status
+                _definition_in_play = market_book_cache._definition_in_play
+                _definition_market_time = market_book_cache.market_definition[
+                    "marketTime"
+                ]
 
-    def snap(self, market_ids: list = None) -> list:
-        market_books = []
-        for cache in list(self._caches.values()):
-            if market_ids and cache.market_id not in market_ids:
-                continue
-            # if market is not open (closed/suspended) send regardless
-            if cache._definition_status == "OPEN":
+            # if market is not open (closed/suspended) process regardless
+            if _definition_status == "OPEN":
                 if self._listener.inplay:
-                    if not cache._definition_in_play:
-                        continue
+                    if not _definition_in_play:
+                        active = False
                 elif self._listener.seconds_to_start:
-                    _now = datetime.datetime.utcfromtimestamp(cache.publish_time / 1e3)
-                    _market_time = BaseResource.strip_datetime(
-                        cache.market_definition["marketTime"]
-                    )
+                    _now = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+                    _market_time = BaseResource.strip_datetime(_definition_market_time)
                     seconds_to_start = (_market_time - _now).total_seconds()
                     if seconds_to_start > self._listener.seconds_to_start:
-                        continue
+                        active = False
                 if self._listener.inplay is False:
-                    if cache._definition_in_play:
-                        continue
-            market_books.append(cache.create_resource(self.unique_id, snap=True))
-        return market_books
+                    if _definition_in_play:
+                        active = False
+            # check if refresh required
+            if active and not market_book_cache.active:
+                market_book_cache.refresh_cache()
+
+            market_book_cache.update_cache(market_book, publish_time, active=active)
+            self._updates_processed += 1
+        return active
 
 
 class FlumineRaceStream(RaceStream):
     """
     `_process` updated to not call `on_process`
     which reduces some function calls.
-    # todo snap optimisation?
     """
 
     def _process(self, race_updates: list, publish_time: int) -> bool:
+        active = False
         for update in race_updates:
             market_id = update["mid"]
             race_cache = self._caches.get(market_id)
@@ -98,14 +109,23 @@ class FlumineRaceStream(RaceStream):
                 race_cache = RaceCache(
                     market_id, publish_time, race_id, self._lightweight
                 )
+                race_cache.start_time = create_time(publish_time, race_id)
                 self._caches[market_id] = race_cache
                 logger.info(
                     "[%s: %s]: %s added, %s markets in cache"
                     % (self, self.unique_id, market_id, len(self._caches))
                 )
-            race_cache.update_cache(update, publish_time)
-            self._updates_processed += 1
-        return False
+
+            # filter after start time
+            diff = (
+                race_cache.start_time
+                - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+            ).total_seconds()
+            if diff <= 0:
+                race_cache.update_cache(update, publish_time)
+                self._updates_processed += 1
+                active = True
+        return active
 
 
 class HistoricListener(StreamListener):
@@ -138,7 +158,7 @@ class HistoricListener(StreamListener):
 
         # skip on_change / on_update as we know it is always an update
         publish_time = data["pt"]
-        self.stream._process(data[self.stream._lookup], publish_time)
+        return self.stream._process(data[self.stream._lookup], publish_time)
 
 
 class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
@@ -150,10 +170,8 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
         stream_snap = self.listener.stream.snap
         with open(self.file_path, "r") as f:
             for update in f:
-                listener_on_data(update)
-                data = stream_snap()
-                if data:  # can return empty list
-                    yield data
+                if listener_on_data(update):
+                    yield stream_snap()
 
 
 class HistoricalStream(BaseStream):
@@ -168,7 +186,6 @@ class HistoricalStream(BaseStream):
         pass
 
     def create_generator(self):
-        self._listener.debug = False  # prevent logging calls on each update (slow)
         self._listener.update_clk = (
             False  # do not update clk on updates (not required when backtesting)
         )

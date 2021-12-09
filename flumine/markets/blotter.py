@@ -33,13 +33,21 @@ class Blotter:
 
     def __init__(self, market_id: str):
         self.market_id = market_id
+        self.active = False
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade.id: [Order,]}
+        self._bet_id_lookup = {}  # {Order.bet_id: Order, }
         self._live_orders = []
         self._pending_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
+
+    def get_order_bet_id(self, bet_id: str) -> Optional[BaseOrder]:
+        try:
+            return self._bet_id_lookup[bet_id]
+        except KeyError:
+            return
 
     def strategy_orders(
         self,
@@ -111,6 +119,25 @@ class Blotter:
 
     """ position """
 
+    def market_exposure(self, strategy, num_runners, num_winners: int = 1) -> float:
+        """Returns worst-case exposure for market, which is the maximum potential loss (negative),
+        arising from the worst race outcome, or the minimum potential profit (positive).
+        """
+        orders = self.strategy_orders(strategy)
+        runners = set([order.lookup for order in orders])
+        worst_possible_profits = [
+            self.get_exposures(strategy, lookup) for lookup in runners
+        ]
+        worst_possible_profits_on_loses = [
+            wpp["worst_possible_profit_on_lose"] for wpp in worst_possible_profits
+        ]
+        differences = [
+            wpp["worst_possible_profit_on_win"] - wpp["worst_possible_profit_on_lose"]
+            for wpp in worst_possible_profits
+        ] + (num_runners - len(runners)) * [0]
+        worst_differences = sorted(differences)[:num_winners]
+        return sum(worst_possible_profits_on_loses) + sum(worst_differences)
+
     def selection_exposure(self, strategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case loss arising
         from the selection either winning or losing. Can be positive or zero.
@@ -133,7 +160,11 @@ class Blotter:
         for order in self.strategy_selection_orders(strategy, *lookup[1:]):
             if order == exclusion:
                 continue
-            if order.status == OrderStatus.VIOLATION:
+            if order.status in [
+                OrderStatus.PENDING,
+                OrderStatus.VIOLATION,
+                OrderStatus.EXPIRED,
+            ]:
                 continue
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                 _size_matched = order.size_matched  # cache
@@ -142,12 +173,13 @@ class Blotter:
                         mb.append((order.average_price_matched, _size_matched))
                     else:
                         ml.append((order.average_price_matched, _size_matched))
-                _size_remaining = order.size_remaining  # cache
-                if order.order_type.price and _size_remaining:
-                    if order.side == "BACK":
-                        ub.append((order.order_type.price, _size_remaining))
-                    else:
-                        ul.append((order.order_type.price, _size_remaining))
+                if not order.complete:
+                    _size_remaining = order.size_remaining  # cache
+                    if order.order_type.price and _size_remaining:
+                        if order.side == "BACK":
+                            ub.append((order.order_type.price, _size_remaining))
+                        else:
+                            ul.append((order.order_type.price, _size_remaining))
             elif order.order_type.ORDER_TYPE in (
                 OrderTypes.LIMIT_ON_CLOSE,
                 OrderTypes.MARKET_ON_CLOSE,
@@ -196,7 +228,9 @@ class Blotter:
     __contains__ = has_order
 
     def __setitem__(self, customer_order_ref: str, order) -> None:
+        self.active = True
         self._orders[customer_order_ref] = order
+        self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
         self._trades[order.trade.id].append(order)
         self._strategy_orders[order.trade.strategy].append(order)

@@ -1,8 +1,12 @@
+import re
 import uuid
 import json
 import logging
 import hashlib
-from typing import Optional, Tuple, Callable
+import datetime
+import functools
+from pathlib import Path
+from typing import Optional, Tuple, Callable, Union
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
@@ -25,8 +29,23 @@ CUTOFFS = (
 )
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
-
+MARKET_ID_REGEX = re.compile(r"1.\d{9}")
+EVENT_ID_REGEX = re.compile(r"\d{8}")
 STRATEGY_NAME_HASH_LENGTH = 13
+
+
+def detect_file_type(file_path: Union[str, tuple]) -> str:
+    if isinstance(file_path, tuple):
+        file_path = file_path[0]
+    path_name = Path(file_path).name
+    market_match = bool(MARKET_ID_REGEX.match(path_name))
+    event_match = bool(EVENT_ID_REGEX.match(path_name))
+    if market_match and not event_match:
+        return "MARKET"
+    elif not market_match and event_match:
+        return "EVENT"
+    else:
+        return "UNKNOWN"
 
 
 def create_short_uuid() -> str:
@@ -40,7 +59,7 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def get_file_md(file_dir: str, value: str) -> Optional[str]:
+def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
     # get value from raw streaming file marketDefinition
     if isinstance(file_dir, tuple):
         file_dir = file_dir[0]
@@ -88,6 +107,7 @@ def make_prices(min_price, cutoffs):
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
+PRICES_FLOAT = [float(price) for price in PRICES]
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):
@@ -136,12 +156,14 @@ def get_sp(runner: RunnerBook) -> Optional[float]:
         return runner.sp.actual_sp
 
 
+@functools.lru_cache(maxsize=2048)
 def price_ticks_away(price: float, n_ticks: int) -> float:
     try:
-        price_index = PRICES.index(as_dec(price))
-        if price_index + n_ticks < 0:
+        price_index = PRICES_FLOAT.index(price)
+        new_index = price_index + n_ticks
+        if new_index < 0:
             return 1.01
-        return float(PRICES[price_index + n_ticks])
+        return PRICES_FLOAT[new_index]
     except IndexError:
         return 1000
 
@@ -282,3 +304,10 @@ def get_event_ids(markets: list, event_type_id: str) -> list:
         if not market.closed and market.event_type_id == event_type_id:
             event_ids.append(market.event_id)
     return list(set(event_ids))
+
+
+def create_time(publish_time: int, id_: str) -> datetime.datetime:
+    pt_datetime = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+    event_id, start_time = id_.split(".")
+    hour, minute = int(start_time[:2]), int(start_time[2:])
+    return pt_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)

@@ -49,15 +49,11 @@ class MarketsTest(unittest.TestCase):
         self.assertIsNone(self.markets.get_order("1.2", "test"))
 
     def test_get_order_from_bet_id(self):
-        mock_order = mock.Mock()
-        mock_order.bet_id = "321"
-        mock_market = mock.Mock()
-        mock_market.closed = False
-        mock_market.blotter.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_blotter = mock.Mock()
+        mock_market = mock.Mock(closed=False, blotter=mock_blotter)
         self.markets._markets = {"1.1": mock_market}
-
-        self.assertEqual(self.markets.get_order_from_bet_id("1.1", "321"), mock_order)
-        self.assertIsNone(self.markets.get_order("1.2", "test"))
+        self.markets.get_order_from_bet_id("1.1", "321")
+        mock_blotter.get_order_bet_id.assert_called_with("321")
 
     def test_markets(self):
         self.assertEqual(self.markets.markets, {})
@@ -149,6 +145,15 @@ class MarketTest(unittest.TestCase):
         )
         self.assertEqual(transaction, mock_transaction())
 
+    @mock.patch("flumine.markets.market.Transaction")
+    def test_transaction_async(self, mock_transaction):
+        config.async_place_orders = True
+        transaction = self.market.transaction()
+        mock_transaction.assert_called_with(
+            self.market, id_=self.market._transaction_id, async_place_orders=True
+        )
+        self.assertEqual(transaction, mock_transaction())
+
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
@@ -180,18 +185,19 @@ class MarketTest(unittest.TestCase):
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):
-        mock_market_catalogue = mock.Mock()
+        mock_market_catalogue = mock.Mock(market_start_time=12)
         mock_market_catalogue.event.id = 12
         self.market.market_catalogue = mock_market_catalogue
 
         self.market.flumine.markets = []
         self.assertEqual(self.market.event, {})
 
-        m_one = mock.Mock(market_type=1, event_id=12)
-        m_two = mock.Mock(market_type=2, event_id=12)
-        m_three = mock.Mock(market_type=3, event_id=123)
-        m_four = mock.Mock(market_type=1, event_id=12)
-        self.market.flumine.markets = [m_one, m_two, m_three, m_four]
+        m_one = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
+        m_two = mock.Mock(market_type=2, event_id=12, market_start_datetime=12)
+        m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
+        m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
+        m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
+        self.market.flumine.markets = [m_one, m_two, m_three, m_four, m_five]
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
 
     def test_event_type_id_mc(self):

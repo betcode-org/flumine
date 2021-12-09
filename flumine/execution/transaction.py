@@ -55,7 +55,12 @@ class Transaction:
         ):
             return False
         # place
-        order.place(self.market.market_book.publish_time, market_version, delay)
+        order.place(
+            self.market.market_book.publish_time,
+            market_version,
+            self._async_place_orders,
+            delay,
+        )
         if self.market.blotter.has_trade(order.trade.id):
             new_trade = False
         else:
@@ -147,14 +152,15 @@ class Transaction:
         if packages:
             for package in packages:
                 self.market.flumine.process_order_package(package)
-            logger.info(
-                "%s order packages executed in transaction" % len(packages),
-                extra={
-                    "market_id": self.market.market_id,
-                    "order_packages": [o.info for o in packages],
-                    "transaction_id": self._id,
-                },
-            )
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(
+                    "%s order packages executed in transaction" % len(packages),
+                    extra={
+                        "market_id": self.market.market_id,
+                        "order_packages": [o.info for o in packages],
+                        "transaction_id": self._id,
+                    },
+                )
             self._pending_orders = False
         return len(packages)
 

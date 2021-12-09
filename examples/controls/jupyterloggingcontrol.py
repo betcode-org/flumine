@@ -61,15 +61,33 @@ class JupyterLoggingControl(LoggingControl):
         data = {
             "framework": {"title": "flumine", "version": __version__},
             "strategies": [strategy.info for strategy in framework.strategies],
-            "markets": [market.info for market in framework.markets],
+            "markets": [
+                self._create_market_info(market) for market in framework.markets
+            ],
             "orders": orders,
         }
         self._create_json(data)
 
+    @staticmethod
+    def _create_market_info(market) -> dict:
+        data = market.info
+        # add runner info
+        data["runners"] = []
+        for runner in market.market_book.runners:
+            data["runners"].append(
+                {
+                    "selection_id": runner.selection_id,
+                    "handicap": runner.handicap,
+                    "status": runner.status,
+                    "actual_sp": runner.sp.actual_sp,
+                }
+            )
+        return data
+
     def _create_json(self, data):
         # save json to file
         with open(self.file_name, "w") as f:
-            json.dump(data, f)
+            json.dump(data, f, separators=(",", ":"))
 
     @staticmethod
     def launch(self, argv=None, **kwargs):

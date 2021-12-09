@@ -181,7 +181,7 @@ class BaseFlumine:
         self.markets.remove_market(market.market_id)
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
-        stream_id, publish_time, data = event.event
+        stream_id, clk, publish_time, data = event.event
         for datum in data:
             if "id" in datum:
                 market_id = datum["id"]
@@ -200,7 +200,7 @@ class BaseFlumine:
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
-                    strategy.process_raw_data(publish_time, datum)
+                    strategy.process_raw_data(clk, publish_time, datum)
 
     def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
@@ -224,12 +224,17 @@ class BaseFlumine:
                 self.markets, self.strategies, event, self.log_control, self._add_market
             )
         for market in self.markets:
-            if market.closed is False:
+            if market.closed is False and market.blotter.active:
+                blotter = market.blotter
                 # check for pending orders (delay)
-                if market.blotter.has_pending_orders:
+                if blotter.has_pending_orders:
                     self._check_pending_orders(market)
+                # check for completed orders
+                for order in blotter.live_orders:
+                    if order.complete:
+                        blotter.complete_order(order)
                 for strategy in self.strategies:
-                    strategy_orders = market.blotter.strategy_orders(strategy)
+                    strategy_orders = blotter.strategy_orders(strategy)
                     utils.call_process_orders_error_handling(
                         strategy, market, strategy_orders
                     )
@@ -280,9 +285,11 @@ class BaseFlumine:
                 extra={"market_id": market_id, **self.info},
             )
             return
+        # process market
         if market.closed is False:
             market.close_market()
         if recorder is False:
+            market(market_book)
             market.blotter.process_closed_market(event.event)
 
         for strategy in self.strategies:

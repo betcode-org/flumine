@@ -67,8 +67,7 @@ class Streams:
             elif events:
                 raise NotImplementedError()
         else:
-            stream = self.add_stream(strategy)
-            strategy.streams.append(stream)
+            self.add_stream(strategy)
 
     def add_client(self, client: BaseClient) -> None:
         if client.order_stream:
@@ -79,38 +78,44 @@ class Streams:
 
     """ market data """
 
-    def add_stream(self, strategy: BaseStrategy) -> Union[MarketStream, DataStream]:
-        for stream in self:  # check if market stream already exists
-            if (
-                isinstance(stream, strategy.stream_class)
-                and stream.market_filter == strategy.market_filter
-                and stream.market_data_filter == strategy.market_data_filter
-                and stream.streaming_timeout == strategy.streaming_timeout
-                and stream.conflate_ms == strategy.conflate_ms
-            ):
+    def add_stream(self, strategy: BaseStrategy) -> None:
+        if isinstance(strategy.market_filter, dict):
+            market_filters = [strategy.market_filter]
+        else:
+            market_filters = strategy.market_filter
+        for market_filter in market_filters:
+            for stream in self:  # check if market stream already exists
+                if (
+                    isinstance(stream, strategy.stream_class)
+                    and stream.market_filter == market_filter
+                    and stream.market_data_filter == strategy.market_data_filter
+                    and stream.streaming_timeout == strategy.streaming_timeout
+                    and stream.conflate_ms == strategy.conflate_ms
+                ):
+                    logger.info(
+                        "Using {0} ({1}) for strategy {2}".format(
+                            strategy.stream_class, stream.stream_id, strategy
+                        )
+                    )
+                    strategy.streams.append(stream)
+                    break
+            else:  # nope? lets create a new one
+                stream_id = self._increment_stream_id()
                 logger.info(
-                    "Using {0} ({1}) for strategy {2}".format(
-                        strategy.stream_class, stream.stream_id, strategy
+                    "Creating new {0} ({1}) for strategy {2}".format(
+                        strategy.stream_class, stream_id, strategy
                     )
                 )
-                return stream
-        else:  # nope? lets create a new one
-            stream_id = self._increment_stream_id()
-            logger.info(
-                "Creating new {0} ({1}) for strategy {2}".format(
-                    strategy.stream_class, stream_id, strategy
+                stream = strategy.stream_class(
+                    flumine=self.flumine,
+                    stream_id=stream_id,
+                    market_filter=market_filter,
+                    market_data_filter=strategy.market_data_filter,
+                    streaming_timeout=strategy.streaming_timeout,
+                    conflate_ms=strategy.conflate_ms,
                 )
-            )
-            stream = strategy.stream_class(
-                flumine=self.flumine,
-                stream_id=stream_id,
-                market_filter=strategy.market_filter,
-                market_data_filter=strategy.market_data_filter,
-                streaming_timeout=strategy.streaming_timeout,
-                conflate_ms=strategy.conflate_ms,
-            )
-            self._streams.append(stream)
-            return stream
+                self._streams.append(stream)
+                strategy.streams.append(stream)
 
     def add_historical_stream(
         self,
@@ -193,7 +198,15 @@ class Streams:
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
+            custom=True,
         )
+        self._streams.append(stream)
+        return stream
+
+    """ custom stream """
+
+    def add_custom_stream(self, stream):
+        stream.stream_id = self._increment_stream_id()
         self._streams.append(stream)
         return stream
 
@@ -203,7 +216,7 @@ class Streams:
             for stream in self:
                 stream.start()
                 # wait for successful start
-                while stream.name != "SimulatedOrderStream" and (
+                while not stream.custom and (
                     not stream._stream or not stream._stream._running
                 ):
                     time.sleep(0.25)

@@ -34,7 +34,7 @@ class LoggingControl(Thread):
                     self.process_event(event)
                 except Exception as e:
                     logger.critical(
-                        "{0} exception raised in {0}".format(e, self.NAME),
+                        "{0} exception raised in {1}".format(e, self.NAME),
                         exc_info=True,
                         extra={"event": event},
                     )

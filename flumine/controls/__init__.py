@@ -22,8 +22,9 @@ class BaseControl:
     def _on_error(self, order: BaseOrder, error: str) -> None:
         violation_msg = "Order has violated: {0} Error: {1}".format(self.NAME, error)
         order.violation(violation_msg)
-        logger.warning(
-            violation_msg,
-            extra={"control": self.NAME, "error": error, "order": order.info},
-        )
+        if logger.isEnabledFor(logging.WARNING):
+            logger.warning(
+                violation_msg,
+                extra={"control": self.NAME, "error": error, "order": order.info},
+            )
         raise ControlError(violation_msg)

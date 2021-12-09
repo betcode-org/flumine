@@ -37,7 +37,7 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.market_notes = None
         self.assertTrue(self.transaction.place_order(mock_order))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time, None, None
+            self.transaction.market.market_book.publish_time, None, False, None
         )
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
@@ -71,7 +71,7 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.market_notes = None
         self.assertTrue(self.transaction.place_order(mock_order, delay=1.0))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time, None, 1.0
+            self.transaction.market.market_book.publish_time, None, False, 1.0
         )
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()
@@ -104,7 +104,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock(id="123")
         self.assertTrue(self.transaction.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time, None, None
+            self.transaction.market.market_book.publish_time, None, False, None
         )
         self.transaction.market.flumine.log_control.assert_called_with(
             mock_events.TradeEvent()

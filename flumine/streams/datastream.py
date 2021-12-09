@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 RETRY_WAIT = BaseStream.RETRY_WAIT
 
-
 """
 Custom listener that doesn't do any processing,
 helps reduce CPU.
@@ -67,7 +66,7 @@ class FlumineMarketStream(FlumineStream):
                 )
             self._updates_processed += 1
 
-        self.on_process([self.unique_id, publish_time, data])
+        self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
 
@@ -87,7 +86,7 @@ class FlumineOrderStream(FlumineStream):
                 )
             self._updates_processed += 1
 
-        self.on_process([self.unique_id, publish_time, data])
+        self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
 
@@ -107,7 +106,7 @@ class FlumineRaceStream(FlumineStream):
                 )
             self._updates_processed += 1
 
-        self.on_process([self.unique_id, publish_time, data])
+        self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
 

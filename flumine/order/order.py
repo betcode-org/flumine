@@ -58,12 +58,14 @@ class BaseOrder:
         self.trade = trade
         self.side = side
         self.order_type = order_type
+        self.selection_id = trade.selection_id
         self.handicap = handicap
         self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
         self.number_of_dead_heat_winners = None
         self.status = None
+        self.complete = False
         self.status_log = []
         self.delay = None
         self.violation_msg = None
@@ -78,6 +80,7 @@ class BaseOrder:
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
         self.market_version = None  # marketBook.version
+        self.async_ = None
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
@@ -91,8 +94,10 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
-        logger.info("Order status update: %s" % self.status.value, extra=self.info)
-        if self.trade.complete and status != OrderStatus.VIOLATION:
+        self.complete = self._is_complete()
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("Order status update: %s" % self.status.value, extra=self.info)
+        if self.complete and self.trade.complete and status != OrderStatus.VIOLATION:
             self.trade.complete_trade()
 
     def placing(self, delay: float = None) -> None:
@@ -125,7 +130,9 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(self, publish_time: int, market_version: int, delay: float) -> None:
+    def place(
+        self, publish_time: int, market_version: int, async_: bool, delay: float
+    ) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -154,17 +161,7 @@ class BaseOrder:
     def update_current_order(self, current_order: CurrentOrder) -> None:
         self.responses.current_order = current_order
 
-    @property
-    def current_order(self) -> Union[CurrentOrder, Simulated]:
-        if self._simulated:
-            return self.simulated
-        elif self.responses.current_order:
-            return self.responses.current_order
-        elif self.responses.place_response:
-            return self.responses.place_response
-
-    @property
-    def complete(self) -> bool:
+    def _is_complete(self) -> bool:
         """Returns False if order is
         live or pending in the market"""
         if self.status in [
@@ -183,6 +180,15 @@ class BaseOrder:
             return True
         else:
             return False  # default to False
+
+    @property
+    def current_order(self) -> Union[CurrentOrder, Simulated]:
+        if self._simulated:
+            return self.simulated
+        elif self.responses.current_order:
+            return self.responses.current_order
+        elif self.responses.place_response:
+            return self.responses.place_response
 
     @property
     def average_price_matched(self) -> float:
@@ -248,10 +254,6 @@ class BaseOrder:
         return self.trade.market_id
 
     @property
-    def selection_id(self) -> int:
-        return self.trade.selection_id
-
-    @property
     def customer_order_ref(self) -> str:
         return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
 
@@ -270,6 +272,8 @@ class BaseOrder:
             "bet_id": self.bet_id,
             "date_time_created": str(self.date_time_created),
             "publish_time": str(self.publish_time) if self.publish_time else None,
+            "market_version": self.market_version,
+            "async": self.async_,
             "trade": self.trade.info,
             "order_type": self.order_type.info,
             "info": {
@@ -310,11 +314,14 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(self, publish_time: int, market_version: int, delay: float) -> None:
+    def place(
+        self, publish_time: int, market_version: int, async_: bool, delay: float
+    ) -> None:
         self.publish_time = publish_time
         self.market_version = market_version
+        self.async_ = async_
         self.delay = delay
-        self.placing(delay)
+        self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.bet_id is None:

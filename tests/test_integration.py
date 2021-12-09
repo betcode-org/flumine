@@ -192,7 +192,7 @@ class IntegrationTest(unittest.TestCase):
             )
             self.assertEqual(len(market_orders), 14)
             # check transaction count
-            self.assertEqual(market._transaction_id, 25427)
+            self.assertEqual(market._transaction_id, 5182)
 
     def test_event_processing(self):
         client = clients.BacktestClient()

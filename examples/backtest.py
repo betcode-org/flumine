@@ -13,7 +13,7 @@ formatter = jsonlogger.JsonFormatter(custom_format)
 formatter.converter = time.gmtime
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)  # Set to logging.CRITICAL to speed up backtest
 
 client = clients.BacktestClient()
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Iterator
+from typing import Type, Iterator, Union
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
 
@@ -38,7 +38,7 @@ class BaseStrategy:
 
     def __init__(
         self,
-        market_filter: dict,
+        market_filter: Union[dict, list],
         market_data_filter: dict = None,
         streaming_timeout: float = None,
         conflate_ms: int = None,
@@ -53,7 +53,7 @@ class BaseStrategy:
         multi_order_trades: bool = False,
     ):
         """
-        :param market_filter: Streaming market filter
+        :param market_filter: Streaming market filter dict or list of market filters
         :param market_data_filter: Streaming market data filter
         :param streaming_timeout: Streaming timeout in seconds, will call snap() on cache
         :param conflate_ms: Streaming conflation
@@ -112,7 +112,7 @@ class BaseStrategy:
         # process marketBook; place/cancel/replace orders
         return
 
-    def process_raw_data(self, publish_time: int, datum: dict) -> None:
+    def process_raw_data(self, clk: str, publish_time: int, datum: dict) -> None:
         return
 
     def process_orders(self, market: Market, orders: list) -> None:

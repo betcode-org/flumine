@@ -64,7 +64,8 @@ class SimulatedMiddleware(Middleware):
 
         market.context["simulated"] = market_analytics
         # process simulated orders
-        self._process_simulated_orders(market, market_analytics)
+        if market.blotter.active:
+            self._process_simulated_orders(market, market_analytics)
 
     def remove_market(self, market) -> None:
         try:
@@ -181,8 +182,8 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
-        for order in market.blotter._live_orders:
-            if order.simulated and order.status == OrderStatus.EXECUTABLE:
+        for order in market.blotter.live_orders:
+            if order.status == OrderStatus.EXECUTABLE and order.simulated:
                 runner_analytics = market_analytics[
                     (order.selection_id, order.handicap)
                 ]

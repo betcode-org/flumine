@@ -1,6 +1,7 @@
 import csv
 import logging
 from flumine.controls.loggingcontrols import LoggingControl
+from flumine.order.ordertype import OrderTypes
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,14 @@ class BacktestLoggingControl(LoggingControl):
         orders = event.event
         with open("orders.txt", "a") as m:
             for order in orders:
+                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                    size = order.order_type.size
+                else:
+                    size = order.order_type.liability
+                if order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+                    price = None
+                else:
+                    price = order.order_type.price
                 try:
                     order_data = {
                         "bet_id": order.bet_id,
@@ -49,9 +58,9 @@ class BacktestLoggingControl(LoggingControl):
                         "selection_id": order.selection_id,
                         "trade_id": order.trade.id,
                         "date_time_placed": order.responses.date_time_placed,
-                        "price": order.order_type.price,
+                        "price": price,
                         "price_matched": order.average_price_matched,
-                        "size": order.order_type.size,
+                        "size": size,
                         "size_matched": order.size_matched,
                         "profit": order.simulated.profit,
                         "side": order.side,

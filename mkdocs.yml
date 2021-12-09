@@ -28,6 +28,7 @@ nav:
       - Controls: 'controls.md'
       - Workers: 'workers.md'
       - Advanced Usage: 'advanced.md'
+      - Performance: 'performance.md'
       - Architecture: 'architecture.md'
 
 markdown_extensions:

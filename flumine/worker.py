@@ -1,7 +1,7 @@
 import time
 import threading
 import logging
-from typing import Callable
+from typing import Callable, Optional
 from betfairlightweight import BetfairError, filters, exceptions
 
 from . import config
@@ -16,7 +16,7 @@ class BackgroundWorker(threading.Thread):
         self,
         flumine,
         function: Callable,
-        interval: int,
+        interval: Optional[int],
         func_args: tuple = None,
         func_kwargs: dict = None,
         start_delay: int = 0,
@@ -73,6 +73,8 @@ class BackgroundWorker(threading.Thread):
                     },
                     exc_info=True,
                 )
+            if self.interval is None:
+                break
             time.sleep(self.interval)
 
     def shutdown(self, timeout: int = 4) -> None:

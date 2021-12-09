@@ -62,9 +62,9 @@ class Market:
             extra=self.info,
         )
 
-    def transaction(
-        self, async_place_orders: bool = config.async_place_orders
-    ) -> Transaction:
+    def transaction(self, async_place_orders: bool = None) -> Transaction:
+        if async_place_orders is None:
+            async_place_orders = config.async_place_orders
         self._transaction_id += 1
         return Transaction(
             self, id_=self._transaction_id, async_place_orders=async_place_orders
@@ -104,7 +104,10 @@ class Market:
     def event(self) -> dict:
         event = defaultdict(list)
         for market in self.flumine.markets:
-            if market.event_id == self.event_id:
+            if (
+                self.event_id == market.event_id
+                and self.market_start_datetime == market.market_start_datetime
+            ):
                 event[market.market_type].append(market)
         return event
 
