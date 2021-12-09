@@ -321,7 +321,7 @@ class BetfairOrder(BaseOrder):
         self.market_version = market_version
         self.async_ = async_
         self.delay = delay
-        self.placing()
+        self.placing(delay)
 
     def cancel(self, size_reduction: float = None) -> None:
         if self.bet_id is None:

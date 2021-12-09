@@ -280,7 +280,7 @@ class BetfairOrderTest(unittest.TestCase):
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
         self.order.place(123, 456, False, 7)
-        mock_placing.assert_called_with()
+        mock_placing.assert_called_with(7)
         self.assertEqual(self.order.publish_time, 123)
         self.assertEqual(self.order.market_version, 456)
         self.assertFalse(self.order.async_)
