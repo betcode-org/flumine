@@ -287,10 +287,12 @@ class SimulatedMiddlewareTest(unittest.TestCase):
             mock_order_two,
             mock_order_three,
         ]
-        mock_market_analytics = {(mock_order.selection_id, mock_order.handicap): "test"}
+        mock_market_analytics = {
+            (mock_order.selection_id, mock_order.handicap): mock.Mock(traded={1: 2})
+        }
         mock_market.market_book = mock_market_book
         self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
-        mock_order.simulated.assert_called_with(mock_market_book, "test")
+        mock_order.simulated.assert_called_with(mock_market_book, {1: 2})
         mock_order_two.simulated.assert_not_called()
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics")

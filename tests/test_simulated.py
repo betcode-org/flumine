@@ -39,13 +39,12 @@ class SimulatedTest(unittest.TestCase):
     def test_call_process_traded(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
-        mock_market_book = mock.Mock()
-        mock_market_book.bsp_reconciled = False
-        mock_runner_analytics = mock.Mock()
-        self.simulated(mock_market_book, mock_runner_analytics)
+        mock_market_book = mock.Mock(bsp_reconciled=False)
+        traded = {1: 2}
+        self.simulated(mock_market_book, traded)
         mock__process_sp.assert_not_called()
         mock__process_traded.assert_called_with(
-            mock_market_book.publish_time_epoch, mock_runner_analytics.traded
+            mock_market_book.publish_time_epoch, traded
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -605,9 +604,9 @@ class SimulatedTest(unittest.TestCase):
         mock__calculate_process_traded.assert_not_called()
 
     def test__calculate_process_traded(self):
-        self.simulated._calculate_process_traded(1234582, 2.00)
-        self.simulated._calculate_process_traded(1234583, 2.00)
-        self.simulated._calculate_process_traded(1234584, 2.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234582, 2.00), 2)
+        self.assertEqual(self.simulated._calculate_process_traded(1234583, 2.00), 2)
+        self.assertEqual(self.simulated._calculate_process_traded(1234584, 2.00), 0)
         self.assertEqual(
             self.simulated.matched, [[1234582, 12, 1.00], [1234583, 12, 1.00]]
         )
@@ -615,12 +614,13 @@ class SimulatedTest(unittest.TestCase):
 
     def test__calculate_process_traded_piq(self):
         self.simulated._piq = 2.00
-        self.simulated._calculate_process_traded(1234585, 4.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234585, 4.00), 4)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0)
-        self.simulated._calculate_process_traded(1234586, 4.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234586, 4.00), 4)
         self.assertEqual(self.simulated.matched, [[1234586, 12, 2.00]])
         self.assertEqual(self.simulated._piq, 0)
+        self.assertEqual(self.simulated._calculate_process_traded(1234586, 4.00), 0)
 
     def test_take_sp(self):
         self.assertFalse(self.simulated.take_sp)

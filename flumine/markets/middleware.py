@@ -182,12 +182,11 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_simulated_orders(market, market_analytics: dict) -> None:
+        _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
         for order in market.blotter.live_orders:
             if order.status == OrderStatus.EXECUTABLE and order.simulated:
-                runner_analytics = market_analytics[
-                    (order.selection_id, order.handicap)
-                ]
-                order.simulated(market.market_book, runner_analytics)
+                runner_traded = _lookup[(order.selection_id, order.handicap)]
+                order.simulated(market.market_book, runner_traded)
 
     @staticmethod
     def _process_runner(
