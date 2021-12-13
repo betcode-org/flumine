@@ -6,6 +6,7 @@ from flumine import config
 class ConfigTest(unittest.TestCase):
     def test_init(self):
         self.assertFalse(config.simulated)
+        self.assertTrue(config.simulated_strategy_isolation)
         self.assertIsInstance(config.customer_strategy_ref, str)
         self.assertIsInstance(config.process_id, int)
         self.assertIsNone(config.current_time)
