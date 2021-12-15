@@ -197,7 +197,14 @@ class SimulatedMiddleware(Middleware):
                 live_orders = [
                     o
                     for o in orders
-                    if o.status == OrderStatus.EXECUTABLE and o.simulated
+                    if o.status
+                    in [
+                        OrderStatus.EXECUTABLE,
+                        OrderStatus.CANCELLING,
+                        OrderStatus.UPDATING,
+                        OrderStatus.REPLACING,
+                    ]
+                    and o.simulated
                 ]
                 if live_orders:
                     _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
@@ -211,7 +218,16 @@ class SimulatedMiddleware(Middleware):
                 _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
                 live_orders_sorted = self._sort_orders(live_orders)
                 for order in live_orders_sorted:
-                    if order.status == OrderStatus.EXECUTABLE and order.simulated:
+                    if (
+                        order.status
+                        in [
+                            OrderStatus.EXECUTABLE,
+                            OrderStatus.CANCELLING,
+                            OrderStatus.UPDATING,
+                            OrderStatus.REPLACING,
+                        ]
+                        and order.simulated
+                    ):
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
                         order.simulated(market.market_book, runner_traded)
 
