@@ -350,8 +350,9 @@ class Simulated:
                         size,
                     ]  # todo takes the worst price, i.e what was asked
                 )
+            _matched = (self._piq + size) * 2
             self._piq = 0
-            return size * 2
+            return _matched
         else:
             self._piq -= _traded_size
             if logger.isEnabledFor(logging.DEBUG):

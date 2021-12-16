@@ -622,6 +622,12 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated._piq, 0)
         self.assertEqual(self.simulated._calculate_process_traded(1234586, 4.00), 0)
 
+    def test__calculate_process_traded_piq_match(self):
+        self.simulated._piq = 4.00
+        self.assertEqual(self.simulated._calculate_process_traded(1234585, 20.00), 12)
+        self.assertEqual(self.simulated.matched, [[1234585, 12, 2.0]])
+        self.assertEqual(self.simulated._piq, 0)
+
     def test_take_sp(self):
         self.assertFalse(self.simulated.take_sp)
         self.simulated.order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
