@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.21.0 (2021-12-16)
++++++++++++++++++++
+
+**Improvements**
+
+- #528 smart matching on passive orders
+
+**Bug Fixes**
+
+- #528 simulation processing on in flight requests
+
 1.20.13 (2021-12-03)
 +++++++++++++++++++
 

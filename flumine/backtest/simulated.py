@@ -348,7 +348,7 @@ class Simulated:
                         publish_time,
                         self.order.order_type.price,
                         size,
-                    ]  # todo takes the worst price, i.e what was asked
+                    ]
                 )
             _matched = (self._piq + size) * 2
             self._piq = 0
