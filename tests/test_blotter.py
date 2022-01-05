@@ -481,18 +481,23 @@ class BlotterTest(unittest.TestCase):
                 order_type=order[6],
                 complete=order[7],
             )
+
+        mock_market_book = mock.Mock(number_of_active_runners=6, number_of_winners=1)
         self.assertEqual(  # single winner
-            self.blotter.market_exposure(mock_strategy, 6), -20.2
+            self.blotter.market_exposure(mock_strategy, mock_market_book), -20.2
         )
+        mock_market_book = mock.Mock(number_of_active_runners=6, number_of_winners=2)
         self.assertEqual(  # muliple winners
-            self.blotter.market_exposure(mock_strategy, 6, 2), -24.6
+            self.blotter.market_exposure(mock_strategy, mock_market_book), -24.6
         )
-        self.assertEqual(  # num winmers > num runners traded
-            self.blotter.market_exposure(mock_strategy, 20, 7), -28.6
+        mock_market_book = mock.Mock(number_of_active_runners=20, number_of_winners=7)
+        self.assertEqual(  # num winners > num runners traded
+            self.blotter.market_exposure(mock_strategy, mock_market_book), -28.6
         )
 
     def test_greened_market_position(self):
         mock_strategy = mock.Mock()
+        mock_market_book = mock.Mock(number_of_active_runners=6, number_of_winners=1)
         mock_trade = mock.Mock(strategy=mock_strategy)
         orders = [
             # (order_id, selection_id, side, average_price_matched, size_matched, size_remaining, order_type, complete)
@@ -515,7 +520,7 @@ class BlotterTest(unittest.TestCase):
                 complete=order[7],
             )
         self.assertEqual(  # single winner
-            self.blotter.market_exposure(mock_strategy, 6), 0.5
+            self.blotter.market_exposure(mock_strategy, mock_market_book), 0.5
         )
 
     def test_complete_order(self):
