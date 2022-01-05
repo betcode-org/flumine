@@ -126,7 +126,7 @@ class Blotter:
             wpp["worst_possible_profit_on_win"] - wpp["worst_possible_profit_on_lose"]
             for wpp in worst_possible_profits
         ] + (market_book.number_of_active_runners - len(runners)) * [0]
-        worst_differences = sorted(differences)[:market_book.number_of_winners]
+        worst_differences = sorted(differences)[: market_book.number_of_winners]
         return sum(worst_possible_profits_on_loses) + sum(worst_differences)
 
     def selection_exposure(self, strategy, lookup: tuple) -> float:
