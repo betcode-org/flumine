@@ -455,6 +455,7 @@ class BetfairOrderTest(unittest.TestCase):
     def test_size_remaining(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order_type.size = 0
+        self.mock_order_type.bet_target_size = 0
         self.assertEqual(self.order.size_remaining, 0)
         self.mock_order_type.size = 10
         mock_current_order = mock.Mock(size_remaining=10)

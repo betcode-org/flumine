@@ -94,6 +94,10 @@ class Simulated:
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             price = self.order.order_type.price
             size = self.order.order_type.size
+            if size is None:
+                raise NotImplementedError(
+                    "Simulated betTargetSize placement not implemented"
+                )
             if self.order.side == "BACK":
                 available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
                 if (
@@ -382,8 +386,9 @@ class Simulated:
     @property
     def size_remaining(self) -> float:
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            size = self.order.order_type.size or self.order.order_type.bet_target_size
             return round(
-                self.order.order_type.size
+                size
                 - self.size_matched
                 - self.size_cancelled
                 - self.size_lapsed

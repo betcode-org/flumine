@@ -136,6 +136,19 @@ class SimulatedTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_back_target_size(self, mock__get_runner):
+        self.mock_order.order_type.size = None
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        with self.assertRaises(NotImplementedError):
+            self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_market_status(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -658,6 +671,13 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.average_price_matched, 10.0)
 
     def test_size_remaining(self):
+        self.assertEqual(self.simulated.size_remaining, 2)
+        self.simulated._update_matched([1234, 1, 1])
+        self.assertEqual(self.simulated.size_remaining, 1)
+
+    def test_size_remaining_target(self):
+        self.mock_order.order_type.size = None
+        self.mock_order.order_type.bet_target_size = 2
         self.assertEqual(self.simulated.size_remaining, 2)
         self.simulated._update_matched([1234, 1, 1])
         self.assertEqual(self.simulated.size_remaining, 1)
