@@ -35,7 +35,7 @@ class LimitOrder(BaseOrderType):
     def __init__(
         self,
         price: float,
-        size: float,
+        size: float = None,
         persistence_type: str = "LAPSE",
         time_in_force: str = None,
         min_fill_size: float = None,

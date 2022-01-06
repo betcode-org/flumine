@@ -14,6 +14,7 @@ Release History
 **Bug Fixes**
 
 - #528 simulation processing on in flight requests
+- #541 handle betTargetSize
 - Example typo (@petercoles)
 
 **Libraries**
