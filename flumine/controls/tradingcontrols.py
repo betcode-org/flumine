@@ -38,11 +38,12 @@ class OrderValidation(BaseControl):
             self._on_error(order, "Unknown orderType")
 
     def _validate_betfair_size(self, order):
-        if order.order_type.size is None:
+        size = order.order_type.size or order.order_type.bet_target_size
+        if size is None:
             self._on_error(order, "Order size is None")
-        elif order.order_type.size <= 0:
+        elif size <= 0:
             self._on_error(order, "Order size is less than 0")
-        elif order.order_type.size != round(order.order_type.size, 2):
+        elif size != round(size, 2):
             self._on_error(order, "Order size has more than 2dp")
 
     def _validate_betfair_price(self, order):
@@ -64,10 +65,10 @@ class OrderValidation(BaseControl):
         if client.min_bet_validation is False:
             return  # some accounts do not have min bet restrictions
         if order_type == OrderTypes.LIMIT:
+            size = order.order_type.size or order.order_type.bet_target_size
             if (
-                order.order_type.size < client.min_bet_size
-                and (order.order_type.price * order.order_type.size)
-                < client.min_bet_payout
+                size < client.min_bet_size
+                and (order.order_type.price * size) < client.min_bet_payout
             ):
                 self._on_error(
                     order,
@@ -146,12 +147,11 @@ class StrategyExposure(BaseControl):
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                size = order.order_type.size or order.order_type.bet_target_size
                 if order.side == "BACK":
-                    order_exposure = order.order_type.size
+                    order_exposure = size
                 else:
-                    order_exposure = (
-                        order.order_type.price - 1
-                    ) * order.order_type.size
+                    order_exposure = (order.order_type.price - 1) * size
             elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                 order_exposure = order.order_type.liability  # todo correct?
             elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
