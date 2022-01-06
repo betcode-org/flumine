@@ -112,6 +112,10 @@ logger.setLevel(logging.INFO)
 
 Updated to True when backtesting or paper trading
 
+#### simulated_strategy_isolation
+
+Defaults to True to match orders per strategy, when False prevents double counting of passive liquidity on all orders regardless of strategy.
+
 #### instance_id
 
 Store server id or similar (e.g. AWS ec2 instanceId)

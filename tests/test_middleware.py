@@ -270,12 +270,43 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(self.middleware._calculate_reduction_factor(10, 75.18), 2.48)
         self.assertEqual(self.middleware._calculate_reduction_factor(1.01, 75.18), 1.01)
 
-    def test__process_simulated_orders(self):
+    @mock.patch("flumine.markets.middleware.config")
+    def test__process_simulated_orders_strategy_isolation(self, mock_config):
+        mock_config.simulated_strategy_isolation = True
         mock_market_book = mock.Mock()
         mock_market = mock.Mock()
         mock_order = mock.Mock(
-            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE
+            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE, side="LAY"
         )
+        mock_order.order_type.price = 1.02
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order_two = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.PENDING
+        )
+        mock_order_three = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE, simulated=False
+        )
+        mock_market.blotter._strategy_orders = {
+            "test": [mock_order, mock_order_two, mock_order_three]
+        }
+        mock_market_analytics = {
+            (mock_order.selection_id, mock_order.handicap): mock.Mock(traded={1: 2})
+        }
+        mock_market.market_book = mock_market_book
+        self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
+        mock_order.simulated.assert_called_with(mock_market_book, {1: 2})
+        mock_order_two.simulated.assert_not_called()
+
+    @mock.patch("flumine.markets.middleware.config")
+    def test__process_simulated_orders(self, mock_config):
+        mock_config.simulated_strategy_isolation = False
+        mock_market_book = mock.Mock()
+        mock_market = mock.Mock()
+        mock_order = mock.Mock(
+            selection_id=123, handicap=1, status=OrderStatus.EXECUTABLE, side="LAY"
+        )
+        mock_order.order_type.price = 1.02
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order_two = mock.Mock(
             selection_id=123, handicap=1, status=OrderStatus.PENDING
         )
@@ -287,11 +318,51 @@ class SimulatedMiddlewareTest(unittest.TestCase):
             mock_order_two,
             mock_order_three,
         ]
-        mock_market_analytics = {(mock_order.selection_id, mock_order.handicap): "test"}
+        mock_market_analytics = {
+            (mock_order.selection_id, mock_order.handicap): mock.Mock(traded={1: 2})
+        }
         mock_market.market_book = mock_market_book
         self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
-        mock_order.simulated.assert_called_with(mock_market_book, "test")
+        mock_order.simulated.assert_called_with(mock_market_book, {1: 2})
         mock_order_two.simulated.assert_not_called()
+
+    def test__sort_orders(self):
+        order_one = mock.Mock(side="LAY", bet_id=1)
+        order_one.order_type.price = 1.01
+        order_two = mock.Mock(side="LAY", bet_id=2)
+        order_two.order_type.price = 1.02
+        order_three = mock.Mock(side="LAY", bet_id=3)
+        order_three.order_type.price = 1.01
+        order_four = mock.Mock(side="BACK", bet_id=4)
+        order_four.order_type.price = 1.2
+        order_five = mock.Mock(side="BACK", bet_id=5)
+        order_five.order_type.price = 1.2
+        order_six = mock.Mock(side="BACK", bet_id=6)
+        order_six.order_type.price = 1.19
+        order_seven = mock.Mock(side="BACK", bet_id=6)
+        order_seven.order_type.price = "ERROR"
+        order_seven.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        orders = [
+            order_one,
+            order_two,
+            order_three,
+            order_four,
+            order_five,
+            order_six,
+            order_seven,
+        ]
+        self.assertEqual(
+            self.middleware._sort_orders(orders),
+            [
+                order_two,
+                order_one,
+                order_three,
+                order_six,
+                order_four,
+                order_five,
+                order_seven,
+            ],
+        )
 
     @mock.patch("flumine.markets.middleware.RunnerAnalytics")
     def test__process_runner(self, mock_runner_analytics):

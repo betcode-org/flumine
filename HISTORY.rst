@@ -3,6 +3,24 @@
 Release History
 ---------------
 
+1.21.0 (2022-01-06)
++++++++++++++++++++
+
+**Improvements**
+
+- #528 smart matching on passive orders
+- #544 market exposure refactor (*breaking change)
+
+**Bug Fixes**
+
+- #528 simulation processing on in flight requests
+- #541 handle betTargetSize
+- Example typo (@petercoles)
+
+**Libraries**
+
+- black upgraded to 21.12b0
+
 1.20.13 (2021-12-03)
 +++++++++++++++++++
 

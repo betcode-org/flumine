@@ -39,13 +39,12 @@ class SimulatedTest(unittest.TestCase):
     def test_call_process_traded(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
-        mock_market_book = mock.Mock()
-        mock_market_book.bsp_reconciled = False
-        mock_runner_analytics = mock.Mock()
-        self.simulated(mock_market_book, mock_runner_analytics)
+        mock_market_book = mock.Mock(bsp_reconciled=False)
+        traded = {1: 2}
+        self.simulated(mock_market_book, traded)
         mock__process_sp.assert_not_called()
         mock__process_traded.assert_called_with(
-            mock_market_book.publish_time_epoch, mock_runner_analytics.traded
+            mock_market_book.publish_time_epoch, traded
         )
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
@@ -135,6 +134,19 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
+
+    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    def test_place_limit_back_target_size(self, mock__get_runner):
+        self.mock_order.order_type.size = None
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        with self.assertRaises(NotImplementedError):
+            self.simulated.place(mock_order_package, mock_market_book, {}, 1)
 
     @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
     def test_place_market_status(self, mock__get_runner):
@@ -605,9 +617,9 @@ class SimulatedTest(unittest.TestCase):
         mock__calculate_process_traded.assert_not_called()
 
     def test__calculate_process_traded(self):
-        self.simulated._calculate_process_traded(1234582, 2.00)
-        self.simulated._calculate_process_traded(1234583, 2.00)
-        self.simulated._calculate_process_traded(1234584, 2.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234582, 2.00), 2)
+        self.assertEqual(self.simulated._calculate_process_traded(1234583, 2.00), 2)
+        self.assertEqual(self.simulated._calculate_process_traded(1234584, 2.00), 0)
         self.assertEqual(
             self.simulated.matched, [[1234582, 12, 1.00], [1234583, 12, 1.00]]
         )
@@ -615,11 +627,18 @@ class SimulatedTest(unittest.TestCase):
 
     def test__calculate_process_traded_piq(self):
         self.simulated._piq = 2.00
-        self.simulated._calculate_process_traded(1234585, 4.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234585, 4.00), 4)
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 0)
-        self.simulated._calculate_process_traded(1234586, 4.00)
+        self.assertEqual(self.simulated._calculate_process_traded(1234586, 4.00), 4)
         self.assertEqual(self.simulated.matched, [[1234586, 12, 2.00]])
+        self.assertEqual(self.simulated._piq, 0)
+        self.assertEqual(self.simulated._calculate_process_traded(1234586, 4.00), 0)
+
+    def test__calculate_process_traded_piq_match(self):
+        self.simulated._piq = 4.00
+        self.assertEqual(self.simulated._calculate_process_traded(1234585, 20.00), 12)
+        self.assertEqual(self.simulated.matched, [[1234585, 12, 2.0]])
         self.assertEqual(self.simulated._piq, 0)
 
     def test_take_sp(self):
@@ -652,6 +671,13 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.average_price_matched, 10.0)
 
     def test_size_remaining(self):
+        self.assertEqual(self.simulated.size_remaining, 2)
+        self.simulated._update_matched([1234, 1, 1])
+        self.assertEqual(self.simulated.size_remaining, 1)
+
+    def test_size_remaining_target(self):
+        self.mock_order.order_type.size = None
+        self.mock_order.order_type.bet_target_size = 2
         self.assertEqual(self.simulated.size_remaining, 2)
         self.simulated._update_matched([1234, 1, 1])
         self.assertEqual(self.simulated.size_remaining, 1)

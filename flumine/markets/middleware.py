@@ -4,6 +4,7 @@ from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
 from ..utils import wap
+from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -180,14 +181,81 @@ class SimulatedMiddleware(Middleware):
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01
 
-    @staticmethod
-    def _process_simulated_orders(market, market_analytics: dict) -> None:
-        for order in market.blotter.live_orders:
-            if order.status == OrderStatus.EXECUTABLE and order.simulated:
-                runner_analytics = market_analytics[
-                    (order.selection_id, order.handicap)
+    def _process_simulated_orders(self, market, market_analytics: dict) -> None:
+        """
+        #538 smart matching
+          - isolation per order
+            Potential double counting of passive liquidity, old logic no longer implemented
+          - isolation per strategy (default)
+            Prevent double counting of passive liquidity per strategy
+          - isolation per instance
+            Prevent double counting of passive liquidity on all orders regardless of strategy (interaction across strategies)
+        """
+        # isolation per strategy (default)
+        if config.simulated_strategy_isolation:
+            for strategy, orders in market.blotter._strategy_orders.items():
+                live_orders = [
+                    o
+                    for o in orders
+                    if o.status
+                    in [
+                        OrderStatus.EXECUTABLE,
+                        OrderStatus.CANCELLING,
+                        OrderStatus.UPDATING,
+                        OrderStatus.REPLACING,
+                    ]
+                    and o.simulated
                 ]
-                order.simulated(market.market_book, runner_analytics)
+                if live_orders:
+                    _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                    live_orders_sorted = self._sort_orders(live_orders)
+                    for order in live_orders_sorted:
+                        runner_traded = _lookup[(order.selection_id, order.handicap)]
+                        order.simulated(market.market_book, runner_traded)
+        else:  # isolation per instance
+            live_orders = list(market.blotter.live_orders)
+            if live_orders:
+                _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                live_orders_sorted = self._sort_orders(live_orders)
+                for order in live_orders_sorted:
+                    if (
+                        order.status
+                        in [
+                            OrderStatus.EXECUTABLE,
+                            OrderStatus.CANCELLING,
+                            OrderStatus.UPDATING,
+                            OrderStatus.REPLACING,
+                        ]
+                        and order.simulated
+                    ):
+                        runner_traded = _lookup[(order.selection_id, order.handicap)]
+                        order.simulated(market.market_book, runner_traded)
+
+    @staticmethod
+    def _sort_orders(orders: list) -> list:
+        # order by betId (default), side (Lay,Back) and then price
+        lay_orders = sorted(
+            [
+                o
+                for o in orders
+                if o.side == "LAY"
+                and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
+            ],
+            key=lambda x: -x.order_type.price,
+        )
+        back_orders = sorted(
+            [
+                o
+                for o in orders
+                if o.side == "BACK"
+                and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
+            ],
+            key=lambda x: x.order_type.price,
+        )
+        moc = [
+            o for o in orders if o.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
+        ]
+        return lay_orders + back_orders + moc
 
     @staticmethod
     def _process_runner(
