@@ -68,7 +68,7 @@ class OrderValidation(BaseControl):
             size = order.order_type.size or order.order_type.bet_target_size
             if (
                 size < client.min_bet_size
-                and (order.order_type.price * size) < client.min_bet_payout
+                and (order.order_type.price - 1) * size < client.min_bet_payout
             ):
                 self._on_error(
                     order,
