@@ -9,10 +9,12 @@ Release History
 **Improvements**
 
 - #528 smart matching on passive orders
+- #544 market exposure refactor (*breaking change)
 
 **Bug Fixes**
 
 - #528 simulation processing on in flight requests
+- Example typo (@petercoles)
 
 **Libraries**
 
