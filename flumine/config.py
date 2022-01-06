@@ -2,6 +2,7 @@ import os
 import socket
 
 simulated = False
+simulated_strategy_isolation = True
 
 instance_id = None  # instance id (e.g. AWS ec2 instanceId)
 

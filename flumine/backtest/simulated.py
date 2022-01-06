@@ -33,7 +33,7 @@ class Simulated:
         self._piq = 0.0
         self._bsp_reconciled = False
 
-    def __call__(self, market_book: MarketBook, runner_analytics) -> None:
+    def __call__(self, market_book: MarketBook, traded: dict) -> None:
         # simulates order matching
         if self._bsp_reconciled is False and market_book.bsp_reconciled:
             if self.take_sp:
@@ -52,10 +52,8 @@ class Simulated:
                         return
 
             # todo estimated piq cancellations
-            if runner_analytics.traded:
-                self._process_traded(
-                    market_book.publish_time_epoch, runner_analytics.traded
-                )
+            if traded:
+                self._process_traded(market_book.publish_time_epoch, traded)
 
     def place(
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int
@@ -94,11 +92,10 @@ class Simulated:
                 error_code="RUNNER_REMOVED",
             )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
-            available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
             price = self.order.order_type.price
             size = self.order.order_type.size
             if self.order.side == "BACK":
+                available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
                 if (
                     not order_package.client.best_price_execution
                     and available_to_back > price
@@ -119,6 +116,7 @@ class Simulated:
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
+                available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
                 if (
                     not order_package.client.best_price_execution
                     and available_to_lay < price
@@ -331,14 +329,18 @@ class Simulated:
                     )
                 )
             if side == "BACK" and traded_price >= price:
-                self._calculate_process_traded(publish_time, traded_size)
+                matched = self._calculate_process_traded(publish_time, traded_size)
+                if matched:
+                    traded[traded_price] = traded_size - matched
             elif side == "LAY" and traded_price <= price:
-                self._calculate_process_traded(publish_time, traded_size)
+                matched = self._calculate_process_traded(publish_time, traded_size)
+                if matched:
+                    traded[traded_price] = traded_size - matched
 
-    def _calculate_process_traded(self, publish_time: int, traded_size: float) -> None:
-        traded_size = traded_size / 2
-        if self._piq - traded_size < 0:
-            size = traded_size - self._piq
+    def _calculate_process_traded(self, publish_time: int, traded_size: float) -> float:
+        _traded_size = traded_size / 2
+        if self._piq - _traded_size < 0:
+            size = _traded_size - self._piq
             size = round(min(self.size_remaining, size), 2)
             if size:
                 self._update_matched(
@@ -346,15 +348,18 @@ class Simulated:
                         publish_time,
                         self.order.order_type.price,
                         size,
-                    ]  # todo takes the worst price, i.e what was asked
+                    ]
                 )
+            _matched = (self._piq + size) * 2
             self._piq = 0
+            return _matched
         else:
-            self._piq -= traded_size
+            self._piq -= _traded_size
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(
                     "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
                 )
+            return traded_size
 
     @property
     def take_sp(self) -> bool:
