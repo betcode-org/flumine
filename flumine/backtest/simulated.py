@@ -92,11 +92,10 @@ class Simulated:
                 error_code="RUNNER_REMOVED",
             )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
-            available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
             price = self.order.order_type.price
             size = self.order.order_type.size
             if self.order.side == "BACK":
+                available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
                 if (
                     not order_package.client.best_price_execution
                     and available_to_back > price
@@ -117,6 +116,7 @@ class Simulated:
                     return self._create_place_response(bet_id)
                 available = runner.ex.available_to_lay
             else:
+                available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
                 if (
                     not order_package.client.best_price_execution
                     and available_to_lay < price
