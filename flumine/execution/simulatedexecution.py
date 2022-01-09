@@ -132,27 +132,29 @@ class SimulatedExecution(BaseExecution):
                     OrderPackageType.CANCEL,
                 )
 
-                # place new order
-                self._bet_id += 1
-                replacement_order = order.trade.create_order_replacement(
-                    order,
-                    instruction.get("newPrice"),
-                    cancel_instruction_report.size_cancelled,
-                )
-                place_instruction_report = replacement_order.simulated.place(
-                    order_package, market.market_book, instruction, self._bet_id
-                )
-                if place_instruction_report.status == "SUCCESS":
-                    self._order_logger(
-                        replacement_order,
-                        place_instruction_report,
-                        order_package.package_type,
+                # Check we have a size_cancelled to replace?
+                if cancel_instruction_report.size_cancelled > 0.0:
+                    # place new order
+                    self._bet_id += 1
+                    replacement_order = order.trade.create_order_replacement(
+                        order,
+                        instruction.get("newPrice"),
+                        cancel_instruction_report.size_cancelled,
                     )
-                    # add to blotter
-                    market.place_order(replacement_order, execute=False)
-                    replacement_order.executable()
-                elif place_instruction_report.status == "FAILURE":
-                    order.executable()
+                    place_instruction_report = replacement_order.simulated.place(
+                        order_package, market.market_book, instruction, self._bet_id
+                    )
+                    if place_instruction_report.status == "SUCCESS":
+                        self._order_logger(
+                            replacement_order,
+                            place_instruction_report,
+                            order_package.package_type,
+                        )
+                        # add to blotter
+                        market.place_order(replacement_order, execute=False)
+                        replacement_order.executable()
+                    elif place_instruction_report.status == "FAILURE":
+                        order.executable()
 
         # update transaction counts
         order_package.client.add_transaction(len(order_package))

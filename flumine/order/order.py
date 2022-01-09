@@ -400,9 +400,13 @@ class BetfairOrder(BaseOrder):
         )
 
     def create_replace_instruction(self) -> dict:
-        return filters.replace_instruction(
-            bet_id=self.bet_id, new_price=self.update_data["new_price"]
-        )
+        if "new_price" not in self.update_data:
+            # No new_price available, previous order probably matched?
+            return {}
+        else:
+            return filters.replace_instruction(
+                bet_id=self.bet_id, new_price=self.update_data["new_price"]
+            )
 
     # currentOrder
     @property
