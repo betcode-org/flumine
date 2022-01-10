@@ -11,6 +11,10 @@ Release History
 - Process end of flumine on exit
 - Flumine added as var to `strategy.finish` (*breaking change)
 
+**Bug Fixes**
+
+- Correctly add order datetimes on restart
+
 1.21.0 (2022-01-06)
 +++++++++++++++++++
 
