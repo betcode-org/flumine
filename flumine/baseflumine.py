@@ -351,8 +351,7 @@ class BaseFlumine:
         self.log_control(event)
 
     def _process_end_flumine(self) -> None:
-        for strategy in self.strategies:
-            strategy.finish()
+        self.strategies.finish(self)
 
     @property
     def info(self) -> dict:
@@ -396,14 +395,16 @@ class BaseFlumine:
         self._running = True
 
     def __exit__(self, *args):
+        # shutdown framework
+        self._process_end_flumine()
+        # shutdown workers
+        for w in self._workers:
+            w.shutdown()
         # shutdown streams
         self.streams.stop()
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
-        # shutdown workers
-        for w in self._workers:
-            w.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:

@@ -123,7 +123,7 @@ class BaseStrategy:
         # process marketBook after closure
         return
 
-    def finish(self) -> None:
+    def finish(self, flumine) -> None:
         # called before flumine ends
         return
 
@@ -234,6 +234,10 @@ class Strategies:
     def start(self) -> None:
         for s in self:
             s.start()
+
+    def finish(self, flumine) -> None:
+        for s in self:
+            s.finish(flumine)
 
     @property
     def hashes(self) -> dict:
