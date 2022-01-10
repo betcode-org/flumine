@@ -13,6 +13,7 @@ Release History
 
 **Bug Fixes**
 
+- #548 handle execution complete during placement delay
 - Correctly add order datetimes on restart
 
 1.21.0 (2022-01-06)
