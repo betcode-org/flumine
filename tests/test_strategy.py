@@ -25,6 +25,13 @@ class StrategiesTest(unittest.TestCase):
         self.strategies.start()
         mock_strategy.start.assert_called_with()
 
+    def test_finish(self):
+        mock_flumine = mock.Mock()
+        mock_strategy = mock.Mock()
+        self.strategies._strategies.append(mock_strategy)
+        self.strategies.finish(mock_flumine)
+        mock_strategy.finish.assert_called_with(mock_flumine)
+
     def test_iter(self):
         for i in self.strategies:
             assert i
@@ -152,7 +159,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.process_closed_market(None, None)
 
     def test_finish(self):
-        self.strategy.finish()
+        self.strategy.finish(mock.Mock())
 
     def test_remove_market(self):
         self.strategy._invested = {

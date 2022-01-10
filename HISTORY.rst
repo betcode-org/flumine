@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+1.21.1 (2022-01-10)
++++++++++++++++++++
+
+**Improvements**
+
+- Process end of flumine on exit
+- Flumine added as var to `strategy.finish` (*breaking change)
+
+**Bug Fixes**
+
+- #548 handle execution complete during placement delay
+- Correctly add order datetimes on restart
+
 1.21.0 (2022-01-06)
 +++++++++++++++++++
 

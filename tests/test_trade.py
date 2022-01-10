@@ -96,10 +96,8 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [mock_order()])
 
     def test_create_order_error(self):
-        mock_order_type = mock.Mock()
-        mock_order_type.EXCHANGE = "SYM"
-        mock_order = mock.Mock()
-        mock_order.EXCHANGE = "MYS"
+        mock_order_type = mock.Mock(EXCHANGE="SYM")
+        mock_order = mock.Mock(EXCHANGE="MYS")
         with self.assertRaises(OrderError):
             self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
@@ -109,32 +107,32 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [replacement_order])
 
     def test_create_order_from_current_limit(self):
-        mock_current_order = mock.Mock()
-        mock_current_order.order_type = "LIMIT"
+        mock_current_order = mock.Mock(
+            order_type="LIMIT", placed_date=12, matched_date=None, cancelled_date=34
+        )
         order = self.trade.create_order_from_current(mock_current_order, "12345")
         self.assertEqual(order.bet_id, mock_current_order.bet_id)
         self.assertEqual(order.id, "12345")
         self.assertEqual(self.trade.orders, [order])
+        self.assertEqual(order.date_time_created, 12)
+        self.assertEqual(order.date_time_execution_complete, 34)
 
     def test_create_order_from_current_limit_on_close(self):
-        mock_current_order = mock.Mock()
-        mock_current_order.order_type = "LIMIT_ON_CLOSE"
+        mock_current_order = mock.Mock(order_type="LIMIT_ON_CLOSE")
         order = self.trade.create_order_from_current(mock_current_order, "12345")
         self.assertEqual(order.bet_id, mock_current_order.bet_id)
         self.assertEqual(order.id, "12345")
         self.assertEqual(self.trade.orders, [order])
 
     def test_create_order_from_current_market_on_close(self):
-        mock_current_order = mock.Mock()
-        mock_current_order.order_type = "MARKET_ON_CLOSE"
+        mock_current_order = mock.Mock(order_type="MARKET_ON_CLOSE")
         order = self.trade.create_order_from_current(mock_current_order, "12345")
         self.assertEqual(order.bet_id, mock_current_order.bet_id)
         self.assertEqual(order.id, "12345")
         self.assertEqual(self.trade.orders, [order])
 
     def test_create_order_from_current_unknown(self):
-        mock_current_order = mock.Mock()
-        mock_current_order.order_type = "BE"
+        mock_current_order = mock.Mock(order_type="BE")
         with self.assertRaises(NotImplementedError):
             self.trade.create_order_from_current(mock_current_order, "12345")
 

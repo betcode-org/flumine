@@ -157,7 +157,11 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def replace_instructions(self):
-        return [order.create_replace_instruction() for order in self]
+        return [
+            order.create_replace_instruction()
+            for order in self
+            if order.status != OrderStatus.EXECUTION_COMPLETE
+        ]
 
     @classmethod
     def order_limit(cls, package_type: OrderPackageType) -> int:

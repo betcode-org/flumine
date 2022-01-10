@@ -372,14 +372,18 @@ class BaseFlumineTest(unittest.TestCase):
         mock_log_control.assert_called_with(mock_event)
 
     def test__process_end_flumine(self):
+        mock_strategies = mock.Mock()
+        self.base_flumine.strategies = mock_strategies
         self.base_flumine._process_end_flumine()
+        mock_strategies.finish.assert_called_with(self.base_flumine)
 
     def test_info(self):
         self.assertTrue(self.base_flumine.info)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine._process_end_flumine")
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
-    def test_enter_exit(self, mock_log_control, mock_events):
+    def test_enter_exit(self, mock_log_control, mock_events, mock__process_end_flumine):
         control = mock.Mock()
         self.base_flumine._logging_controls = [control]
         self.base_flumine.simulated_execution = mock.Mock()
@@ -390,6 +394,7 @@ class BaseFlumineTest(unittest.TestCase):
             mock_log_control.assert_called_with(mock_events.ConfigEvent(None))
 
         self.assertFalse(self.base_flumine._running)
+        mock__process_end_flumine.assert_called_with()
         self.mock_client.logout.assert_called_with()
         self.base_flumine.simulated_execution.shutdown.assert_called_with()
         self.base_flumine.betfair_execution.shutdown.assert_called_with()

@@ -150,6 +150,13 @@ class Trade:
         )
         order.bet_id = current_order.bet_id
         order.id = order_id
+        # update dates
+        order.date_time_created = current_order.placed_date
+        order.date_time_execution_complete = (
+            current_order.matched_date
+            or current_order.cancelled_date
+            or current_order.lapsed_date
+        )
         self.orders.append(order)
         return order
 
