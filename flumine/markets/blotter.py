@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 
 # https://www.betfair.com/aboutUs/Betfair.Charges/#charges6
 IMPLIED_COMMISSION_RATE = 0.03
+PENDING_STATUS = [
+    OrderStatus.PENDING,
+    OrderStatus.VIOLATION,
+    OrderStatus.EXPIRED,
+]
 
 
 class Blotter:
@@ -151,11 +156,7 @@ class Blotter:
         for order in self.strategy_selection_orders(strategy, *lookup[1:]):
             if order == exclusion:
                 continue
-            if order.status in [
-                OrderStatus.PENDING,
-                OrderStatus.VIOLATION,
-                OrderStatus.EXPIRED,
-            ]:
+            if order.status in PENDING_STATUS:
                 continue
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
                 _size_matched = order.size_matched  # cache

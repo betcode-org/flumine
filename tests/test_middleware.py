@@ -9,6 +9,7 @@ from flumine.markets.middleware import (
     OrderTypes,
     WIN_MINIMUM_ADJUSTMENT_FACTOR,
     PLACE_MINIMUM_ADJUSTMENT_FACTOR,
+    LIVE_STATUS,
 )
 from flumine.order.ordertype import MarketOnCloseOrder
 
@@ -38,6 +39,15 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(self.middleware._runner_removals, [])
         self.assertEqual(WIN_MINIMUM_ADJUSTMENT_FACTOR, 2.5)
         self.assertEqual(PLACE_MINIMUM_ADJUSTMENT_FACTOR, 0)
+        self.assertEqual(
+            LIVE_STATUS,
+            [
+                OrderStatus.EXECUTABLE,
+                OrderStatus.CANCELLING,
+                OrderStatus.UPDATING,
+                OrderStatus.REPLACING,
+            ],
+        )
 
     @mock.patch(
         "flumine.markets.middleware.SimulatedMiddleware._process_simulated_orders"

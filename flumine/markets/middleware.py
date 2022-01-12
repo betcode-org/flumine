@@ -10,6 +10,12 @@ logger = logging.getLogger(__name__)
 
 WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
 PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+LIVE_STATUS = [
+    OrderStatus.EXECUTABLE,
+    OrderStatus.CANCELLING,
+    OrderStatus.UPDATING,
+    OrderStatus.REPLACING,
+]
 
 
 class Middleware:
@@ -193,21 +199,13 @@ class SimulatedMiddleware(Middleware):
         """
         # isolation per strategy (default)
         if config.simulated_strategy_isolation:
+            _base_lookup = {k: v.traded for k, v in market_analytics.items()}
             for strategy, orders in market.blotter._strategy_orders.items():
                 live_orders = [
-                    o
-                    for o in orders
-                    if o.status
-                    in [
-                        OrderStatus.EXECUTABLE,
-                        OrderStatus.CANCELLING,
-                        OrderStatus.UPDATING,
-                        OrderStatus.REPLACING,
-                    ]
-                    and o.simulated
+                    o for o in orders if o.status in LIVE_STATUS and o.simulated
                 ]
                 if live_orders:
-                    _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                    _lookup = _base_lookup.copy()
                     live_orders_sorted = self._sort_orders(live_orders)
                     for order in live_orders_sorted:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
@@ -218,16 +216,7 @@ class SimulatedMiddleware(Middleware):
                 _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
                 live_orders_sorted = self._sort_orders(live_orders)
                 for order in live_orders_sorted:
-                    if (
-                        order.status
-                        in [
-                            OrderStatus.EXECUTABLE,
-                            OrderStatus.CANCELLING,
-                            OrderStatus.UPDATING,
-                            OrderStatus.REPLACING,
-                        ]
-                        and order.simulated
-                    ):
+                    if order.status in LIVE_STATUS and order.simulated:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
                         order.simulated(market.market_book, runner_traded)
 

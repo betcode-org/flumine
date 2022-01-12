@@ -345,15 +345,16 @@ class Simulated:
         _traded_size = traded_size / 2
         if self._piq - _traded_size < 0:
             size = _traded_size - self._piq
-            size = round(min(self.size_remaining, size), 2)
             if size:
-                self._update_matched(
-                    [
-                        publish_time,
-                        self.order.order_type.price,
-                        size,
-                    ]
-                )
+                size = min(self.size_remaining, size)
+                if size:
+                    self._update_matched(
+                        [
+                            publish_time,
+                            self.order.order_type.price,
+                            round(size, 2),
+                        ]
+                    )
             _matched = (self._piq + size) * 2
             self._piq = 0
             return _matched

@@ -11,6 +11,8 @@ from flumine.order.order import (
     OrderTypes,
     OrderStatus,
     VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS,
+    LIVE_STATUS,
+    COMPLETE_STATUS,
 )
 from flumine.exceptions import OrderUpdateError
 
@@ -55,6 +57,24 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.date_time_execution_complete)
         self.assertFalse(self.order.simulated)
         self.assertFalse(self.order._simulated)
+        self.assertEqual(
+            LIVE_STATUS,
+            [
+                OrderStatus.PENDING,
+                OrderStatus.CANCELLING,
+                OrderStatus.UPDATING,
+                OrderStatus.REPLACING,
+                OrderStatus.EXECUTABLE,
+            ],
+        )
+        self.assertEqual(
+            COMPLETE_STATUS,
+            [
+                OrderStatus.EXECUTION_COMPLETE,
+                OrderStatus.EXPIRED,
+                OrderStatus.VIOLATION,
+            ],
+        )
 
     @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")

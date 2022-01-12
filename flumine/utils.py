@@ -175,16 +175,13 @@ def calculate_matched_exposure(mb: list, ml: list) -> Tuple:
     """
     if not mb and not ml:
         return 0.0, 0.0
-    if mb:
-        back_exp = sum(-i[1] for i in mb)
-        back_profit = sum((i[0] - 1) * i[1] for i in mb)
-    else:
-        back_exp, back_profit = 0, 0
-    if ml:
-        lay_exp = sum((i[0] - 1) * -i[1] for i in ml)
-        lay_profit = sum(i[1] for i in ml)
-    else:
-        lay_exp, lay_profit = 0, 0
+    back_exp, back_profit, lay_exp, lay_profit = 0, 0, 0, 0
+    for p, s in mb:
+        back_exp += -s
+        back_profit += (p - 1) * s
+    for p, s in ml:
+        lay_exp += (p - 1) * -s
+        lay_profit += s
     _win = back_profit + lay_exp
     _lose = lay_profit + back_exp
     return round(_win, 2), round(_lose, 2)
@@ -201,8 +198,11 @@ def calculate_unmatched_exposure(ub: list, ul: list) -> Tuple:
     """
     if not ub and not ul:
         return 0.0, 0.0
-    back_exp = sum(-i[1] for i in ub)
-    lay_exp = sum((i[0] - 1) * -i[1] for i in ul)
+    back_exp, lay_exp = 0, 0
+    for p, s in ub:
+        back_exp += -s
+    for p, s in ul:
+        lay_exp += (p - 1) * -s
     return round(lay_exp, 2), round(back_exp, 2)
 
 
@@ -210,9 +210,9 @@ def wap(matched: list) -> Tuple[float, float]:
     if not matched:
         return 0, 0
     a, b = 0, 0
-    for match in matched:
-        a += match[1] * match[2]
-        b += match[2]
+    for _, p, s in matched:
+        a += p * s
+        b += s
     if b == 0 or a == 0:
         return 0, 0
     else:
