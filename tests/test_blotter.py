@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine.markets.blotter import Blotter
+from flumine.markets.blotter import Blotter, PENDING_STATUS
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
 
@@ -19,6 +19,14 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter._trades, {})
         self.assertEqual(self.blotter._strategy_orders, {})
         self.assertEqual(self.blotter._strategy_selection_orders, {})
+        self.assertEqual(
+            PENDING_STATUS,
+            [
+                OrderStatus.PENDING,
+                OrderStatus.VIOLATION,
+                OrderStatus.EXPIRED,
+            ],
+        )
 
     def test_get_order_bet_id(self):
         self.assertIsNone(self.blotter.get_order_bet_id("123"))

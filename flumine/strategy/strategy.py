@@ -227,6 +227,8 @@ class Strategies:
         self._strategies = []
 
     def __call__(self, strategy: BaseStrategy, client: BaseClient) -> None:
+        if strategy.name in [s.name for s in self]:
+            logger.warning("Strategy of same name '{0}' already added".format(strategy))
         strategy.client = client
         self._strategies.append(strategy)
         strategy.add()

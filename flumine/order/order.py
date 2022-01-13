@@ -39,6 +39,20 @@ class OrderStatus(Enum):
     VIOLATION = "Violation"  # order never placed due to failing controls
 
 
+LIVE_STATUS = [
+    OrderStatus.PENDING,
+    OrderStatus.CANCELLING,
+    OrderStatus.UPDATING,
+    OrderStatus.REPLACING,
+    OrderStatus.EXECUTABLE,
+]
+COMPLETE_STATUS = [
+    OrderStatus.EXECUTION_COMPLETE,
+    OrderStatus.EXPIRED,
+    OrderStatus.VIOLATION,
+]
+
+
 class BaseOrder:
 
     EXCHANGE = None
@@ -157,19 +171,9 @@ class BaseOrder:
     def _is_complete(self) -> bool:
         """Returns False if order is
         live or pending in the market"""
-        if self.status in [
-            OrderStatus.PENDING,
-            OrderStatus.CANCELLING,
-            OrderStatus.UPDATING,
-            OrderStatus.REPLACING,
-            OrderStatus.EXECUTABLE,
-        ]:
+        if self.status in LIVE_STATUS:
             return False
-        elif self.status in [
-            OrderStatus.EXECUTION_COMPLETE,
-            OrderStatus.EXPIRED,
-            OrderStatus.VIOLATION,
-        ]:
+        elif self.status in COMPLETE_STATUS:
             return True
         else:
             return False  # default to False
