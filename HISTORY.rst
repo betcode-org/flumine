@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+1.21.2 (2022-01-13)
++++++++++++++++++++
+
+**Improvements**
+
+- license update
+- strategy warning on duplicate names
+- minor optimisations for simulation
+
 1.21.1 (2022-01-10)
 +++++++++++++++++++
 
