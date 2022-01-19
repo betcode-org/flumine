@@ -1,10 +1,12 @@
 import logging
 
 from ..clients.clients import ExchangeType
+from ..order.order import OrderStatus
 from ..order.ordertype import OrderTypes
 from ..order.orderpackage import OrderPackageType, BaseOrder
 from . import BaseControl
-from .. import utils
+from .. import utils, config
+from ..streams.orderstream import OrderStream
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +120,55 @@ class MarketValidation(BaseControl):
             self._on_error(order, "MarketBook is not available")
         elif market.market_book.status != "OPEN":
             self._on_error(order, "Market is not open")
+
+
+class ExecutionValidation(BaseControl):
+    """
+    Validates the OrderStream is connected when executing bets
+    """
+
+    NAME = "EXECUTION_VALIDATION"
+
+    @property
+    def order_stream_connected(self):
+        for stream in self.flumine.streams:
+            if isinstance(stream, OrderStream):
+                if stream._stream._running:  # todo: add property in bflw
+                    return True
+        return False
+
+    @staticmethod
+    def failed_execution_attempts(responses):
+        return len([response for response in responses if response.status != "SUCCESS"])
+
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+        if self.flumine.BACKTEST or self.flumine.client.paper_trade:
+            return
+
+        if order.EXCHANGE == ExchangeType.BETFAIR:
+            if package_type == OrderPackageType.REPLACE:
+                failed_attempts = self.failed_execution_attempts(
+                    order.responses.replace_responses
+                )
+            elif package_type == OrderPackageType.UPDATE:
+                failed_attempts = self.failed_execution_attempts(
+                    order.responses.update_responses
+                )
+            elif package_type == OrderPackageType.CANCEL:
+                failed_attempts = self.failed_execution_attempts(
+                    order.responses.cancel_responses
+                )
+            else:
+                return
+
+            if (
+                not self.order_stream_connected
+                and failed_attempts >= config.execution_retry_attempts
+            ):
+                self._on_error(
+                    order,
+                    "OrderStream is not connected, execution of orders is blocked until OrderStream is reconnected",
+                )
 
 
 class StrategyExposure(BaseControl):
