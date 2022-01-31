@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+1.21.3 (2022-01-31)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+- trading control exposure bug revert
+
 1.21.2 (2022-01-13)
 +++++++++++++++++++
 

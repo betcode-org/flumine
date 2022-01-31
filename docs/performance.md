@@ -126,6 +126,14 @@ Profiling code is always the best option for finding improvements, `cprofilev` i
 python -m cprofilev examples/backtest.py
 ```
 
+### Middleware
+
+If you don't need the simulation middleware remove it from `framework._market_middleware`, this is useful when processing markets for data collection. This can dramatically improve processing time due to the heavy functions contained in the simulation logic.
+
+### Libraries
+
+Installing betfairlightweight[speed] will have a big impact on processing speed due to the inclusion of C and Rust libraries for datetime and json decoding.
+
 ## Live
 
 For improving live trading 'Strategy' and 'cprofile' tips above will help although CPU load tends to be considerably lower compared to backtesting.
