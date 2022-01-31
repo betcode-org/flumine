@@ -102,6 +102,10 @@ class Blotter:
                     runner.handicap,
                 ):
                     order.runner_status = runner.status
+                    order.market_type = market_book.market_definition.market_type
+                    order.each_way_divisor = (
+                        market_book.market_definition.each_way_divisor
+                    )
                     if number_of_winners > market_book.number_of_winners:
                         order.number_of_dead_heat_winners = number_of_winners
 

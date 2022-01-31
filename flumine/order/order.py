@@ -76,6 +76,8 @@ class BaseOrder:
         self.lookup = self.market_id, self.selection_id, self.handicap
 
         self.runner_status = None  # RunnerBook.status
+        self.market_type = None
+        self.each_way_divisor = 1
         self.number_of_dead_heat_winners = None
         self.status = None
         self.complete = False
@@ -228,10 +230,9 @@ class BaseOrder:
 
     @property
     def elapsed_seconds(self) -> Optional[float]:
-        if self.responses.date_time_placed:
-            return (
-                datetime.datetime.utcnow() - self.responses.date_time_placed
-            ).total_seconds()
+        date_time_placed = self.responses.date_time_placed
+        if date_time_placed:
+            return (datetime.datetime.utcnow() - date_time_placed).total_seconds()
         else:
             return
 
