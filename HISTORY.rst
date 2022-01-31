@@ -8,7 +8,8 @@ Release History
 
 **Improvements**
 
--
+- Each Way simulated profit handled
+- ExecutionValidation control to prevent failed requests being sent continuously, not added by default (@lunswor)
 
 **Bug Fixes**
 
