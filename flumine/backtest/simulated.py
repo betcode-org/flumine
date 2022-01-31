@@ -400,13 +400,15 @@ class Simulated:
 
     @property
     def profit(self) -> float:
+        number_of_dead_heat_winners = self.order.number_of_dead_heat_winners or 1
         if self.order.market_type == "EACH_WAY":
-            # todo dead heat
             divisor = self.order.each_way_divisor
             win = self.size_matched * (self.average_price_matched - 1)
             place = self.size_matched * (
                 (self.average_price_matched - 1) * (1 / divisor)
             )
+            if number_of_dead_heat_winners > 1:  # todo dead heat
+                logger.error("Each Way Dead Heat Detected but not handled")
             if self.order.runner_status == "WINNER":
                 profit = round(win + place, 2)
                 if self.side == "BACK":
@@ -430,9 +432,6 @@ class Simulated:
                 return 0.0
         else:
             if self.order.runner_status == "WINNER":
-                number_of_dead_heat_winners = (
-                    self.order.number_of_dead_heat_winners or 1
-                )
                 profit = (self.size_matched / number_of_dead_heat_winners) * (
                     self.average_price_matched - 1
                 )

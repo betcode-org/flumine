@@ -40,6 +40,8 @@ class BaseOrderTest(unittest.TestCase):
             (self.order.market_id, self.order.selection_id, self.order.handicap),
         )
         self.assertIsNone(self.order.runner_status)
+        self.assertIsNone(self.order.market_type)
+        self.assertEqual(self.order.each_way_divisor, 1)
         self.assertIsNone(self.order.status)
         self.assertFalse(self.order.complete)
         self.assertEqual(self.order.status_log, [])

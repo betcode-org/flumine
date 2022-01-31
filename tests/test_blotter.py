@@ -121,6 +121,13 @@ class BlotterTest(unittest.TestCase):
         self.blotter._orders = {"12345": mock_order}
         self.blotter.process_closed_market(mock_market_book)
         self.assertEqual(mock_order.runner_status, mock_runner.status)
+        self.assertEqual(
+            mock_order.market_type, mock_market_book.market_definition.market_type
+        )
+        self.assertEqual(
+            mock_order.each_way_divisor,
+            mock_market_book.market_definition.each_way_divisor,
+        )
 
     def test_process_cleared_orders(self):
         mock_cleared_orders = mock.Mock()
