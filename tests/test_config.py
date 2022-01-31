@@ -18,3 +18,4 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config.update_latency, 0.150)
         self.assertEqual(config.replace_latency, 0.280)
         self.assertEqual(config.order_sep, "-")
+        self.assertEqual(config.execution_retry_attempts, 10)

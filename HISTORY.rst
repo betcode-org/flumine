@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.21.3 (2022-01-31)
++++++++++++++++++++
+
+**Improvements**
+
+- Each Way simulated profit handled
+- ExecutionValidation control to prevent failed requests being sent continuously, not added by default (@lunswor)
+
+**Bug Fixes**
+
+- trading control exposure bug revert
+
 1.21.2 (2022-01-13)
 +++++++++++++++++++
 

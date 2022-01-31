@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 
+from flumine import config
 from flumine.controls.tradingcontrols import (
     OrderValidation,
     StrategyExposure,
@@ -8,9 +9,11 @@ from flumine.controls.tradingcontrols import (
     ExchangeType,
     OrderPackageType,
     MarketValidation,
+    ExecutionValidation,
 )
 from flumine.markets.blotter import Blotter
 from flumine.order.order import OrderStatus
+from flumine.streams.orderstream import OrderStream
 
 
 class TestOrderValidation(unittest.TestCase):
@@ -345,6 +348,163 @@ class TestMarketValidation(unittest.TestCase):
         self.mock_market.market_book = None
         self.trading_control._validate_betfair_market_status(self.mock_order)
         mock_on_error.assert_called()
+
+
+class TestExecutionValidation(unittest.TestCase):
+    def setUp(self):
+        self.mock_order_stream = mock.Mock(
+            spec=OrderStream, _stream=mock.Mock(_running=True)
+        )
+        self.mock_flumine = mock.Mock(
+            BACKTEST=False,
+            client=mock.Mock(paper_trade=False),
+            streams=[self.mock_order_stream],
+        )
+        self.trading_control = ExecutionValidation(self.mock_flumine)
+        self.mock_order = mock.Mock(
+            EXCHANGE=ExchangeType.BETFAIR,
+            responses=mock.Mock(
+                replace_responses=[], update_responses=[], cancel_responses=[]
+            ),
+        )
+
+    def tearDown(self) -> None:
+        config.execution_retry_attempts = 10
+
+    def test_order_stream_connected(self):
+        self.assertTrue(self.trading_control.order_stream_connected)
+        self.mock_order_stream._stream._running = False
+        self.assertFalse(self.trading_control.order_stream_connected)
+
+    def test_order_stream_missing(self):
+        self.mock_flumine.streams = []
+        self.assertFalse(self.trading_control.order_stream_connected)
+
+    def test_failed_execution_attempts(self):
+        mock_responses = [
+            mock.Mock(status="SUCCESS"),
+            mock.Mock(status="SUCCESS"),
+            mock.Mock(status="SUCCESS"),
+        ]
+        self.assertEqual(
+            self.trading_control.failed_execution_attempts(mock_responses), 0
+        )
+
+        mock_responses = [
+            mock.Mock(status="FAILURE"),
+            mock.Mock(status="SUCCESS"),
+            mock.Mock(status="TIMEOUT"),
+        ]
+        self.assertEqual(
+            self.trading_control.failed_execution_attempts(mock_responses), 2
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation._on_error")
+    def test_validate_order(self, mock_on_error):
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_not_called()
+
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.REPLACE)
+        mock_on_error.assert_not_called()
+
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.UPDATE)
+        mock_on_error.assert_not_called()
+
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_on_error.assert_not_called()
+
+    @mock.patch(
+        "flumine.controls.tradingcontrols.ExecutionValidation.failed_execution_attempts"
+    )
+    def test_validate_order_responses(self, mock_failed_execution_attempts):
+        self.mock_replace_responses = [mock.Mock()]
+        self.mock_order.responses.replace_responses = self.mock_replace_responses
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.REPLACE)
+        mock_failed_execution_attempts.assert_called_with(self.mock_replace_responses)
+
+        mock_failed_execution_attempts.reset_mock()
+
+        self.mock_update_responses = [mock.Mock()]
+        self.mock_order.responses.update_responses = self.mock_update_responses
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.UPDATE)
+        mock_failed_execution_attempts.assert_called_with(self.mock_update_responses)
+
+        mock_failed_execution_attempts.reset_mock()
+
+        self.mock_cancel_responses = [mock.Mock()]
+        self.mock_order.responses.cancel_responses = self.mock_cancel_responses
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_failed_execution_attempts.assert_called_with(self.mock_cancel_responses)
+
+    @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation._on_error")
+    @mock.patch(
+        "flumine.controls.tradingcontrols.ExecutionValidation.order_stream_connected",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.controls.tradingcontrols.ExecutionValidation.failed_execution_attempts"
+    )
+    def test_validate_error(
+        self, mock_failed_execution_attempts, mock_order_stream_connected, mock_on_error
+    ):
+        mock_failed_execution_attempts.return_value = 5
+        mock_order_stream_connected.return_value = False
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_on_error.assert_not_called()
+
+        mock_failed_execution_attempts.return_value = 12
+        mock_order_stream_connected.return_value = True
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_on_error.assert_not_called()
+
+        mock_failed_execution_attempts.return_value = 12
+        mock_order_stream_connected.return_value = False
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_on_error.assert_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation._on_error")
+    @mock.patch(
+        "flumine.controls.tradingcontrols.ExecutionValidation.order_stream_connected",
+        new_callable=mock.PropertyMock,
+    )
+    @mock.patch(
+        "flumine.controls.tradingcontrols.ExecutionValidation.failed_execution_attempts"
+    )
+    def test__validate_execution_retry_attempts(
+        self, mock_failed_execution_attempts, mock_order_stream_connected, mock_on_error
+    ):
+        mock_failed_execution_attempts.return_value = 5
+        mock_order_stream_connected.return_value = False
+        config.execution_retry_attempts = 4
+        self.trading_control.validate_order(self.mock_order, OrderPackageType.CANCEL)
+        mock_on_error.assert_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
+    def test__validate(self, mock_validate_order):
+        self.mock_flumine.BACKTEST = False
+        self.mock_flumine.client.paper_trade = False
+        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
+        mock_validate_order.assert_called()
+
+        mock_validate_order.reset_mock()
+
+        self.mock_flumine.BACKTEST = True
+        self.mock_flumine.client.paper_trade = False
+        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
+        mock_validate_order.assert_not_called()
+
+        mock_validate_order.reset_mock()
+
+        self.mock_flumine.BACKTEST = False
+        self.mock_flumine.client.paper_trade = True
+        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
+        mock_validate_order.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
+    def test__validate_exchange(self, mock_validate_order):
+        self.mock_order.EXCHANGE = "OTHER"
+        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
+        mock_validate_order.assert_not_called()
 
 
 class TestStrategyExposure(unittest.TestCase):

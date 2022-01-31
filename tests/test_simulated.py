@@ -738,6 +738,31 @@ class SimulatedTest(unittest.TestCase):
         self.simulated._update_matched([1234, 11.0, 50.0])
         self.assertEqual(self.simulated.profit, 87.50)
 
+    def test_profit_ew_back(self):
+        self.simulated.order.market_type = "EACH_WAY"
+        self.simulated.order.each_way_divisor = 5
+        self.assertEqual(self.simulated.profit, 0)
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 10.0, 2.0])
+        self.assertEqual(self.simulated.profit, 21.6)
+        self.simulated.order.runner_status = "PLACED"
+        self.assertEqual(self.simulated.profit, 1.6)
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, -4.0)
+
+    def test_profit_ew_lay(self):
+        self.simulated.order.side = "LAY"
+        self.simulated.order.market_type = "EACH_WAY"
+        self.simulated.order.each_way_divisor = 5
+        self.assertEqual(self.simulated.profit, 0)
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1234, 10.0, 2.0])
+        self.assertEqual(self.simulated.profit, -21.6)
+        self.simulated.order.runner_status = "PLACED"
+        self.assertEqual(self.simulated.profit, -1.6)
+        self.simulated.order.runner_status = "LOSER"
+        self.assertEqual(self.simulated.profit, 4.0)
+
     @mock.patch(
         "flumine.backtest.simulated.Simulated.size_remaining",
         new_callable=mock.PropertyMock,
