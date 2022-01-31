@@ -29,3 +29,5 @@ update_latency = 0.150
 replace_latency = 0.280
 
 order_sep = "-"  # customer_order_ref separator
+
+execution_retry_attempts = 10  # cancel attempts when the OrderStream is not connected
