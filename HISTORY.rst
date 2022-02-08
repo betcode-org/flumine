@@ -12,7 +12,7 @@ Release History
 
 **Libraries**
 
-- betfairlightweight upgraded to 2.15.3
+- betfairlightweight upgraded to 2.15.4
 - black upgraded to 22.1.0
 
 1.21.3 (2022-01-31)
