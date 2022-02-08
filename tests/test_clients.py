@@ -1,8 +1,10 @@
 import unittest
 from unittest import mock
+from betfairlightweight.metadata import currency_parameters
 
 from flumine.clients.clients import ExchangeType
 from flumine.clients import BaseClient, BetfairClient, BacktestClient
+from flumine.clients import betfairclient
 
 
 class ClientsTest(unittest.TestCase):
@@ -110,6 +112,18 @@ class BetfairClientTest(unittest.TestCase):
         self.mock_betting_client = mock.Mock(lightweight=False)
         self.betfair_client = BetfairClient(self.mock_betting_client)
 
+    def test_init(self):
+        self.assertEqual(
+            betfairclient.MIN_BET_SIZE, currency_parameters["GBP"]["min_bet_size"]
+        )
+        self.assertEqual(
+            betfairclient.MIN_BSP_LIABILITY,
+            currency_parameters["GBP"]["min_bsp_liability"],
+        )
+        self.assertEqual(
+            betfairclient.MIN_BET_PAYOUT, currency_parameters["GBP"]["min_bet_payout"]
+        )
+
     def test_login(self):
         self.betfair_client.login()
         self.mock_betting_client.login.assert_called_with()
@@ -149,18 +163,18 @@ class BetfairClientTest(unittest.TestCase):
         mock_account_details = mock.Mock()
         mock_account_details.currency_code = "GBP"
         self.betfair_client.account_details = mock_account_details
-        self.assertEqual(self.betfair_client.min_bet_size, 2)
+        self.assertEqual(self.betfair_client.min_bet_size, 1)
 
     def test_min_bet_size_none(self):
         mock_account_details = mock.Mock()
         mock_account_details.currency_code = None
         self.betfair_client.account_details = mock_account_details
-        self.assertEqual(self.betfair_client.min_bet_size, 2)
+        self.assertEqual(self.betfair_client.min_bet_size, 1)
 
     def test_min_bet_size_ac_none(self):
         mock_account_details = None
         self.betfair_client.account_details = mock_account_details
-        self.assertEqual(self.betfair_client.min_bet_size, 2)
+        self.assertEqual(self.betfair_client.min_bet_size, 1)
 
     def test_min_bsp_liability(self):
         mock_account_details = mock.Mock()
@@ -217,7 +231,7 @@ class BacktestClientTest(unittest.TestCase):
 
     def test_min_bet_size(self):
         self.backtest_client.update_account_details()
-        self.assertEqual(self.backtest_client.min_bet_size, 2)
+        self.assertEqual(self.backtest_client.min_bet_size, 1)
 
     def test_min_bsp_liability(self):
         self.backtest_client.update_account_details()
