@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.21.4 (2022-02-08)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove currency parameters hard coding
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.15.3
+- black upgraded to 22.1.0
+
 1.21.3 (2022-01-31)
 +++++++++++++++++++
 

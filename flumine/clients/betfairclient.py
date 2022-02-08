@@ -9,9 +9,9 @@ from .clients import ExchangeType
 logger = logging.getLogger(__name__)
 
 # default to GBP on error
-MIN_BET_SIZE = 2
-MIN_BSP_LIABILITY = 10
-MIN_BET_PAYOUT = 10
+MIN_BET_SIZE = currency_parameters["GBP"]["min_bet_size"]
+MIN_BSP_LIABILITY = currency_parameters["GBP"]["min_bsp_liability"]
+MIN_BET_PAYOUT = currency_parameters["GBP"]["min_bet_payout"]
 
 
 class BetfairClient(BaseClient):
