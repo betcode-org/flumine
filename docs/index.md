@@ -28,7 +28,7 @@ Betfair trading framework with a focus on:
 
 Support for market, order and custom streaming data.
 
-[join slack group](https://betfairlightweight.herokuapp.com)
+[join slack group](https://join.slack.com/t/betfairlightweight/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
 Tested on Python 3.6, 3.7, 3.8, 3.9 and 3.10.
 
