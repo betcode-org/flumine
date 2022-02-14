@@ -2,14 +2,71 @@ import unittest
 from unittest import mock
 from betfairlightweight.metadata import currency_parameters
 
-from flumine.clients.clients import ExchangeType
+from flumine.clients.clients import ExchangeType, Clients
 from flumine.clients import BaseClient, BetfairClient, BacktestClient
 from flumine.clients import betfairclient
 
 
 class ClientsTest(unittest.TestCase):
+    def setUp(self):
+        self.clients = Clients()
+
     def test_exchange_type(self):
+        self.assertEqual(len(ExchangeType), 3)
         assert ExchangeType
+
+    def test_init(self):
+        self.assertEqual(self.clients._clients, [])
+        self.assertEqual(
+            self.clients._exchange_clients,
+            {exchange.name: {} for exchange in ExchangeType},
+        )
+
+    def test_login(self):
+        mock_client = unittest.mock.Mock()
+        self.clients._clients = [mock_client]
+        self.clients.login()
+        mock_client.login.assert_called_with()
+
+    def test_keep_alive(self):
+        mock_client = unittest.mock.Mock()
+        self.clients._clients = [mock_client]
+        self.clients.keep_alive()
+        mock_client.keep_alive.assert_called_with()
+
+    def test_logout(self):
+        mock_client = unittest.mock.Mock()
+        self.clients._clients = [mock_client]
+        self.clients.logout()
+        mock_client.logout.assert_called_with()
+
+    def test_update_account_details(self):
+        mock_client = unittest.mock.Mock()
+        self.clients._clients = [mock_client]
+        self.clients.update_account_details()
+        mock_client.update_account_details.assert_called_with()
+
+    def test_extra(self):
+        self.assertEqual(
+            self.clients.extra, {exchange.name: {} for exchange in ExchangeType}
+        )
+        mock_client = mock.Mock()
+        self.clients._exchange_clients[ExchangeType.BETFAIR.name]["james"] = mock_client
+        self.assertEqual(
+            self.clients.extra,
+            {
+                ExchangeType.BETFAIR.name: {"james": mock_client.extra},
+                ExchangeType.SIMULATED.name: {},
+                ExchangeType.BETCONNECT.name: {},
+            },
+        )
+
+    def test_iter(self):
+        for i in self.clients:
+            assert i
+
+    def test_len(self):
+        self.assertEqual(len(self.clients), 0)
 
 
 class BaseClientTest(unittest.TestCase):
