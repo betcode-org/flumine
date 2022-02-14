@@ -76,6 +76,10 @@ class BaseClient:
                 control.add_transaction(count, failed)
 
     @property
+    def username(self) -> str:
+        return self.betting_client.username
+
+    @property
     def current_transaction_count_total(self) -> Optional[int]:
         # current hours total transaction count
         for control in self.trading_controls:

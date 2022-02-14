@@ -5,6 +5,7 @@ from betfairlightweight.metadata import currency_parameters
 from flumine.clients.clients import ExchangeType, Clients
 from flumine.clients import BaseClient, BetfairClient, BacktestClient
 from flumine.clients import betfairclient
+from flumine import exceptions
 
 
 class ClientsTest(unittest.TestCase):
@@ -19,7 +20,31 @@ class ClientsTest(unittest.TestCase):
         self.assertEqual(self.clients._clients, [])
         self.assertEqual(
             self.clients._exchange_clients,
-            {exchange.name: {} for exchange in ExchangeType},
+            {exchange: {} for exchange in ExchangeType},
+        )
+
+    def test_add_client(self):
+        mock_client = unittest.mock.Mock(EXCHANGE="test")
+        self.clients._betting_clients = [mock_client]
+        with self.assertRaises(exceptions.ClientError):
+            self.clients.add_client(mock_client)
+
+        self.clients._betting_clients = []
+        with self.assertRaises(exceptions.ClientError):
+            self.clients.add_client(mock_client)
+
+        mock_client.EXCHANGE = ExchangeType.BETFAIR
+        self.assertEqual(self.clients.add_client(mock_client), mock_client)
+        self.assertEqual(self.clients._clients, [mock_client])
+        self.assertEqual(
+            self.clients._exchange_clients[mock_client.EXCHANGE],
+            {mock_client.username: mock_client},
+        )
+
+    def test_get_client(self):
+        self.clients._exchange_clients[ExchangeType.SIMULATED]["joejames"] = 12
+        self.assertEqual(
+            self.clients.get_client(ExchangeType.SIMULATED, "joejames"), 12
         )
 
     def test_login(self):
@@ -46,18 +71,21 @@ class ClientsTest(unittest.TestCase):
         self.clients.update_account_details()
         mock_client.update_account_details.assert_called_with()
 
-    def test_extra(self):
-        self.assertEqual(
-            self.clients.extra, {exchange.name: {} for exchange in ExchangeType}
-        )
+    def test_simulated(self):
+        self.assertFalse(self.clients.simulated)
+        self.clients._clients.append(mock.Mock(paper_trade=True))
+        self.assertTrue(self.clients.simulated)
+
+    def test_info(self):
+        self.assertEqual(self.clients.info, {exchange: {} for exchange in ExchangeType})
         mock_client = mock.Mock()
-        self.clients._exchange_clients[ExchangeType.BETFAIR.name]["james"] = mock_client
+        self.clients._exchange_clients[ExchangeType.BETFAIR]["james"] = mock_client
         self.assertEqual(
-            self.clients.extra,
+            self.clients.info,
             {
-                ExchangeType.BETFAIR.name: {"james": mock_client.extra},
-                ExchangeType.SIMULATED.name: {},
-                ExchangeType.BETCONNECT.name: {},
+                ExchangeType.BETFAIR: {"james": mock_client.info},
+                ExchangeType.SIMULATED: {},
+                ExchangeType.BETCONNECT: {},
             },
         )
 
@@ -159,6 +187,11 @@ class BaseClientTest(unittest.TestCase):
     def test_min_bsp_liability(self):
         with self.assertRaises(NotImplementedError):
             assert self.base_client.min_bsp_liability
+
+    def test_username(self):
+        self.assertEqual(
+            self.base_client.username, self.base_client.betting_client.username
+        )
 
     def test_info(self):
         self.assertTrue(self.base_client.info)
@@ -297,3 +330,9 @@ class BacktestClientTest(unittest.TestCase):
     def test_min_bet_payout(self):
         self.backtest_client.update_account_details()
         self.assertEqual(self.backtest_client.min_bet_payout, 10)
+
+    def test_username(self):
+        self.assertEqual(
+            self.backtest_client.username,
+            "Simulated-{0}".format(self.backtest_client.id),
+        )

@@ -30,6 +30,10 @@ class BacktestClient(BaseClient):
         )
 
     @property
+    def username(self) -> str:
+        return "{0}-{1}".format(self.EXCHANGE.value, self.id)
+
+    @property
     def min_bet_size(self) -> Optional[float]:
         if self.account_details:
             return currency_parameters[self.account_details.currency_code][

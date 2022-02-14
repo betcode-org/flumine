@@ -53,3 +53,12 @@ class ControlError(FlumineException):
 
     def __init__(self, message):
         super(ControlError, self).__init__(message)
+
+
+class ClientError(FlumineException):
+    """Exception raised on client
+    error.
+    """
+
+    def __init__(self, message):
+        super(ClientError, self).__init__(message)
