@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+1.21.5 (2022-02-14)
++++++++++++++++++++
+
+**Improvements**
+
+- PYPI secret update and deploy environment added
+- slack group invite updated
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.0
+
 1.21.4 (2022-02-08)
 +++++++++++++++++++
 
