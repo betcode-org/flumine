@@ -76,6 +76,7 @@ class BaseStrategy:
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
+        self.clients = None
         self.client = client
         self.max_trade_count = max_trade_count
         self.max_live_trade_count = max_live_trade_count
@@ -226,9 +227,10 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy: BaseStrategy, client: BaseClient) -> None:
+    def __call__(self, strategy: BaseStrategy, clients, client: BaseClient) -> None:
         if strategy.name in [s.name for s in self]:
             logger.warning("Strategy of same name '{0}' already added".format(strategy))
+        strategy.clients = clients
         strategy.client = client
         self._strategies.append(strategy)
         strategy.add()

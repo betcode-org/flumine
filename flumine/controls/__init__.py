@@ -13,10 +13,12 @@ class BaseControl:
     def __init__(self, flumine, *args, **kwargs):
         self.flumine = flumine
 
-    def __call__(self, order: BaseOrder, package_type: OrderPackageType):
-        self._validate(order, package_type)
+    def __call__(self, order: BaseOrder, package_type: OrderPackageType, client):
+        self._validate(order, package_type, client)
 
-    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+    def _validate(
+        self, order: BaseOrder, package_type: OrderPackageType, client
+    ) -> None:
         raise NotImplementedError
 
     def _on_error(self, order: BaseOrder, error: str) -> None:

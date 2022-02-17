@@ -5,7 +5,6 @@ from .utils import SimulatedDateTime
 from ..baseflumine import BaseFlumine
 from ..events import events
 from .. import utils
-from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.order import OrderTypes
 
@@ -27,7 +26,7 @@ class FlumineBacktest(BaseFlumine):
         self.handler_queue = []
 
     def run(self) -> None:
-        if self.client.EXCHANGE != ExchangeType.SIMULATED:
+        if not self.clients.simulated:
             raise RunError(
                 "Incorrect client provided, only a Simulated client can be used when backtesting"
             )

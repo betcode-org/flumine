@@ -30,8 +30,9 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool):
+    def __init__(self, market, id_: int, async_place_orders: bool, client=None):
         self.market = market
+        self._client = client or market.flumine.clients.get_default()
         self._id = id_  # unique per market only
         self._async_place_orders = async_place_orders
         self._pending_orders = False
@@ -165,9 +166,9 @@ class Transaction:
         # return False on violation
         try:
             for control in self.market.flumine.trading_controls:
-                control(order, package_type)
-            for control in self.market.flumine.client.trading_controls:
-                control(order, package_type)
+                control(order, package_type, self._client)
+            for control in self._client.trading_controls:
+                control(order, package_type, self._client)
         except ControlError:
             return False
         else:
@@ -187,7 +188,7 @@ class Transaction:
             for chunked_orders in chunks(package_orders, limit):
                 packages.append(
                     BetfairOrderPackage(
-                        client=self.market.flumine.client,
+                        client=self._client,
                         market_id=self.market.market_id,
                         orders=chunked_orders,
                         package_type=package_type,

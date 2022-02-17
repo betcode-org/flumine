@@ -20,22 +20,24 @@ class OrderValidation(BaseControl):
 
     NAME = "ORDER_VALIDATION"
 
-    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+    def _validate(
+        self, order: BaseOrder, package_type: OrderPackageType, client
+    ) -> None:
         if order.EXCHANGE == ExchangeType.BETFAIR:
-            self._validate_betfair_order(order)
+            self._validate_betfair_order(order, client)
 
-    def _validate_betfair_order(self, order):
+    def _validate_betfair_order(self, order, client):
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             self._validate_betfair_size(order)
             self._validate_betfair_price(order)
-            self._validate_betfair_min_size(order, OrderTypes.LIMIT)
+            self._validate_betfair_min_size(order, OrderTypes.LIMIT, client)
         elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
             self._validate_betfair_price(order)
             self._validate_betfair_liability(order)
-            self._validate_betfair_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
+            self._validate_betfair_min_size(order, OrderTypes.LIMIT_ON_CLOSE, client)
         elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
             self._validate_betfair_liability(order)
-            self._validate_betfair_min_size(order, OrderTypes.MARKET_ON_CLOSE)
+            self._validate_betfair_min_size(order, OrderTypes.MARKET_ON_CLOSE, client)
         else:
             self._on_error(order, "Unknown orderType")
 
@@ -62,8 +64,7 @@ class OrderValidation(BaseControl):
         elif order.order_type.liability != round(order.order_type.liability, 2):
             self._on_error(order, "Order liability has more than 2dp")
 
-    def _validate_betfair_min_size(self, order, order_type):
-        client = self.flumine.client
+    def _validate_betfair_min_size(self, order, order_type, client):
         if client.min_bet_validation is False:
             return  # some accounts do not have min bet restrictions
         if order_type == OrderTypes.LIMIT:
@@ -108,7 +109,9 @@ class MarketValidation(BaseControl):
 
     NAME = "MARKET_VALIDATION"
 
-    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+    def _validate(
+        self, order: BaseOrder, package_type: OrderPackageType, client
+    ) -> None:
         if order.EXCHANGE == ExchangeType.BETFAIR:
             self._validate_betfair_market_status(order)
 
@@ -166,8 +169,10 @@ class ExecutionValidation(BaseControl):
                 "OrderStream is not connected, execution of orders is blocked until OrderStream is reconnected",
             )
 
-    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if self.flumine.BACKTEST or self.flumine.client.paper_trade:
+    def _validate(
+        self, order: BaseOrder, package_type: OrderPackageType, client
+    ) -> None:
+        if self.flumine.BACKTEST or client.paper_trade:
             return
 
         if order.EXCHANGE == ExchangeType.BETFAIR:
@@ -188,7 +193,9 @@ class StrategyExposure(BaseControl):
 
     NAME = "STRATEGY_EXPOSURE"
 
-    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
+    def _validate(
+        self, order: BaseOrder, package_type: OrderPackageType, client
+    ) -> None:
         if package_type == OrderPackageType.PLACE:
             # strategy.validate_order
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)

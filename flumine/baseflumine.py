@@ -9,7 +9,7 @@ from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
-from .clients.baseclient import BaseClient
+from .clients import Clients, BaseClient
 from .markets.markets import Markets
 from .markets.market import Market
 from .markets.middleware import Middleware, SimulatedMiddleware
@@ -23,7 +23,7 @@ from .controls.tradingcontrols import (
     MarketValidation,
 )
 from .controls.loggingcontrols import LoggingControl
-from .exceptions import FlumineException
+from .exceptions import FlumineException, ClientError
 from . import config, utils
 
 logger = logging.getLogger(__name__)
@@ -33,14 +33,17 @@ class BaseFlumine:
 
     BACKTEST = False
 
-    def __init__(self, client: BaseClient):
+    def __init__(self, client: BaseClient = None):
         """
         Base framework class
 
         :param client: flumine client instance
         """
-        self.client = client
         self._running = False
+        # streams (market/order)
+        self.streams = Streams(self)
+
+        self.clients = Clients()
 
         # FIFO queue
         self.handler_queue = queue.Queue()
@@ -50,21 +53,19 @@ class BaseFlumine:
 
         # middleware
         self._market_middleware = []
-        if self.BACKTEST or self.client.paper_trade:
-            self.add_market_middleware(SimulatedMiddleware())
 
         # strategies
         self.strategies = Strategies()
-
-        # streams (market/order)
-        self.streams = Streams(self)
-        self.streams.add_client(client)
 
         # order execution class
         self.simulated_execution = SimulatedExecution(
             self, config.max_execution_workers
         )
         self.betfair_execution = BetfairExecution(self, config.max_execution_workers)
+
+        # add client
+        if client:
+            self.add_client(client)
 
         # logging controls (e.g. database logger)
         self._logging_controls = []
@@ -75,8 +76,6 @@ class BaseFlumine:
         self.add_trading_control(OrderValidation)
         self.add_trading_control(MarketValidation)
         self.add_trading_control(StrategyExposure)
-        # register default client controls (processed in order)
-        self.add_client_control(MaxTransactionCount)
 
         # workers
         self._workers = []
@@ -84,20 +83,34 @@ class BaseFlumine:
     def run(self) -> None:
         raise NotImplementedError
 
+    def add_client(self, client: BaseClient) -> None:
+        self.clients.add_client(client)
+        self.streams.add_client(client)
+        # add execution
+        client.add_execution(self)
+        # add simulation middleware
+        if self.clients.simulated and not self._market_middleware:
+            self.add_market_middleware(SimulatedMiddleware())
+        # register default client controls (processed in order)
+        self.add_client_control(client, MaxTransactionCount)
+
     def add_strategy(self, strategy: BaseStrategy, client: BaseClient = None) -> None:
         logger.info("Adding strategy {0}".format(strategy))
-        _client = client or self.client
+        if client and client not in self.clients:
+            raise ClientError("Client not present in framework")
         self.streams(strategy)  # create required streams
-        self.strategies(strategy, _client)  # store in strategies
+        self.strategies(strategy, self.clients, client)  # store in strategies
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
         logger.info("Adding worker {0}".format(worker.name))
         self._workers.append(worker)
 
-    def add_client_control(self, client_control: Type[BaseControl], **kwargs) -> None:
+    def add_client_control(
+        self, client: BaseClient, client_control: Type[BaseControl], **kwargs
+    ) -> None:
         logger.info("Adding client control {0}".format(client_control.NAME))
-        self.client.trading_controls.append(client_control(self, self.client, **kwargs))
+        client.trading_controls.append(client_control(self, client, **kwargs))
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control {0}".format(trading_control.NAME))
@@ -283,29 +296,27 @@ class BaseFlumine:
             if stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
-        if recorder is False:
-            if self.BACKTEST or self.client.paper_trade:
-                # simulate ClearedOrdersEvent
-                cleared_orders = resources.ClearedOrders(
-                    moreAvailable=False, clearedOrders=[]
-                )
-                cleared_orders.market_id = market_id
-                self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
-                # simulate ClearedMarketsEvent
-                cleared_markets = resources.ClearedOrders(
-                    moreAvailable=False,
-                    clearedOrders=[market.cleared(self.client.commission_base)],
-                )
-                self._process_cleared_markets(
-                    events.ClearedMarketsEvent(cleared_markets)
-                )
+        if recorder is False and self.clients.simulated:
+            # simulate ClearedOrdersEvent
+            cleared_orders = resources.ClearedOrders(
+                moreAvailable=False, clearedOrders=[]
+            )
+            cleared_orders.market_id = market_id
+            self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
+            # simulate ClearedMarketsEvent
+            cleared_markets = resources.ClearedOrders(
+                moreAvailable=False,
+                clearedOrders=[market.cleared(self.client.commission_base)],
+            )
+            self._process_cleared_markets(
+                events.ClearedMarketsEvent(cleared_markets)
+            )
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
         # check for markets that have been closed for x seconds and remove
-        if (
-            self.BACKTEST is False and self.client.paper_trade is False
-        ):  # due to monkey patching this will clear backtested markets
+        if not self.clients.simulated:
+            # due to monkey patching this will clear backtested markets
             closed_markets = [
                 m
                 for m in self.markets
@@ -356,7 +367,7 @@ class BaseFlumine:
     @property
     def info(self) -> dict:
         return {
-            "client": self.client.info,
+            "clients": self.clients.info,
             "markets": {
                 "market_count": len(self.markets),
                 "open_market_count": len(self.markets.open_market_ids),
@@ -368,16 +379,16 @@ class BaseFlumine:
 
     def __enter__(self):
         logger.info("Starting flumine", extra=self.info)
-        # add execution to clients
-        self.client.add_execution(self)
+        if len(self.clients) == 0:
+            raise ClientError("No clients present")
         # simulated
         if self.BACKTEST:
             config.simulated = True
         else:
             config.simulated = False
         # login
-        self.client.login()
-        self.client.update_account_details()
+        self.clients.login()
+        self.clients.update_account_details()
         # add default and start all workers
         self._add_default_workers()
         for w in self._workers:
@@ -411,6 +422,6 @@ class BaseFlumine:
             if c.is_alive():
                 c.join()
         # logout
-        self.client.logout()
+        self.clients.logout()
         self._running = False
         logger.info("Exiting flumine", extra=self.info)

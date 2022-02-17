@@ -14,7 +14,8 @@ class ExchangeType(Enum):
 
 class Clients:
     """
-    Data structure for flumine clients
+    Data structure for flumine clients.
+    First client added == default client
     """
 
     def __init__(self) -> None:
@@ -36,6 +37,9 @@ class Clients:
             return self._exchange_clients[exchange_type][username]
         except KeyError:
             return
+
+    def get_default(self):
+        return self._clients[0]
 
     def login(self) -> None:
         for client in self._clients:
@@ -68,7 +72,7 @@ class Clients:
     @property
     def info(self) -> dict:
         return {
-            k: {k_i: v_i.info for k_i, v_i in v.items()}
+            k.value: {k_i: v_i.info for k_i, v_i in v.items()}
             for k, v in self._exchange_clients.items()
         }
 

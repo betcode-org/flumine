@@ -21,9 +21,9 @@ class FlumineBacktestTest(unittest.TestCase):
         self.assertEqual(self.flumine.handler_queue, [])
 
     def test_run_error(self):
-        mock_client = mock.Mock()
-        mock_client.EXCHANGE = 69
-        self.flumine.client = mock_client
+        self.flumine.clients._clients.clear()
+        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, paper_trade=False)
+        self.flumine.add_client(mock_client)
         with self.assertRaises(RunError):
             self.flumine.run()
 

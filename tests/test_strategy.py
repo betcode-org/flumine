@@ -13,11 +13,13 @@ class StrategiesTest(unittest.TestCase):
 
     def test_call(self):
         mock_strategy = mock.Mock()
+        mock_clients = mock.Mock()
         mock_client = mock.Mock()
-        self.strategies(mock_strategy, mock_client)
+        self.strategies(mock_strategy, mock_clients, mock_client)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
         mock_strategy.add.assert_called_with()
-        mock_strategy.client = mock_client
+        self.assertEqual(mock_strategy.client, mock_client)
+        self.assertEqual(mock_strategy.clients, mock_clients)
 
     def test_start(self):
         mock_strategy = mock.Mock()
@@ -74,6 +76,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.max_selection_exposure, 1)
         self.assertEqual(self.strategy.max_order_exposure, 2)
         self.assertEqual(self.strategy.client, self.mock_client)
+        self.assertIsNone(self.strategy.clients)
         self.assertEqual(self.strategy.max_trade_count, 3)
         self.assertEqual(self.strategy.max_live_trade_count, 4)
         self.assertEqual(self.strategy.streams, [])

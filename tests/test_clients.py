@@ -41,6 +41,10 @@ class ClientsTest(unittest.TestCase):
             {mock_client.username: mock_client},
         )
 
+    def test_get_default(self):
+        self.clients._clients.append("howlandthehum")
+        self.assertEqual(self.clients.get_default(), "howlandthehum")
+
     def test_get_client(self):
         self.clients._exchange_clients[ExchangeType.SIMULATED]["joejames"] = 12
         self.assertEqual(
@@ -77,15 +81,15 @@ class ClientsTest(unittest.TestCase):
         self.assertTrue(self.clients.simulated)
 
     def test_info(self):
-        self.assertEqual(self.clients.info, {exchange: {} for exchange in ExchangeType})
+        self.assertEqual(self.clients.info, {exchange.value: {} for exchange in ExchangeType})
         mock_client = mock.Mock()
         self.clients._exchange_clients[ExchangeType.BETFAIR]["james"] = mock_client
         self.assertEqual(
             self.clients.info,
             {
-                ExchangeType.BETFAIR: {"james": mock_client.info},
-                ExchangeType.SIMULATED: {},
-                ExchangeType.BETCONNECT: {},
+                ExchangeType.BETFAIR.value: {"james": mock_client.info},
+                ExchangeType.SIMULATED.value: {},
+                ExchangeType.BETCONNECT.value: {},
             },
         )
 

@@ -92,7 +92,7 @@ class BaseOrderTest(unittest.TestCase):
         cheap_hash = create_cheap_hash("strategy_name", 13)
         strategy = mock.Mock(name_hash=cheap_hash)
         strategies = Strategies()
-        strategies(strategy=strategy, client=mock.Mock())
+        strategies(strategy=strategy, clients=mock.Mock(), client=mock.Mock())
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123",
             market_id="market_id",
