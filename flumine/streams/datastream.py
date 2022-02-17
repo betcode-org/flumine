@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 from tenacity import retry
 from betfairlightweight import StreamListener, filters, BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
@@ -28,7 +29,7 @@ class FlumineListener(StreamListener):
 
 
 class FlumineStream(BFBaseStream):
-    def on_process(self, caches: list) -> None:
+    def on_process(self, caches: list, publish_time: Optional[int] = None) -> None:
         output = RawDataEvent(caches)
         self.output_queue.put(output)
 
@@ -172,7 +173,9 @@ class OrderDataStream(DataStream):
         try:
             self.stream_id = self._stream.subscribe_to_orders(
                 order_filter=filters.streaming_order_filter(
-                    customer_strategy_refs=[config.customer_strategy_ref],
+                    customer_strategy_refs=[config.customer_strategy_ref]
+                    if config.customer_strategy_ref
+                    else None,
                     partition_matched_by_strategy_ref=True,
                     include_overall_position=False,
                 ),

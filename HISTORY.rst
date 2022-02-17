@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+1.21.6b0 (2022-02-17)
++++++++++++++++++++
+
+**Improvements**
+
+- blotter lookups updated to lists (order_status)
+
+**Bug Fixes**
+
+- OrderStreams customer_strategy_refs fix when None provided
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.1
+
 1.21.5 (2022-02-14)
 +++++++++++++++++++
 
