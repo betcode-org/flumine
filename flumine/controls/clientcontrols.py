@@ -46,9 +46,7 @@ class MaxTransactionCount(BaseControl):
                 self.transaction_count += count
                 self.current_transaction_count += count
 
-    def _validate(
-        self, order: BaseOrder, package_type: OrderPackageType, client
-    ) -> None:
+    def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         self._check_hour()
         if not self.safe:
             self._on_error(

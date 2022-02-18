@@ -81,7 +81,9 @@ class ClientsTest(unittest.TestCase):
         self.assertTrue(self.clients.simulated)
 
     def test_info(self):
-        self.assertEqual(self.clients.info, {exchange.value: {} for exchange in ExchangeType})
+        self.assertEqual(
+            self.clients.info, {exchange.value: {} for exchange in ExchangeType}
+        )
         mock_client = mock.Mock()
         self.clients._exchange_clients[ExchangeType.BETFAIR]["james"] = mock_client
         self.assertEqual(

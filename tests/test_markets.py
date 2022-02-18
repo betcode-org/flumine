@@ -141,7 +141,10 @@ class MarketTest(unittest.TestCase):
     def test_transaction(self, mock_transaction):
         transaction = self.market.transaction()
         mock_transaction.assert_called_with(
-            self.market, id_=self.market._transaction_id, async_place_orders=False
+            self.market,
+            id_=self.market._transaction_id,
+            async_place_orders=False,
+            client=self.market.flumine.clients.get_default(),
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -150,7 +153,10 @@ class MarketTest(unittest.TestCase):
         config.async_place_orders = True
         transaction = self.market.transaction()
         mock_transaction.assert_called_with(
-            self.market, id_=self.market._transaction_id, async_place_orders=True
+            self.market,
+            id_=self.market._transaction_id,
+            async_place_orders=True,
+            client=self.market.flumine.clients.get_default(),
         )
         self.assertEqual(transaction, mock_transaction())
 

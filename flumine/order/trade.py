@@ -113,7 +113,7 @@ class Trade:
             size=size,
             persistence_type=order.order_type.persistence_type,
         )
-        order = BetfairOrder(
+        replacement_order = BetfairOrder(
             trade=self,
             side=order.side,
             order_type=order_type,
@@ -122,8 +122,9 @@ class Trade:
             context=order.context,
             notes=order.notes,
         )
-        self.orders.append(order)
-        return order
+        replacement_order.client = order.client
+        self.orders.append(replacement_order)
+        return replacement_order
 
     def create_order_from_current(
         self, current_order: CurrentOrder, order_id: str

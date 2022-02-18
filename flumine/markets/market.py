@@ -62,12 +62,17 @@ class Market:
             extra=self.info,
         )
 
-    def transaction(self, async_place_orders: bool = None) -> Transaction:
+    def transaction(self, async_place_orders: bool = None, client=None) -> Transaction:
         if async_place_orders is None:
             async_place_orders = config.async_place_orders
+        if client is None:
+            client = self.flumine.clients.get_default()
         self._transaction_id += 1
         return Transaction(
-            self, id_=self._transaction_id, async_place_orders=async_place_orders
+            self,
+            id_=self._transaction_id,
+            async_place_orders=async_place_orders,
+            client=client,
         )
 
     # order

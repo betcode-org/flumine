@@ -23,14 +23,12 @@ class TestBaseControl(unittest.TestCase):
     @mock.patch("flumine.controls.BaseControl._validate")
     def test_call(self, mock_validate):
         order = mock.Mock()
-        self.control(order, OrderPackageType.PLACE, self.mock_client)
-        mock_validate.assert_called_with(
-            order, OrderPackageType.PLACE, self.mock_client
-        )
+        self.control(order, OrderPackageType.PLACE)
+        mock_validate.assert_called_with(order, OrderPackageType.PLACE)
 
     def test_validate(self):
         with self.assertRaises(NotImplementedError):
-            self.control._validate(None, None, None)
+            self.control._validate(None, None)
 
     def test_on_error(self):
         order = mock.Mock()
@@ -71,9 +69,7 @@ class TestMaxTransactionCount(unittest.TestCase):
     @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._check_hour")
     def test_validate(self, mock_check_hour):
         mock_order = mock.Mock()
-        self.trading_control._validate(
-            mock_order, OrderPackageType.PLACE, self.mock_client
-        )
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_check_hour.assert_called()
 
     @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._set_next_hour")
