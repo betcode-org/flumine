@@ -194,6 +194,24 @@ class StreamsTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_stream_none(self, mock_increment):
+        mock_strategy = mock.Mock(market_filter=None)
+        mock_stream_class = mock.Mock()
+        mock_strategy.stream_class = mock_stream_class
+
+        self.streams.add_stream(mock_strategy)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        mock_strategy.stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            market_filter=mock_strategy.market_filter,
+            market_data_filter=mock_strategy.market_data_filter,
+            streaming_timeout=mock_strategy.streaming_timeout,
+            conflate_ms=mock_strategy.conflate_ms,
+        )
+
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_multi(self, mock_increment):
         mock_strategy = mock.Mock(
             market_filter=[{1: 2}, {3: 4}], stream_class=streams.MarketStream

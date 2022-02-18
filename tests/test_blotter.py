@@ -57,13 +57,13 @@ class BlotterTest(unittest.TestCase):
         )
         self.assertEqual(
             self.blotter.strategy_orders(
-                69, order_status=OrderStatus.EXECUTION_COMPLETE
+                69, order_status=[OrderStatus.EXECUTION_COMPLETE]
             ),
             [mock_order_two, mock_order_three],
         )
         self.assertEqual(
             self.blotter.strategy_orders(
-                69, order_status=OrderStatus.EXECUTION_COMPLETE, matched_only=True
+                69, order_status=[OrderStatus.EXECUTION_COMPLETE], matched_only=True
             ),
             [mock_order_three],
         )
@@ -91,13 +91,17 @@ class BlotterTest(unittest.TestCase):
         )
         self.assertEqual(
             self.blotter.strategy_selection_orders(
-                69, 2, 3, order_status=OrderStatus.EXECUTION_COMPLETE
+                69, 2, 3, order_status=[OrderStatus.EXECUTION_COMPLETE]
             ),
             [mock_order_two, mock_order_three],
         )
         self.assertEqual(
             self.blotter.strategy_selection_orders(
-                69, 2, 3, order_status=OrderStatus.EXECUTION_COMPLETE, matched_only=True
+                69,
+                2,
+                3,
+                order_status=[OrderStatus.EXECUTION_COMPLETE],
+                matched_only=True,
             ),
             [mock_order_three],
         )
