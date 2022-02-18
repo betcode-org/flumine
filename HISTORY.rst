@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-1.21.6 (2022-02-17)
+1.21.6 (2022-02-18)
 +++++++++++++++++++
 
 **Improvements**
@@ -13,6 +13,7 @@ Release History
 **Bug Fixes**
 
 - OrderStreams customer_strategy_refs fix when None provided
+- Handle null market_filter when creating streams
 
 **Libraries**
 
