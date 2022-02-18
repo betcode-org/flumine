@@ -1,5 +1,6 @@
 import logging
-from typing import Iterable, Optional
+import warnings
+from typing import Iterable, Optional, List
 from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
@@ -56,13 +57,20 @@ class Blotter:
     def strategy_orders(
         self,
         strategy,
-        order_status: Optional[OrderStatus] = None,
+        order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
     ) -> list:
         """Returns all orders related to a strategy."""
         orders = self._strategy_orders[strategy]
         if order_status:
-            orders = [o for o in orders if o.status == order_status]
+            if isinstance(order_status, OrderStatus):
+                warnings.warn(
+                    "`order_status` to accept List[OrderStatus] only from v1.22.0",
+                    DeprecationWarning,
+                )
+                orders = [o for o in orders if o.status == order_status]
+            else:
+                orders = [o for o in orders if o.status in order_status]
         if matched_only:
             orders = [o for o in orders if o.size_matched > 0]
         return orders
@@ -72,13 +80,20 @@ class Blotter:
         strategy,
         selection_id: int,
         handicap: float = 0,
-        order_status: Optional[OrderStatus] = None,
+        order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
     ) -> list:
         """Returns all orders related to a strategy selection."""
         orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
         if order_status:
-            orders = [o for o in orders if o.status == order_status]
+            if isinstance(order_status, OrderStatus):
+                warnings.warn(
+                    "`order_status` to accept List[OrderStatus] only from v1.22.0",
+                    DeprecationWarning,
+                )
+                orders = [o for o in orders if o.status == order_status]
+            else:
+                orders = [o for o in orders if o.status in order_status]
         if matched_only:
             orders = [o for o in orders if o.size_matched > 0]
         return orders

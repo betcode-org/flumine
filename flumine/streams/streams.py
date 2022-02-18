@@ -79,7 +79,7 @@ class Streams:
     """ market data """
 
     def add_stream(self, strategy: BaseStrategy) -> None:
-        if isinstance(strategy.market_filter, dict):
+        if isinstance(strategy.market_filter, dict) or strategy.market_filter is None:
             market_filters = [strategy.market_filter]
         else:
             market_filters = strategy.market_filter
