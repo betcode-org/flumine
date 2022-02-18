@@ -134,7 +134,7 @@ class BaseOrderTest(unittest.TestCase):
 
     def test_place(self):
         with self.assertRaises(NotImplementedError):
-            self.order.place(None, 123, 456, False)
+            self.order.place(123, 456, False)
 
     def test_cancel(self):
         with self.assertRaises(NotImplementedError):
@@ -296,9 +296,8 @@ class BetfairOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
-        self.order.place(0, 123, 456, False)
+        self.order.place(123, 456, False)
         mock_placing.assert_called_with()
-        self.assertEqual(self.order.client, 0)
         self.assertEqual(self.order.publish_time, 123)
         self.assertEqual(self.order.market_version, 456)
         self.assertFalse(self.order.async_)

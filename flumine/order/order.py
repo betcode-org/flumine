@@ -142,9 +142,7 @@ class BaseOrder:
         self.update_data.clear()
 
     # updates
-    def place(
-        self, client, publish_time: int, market_version: int, async_: bool
-    ) -> None:
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         raise NotImplementedError
 
     def cancel(self, size_reduction: float = None) -> None:
@@ -315,10 +313,7 @@ class BetfairOrder(BaseOrder):
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates
-    def place(
-        self, client, publish_time: int, market_version: int, async_: bool
-    ) -> None:
-        self.client = client
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
         self.publish_time = publish_time
         self.market_version = market_version
         self.async_ = async_

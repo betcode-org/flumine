@@ -83,6 +83,8 @@ class OrderStream(BaseStream):
                     continue
             last_snap = time.time()
             if order_books or self.flumine.markets.live_orders:
+                for order_book in order_books:
+                    order_book.client = self.client
                 self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 
         logger.info("Stopped output_thread (OrderStream {0})".format(self.stream_id))

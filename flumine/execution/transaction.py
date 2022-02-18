@@ -48,6 +48,7 @@ class Transaction:
         execute: bool = True,
         force: bool = False,
     ) -> bool:
+        order.client = self._client
         if (
             execute
             and not force
@@ -56,7 +57,6 @@ class Transaction:
             return False
         # place
         order.place(
-            self._client,
             self.market.market_book.publish_time,
             market_version,
             self._async_place_orders,

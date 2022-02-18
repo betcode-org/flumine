@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 class CurrentOrders:
-    def __init__(self, orders):
+    def __init__(self, orders, client):
         self.orders = orders
         self.more_available = False
+        self.client = client
 
 
 class SimulatedOrderStream(BaseStream):
@@ -28,7 +29,7 @@ class SimulatedOrderStream(BaseStream):
                 current_orders = self._get_current_orders()
                 if current_orders:
                     self.flumine.handler_queue.put(
-                        CurrentOrdersEvent([CurrentOrders(current_orders)])
+                        CurrentOrdersEvent([CurrentOrders(current_orders, self.client)])
                     )
             time.sleep(self.streaming_timeout)
         logger.info("Stopped SimulatedOrderStream {0}".format(self.stream_id))

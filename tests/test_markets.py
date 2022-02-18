@@ -334,19 +334,25 @@ class MarketTest(unittest.TestCase):
     @mock.patch("flumine.markets.market.Market.event_type_id")
     @mock.patch("flumine.markets.market.Market.event_id")
     def test_cleared(self, mock_event_id, mock_event_type_id):
+        mock_client = mock.Mock(commission_base=0.05)
+        mock_order = mock.Mock(
+            client=mock_client, size_matched=2.00, profit=20, lookup=(1, 2, 3)
+        )
+        mock_order.simulated.profit = 20
+        self.market.blotter["123"] = mock_order
         self.assertEqual(
-            self.market.cleared(0.05),
+            self.market.cleared(mock_client),
             {
-                "betCount": 0,
+                "betCount": 1,
                 "betOutcome": "WON",
-                "commission": 0.0,
+                "commission": 1.0,
                 "customerStrategyRef": config.customer_strategy_ref,
                 "eventId": mock_event_id,
                 "eventTypeId": mock_event_type_id,
                 "lastMatchedDate": None,
                 "marketId": "1.234",
                 "placedDate": None,
-                "profit": 0,
+                "profit": 20,
                 "settledDate": None,
             },
         )

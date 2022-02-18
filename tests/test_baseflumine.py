@@ -335,7 +335,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_events,
         mock__process_cleared_markets,
     ):
-        self.base_flumine.client.paper_trade = True
+        self.mock_client.paper_trade = True
         mock_strategy = mock.Mock()
         mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
@@ -360,7 +360,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock__process_cleared_orders.assert_called_with(
             mock_events.ClearedOrdersEvent()
         )
-        mock_market.cleared.assert_called_with(self.base_flumine.client.commission_base)
+        mock_market.cleared.assert_called_with(self.mock_client)
         mock__process_cleared_markets.assert_called_with(
             mock_events.ClearedMarketsEvent()
         )

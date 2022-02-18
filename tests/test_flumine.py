@@ -3,12 +3,13 @@ from unittest import mock
 
 from flumine import Flumine, worker
 from flumine.events import events
+from flumine.clients import ExchangeType
 
 
 class FlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_trading = mock.Mock()
-        self.flumine = Flumine(self.mock_trading)
+        self.mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        self.flumine = Flumine(self.mock_client)
 
     @mock.patch("flumine.flumine.Flumine._add_default_workers")
     @mock.patch("flumine.flumine.Flumine._process_custom_event")
@@ -62,8 +63,8 @@ class FlumineTest(unittest.TestCase):
     @mock.patch("flumine.worker.BackgroundWorker")
     @mock.patch("flumine.Flumine.add_worker")
     def test__add_default_workers(self, mock_add_worker, mock_worker):
-        self.mock_trading.betting_client.session_timeout = 1200
-        self.flumine.client.market_recording_mode = False
+        self.mock_client.betting_client.session_timeout = 1200
+        self.mock_client.market_recording_mode = False
         self.flumine._add_default_workers()
         self.assertEqual(len(mock_add_worker.call_args_list), 4)
         self.assertEqual(

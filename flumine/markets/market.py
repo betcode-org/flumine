@@ -182,8 +182,12 @@ class Market:
         elif self.market_book:
             return self.market_book.market_definition.race_type
 
-    def cleared(self, commission: float) -> dict:
-        orders = [order for order in self.blotter if order.size_matched]
+    def cleared(self, client) -> dict:
+        orders = [
+            order
+            for order in self.blotter
+            if order.client == client and order.size_matched
+        ]
         profit = round(sum([order.simulated.profit for order in orders]), 2)
         return {
             "marketId": self.market_id,
@@ -195,7 +199,7 @@ class Market:
             "settledDate": None,
             "betCount": len(orders),
             "betOutcome": "WON" if profit >= 0 else "LOST",
-            "commission": round(max(profit * commission, 0), 2),
+            "commission": round(max(profit * client.commission_base, 0), 2),
             "profit": profit,
         }
 

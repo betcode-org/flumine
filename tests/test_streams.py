@@ -475,7 +475,7 @@ class TestBaseStream(unittest.TestCase):
         self.stream._client = 1
         self.assertEqual(self.stream.client, 1)
         self.stream._client = None
-        self.assertEqual(self.stream.client, self.mock_flumine.client)
+        self.assertEqual(self.stream.client, self.mock_flumine.clients.get_default())
 
 
 class TestMarketStream(unittest.TestCase):
@@ -923,9 +923,11 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.assertIsNone(self.stream._stream)
 
     def test_current_orders(self):
-        current_orders = CurrentOrders([1])
+        mock_client = mock.Mock()
+        current_orders = CurrentOrders([1], mock_client)
         self.assertEqual(current_orders.orders, [1])
         self.assertFalse(current_orders.more_available)
+        self.assertEqual(current_orders.client, mock_client)
 
     # def test_run(self):
     #     pass

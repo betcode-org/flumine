@@ -303,12 +303,15 @@ class BaseFlumine:
             )
             cleared_orders.market_id = market_id
             self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
-            # simulate ClearedMarketsEvent
-            cleared_markets = resources.ClearedOrders(
-                moreAvailable=False,
-                clearedOrders=[market.cleared(self.client.commission_base)],
-            )
-            self._process_cleared_markets(events.ClearedMarketsEvent(cleared_markets))
+            for client in self.clients:
+                # simulate ClearedMarketsEvent
+                cleared_markets = resources.ClearedOrders(
+                    moreAvailable=False,
+                    clearedOrders=[market.cleared(client)],
+                )
+                self._process_cleared_markets(
+                    events.ClearedMarketsEvent(cleared_markets)
+                )
         self.log_control(event)
         logger.info("Market closed", extra={"market_id": market_id, **self.info})
 
