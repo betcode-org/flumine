@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 from betfairlightweight.metadata import currency_parameters
+from betfairlightweight.exceptions import BetfairError
 
 from flumine.clients.clients import ExchangeType, Clients
 from flumine.clients import BaseClient, BetfairClient, BacktestClient
@@ -229,13 +230,28 @@ class BetfairClientTest(unittest.TestCase):
         self.betfair_client.login()
         self.mock_betting_client.login_interactive.assert_called_with()
 
+    def test_login_error(self):
+        self.betfair_client.betting_client.login.side_effect = BetfairError
+        self.assertIsNone(self.betfair_client.login())
+        self.mock_betting_client.login.assert_called_with()
+
     def test_keep_alive(self):
         self.mock_betting_client.session_expired = True
         self.betfair_client.keep_alive()
         self.mock_betting_client.keep_alive.assert_called_with()
 
+    def test_keep_alive_error(self):
+        self.betfair_client.betting_client.keep_alive.side_effect = BetfairError
+        self.assertIsNone(self.betfair_client.keep_alive())
+        self.mock_betting_client.keep_alive.assert_called_with()
+
     def test_logout(self):
         self.betfair_client.logout()
+        self.mock_betting_client.logout.assert_called_with()
+
+    def test_logout_error(self):
+        self.betfair_client.betting_client.logout.side_effect = BetfairError
+        self.assertIsNone(self.betfair_client.logout())
         self.mock_betting_client.logout.assert_called_with()
 
     @mock.patch("flumine.clients.betfairclient.BetfairClient._get_account_details")
@@ -251,8 +267,22 @@ class BetfairClientTest(unittest.TestCase):
         self.betfair_client._get_account_details()
         self.mock_betting_client.account.get_account_details.assert_called_with()
 
+    def test__get_account_details_error(self):
+        self.betfair_client.betting_client.account.get_account_details.side_effect = (
+            BetfairError
+        )
+        self.assertIsNone(self.betfair_client._get_account_details())
+        self.mock_betting_client.account.get_account_details.assert_called_with()
+
     def test__get_account_funds(self):
         self.betfair_client._get_account_funds()
+        self.mock_betting_client.account.get_account_funds.assert_called_with()
+
+    def test__get_account_funds_error(self):
+        self.betfair_client.betting_client.account.get_account_funds.side_effect = (
+            BetfairError
+        )
+        self.assertIsNone(self.betfair_client._get_account_funds())
         self.mock_betting_client.account.get_account_funds.assert_called_with()
 
     def test_min_bet_size(self):
