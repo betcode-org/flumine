@@ -25,6 +25,7 @@ class OrderStream(BaseStream):
                 "customer_strategy_refs": config.customer_strategy_ref,
                 "conflate_ms": self.conflate_ms,
                 "streaming_timeout": self.streaming_timeout,
+                "client_username": self.client.username,
             },
         )
         if not self._output_thread.is_alive():

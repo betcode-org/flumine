@@ -127,7 +127,7 @@ class Trade:
         return replacement_order
 
     def create_order_from_current(
-        self, current_order: CurrentOrder, order_id: str
+        self, client, current_order: CurrentOrder, order_id: str
     ) -> BetfairOrder:
         if current_order.order_type == "LIMIT":
             order_type = LimitOrder(
@@ -151,6 +151,7 @@ class Trade:
         )
         order.bet_id = current_order.bet_id
         order.id = order_id
+        order.client = client
         # update dates
         order.date_time_created = current_order.placed_date
         order.date_time_execution_complete = (
@@ -158,6 +159,7 @@ class Trade:
             or current_order.cancelled_date
             or current_order.lapsed_date
         )
+        order._simulated = bool(order.simulated)
         self.orders.append(order)
         return order
 

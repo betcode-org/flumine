@@ -381,7 +381,7 @@ class BaseFlumine:
     def __enter__(self):
         logger.info("Starting flumine", extra=self.info)
         if len(self.clients) == 0:
-            raise ClientError("No clients present")
+            raise ClientError("No clients provided")
         # simulated
         if self.BACKTEST:
             config.simulated = True

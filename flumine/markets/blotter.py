@@ -47,6 +47,7 @@ class Blotter:
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
+        # todo client_orders / client_strategy_orders / client_strategy_selection_orders
 
     def get_order_bet_id(self, bet_id: str) -> Optional[BaseOrder]:
         try:

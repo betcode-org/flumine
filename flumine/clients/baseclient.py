@@ -110,6 +110,7 @@ class BaseClient:
         return {
             "id": self.id,
             "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
+            "username": self.username,
             "betting_client": self.betting_client,
             "current_transaction_count_total": self.current_transaction_count_total,
             "transaction_count_total": self.transaction_count_total,

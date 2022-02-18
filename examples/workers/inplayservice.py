@@ -11,7 +11,7 @@ to use this worker for betting.
 
 
 def poll_in_play_service(context: dict, flumine, event_type_id: str) -> None:
-    trading = flumine.client.betting_client
+    trading = flumine.clients.get_betfair_default()
     event_ids = get_event_ids(flumine.markets, event_type_id=event_type_id)
     for event_id in event_ids:
         response = trading.in_play_service.get_scores(event_ids=[event_id])

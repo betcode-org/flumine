@@ -48,7 +48,6 @@ class BaseStrategyTest(unittest.TestCase):
         self.mock_market_data_filter = mock.Mock()
         self.streaming_timeout = 2
         self.conflate_ms = 100
-        self.mock_client = mock.Mock()
         self.strategy = strategy.BaseStrategy(
             market_filter=self.mock_market_filter,
             market_data_filter=self.mock_market_data_filter,
@@ -59,7 +58,6 @@ class BaseStrategyTest(unittest.TestCase):
             context={"trigger": 0.123},
             max_selection_exposure=1,
             max_order_exposure=2,
-            client=self.mock_client,
             max_trade_count=3,
             max_live_trade_count=4,
             multi_order_trades=False,
@@ -75,7 +73,6 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
         self.assertEqual(self.strategy.max_selection_exposure, 1)
         self.assertEqual(self.strategy.max_order_exposure, 2)
-        self.assertEqual(self.strategy.client, self.mock_client)
         self.assertIsNone(self.strategy.clients)
         self.assertEqual(self.strategy.max_trade_count, 3)
         self.assertEqual(self.strategy.max_live_trade_count, 4)
@@ -256,7 +253,6 @@ class BaseStrategyTest(unittest.TestCase):
                 "max_order_exposure": 2,
                 "max_selection_exposure": 1,
                 "max_trade_count": 3,
-                "client": str(self.strategy.client),
             },
         )
 
