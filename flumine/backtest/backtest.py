@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from .utils import SimulatedDateTime
 from ..baseflumine import BaseFlumine
+from ..clients import BaseClient
 from ..events import events
 from .. import utils
 from ..exceptions import RunError
@@ -20,7 +21,7 @@ class FlumineBacktest(BaseFlumine):
 
     BACKTEST = True
 
-    def __init__(self, client):
+    def __init__(self, client: BaseClient = None):
         super(FlumineBacktest, self).__init__(client)
         self.simulated_datetime = SimulatedDateTime()
         self.handler_queue = []

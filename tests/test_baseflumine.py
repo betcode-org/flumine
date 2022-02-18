@@ -56,12 +56,6 @@ class BaseFlumineTest(unittest.TestCase):
         mock_add_market_middleware.assert_called()
         mock_add_client_control.assert_called_with(mock_client, MaxTransactionCount)
 
-    def test_add_strategy_not_present(self):
-        mock_strategy = mock.Mock(market_filter={})
-        mock_client = mock.Mock()
-        with self.assertRaises(ClientError):
-            self.base_flumine.add_strategy(mock_strategy, mock_client)
-
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test_add_strategy(self, mock_log_control, mock_events):
@@ -70,13 +64,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
         mock_strategy = mock.Mock(market_filter={})
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
-        self.base_flumine.clients.add_client(mock_client)
-        self.base_flumine.add_strategy(mock_strategy, mock_client)
+        self.base_flumine.add_strategy(mock_strategy)
         mock_streams.assert_called_with(mock_strategy)
-        mock_strategies.assert_called_with(
-            mock_strategy, self.base_flumine.clients, mock_client
-        )
+        mock_strategies.assert_called_with(mock_strategy, self.base_flumine.clients)
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
 
     def test_add_worker(self):

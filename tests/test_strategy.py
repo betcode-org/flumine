@@ -14,11 +14,9 @@ class StrategiesTest(unittest.TestCase):
     def test_call(self):
         mock_strategy = mock.Mock()
         mock_clients = mock.Mock()
-        mock_client = mock.Mock()
-        self.strategies(mock_strategy, mock_clients, mock_client)
+        self.strategies(mock_strategy, mock_clients)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
         mock_strategy.add.assert_called_with()
-        self.assertEqual(mock_strategy.client, mock_client)
         self.assertEqual(mock_strategy.clients, mock_clients)
 
     def test_start(self):

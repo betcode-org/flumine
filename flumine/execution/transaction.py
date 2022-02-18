@@ -158,6 +158,7 @@ class Transaction:
                         "market_id": self.market.market_id,
                         "order_packages": [o.info for o in packages],
                         "transaction_id": self._id,
+                        "client_username": self._client.username,
                     },
                 )
             self._pending_orders = False

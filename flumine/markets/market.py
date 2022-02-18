@@ -82,8 +82,9 @@ class Market:
         market_version: int = None,
         execute: bool = True,
         force: bool = False,
+        client=None,
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=client) as t:
             return t.place_order(order, market_version, execute, force)
 
     def cancel_order(

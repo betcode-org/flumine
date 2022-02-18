@@ -94,12 +94,10 @@ class BaseFlumine:
         # register default client controls (processed in order)
         self.add_client_control(client, MaxTransactionCount)
 
-    def add_strategy(self, strategy: BaseStrategy, client: BaseClient = None) -> None:
+    def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy {0}".format(strategy))
-        if client and client not in self.clients:
-            raise ClientError("Client not present in framework")
         self.streams(strategy)  # create required streams
-        self.strategies(strategy, self.clients, client)  # store in strategies
+        self.strategies(strategy, self.clients)  # store in strategies
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:

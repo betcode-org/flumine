@@ -123,6 +123,7 @@ class Trade:
             notes=order.notes,
         )
         replacement_order.client = order.client
+        replacement_order._simulated = bool(replacement_order.simulated)
         self.orders.append(replacement_order)
         return replacement_order
 

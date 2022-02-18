@@ -4,7 +4,6 @@ from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook
 
 from .runnercontext import RunnerContext
-from ..clients import BaseClient
 from ..markets.market import Market
 from ..streams.marketstream import BaseStream, MarketStream
 from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
@@ -223,11 +222,10 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy: BaseStrategy, clients, client: BaseClient) -> None:
+    def __call__(self, strategy: BaseStrategy, clients) -> None:
         if strategy.name in [s.name for s in self]:
             logger.warning("Strategy of same name '{0}' already added".format(strategy))
         strategy.clients = clients
-        strategy.client = client
         self._strategies.append(strategy)
         strategy.add()
 

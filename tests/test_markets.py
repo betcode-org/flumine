@@ -164,7 +164,10 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.place_order(mock_order, 2, False, force=True))
+        self.assertTrue(
+            self.market.place_order(mock_order, 2, False, force=True, client=1)
+        )
+        mock_transaction.assert_called_with(client=1)
         mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
