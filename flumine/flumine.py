@@ -48,7 +48,10 @@ class Flumine(BaseFlumine):
                 del event
 
     def _add_default_workers(self):
-        ka_interval = min((self.client.betting_client.session_timeout / 2), 1200)
+        client_timeouts = [
+            client.betting_client.session_timeout for client in self.clients
+        ]
+        ka_interval = min((min(client_timeouts) / 2), 1200)
         self.add_worker(
             worker.BackgroundWorker(
                 self, function=worker.keep_alive, interval=ka_interval
@@ -62,7 +65,7 @@ class Flumine(BaseFlumine):
                 start_delay=10,  # wait for streams to populate
             )
         )
-        if self.client.market_recording_mode is False:
+        if not all([client.market_recording_mode for client in self.clients]):
             self.add_worker(
                 worker.BackgroundWorker(
                     self,

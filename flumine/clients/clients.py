@@ -41,6 +41,11 @@ class Clients:
     def get_default(self):
         return self._clients[0]
 
+    def get_betfair_default(self):
+        for client in self._clients:
+            if client.EXCHANGE == ExchangeType.BETFAIR:
+                return client
+
     def login(self) -> None:
         for client in self._clients:
             client.login()

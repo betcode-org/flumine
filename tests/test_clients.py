@@ -46,6 +46,13 @@ class ClientsTest(unittest.TestCase):
         self.clients._clients.append("howlandthehum")
         self.assertEqual(self.clients.get_default(), "howlandthehum")
 
+    def test_get_betfair_default(self):
+        mock_client_one = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        mock_client_two = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        self.clients._clients.append(mock_client_one)
+        self.clients._clients.append(mock_client_two)
+        self.assertEqual(self.clients.get_betfair_default(), mock_client_two)
+
     def test_get_client(self):
         self.clients._exchange_clients[ExchangeType.SIMULATED]["joejames"] = 12
         self.assertEqual(

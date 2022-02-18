@@ -4,6 +4,7 @@ from unittest import mock
 from betfairlightweight import BetfairError, exceptions
 
 from flumine import worker
+from flumine.clients import ExchangeType
 
 
 class BackgroundWorkerTest(unittest.TestCase):
@@ -62,47 +63,27 @@ class WorkersTest(unittest.TestCase):
 
     def test_keep_alive(self):
         mock_context = mock.Mock()
-        mock_flumine = mock.Mock()
-        mock_flumine.client.betting_client.session_token = None
+        mock_client_simulated = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        mock_client_betfair = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_betfair.betting_client.session_token = None
+        mock_client_betfair_st = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_betfair_st.betting_client.session_token = "test"
+        mock_flumine = mock.Mock(
+            clients=[mock_client_simulated, mock_client_betfair, mock_client_betfair_st]
+        )
         worker.keep_alive(mock_context, mock_flumine)
-        mock_flumine.client.login.assert_called_with()
 
-        mock_flumine.client.betting_client.session_token = 1
-        mock_flumine.client.betting_client.session_expired = True
-        worker.keep_alive(mock_context, mock_flumine)
-        mock_flumine.client.keep_alive.assert_called_with()
-
-    def test_keep_alive_failure(self):
-        mock_context = mock.Mock()
-        mock_flumine = mock.Mock()
-        mock_flumine.client.betting_client.session_token = None
-        mock_response = mock.Mock()
-        mock_response.status = "FAILURE"
-        mock_flumine.client.betting_client.keep_alive.return_value = mock_response
-        worker.keep_alive(mock_context, mock_flumine)
-        mock_flumine.client.login.assert_called_with()
-
-    def test_keep_alive_error(self):
-        mock_context = mock.Mock()
-        mock_flumine = mock.Mock()
-        mock_flumine.client.betting_client.session_token = None
-        mock_flumine.client.betting_client.keep_alive.side_effect = BetfairError
-        worker.keep_alive(mock_context, mock_flumine)
-        mock_flumine.client.login.assert_called_with()
-
-    def test_keep_alive_ka_error(self):
-        mock_context = mock.Mock()
-        mock_flumine = mock.Mock()
-        mock_flumine.client.betting_client.session_token = 1
-        mock_flumine.client.betting_client.session_expired = True
-        mock_flumine.client.betting_client.keep_alive.side_effect = BetfairError
-        worker.keep_alive(mock_context, mock_flumine)
-        mock_flumine.client.keep_alive.assert_called_with()
+        mock_client_simulated.login.assert_called_with()
+        mock_client_betfair.login.assert_called_with()
+        mock_client_betfair_st.keep_alive.assert_called_with()
+        mock_client_betfair_st.login.assert_called_with()
 
     @mock.patch("flumine.worker.events")
     def test_poll_market_catalogue(self, mock_events):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
+        mock_client = mock.Mock()
+        mock_flumine.clients.get_betfair_default.return_value = mock_client
         mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
         mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
         mock_flumine.markets.markets = {
@@ -111,7 +92,7 @@ class WorkersTest(unittest.TestCase):
         }
 
         worker.poll_market_catalogue(mock_context, mock_flumine)
-        mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
+        mock_client.betting_client.betting.list_market_catalogue.assert_called_with(
             filter={"marketIds": ["1.234"]},
             market_projection=[
                 "COMPETITION",
@@ -132,18 +113,20 @@ class WorkersTest(unittest.TestCase):
     def test_poll_market_catalogue_status_error(self, mock_events):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
+        mock_client = mock.Mock()
+        mock_flumine.clients.get_betfair_default.return_value = mock_client
         mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
         mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
         mock_flumine.markets.markets = {
             "1.234": mock_market_one,
             "5.678": mock_market_two,
         }
-        mock_flumine.client.betting_client.betting.list_market_catalogue.side_effect = (
+        mock_client.betting_client.betting.list_market_catalogue.side_effect = (
             exceptions.StatusCodeError("503")
         )
 
         worker.poll_market_catalogue(mock_context, mock_flumine)
-        mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
+        mock_client.betting_client.betting.list_market_catalogue.assert_called_with(
             filter={"marketIds": ["1.234"]},
             market_projection=[
                 "COMPETITION",
@@ -162,18 +145,20 @@ class WorkersTest(unittest.TestCase):
     def test_poll_market_catalogue_error(self, mock_events):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
+        mock_client = mock.Mock()
+        mock_flumine.clients.get_betfair_default.return_value = mock_client
         mock_market_one = mock.Mock(market_id="1.234", update_market_catalogue=True)
         mock_market_two = mock.Mock(market_id="5.678", update_market_catalogue=False)
         mock_flumine.markets.markets = {
             "1.234": mock_market_one,
             "5.678": mock_market_two,
         }
-        mock_flumine.client.betting_client.betting.list_market_catalogue.side_effect = (
+        mock_client.betting_client.betting.list_market_catalogue.side_effect = (
             BetfairError()
         )
 
         worker.poll_market_catalogue(mock_context, mock_flumine)
-        mock_flumine.client.betting_client.betting.list_market_catalogue.assert_called_with(
+        mock_client.betting_client.betting.list_market_catalogue.assert_called_with(
             filter={"marketIds": ["1.234"]},
             market_projection=[
                 "COMPETITION",
@@ -191,21 +176,20 @@ class WorkersTest(unittest.TestCase):
     @mock.patch("flumine.worker.events")
     def test_poll_account_balance(self, mock_events):
         mock_context = mock.Mock()
-        mock_flumine = mock.Mock()
-        mock_flumine.client.account_funds = {1: 2}
+        mock_client = mock.Mock(account_funds={1: 2})
+        mock_flumine = mock.Mock(clients=[mock_client])
         worker.poll_account_balance(mock_context, mock_flumine)
-        mock_flumine.client.update_account_details.assert_called_with()
-        mock_flumine.log_control.assert_called_with(
-            mock_events.BalanceEvent(mock_flumine.client.account_funds)
-        )
+        mock_client.update_account_details.assert_called_with()
+        mock_events.BalanceEvent.assert_called_with(mock_client)
+        mock_flumine.log_control.assert_called_with(mock_events.BalanceEvent())
 
     @mock.patch("flumine.worker._get_cleared_market")
     @mock.patch("flumine.worker._get_cleared_orders")
     def test_poll_market_closure(
         self, mock__get_cleared_orders, mock__get_cleared_market
     ):
-        mock_client = mock.Mock(paper_trade=False)
-        mock_flumine = mock.Mock(client=mock_client)
+        mock_client = mock.Mock(paper_trade=False, market_recording_mode=False)
+        mock_flumine = mock.Mock(clients=[mock_client])
         market_one = mock.Mock(closed=False)
         market_two = mock.Mock(closed=True, orders_cleared=True, market_cleared=True)
         market_three = mock.Mock(
@@ -226,7 +210,8 @@ class WorkersTest(unittest.TestCase):
 
     def test_poll_market_closure_paper(self):
         mock_client = mock.Mock(paper_trade=True)
-        mock_flumine = mock.Mock(client=mock_client)
+        mock_flumine = mock.Mock(clients=[mock_client])
+        mock_flumine.markets.markets = {1: mock.Mock()}
         worker.poll_market_closure({}, mock_flumine)
 
     @mock.patch("flumine.worker.config")
