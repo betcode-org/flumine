@@ -149,9 +149,6 @@ class TradeTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.trade.create_order_from_current(mock_current_order, "12345")
 
-    def test_client(self):
-        self.assertEqual(self.trade.client, self.mock_strategy.client)
-
     def test_notes_str(self):
         self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})
         self.assertEqual(self.trade.notes_str, "1,2,3,four")

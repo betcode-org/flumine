@@ -934,8 +934,7 @@ class TestSimulatedOrderStream(unittest.TestCase):
 
     def test__get_current_orders(self):
         mock_market = mock.Mock(closed=False)
-        order_one = mock.Mock(simulated=True)
-        order_one.trade.client = self.stream.client
+        order_one = mock.Mock(simulated=True, client=self.stream.client)
         order_two = mock.Mock(simulated=True)
         order_three = mock.Mock(simulated=True)
         mock_market.blotter = [order_one, order_two, order_three]

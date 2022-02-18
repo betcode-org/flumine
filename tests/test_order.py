@@ -297,10 +297,11 @@ class BetfairOrderTest(unittest.TestCase):
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
         self.order.place(123, 456, False)
-        mock_placing.assert_called_with()
+        self.assertFalse(self.order._simulated)
         self.assertEqual(self.order.publish_time, 123)
         self.assertEqual(self.order.market_version, 456)
         self.assertFalse(self.order.async_)
+        mock_placing.assert_called_with()
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",
@@ -565,6 +566,7 @@ class BetfairOrderTest(unittest.TestCase):
                 "runner_status": self.order.runner_status,
                 "market_notes": None,
                 "notes": "",
+                "client": None,
             },
         )
 

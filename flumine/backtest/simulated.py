@@ -283,7 +283,7 @@ class Simulated:
                     size = self.size_remaining
                 else:
                     remaining_risk = (_order_type.price - 1.0) * self.size_remaining
-                    client = self.order.trade.client
+                    client = self.order.client
                     if remaining_risk >= client.min_bsp_liability:
                         size = round(remaining_risk / (actual_sp - 1.0), 2)
                         # Cancel remaining size
@@ -476,4 +476,6 @@ class Simulated:
         }
 
     def __bool__(self):
-        return config.simulated or self.order.trade.client.paper_trade
+        return config.simulated or bool(
+            self.order.client and self.order.client.paper_trade
+        )

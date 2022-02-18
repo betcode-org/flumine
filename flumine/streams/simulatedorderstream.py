@@ -39,6 +39,6 @@ class SimulatedOrderStream(BaseStream):
         for market in self.flumine.markets:
             if market.closed is False:
                 for order in market.blotter:
-                    if order.simulated and order.trade.client == self.client:
+                    if order.simulated and order.client == self.client:
                         current_orders.append(order)
         return current_orders

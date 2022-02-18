@@ -297,6 +297,7 @@ class BaseOrder:
             "simulated": self.simulated.info,
             "notes": self.notes_str,
             "market_notes": self.market_notes,
+            "client": self.client.id if self.client else None,
         }
 
     def json(self) -> str:
@@ -314,6 +315,7 @@ class BetfairOrder(BaseOrder):
 
     # updates
     def place(self, publish_time: int, market_version: int, async_: bool) -> None:
+        self._simulated = bool(self.simulated)
         self.publish_time = publish_time
         self.market_version = market_version
         self.async_ = async_

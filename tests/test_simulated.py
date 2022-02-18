@@ -11,7 +11,7 @@ class SimulatedTest(unittest.TestCase):
             price=12, size=2.00, ORDER_TYPE=OrderTypes.LIMIT
         )
         mock_client = mock.Mock(paper_trade=False, min_bsp_liability=10)
-        mock_trade = mock.Mock(client=mock_client)
+        mock_trade = mock.Mock()
         self.mock_order = mock.Mock(
             selection_id=1234,
             handicap=1,
@@ -19,6 +19,7 @@ class SimulatedTest(unittest.TestCase):
             order_type=self.mock_order_type,
             trade=mock_trade,
             number_of_dead_heat_winners=None,
+            client=mock_client,
         )
         self.simulated = simulated.Simulated(self.mock_order)
 
@@ -811,6 +812,7 @@ class SimulatedTest(unittest.TestCase):
         )
 
     def test_bool(self):
+        self.simulated.order.client.paper_trade = False
         self.assertFalse(self.simulated)
         from flumine import config
 
@@ -819,6 +821,7 @@ class SimulatedTest(unittest.TestCase):
         config.simulated = False
 
     def test_bool_paper_trade(self):
+        self.simulated.order.client.paper_trade = False
         self.assertFalse(self.simulated)
-        self.simulated.order.trade.client.paper_trade = True
+        self.simulated.order.client.paper_trade = True
         self.assertTrue(self.simulated)
