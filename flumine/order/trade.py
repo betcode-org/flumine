@@ -122,8 +122,7 @@ class Trade:
             context=order.context,
             notes=order.notes,
         )
-        replacement_order.client = order.client
-        replacement_order._simulated = bool(replacement_order.simulated)
+        replacement_order.update_client(order.client)
         self.orders.append(replacement_order)
         return replacement_order
 
@@ -152,7 +151,7 @@ class Trade:
         )
         order.bet_id = current_order.bet_id
         order.id = order_id
-        order.client = client
+        order.update_client(client)
         # update dates
         order.date_time_created = current_order.placed_date
         order.date_time_execution_complete = (
@@ -160,7 +159,6 @@ class Trade:
             or current_order.cancelled_date
             or current_order.lapsed_date
         )
-        order._simulated = bool(order.simulated)
         self.orders.append(order)
         return order
 

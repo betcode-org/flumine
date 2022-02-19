@@ -48,7 +48,7 @@ class Transaction:
         execute: bool = True,
         force: bool = False,
     ) -> bool:
-        order.client = self._client
+        order.update_client(self._client)
         if (
             execute
             and not force

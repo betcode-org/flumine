@@ -169,6 +169,13 @@ class BaseOrderTest(unittest.TestCase):
         self.order.update_current_order(mock_current_order)
         self.assertEqual(self.order.responses.current_order, mock_current_order)
 
+    def test_update_client(self):
+        self.order._simulated = False
+        mock_client = mock.Mock(paper_trade=True)
+        self.order.update_client(mock_client)
+        self.assertEqual(self.order.client, mock_client)
+        self.assertTrue(self.order._simulated)
+
     def test_current_order(self):
         self.assertIsNone(self.order.current_order)
         mock_responses = mock.Mock()

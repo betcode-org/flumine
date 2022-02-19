@@ -171,6 +171,10 @@ class BaseOrder:
     def update_current_order(self, current_order: CurrentOrder) -> None:
         self.responses.current_order = current_order
 
+    def update_client(self, client) -> None:
+        self.client = client
+        self._simulated = bool(self.simulated)
+
     def _is_complete(self) -> bool:
         """Returns False if order is
         live or pending in the market"""
@@ -315,7 +319,6 @@ class BetfairOrder(BaseOrder):
 
     # updates
     def place(self, publish_time: int, market_version: int, async_: bool) -> None:
-        self._simulated = bool(self.simulated)
         self.publish_time = publish_time
         self.market_version = market_version
         self.async_ = async_

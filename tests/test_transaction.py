@@ -59,6 +59,7 @@ class TransactionTest(unittest.TestCase):
         self.transaction.market.blotter.has_trade.assert_called_with(
             mock_order.trade.id
         )
+        mock_order.update_client.assert_called_with(self.transaction._client)
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
