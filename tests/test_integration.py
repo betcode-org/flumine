@@ -194,6 +194,78 @@ class IntegrationTest(unittest.TestCase):
             # check transaction count
             self.assertEqual(market._transaction_id, 5182)
 
+    def test_backtest_multi_clients(self):
+        class LimitOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if market_book.inplay:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                with market.transaction(client=self.context["client"]) as t:
+                    for runner in market_book.runners:
+                        if runner.status == "ACTIVE":
+                            back = get_price(runner.ex.available_to_back, 0)
+                            runner_context = self.get_runner_context(
+                                market.market_id, runner.selection_id
+                            )
+                            if runner_context.trade_count == 0:
+                                trade = Trade(
+                                    market_book.market_id,
+                                    runner.selection_id,
+                                    runner.handicap,
+                                    self,
+                                )
+                                order = trade.create_order(
+                                    side="BACK",
+                                    order_type=LimitOrder(back, 2.00),
+                                )
+                                t.place_order(order)
+
+            def process_orders(self, market, orders):
+                for order in orders:
+                    if order.status == OrderStatus.EXECUTABLE:
+                        if order.elapsed_seconds and order.elapsed_seconds > 2:
+                            market.cancel_order(order)
+
+        client_bpe_on = clients.BacktestClient()
+        client_bpe_off = clients.BacktestClient(best_price_execution=False)
+        framework = FlumineBacktest()
+        framework.add_client(client_bpe_on)
+        framework.add_client(client_bpe_off)
+        limit_strategy_bpe_on = LimitOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+            max_trade_count=100,
+            context={"client": client_bpe_on},
+        )
+        framework.add_strategy(limit_strategy_bpe_on)
+        limit_strategy_bpe_off = LimitOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+            max_trade_count=100,
+            context={"client": client_bpe_off},
+        )
+        framework.add_strategy(limit_strategy_bpe_off)
+        framework.run()
+
+        self.assertEqual(len(framework.markets), 1)
+
+        for market in framework.markets:
+            limit_orders_bpe_on = market.blotter.strategy_orders(limit_strategy_bpe_on)
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_on]), 2), -14.3
+            )
+            self.assertEqual(len(limit_orders_bpe_on), 14)
+            limit_orders_bpe_off = market.blotter.strategy_orders(
+                limit_strategy_bpe_off
+            )
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_off]), 2), -8.3
+            )
+            self.assertEqual(len(limit_orders_bpe_off), 14)
+
     def test_event_processing(self):
         client = clients.BacktestClient()
         framework = FlumineBacktest(client=client)

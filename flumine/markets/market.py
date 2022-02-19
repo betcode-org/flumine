@@ -90,19 +90,19 @@ class Market:
     def cancel_order(
         self, order, size_reduction: float = None, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.cancel_order(order, size_reduction, force)
 
     def update_order(
         self, order, new_persistence_type: str, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.update_order(order, new_persistence_type, force)
 
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.replace_order(order, new_price, market_version, force)
 
     @property

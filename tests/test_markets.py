@@ -175,6 +175,7 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.cancel_order(mock_order, 2.02, force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.cancel_order.assert_called_with(mock_order, 2.02, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -182,6 +183,7 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.update_order.assert_called_with(mock_order, "test", True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -189,6 +191,7 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.replace_order(mock_order, 2, False, force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):

@@ -1044,10 +1044,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel(self, mock__order_logger):
-        mock_order = mock.Mock(size_cancelled=2, size_remaining=0)
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client, size_cancelled=2, size_remaining=0)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1065,10 +1066,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel_executable(self, mock__order_logger):
-        mock_order = mock.Mock(size_cancelled=2, size_remaining=2)
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client, size_cancelled=2, size_remaining=2)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1086,10 +1088,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel_failure(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1116,10 +1119,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.Mock(market_id="1.23")
+        mock_order_package = mock.Mock(market_id="1.23", client=mock_client)
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.update_instructions = ["PERSIST"]
@@ -1140,10 +1144,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update_failure(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.Mock(market_id="1.23")
+        mock_order_package = mock.Mock(market_id="1.23", client=mock_client)
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.update_instructions = ["PERSIST"]
@@ -1175,11 +1180,12 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order.market_id = "1.234"
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1220,10 +1226,11 @@ class SimulatedExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
-        mock_order = mock.Mock()
+        mock_client = mock.Mock()
+        mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
