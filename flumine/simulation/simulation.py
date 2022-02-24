@@ -12,24 +12,24 @@ from ..order.order import OrderTypes
 logger = logging.getLogger(__name__)
 
 
-class FlumineBacktest(BaseFlumine):
+class FlumineSimulation(BaseFlumine):
     """
     Single threaded implementation of flumine
-    for backtesting strategies with betfair
+    for simulating strategies with betfair
     historic (or self recorded) streaming data.
     """
 
     BACKTEST = True
 
     def __init__(self, client: BaseClient = None):
-        super(FlumineBacktest, self).__init__(client)
+        super(FlumineSimulation, self).__init__(client)
         self.simulated_datetime = SimulatedDateTime()
         self.handler_queue = []
 
     def run(self) -> None:
         if not self.clients.simulated:
             raise RunError(
-                "Incorrect client provided, only a Simulated client can be used when backtesting"
+                "Incorrect client provided, only a Simulated client can be used when simulating"
             )
         with self:
             with self.simulated_datetime:
@@ -104,7 +104,7 @@ class FlumineBacktest(BaseFlumine):
                                 )
                             )
                 self._process_end_flumine()
-                logger.info("Backtesting complete")
+                logger.info("Simulation complete")
 
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         # todo DRY!
@@ -189,7 +189,7 @@ class FlumineBacktest(BaseFlumine):
             self.handler_queue.remove(p)
 
     def __repr__(self) -> str:
-        return "<FlumineBacktest>"
+        return "<FlumineSimulation>"
 
     def __str__(self) -> str:
-        return "<FlumineBacktest>"
+        return "<FlumineSimulation>"

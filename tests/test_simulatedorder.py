@@ -1,11 +1,11 @@
 import unittest
 from unittest import mock
 
-from flumine.backtest import simulated
+from flumine.simulation import simulatedorder
 from flumine.order.ordertype import OrderTypes
 
 
-class SimulatedTest(unittest.TestCase):
+class SimulatedOrderTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_order_type = mock.Mock(
             price=12, size=2.00, ORDER_TYPE=OrderTypes.LIMIT
@@ -21,7 +21,7 @@ class SimulatedTest(unittest.TestCase):
             number_of_dead_heat_winners=None,
             client=mock_client,
         )
-        self.simulated = simulated.Simulated(self.mock_order)
+        self.simulated = simulatedorder.SimulatedOrder(self.mock_order)
 
     def test_init(self):
         self.assertEqual(self.simulated.order, self.mock_order)
@@ -33,10 +33,12 @@ class SimulatedTest(unittest.TestCase):
         self.assertIsNone(self.simulated.market_version)
         self.assertFalse(self.simulated._bsp_reconciled)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
-    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
-    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_process_traded(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
@@ -48,10 +50,12 @@ class SimulatedTest(unittest.TestCase):
             mock_market_book.publish_time_epoch, traded
         )
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
-    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
-    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_process_sp(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
@@ -64,10 +68,12 @@ class SimulatedTest(unittest.TestCase):
         )
         mock__process_traded.assert_not_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
-    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
-    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_market_version(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
@@ -83,10 +89,12 @@ class SimulatedTest(unittest.TestCase):
         mock__process_sp.assert_not_called()
         mock__process_traded.assert_not_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
-    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
-    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_not_re(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
@@ -104,10 +112,12 @@ class SimulatedTest(unittest.TestCase):
         )
         mock__process_traded.assert_not_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
-    @mock.patch("flumine.backtest.simulated.Simulated._process_traded")
-    @mock.patch("flumine.backtest.simulated.Simulated._process_sp")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_bsp_reconciled(
         self, mock__process_sp, mock__process_traded, _, mock__get_runner
     ):
@@ -119,7 +129,7 @@ class SimulatedTest(unittest.TestCase):
         mock__process_sp.assert_not_called()
         mock__process_traded.assert_not_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -136,7 +146,7 @@ class SimulatedTest(unittest.TestCase):
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_target_size(self, mock__get_runner):
         self.mock_order.order_type.size = None
         mock_client = mock.Mock(best_price_execution=True)
@@ -149,7 +159,7 @@ class SimulatedTest(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.simulated.place(mock_order_package, mock_market_book, {}, 1)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_market_status(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -160,7 +170,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_voided, 2)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_market_version(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(
@@ -173,7 +183,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_voided, 2)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_unmatched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -193,7 +203,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 22)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_bpe(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -208,7 +218,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_lapsed, 2)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -225,7 +235,7 @@ class SimulatedTest(unittest.TestCase):
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_unmatched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -246,7 +256,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated._piq, 22)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_bpe(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -262,7 +272,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_lapsed, 2)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_removed_runner(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -279,8 +289,10 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_voided, 2)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._create_place_response")
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._create_place_response"
+    )
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_else(self, mock__get_runner, mock__create_place_response):
         mock__get_runner.status = "ACTIVE"
         mock_client = mock.Mock(best_price_execution=True)
@@ -291,7 +303,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         mock__create_place_response.assert_called_with(1)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._get_runner")
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_else_bsp_recon(self, mock__get_runner):
         mock__get_runner.status = "ACTIVE"
         mock_client = mock.Mock(best_price_execution=True)
@@ -314,7 +326,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(resp.error_code, "dubs of the mad skint and british")
 
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_remaining",
+        "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",
         new_callable=mock.PropertyMock,
         return_value=0,
     )
@@ -421,7 +433,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertIsNone(self.simulated._get_runner(mock_market_book))
 
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.side",
+        "flumine.simulation.simulatedorder.SimulatedOrder.side",
         new_callable=mock.PropertyMock,
         return_value="BACK",
     )
@@ -447,7 +459,7 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [[1234570, 15, 1]])
 
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.side",
+        "flumine.simulation.simulatedorder.SimulatedOrder.side",
         new_callable=mock.PropertyMock,
         return_value="LAY",
     )
@@ -595,23 +607,31 @@ class SimulatedTest(unittest.TestCase):
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
+    )
     def test__process_traded_back(self, mock__calculate_process_traded):
         self.simulated._process_traded(1234579, {12: 120})
         mock__calculate_process_traded.assert_called_with(1234579, 120)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
+    )
     def test__process_traded_back_no(self, mock__calculate_process_traded):
         self.simulated._process_traded(1234580, {11: 120})
         mock__calculate_process_traded.assert_not_called()
 
-    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
+    )
     def test__process_traded_lay(self, mock__calculate_process_traded):
         self.simulated.order.side = "LAY"
         self.simulated._process_traded(1234581, {12: 120})
         mock__calculate_process_traded.assert_called_with(1234581, 120)
 
-    @mock.patch("flumine.backtest.simulated.Simulated._calculate_process_traded")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
+    )
     def test__process_traded_lay_no(self, mock__calculate_process_traded):
         self.simulated.order.side = "LAY"
         self.simulated._process_traded(1234582, {13: 120})
@@ -765,11 +785,11 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.profit, 4.0)
 
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_remaining",
+        "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",
         new_callable=mock.PropertyMock,
     )
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.take_sp",
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp",
         new_callable=mock.PropertyMock,
         return_value=False,
     )
@@ -779,7 +799,9 @@ class SimulatedTest(unittest.TestCase):
         mock_size_remaining.return_value = 0
         self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
 
-    @mock.patch("flumine.backtest.simulated.Simulated.take_sp", return_value=True)
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
     def test_status_sp(self, mock_take_sp):
         self.simulated._bsp_reconciled = False
         self.assertEqual(self.simulated.status, "EXECUTABLE")
@@ -787,12 +809,12 @@ class SimulatedTest(unittest.TestCase):
         self.assertEqual(self.simulated.status, "EXECUTION_COMPLETE")
 
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.size_remaining",
+        "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",
         return_value=1,
         new_callable=mock.PropertyMock,
     )
     @mock.patch(
-        "flumine.backtest.simulated.Simulated.take_sp",
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp",
         return_value=False,
         new_callable=mock.PropertyMock,
     )

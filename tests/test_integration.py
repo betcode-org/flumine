@@ -1,6 +1,6 @@
 import unittest
 
-from flumine import FlumineBacktest, clients, BaseStrategy, config
+from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
@@ -21,7 +21,7 @@ class IntegrationTest(unittest.TestCase):
                 return
 
         client = clients.SimulatedClient()
-        framework = FlumineBacktest(client=client)
+        framework = FlumineSimulation(client=client)
         strategy = Ex(market_filter={"markets": ["tests/resources/BASIC-1.132153978"]})
         framework.add_strategy(strategy)
         framework.run()
@@ -137,7 +137,7 @@ class IntegrationTest(unittest.TestCase):
                             market.place_order(order)
 
         client = clients.SimulatedClient()
-        framework = FlumineBacktest(client=client)
+        framework = FlumineSimulation(client=client)
         limit_strategy = LimitOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -232,7 +232,7 @@ class IntegrationTest(unittest.TestCase):
 
         client_bpe_on = clients.SimulatedClient()
         client_bpe_off = clients.SimulatedClient(best_price_execution=False)
-        framework = FlumineBacktest()
+        framework = FlumineSimulation()
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
         limit_strategy_bpe_on = LimitOrders(
@@ -278,7 +278,7 @@ class IntegrationTest(unittest.TestCase):
 
     def test_event_processing(self):
         client = clients.SimulatedClient()
-        framework = FlumineBacktest(client=client)
+        framework = FlumineSimulation(client=client)
 
         class LimitOrdersInplay(BaseStrategy):
             def check_market_book(self, market, market_book):

@@ -185,7 +185,7 @@ class BaseOrderTest(unittest.TestCase):
         mock_responses.current_order = 1
         self.assertEqual(self.order.current_order, 1)
 
-    @mock.patch("flumine.backtest.simulated.config")
+    @mock.patch("flumine.simulation.simulatedorder.config")
     def test_current_order_simulated(self, mock_config):
         mock_config.simulated = True
         order = BaseOrder(mock.Mock(), "", mock.Mock())

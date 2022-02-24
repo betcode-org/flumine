@@ -13,7 +13,7 @@ from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
-from ..backtest.simulated import Simulated
+from ..simulation.simulatedorder import SimulatedOrder
 from .. import config
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class BaseOrder:
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
-        self.simulated = Simulated(self)  # used in simulated execution
+        self.simulated = SimulatedOrder(self)  # used in simulated execution
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
         self.market_version = None  # marketBook.version
@@ -186,7 +186,7 @@ class BaseOrder:
             return False  # default to False
 
     @property
-    def current_order(self) -> Union[CurrentOrder, Simulated]:
+    def current_order(self) -> Union[CurrentOrder, SimulatedOrder]:
         if self._simulated:
             return self.simulated
         elif self.responses.current_order:

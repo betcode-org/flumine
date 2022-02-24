@@ -15,7 +15,7 @@ from .. import config
 logger = logging.getLogger(__name__)
 
 
-class Simulated:
+class SimulatedOrder:
     """
     Class to hold `simulated` order
     matching and status.
