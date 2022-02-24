@@ -4,7 +4,7 @@ from flumine import FlumineBacktest, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
-from flumine.utils import get_price
+from flumine.utils import get_price, get_nearest_price
 
 
 class IntegrationTest(unittest.TestCase):
@@ -225,6 +225,9 @@ class IntegrationTest(unittest.TestCase):
                 for order in orders:
                     if order.status == OrderStatus.EXECUTABLE:
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
+                            new_price = get_nearest_price(order.order_type.price - 1)
+                            market.replace_order(order, new_price)
+                        elif order.elapsed_seconds and order.elapsed_seconds > 10:
                             market.cancel_order(order)
 
         client_bpe_on = clients.BacktestClient()
@@ -255,14 +258,21 @@ class IntegrationTest(unittest.TestCase):
         for market in framework.markets:
             limit_orders_bpe_on = market.blotter.strategy_orders(limit_strategy_bpe_on)
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders_bpe_on]), 2), -14.3
+                limit_orders_bpe_on, market.blotter.client_orders(client_bpe_on)
             )
-            self.assertEqual(len(limit_orders_bpe_on), 14)
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_on]), 2), -17.75
+            )
+            self.assertEqual(len(limit_orders_bpe_on), 15)
             limit_orders_bpe_off = market.blotter.strategy_orders(
                 limit_strategy_bpe_off
             )
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders_bpe_off]), 2), -8.3
+                limit_orders_bpe_off, market.blotter.client_orders(client_bpe_off)
+            )
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_off]), 2),
+                -19.75,
             )
             self.assertEqual(len(limit_orders_bpe_off), 14)
 

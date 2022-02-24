@@ -184,11 +184,7 @@ class Market:
             return self.market_book.market_definition.race_type
 
     def cleared(self, client) -> dict:
-        orders = [
-            order
-            for order in self.blotter
-            if order.client == client and order.size_matched
-        ]
+        orders = self.blotter.client_orders(client, matched_only=True)
         profit = round(sum([order.simulated.profit for order in orders]), 2)
         return {
             "marketId": self.market_id,
