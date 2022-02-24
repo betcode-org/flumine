@@ -4,6 +4,7 @@ from typing import Union, Iterator
 
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
+from .sportsdatastream import SportsDataStream
 from .datastream import DataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
@@ -79,6 +80,7 @@ class Streams:
     """ market data """
 
     def add_stream(self, strategy: BaseStrategy) -> None:
+        # markets
         if isinstance(strategy.market_filter, dict) or strategy.market_filter is None:
             market_filters = [strategy.market_filter]
         else:
@@ -113,6 +115,36 @@ class Streams:
                     market_data_filter=strategy.market_data_filter,
                     streaming_timeout=strategy.streaming_timeout,
                     conflate_ms=strategy.conflate_ms,
+                )
+                self._streams.append(stream)
+                strategy.streams.append(stream)
+        # sports data
+        for subscription in strategy.sports_data_filter:
+            for stream in self:  # check if sports data stream already exists
+                if (
+                    isinstance(stream, SportsDataStream)
+                    and stream.sports_data_filter == subscription
+                    and stream.streaming_timeout == strategy.streaming_timeout
+                ):
+                    logger.info(
+                        "Using {0} ({1}) for strategy {2}".format(
+                            strategy.stream_class, stream.stream_id, strategy
+                        )
+                    )
+                    strategy.streams.append(stream)
+                    break
+            else:  # nope? lets create a new one
+                stream_id = self._increment_stream_id()
+                logger.info(
+                    "Creating new {0} ({1}) for strategy {2}".format(
+                        strategy.stream_class, stream_id, strategy
+                    )
+                )
+                stream = strategy.stream_class(
+                    flumine=self.flumine,
+                    stream_id=stream_id,
+                    sports_data_filter=strategy.sports_data_filter,
+                    streaming_timeout=strategy.streaming_timeout,
                 )
                 self._streams.append(stream)
                 strategy.streams.append(stream)

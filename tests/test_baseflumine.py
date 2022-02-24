@@ -43,7 +43,7 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test_add_strategy(self, mock_log_control, mock_events):
-        mock_strategy = mock.Mock(market_filter={})
+        mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
         mock_client = mock.Mock()
         self.base_flumine.add_strategy(mock_strategy, mock_client)
         self.assertEqual(len(self.base_flumine.strategies), 1)

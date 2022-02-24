@@ -177,7 +177,7 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
-        mock_strategy = mock.Mock(market_filter={})
+        mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
         mock_stream_class = mock.Mock()
         mock_strategy.stream_class = mock_stream_class
 
@@ -195,7 +195,7 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_none(self, mock_increment):
-        mock_strategy = mock.Mock(market_filter=None)
+        mock_strategy = mock.Mock(market_filter=None, sports_data_filter=[])
         mock_stream_class = mock.Mock()
         mock_strategy.stream_class = mock_stream_class
 
@@ -214,7 +214,9 @@ class StreamsTest(unittest.TestCase):
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_multi(self, mock_increment):
         mock_strategy = mock.Mock(
-            market_filter=[{1: 2}, {3: 4}], stream_class=streams.MarketStream
+            market_filter=[{1: 2}, {3: 4}],
+            stream_class=streams.MarketStream,
+            sports_data_filter=[],
         )
         self.streams.add_stream(mock_strategy)
         self.assertEqual(len(self.streams), 2)
@@ -222,23 +224,34 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_old(self, mock_increment):
-        mock_strategy = mock.Mock(market_filter={})
-        mock_strategy.market_data_filter = 2
-        mock_strategy.streaming_timeout = 3
-        mock_strategy.conflate_ms = 4
-        mock_strategy.stream_class = streams.MarketStream
-
-        stream = mock.Mock(spec=streams.MarketStream)
-        stream.market_filter = {}
-        stream.market_data_filter = 2
-        stream.streaming_timeout = 3
-        stream.conflate_ms = 4
-        stream.stream_id = 1001
+        mock_strategy = mock.Mock(
+            market_data_filter=2,
+            stream_class=streams.MarketStream,
+            streaming_timeout=3,
+            conflate_ms=4,
+            market_filter={},
+            sports_data_filter=[],
+        )
+        stream = mock.Mock(
+            spec=streams.MarketStream,
+            market_filter={},
+            market_data_filter=2,
+            streaming_timeout=3,
+            conflate_ms=4,
+            stream_id=1001,
+        )
         self.streams._streams = [stream]
 
         self.streams.add_stream(mock_strategy)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_not_called()
+
+    def test_add_stream_sports_data(self):
+        mock_strategy = mock.Mock(
+            market_filter=[],
+            sports_data_filter=["raceSubscription", "cricketSubscription"],
+        )
+        self.streams.add_stream(mock_strategy)
 
     @mock.patch("flumine.streams.streams.get_file_md")
     @mock.patch("flumine.streams.streams.HistoricalStream")
@@ -428,6 +441,7 @@ class TestBaseStream(unittest.TestCase):
             100,
             {"test": "me"},
             {"please": "now"},
+            "yes",
             client=self.mock_client,
             output_queue=False,
             event_processing=True,
@@ -441,6 +455,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
         self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.sports_data_filter, "yes")
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertFalse(self.stream.custom)
