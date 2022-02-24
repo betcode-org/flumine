@@ -12,7 +12,7 @@ class IntegrationTest(unittest.TestCase):
         # change config to raise errors
         config.raise_errors = True
 
-    def test_backtest_basic(self):
+    def test_simulation_basic(self):
         class Ex(BaseStrategy):
             def check_market_book(self, market, market_book):
                 return True
@@ -26,7 +26,7 @@ class IntegrationTest(unittest.TestCase):
         framework.add_strategy(strategy)
         framework.run()
 
-    def test_backtest_pro(self):
+    def test_simulation_pro(self):
         class LimitOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
                 if not market_book.inplay and market.seconds_to_start < 100:
@@ -194,7 +194,7 @@ class IntegrationTest(unittest.TestCase):
             # check transaction count
             self.assertEqual(market._transaction_id, 5182)
 
-    def test_backtest_multi_clients(self):
+    def test_simulation_multi_clients(self):
         class LimitOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
                 if market_book.inplay:

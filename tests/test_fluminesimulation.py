@@ -17,7 +17,7 @@ class FlumineSimulationTest(unittest.TestCase):
         self.flumine = FlumineSimulation(self.mock_client)
 
     def test_init(self):
-        self.assertTrue(self.flumine.BACKTEST)
+        self.assertTrue(self.flumine.SIMULATED)
         self.assertEqual(self.flumine.handler_queue, [])
 
     def test_run_error(self):

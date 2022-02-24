@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class BaseFlumine:
 
-    BACKTEST = False
+    SIMULATED = False
 
     def __init__(self, client: BaseClient = None):
         """
@@ -383,7 +383,7 @@ class BaseFlumine:
         if len(self.clients) == 0:
             raise ClientError("No clients provided")
         # simulated
-        if self.BACKTEST:
+        if self.SIMULATED:
             config.simulated = True
         else:
             config.simulated = False

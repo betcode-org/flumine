@@ -17,7 +17,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
-        self.assertFalse(self.base_flumine.BACKTEST)
+        self.assertFalse(self.base_flumine.SIMULATED)
         self.assertFalse(self.base_flumine._running)
         self.assertEqual(self.base_flumine._market_middleware, [])
         self.assertEqual(self.base_flumine._logging_controls, [])
@@ -26,12 +26,12 @@ class BaseFlumineTest(unittest.TestCase):
 
     @mock.patch("flumine.baseflumine.SimulatedMiddleware")
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
-    def test_init_backtest(self, mock_add_market_middleware, mock_SimulatedMiddleware):
-        BaseFlumine.BACKTEST = True
+    def test_init_simulated(self, mock_add_market_middleware, mock_SimulatedMiddleware):
+        BaseFlumine.SIMULATED = True
         mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED, paper_trade=False)
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
-        BaseFlumine.BACKTEST = False
+        BaseFlumine.SIMULATED = False
 
     @mock.patch("flumine.baseflumine.SimulatedMiddleware")
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")

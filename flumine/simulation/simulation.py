@@ -19,7 +19,7 @@ class FlumineSimulation(BaseFlumine):
     historic (or self recorded) streaming data.
     """
 
-    BACKTEST = True
+    SIMULATED = True
 
     def __init__(self, client: BaseClient = None):
         super(FlumineSimulation, self).__init__(client)

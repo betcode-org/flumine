@@ -352,7 +352,7 @@ class TestExecutionValidation(unittest.TestCase):
             spec=OrderStream, _stream=mock.Mock(_running=True)
         )
         self.mock_flumine = mock.Mock(
-            BACKTEST=False,
+            SIMULATED=False,
             client=mock.Mock(paper_trade=False),
             streams=[self.mock_order_stream],
         )
@@ -477,21 +477,21 @@ class TestExecutionValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
     def test__validate(self, mock_validate_order):
-        self.mock_flumine.BACKTEST = False
+        self.mock_flumine.SIMULATED = False
         self.mock_order.client.paper_trade = False
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_called()
 
         mock_validate_order.reset_mock()
 
-        self.mock_flumine.BACKTEST = True
+        self.mock_flumine.SIMULATED = True
         self.mock_order.client.paper_trade = False
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_not_called()
 
         mock_validate_order.reset_mock()
 
-        self.mock_flumine.BACKTEST = False
+        self.mock_flumine.SIMULATED = False
         self.mock_order.client.paper_trade = True
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_not_called()
