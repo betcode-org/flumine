@@ -97,6 +97,23 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
 
+    def test__process_sports_data(self):
+        mock_market = mock.Mock()
+        self.base_flumine.markets._markets = {"1.1": mock_market}
+        mock_strategy_one = mock.Mock(stream_ids=[123])
+        mock_strategy_two = mock.Mock(stream_ids=[])
+        self.base_flumine.strategies = [
+            mock_strategy_one,
+            mock_strategy_two,
+        ]
+        mock_sports_data = mock.Mock(streaming_unique_id=123, market_id="1.1")
+        mock_event = mock.Mock(event=[mock_sports_data])
+        self.base_flumine._process_sports_data(mock_event)
+        mock_strategy_one.process_sports_data.assert_called_with(
+            mock_market, mock_sports_data
+        )
+        mock_strategy_two.process_sports_data.assert_not_called()
+
     def test_process_order_package(self):
         mock_order_package = mock.Mock()
         self.base_flumine.process_order_package(mock_order_package)

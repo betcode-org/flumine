@@ -1,7 +1,7 @@
 import logging
 from typing import Type, Iterator, Union
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook
+from betfairlightweight.resources import MarketBook, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..clients import BaseClient
@@ -110,6 +110,12 @@ class BaseStrategy:
 
     def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook; place/cancel/replace orders
+        return
+
+    def process_sports_data(
+        self, market: Market, sports_data: Union[Race, CricketMatch]
+    ) -> None:
+        # process sports data
         return
 
     def process_raw_data(self, clk: str, publish_time: int, datum: dict) -> None:

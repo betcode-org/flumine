@@ -8,6 +8,7 @@ class EventType(Enum):
     # betfair objects
     MARKET_CATALOGUE = "MarketCatalogue"
     MARKET_BOOK = "MarketBook"
+    SPORTS_DATA = "SportsData"
     RAW_DATA = "Raw streaming data"
     CURRENT_ORDERS = "CurrentOrders"
     CLEARED_MARKETS = "ClearedMarkets"
@@ -57,6 +58,11 @@ class MarketCatalogueEvent(BaseEvent):
 
 class MarketBookEvent(BaseEvent):
     EVENT_TYPE = EventType.MARKET_BOOK
+    QUEUE_TYPE = QueueType.HANDLER
+
+
+class SportsDataEvent(BaseEvent):
+    EVENT_TYPE = EventType.SPORTS_DATA
     QUEUE_TYPE = QueueType.HANDLER
 
 

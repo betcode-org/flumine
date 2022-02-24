@@ -149,6 +149,9 @@ class BaseStrategyTest(unittest.TestCase):
     def test_process_market_book(self):
         self.strategy.process_market_book(None, None)
 
+    def test_process_sports_data(self):
+        self.strategy.process_sports_data(None, None)
+
     def test_process_raw_data(self):
         self.strategy.process_raw_data(None, None, None)
 
