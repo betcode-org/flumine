@@ -1,7 +1,12 @@
 import unittest
 from unittest import mock
 
-from flumine.baseflumine import BaseFlumine, FlumineException, MaxTransactionCount
+from flumine.baseflumine import (
+    BaseFlumine,
+    FlumineException,
+    MaxTransactionCount,
+    SimulatedMiddleware,
+)
 from flumine.clients import ExchangeType
 from flumine.exceptions import ClientError
 
@@ -54,6 +59,24 @@ class BaseFlumineTest(unittest.TestCase):
         mock_streams.add_client.assert_called_with(mock_client)
         mock_client.add_execution.assert_called_with(self.base_flumine)
         mock_add_market_middleware.assert_called()
+        mock_add_client_control.assert_called_with(mock_client, MaxTransactionCount)
+
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_client_control")
+    def test_add_client_with_middleware(
+        self, mock_add_client_control, mock_add_market_middleware
+    ):
+        self.base_flumine._market_middleware.append(SimulatedMiddleware())
+        mock_clients = mock.Mock()
+        self.base_flumine.clients = mock_clients
+        mock_streams = mock.Mock()
+        self.base_flumine.streams = mock_streams
+        mock_client = mock.Mock()
+        self.base_flumine.add_client(mock_client)
+        mock_clients.add_client.assert_called_with(mock_client)
+        mock_streams.add_client.assert_called_with(mock_client)
+        mock_client.add_execution.assert_called_with(self.base_flumine)
+        mock_add_market_middleware.assert_not_called()
         mock_add_client_control.assert_called_with(mock_client, MaxTransactionCount)
 
     @mock.patch("flumine.baseflumine.events")

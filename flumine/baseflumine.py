@@ -88,8 +88,10 @@ class BaseFlumine:
         self.streams.add_client(client)
         # add execution
         client.add_execution(self)
-        # add simulation middleware
-        if self.clients.simulated and not self._market_middleware:
+        # add simulation middleware if required
+        if self.clients.simulated and not any(
+            isinstance(val, SimulatedMiddleware) for val in self._market_middleware
+        ):
             self.add_market_middleware(SimulatedMiddleware())
         # register default client controls (processed in order)
         self.add_client_control(client, MaxTransactionCount)
