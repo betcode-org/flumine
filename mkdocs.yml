@@ -22,6 +22,7 @@ nav:
       - QuickStart: 'quickstart.md'
       - Help: 'help.md'
     - Advanced:
+      - Clients: 'clients.md'
       - Strategies: 'strategies.md'
       - Trades / Orders: 'trades.md'
       - Markets: 'markets.md'

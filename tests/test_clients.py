@@ -377,5 +377,5 @@ class BacktestClientTest(unittest.TestCase):
     def test_username(self):
         self.assertEqual(
             self.backtest_client.username,
-            "Simulated-{0}".format(self.backtest_client.id),
+            self.backtest_client.id,
         )

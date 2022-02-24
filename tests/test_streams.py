@@ -934,9 +934,7 @@ class TestSimulatedOrderStream(unittest.TestCase):
 
     def test__get_current_orders(self):
         mock_market = mock.Mock(closed=False)
-        order_one = mock.Mock(simulated=True, client=self.stream.client)
-        order_two = mock.Mock(simulated=True)
-        order_three = mock.Mock(simulated=True)
-        mock_market.blotter = [order_one, order_two, order_three]
+        order_one = mock.Mock(client=self.stream.client)
+        mock_market.blotter.client_orders.return_value = [order_one]
         self.stream.flumine.markets = [mock_market, mock.Mock(closed=True)]
         self.assertEqual(self.stream._get_current_orders(), [order_one])
