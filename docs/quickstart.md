@@ -163,15 +163,15 @@ Market data will be recieved as per live but any orders will use Simulated execu
 !!! tip
     This can be handy when testing strategies as the betfair website can be used to validate the market.
 
-## Backtesting
+## Simulation
 
-Flumine can be used to backtest strategies using the following code:
+Flumine can be used to simulate strategies using the following code:
 
 ```python
-from flumine import FlumineBacktest, clients
+from flumine import FlumineSimulation, clients
 
 client = clients.SimulatedClient()
-framework = FlumineBacktest(client=client)
+framework = FlumineSimulation(client=client)
 
 strategy = ExampleStrategy(
     market_filter={"markets": ["/tmp/marketdata/1.170212754"]}
@@ -185,7 +185,7 @@ Note the use of market filter to pass the file directories.
 
 ### Listener kwargs
 
-Sometimes a subset of the market lifetime is required, this can be optimised by limiting the number of updates to process resulting in faster backtesting:
+Sometimes a subset of the market lifetime is required, this can be optimised by limiting the number of updates to process resulting in faster simulation:
 
 ```python
 strategy = ExampleStrategy(
@@ -224,7 +224,7 @@ place_market = market.event["PLACE"]
 
 ### Market Filter
 
-When backtesting you can filter markets to be processed by using the `market_type` and `country_code` filter as per live:
+When simulating you can filter markets to be processed by using the `market_type` and `country_code` filter as per live:
 
 ```python
 strategy = ExampleStrategy(
@@ -234,7 +234,7 @@ strategy = ExampleStrategy(
 
 ### Simulation
 
-Backtesting uses the `SimulatedExecution` execution class and tries to accurately simulate matching with the following:
+Simulation uses the `SimulatedExecution` execution class and tries to accurately simulate matching with the following:
 
 - Place/Cancel/Replace latency delay added
 - BetDelay added based on market state

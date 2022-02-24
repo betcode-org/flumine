@@ -137,7 +137,7 @@ class FlumineSimulation(BaseFlumine):
 
             # process current orders
             if market.blotter.active:
-                self._process_backtest_orders(market)
+                self._process_simulated_orders(market)
 
             for strategy in self.strategies:
                 if utils.call_strategy_error_handling(
@@ -151,7 +151,7 @@ class FlumineSimulation(BaseFlumine):
         # place in pending list (wait for latency+delay)
         self.handler_queue.append(order_package)
 
-    def _process_backtest_orders(self, market) -> None:
+    def _process_simulated_orders(self, market) -> None:
         """Remove order from blotter live
         orders if complete and process
         orders through strategies

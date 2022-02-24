@@ -7,7 +7,7 @@ from flumine.markets.middleware import Middleware
 MARKET_CATALOGUE_PATH = ""  # update to correct path
 
 
-# Will read and parse the market_catalogue file and add to the market object when backtesting
+# Will read and parse the market_catalogue file and add to the market object when simulating
 # Usage framework.add_market_middleware(MarketCatalogueMiddleware())
 class MarketCatalogueMiddleware(Middleware):
     def add_market(self, market) -> None:

@@ -40,7 +40,7 @@ Similar to Market Streams but the raw streaming data is passed back, this reduce
 
 ### Historical Stream
 
-This is created on a per market basis when backtesting.
+This is created on a per market basis when simulating.
 
 ### Order Stream
 
@@ -110,7 +110,7 @@ logger.setLevel(logging.INFO)
 
 #### simulated
 
-Updated to True when backtesting or paper trading
+Updated to True when simulating or paper trading
 
 #### simulated_strategy_isolation
 
@@ -130,7 +130,7 @@ OS process id of running application.
 
 #### current_time
 
-Used for backtesting
+Used for simulation
 
 #### raise_errors
 
@@ -146,19 +146,19 @@ Place orders sent with place orders flag, prevents waiting for bet delay
 
 #### place_latency
 
-Place latency used for backtesting / simulation execution
+Place latency used for simulation / simulation execution
 
 #### cancel_latency
 
-Cancel latency used for backtesting / simulation execution
+Cancel latency used for simulation / simulation execution
 
 #### update_latency
 
-Update latency used for backtesting / simulation execution
+Update latency used for simulation / simulation execution
 
 #### replace_latency
 
-Replace latency used for backtesting / simulation execution
+Replace latency used for simulation / simulation execution
 
 #### order_sep 
 

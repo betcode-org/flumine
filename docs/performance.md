@@ -2,7 +2,7 @@
 
 Flumine is heavily optimised out of the box to be as quick as possible however there are various ways to improve the performance further with minimal effort.
 
-## Backtesting
+## Simulation
 
 ### Listener Kwargs
 
@@ -60,7 +60,7 @@ Sometimes a download from the betfair site will include market and event files i
 
 ### Multiprocessing
 
-Backtesting is CPU bound so can therefore be improved through the use of multiprocessing, threading offers no improvement due to the limitations of the GIL.
+Simulation is CPU bound so can therefore be improved through the use of multiprocessing, threading offers no improvement due to the limitations of the GIL.
 
 The multiprocessing example code below will:
 
@@ -74,13 +74,13 @@ import math
 import smart_open
 from concurrent import futures
 from unittest.mock import patch as mock_patch
-from flumine import FlumineBacktest, clients, utils
+from flumine import FlumineSimulation, clients, utils
 from strategies.lowestlayer import LowestLayer
 
 
 def run_process(markets):
     client = clients.SimulatedClient()
-    framework = FlumineBacktest(client=client)
+    framework = FlumineSimulation(client=client)
     strategy = LowestLayer(
         market_filter={"markets": markets},
         context={"stake": 2},
@@ -136,4 +136,4 @@ Installing betfairlightweight[speed] will have a big impact on processing speed 
 
 ## Live
 
-For improving live trading 'Strategy' and 'cprofile' tips above will help although CPU load tends to be considerably lower compared to backtesting.
+For improving live trading 'Strategy' and 'cprofile' tips above will help although CPU load tends to be considerably lower compared to simulating.

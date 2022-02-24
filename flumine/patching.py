@@ -8,7 +8,7 @@ The inclusion of slots further reduces the processing time as well
 as reducing memory.
 
 This optimisation will improve normal streaming as well as
-backtesting, with more speed, less CPU + ram and minimal reduction
+simulation, with more speed, less CPU + ram and minimal reduction
 in usability.
 """
 

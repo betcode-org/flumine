@@ -2,7 +2,7 @@ import time
 import logging
 from pythonjsonlogger import jsonlogger
 
-from flumine import FlumineBacktest, clients
+from flumine import FlumineSimulation, clients
 from strategies.lowestlayer import LowestLayer
 
 logger = logging.getLogger()
@@ -13,11 +13,11 @@ formatter = jsonlogger.JsonFormatter(custom_format)
 formatter.converter = time.gmtime
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
-logger.setLevel(logging.INFO)  # Set to logging.CRITICAL to speed up backtest
+logger.setLevel(logging.INFO)  # Set to logging.CRITICAL to speed up simulation
 
 client = clients.SimulatedClient()
 
-framework = FlumineBacktest(client=client)
+framework = FlumineSimulation(client=client)
 
 markets = ["tests/resources/PRO-1.170258213"]
 

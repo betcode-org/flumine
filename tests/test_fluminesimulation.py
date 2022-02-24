@@ -70,7 +70,7 @@ class FlumineSimulationTest(unittest.TestCase):
         mock__process_end_flumine.assert_called_with()
 
     @mock.patch(
-        "flumine.simulation.simulation.FlumineSimulation._process_backtest_orders"
+        "flumine.simulation.simulation.FlumineSimulation._process_simulated_orders"
     )
     @mock.patch(
         "flumine.simulation.simulation.FlumineSimulation._check_pending_packages"
@@ -78,7 +78,7 @@ class FlumineSimulationTest(unittest.TestCase):
     def test__process_market_books(
         self,
         mock__check_pending_packages,
-        mock__process_backtest_orders,
+        mock__process_simulated_orders,
     ):
         self.flumine.handler_queue.append(mock.Mock())
         mock_event = mock.Mock()
@@ -90,14 +90,14 @@ class FlumineSimulationTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.flumine._process_market_books(mock_event)
         mock__check_pending_packages.assert_called_with("1.23")
-        mock__process_backtest_orders.assert_called_with(mock_market)
+        mock__process_simulated_orders.assert_called_with(mock_market)
 
     def test_process_order_package(self):
         mock_order_package = mock.Mock()
         self.flumine.process_order_package(mock_order_package)
         self.assertEqual(self.flumine.handler_queue, [mock_order_package])
 
-    def test__process_backtest_orders(self):
+    def test__process_simulated_orders(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter = Blotter("1.23")
         mock_order = mock.Mock(size_remaining=0, complete=False)
@@ -107,16 +107,16 @@ class FlumineSimulationTest(unittest.TestCase):
         mock_order_two.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order_two.trade.status = TradeStatus.COMPLETE
         mock_market.blotter._live_orders = [mock_order, mock_order_two]
-        self.flumine._process_backtest_orders(mock_market)
+        self.flumine._process_simulated_orders(mock_market)
         mock_order.execution_complete.assert_called()
         mock_order_two.execution_complete.assert_not_called()
 
-    def test__process_backtest_orders_strategies(self):
+    def test__process_simulated_orders_strategies(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter.live_orders = []
         mock_strategy = mock.Mock()
         self.flumine.strategies = [mock_strategy]
-        self.flumine._process_backtest_orders(mock_market)
+        self.flumine._process_simulated_orders(mock_market)
         mock_strategy.process_orders.assert_called_with(
             mock_market, mock_market.blotter.strategy_orders(mock_strategy)
         )

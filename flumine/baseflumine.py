@@ -317,7 +317,7 @@ class BaseFlumine:
 
         # check for markets that have been closed for x seconds and remove
         if not self.clients.simulated:
-            # due to monkey patching this will clear backtested markets
+            # due to monkey patching this will clear simulated markets
             closed_markets = [
                 m
                 for m in self.markets
