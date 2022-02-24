@@ -86,6 +86,12 @@ class Transaction:
     def cancel_order(
         self, order, size_reduction: float = None, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "cancel_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.CANCEL) is False
@@ -100,6 +106,12 @@ class Transaction:
     def update_order(
         self, order, new_persistence_type: str, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "update_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.UPDATE) is False
@@ -114,6 +126,12 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "replace_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.REPLACE) is False
