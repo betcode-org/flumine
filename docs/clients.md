@@ -5,7 +5,7 @@ Flumine is capable of using multiple clients, these can be of the same `Exchange
 ## ExchangeTypes
 
 - BETFAIR: `BetfairClient`
-- SIMULATED: `BacktestClient`
+- SIMULATED: `SimulatedClient`
 - BETCONNECT: `BetconnectClient`
 
 ## Strategy use
@@ -17,7 +17,7 @@ from flumine import Flumine, clients
 
 framework = Flumine()
 
-client = clients.BacktestClient(id_="123")
+client = clients.SimulatedClient(id_="123")
 framework.add_client(client)
 ```
 

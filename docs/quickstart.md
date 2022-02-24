@@ -170,7 +170,7 @@ Flumine can be used to backtest strategies using the following code:
 ```python
 from flumine import FlumineBacktest, clients
 
-client = clients.BacktestClient()
+client = clients.SimulatedClient()
 framework = FlumineBacktest(client=client)
 
 strategy = ExampleStrategy(

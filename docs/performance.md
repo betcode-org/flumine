@@ -79,7 +79,7 @@ from strategies.lowestlayer import LowestLayer
 
 
 def run_process(markets):
-    client = clients.BacktestClient()
+    client = clients.SimulatedClient()
     framework = FlumineBacktest(client=client)
     strategy = LowestLayer(
         market_filter={"markets": markets},

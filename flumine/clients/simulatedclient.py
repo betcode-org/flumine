@@ -6,9 +6,9 @@ from .baseclient import BaseClient
 from .clients import ExchangeType
 
 
-class BacktestClient(BaseClient):
+class SimulatedClient(BaseClient):
     """
-    Backtest betting client.
+    Simulated betting client.
     """
 
     EXCHANGE = ExchangeType.SIMULATED

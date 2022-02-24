@@ -20,7 +20,7 @@ class IntegrationTest(unittest.TestCase):
             def process_market_book(self, market, market_book):
                 return
 
-        client = clients.BacktestClient()
+        client = clients.SimulatedClient()
         framework = FlumineBacktest(client=client)
         strategy = Ex(market_filter={"markets": ["tests/resources/BASIC-1.132153978"]})
         framework.add_strategy(strategy)
@@ -136,7 +136,7 @@ class IntegrationTest(unittest.TestCase):
                             )
                             market.place_order(order)
 
-        client = clients.BacktestClient()
+        client = clients.SimulatedClient()
         framework = FlumineBacktest(client=client)
         limit_strategy = LimitOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
@@ -230,8 +230,8 @@ class IntegrationTest(unittest.TestCase):
                         elif order.elapsed_seconds and order.elapsed_seconds > 10:
                             market.cancel_order(order)
 
-        client_bpe_on = clients.BacktestClient()
-        client_bpe_off = clients.BacktestClient(best_price_execution=False)
+        client_bpe_on = clients.SimulatedClient()
+        client_bpe_off = clients.SimulatedClient(best_price_execution=False)
         framework = FlumineBacktest()
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
@@ -277,7 +277,7 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(len(limit_orders_bpe_off), 14)
 
     def test_event_processing(self):
-        client = clients.BacktestClient()
+        client = clients.SimulatedClient()
         framework = FlumineBacktest(client=client)
 
         class LimitOrdersInplay(BaseStrategy):
