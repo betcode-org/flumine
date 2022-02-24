@@ -111,8 +111,8 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
         self.assertTrue(self.market.update_market_catalogue)
-        self.assertFalse(self.market.orders_cleared)
-        self.assertFalse(self.market.market_cleared)
+        self.assertEqual(self.market.orders_cleared, [])
+        self.assertEqual(self.market.market_cleared, [])
         self.assertEqual(self.market.context, {"simulated": {}})
         self.assertIsNotNone(self.market.blotter)
         self.assertEqual(self.market._transaction_id, 0)
@@ -125,12 +125,12 @@ class MarketTest(unittest.TestCase):
 
     def test_open_market(self):
         self.market.closed = True
-        self.market.orders_cleared = True
-        self.market.market_cleared = True
+        self.market.orders_cleared = [1, 2]
+        self.market.market_cleared = [1]
         self.market.open_market()
         self.assertFalse(self.market.closed)
-        self.assertFalse(self.market.orders_cleared)
-        self.assertFalse(self.market.market_cleared)
+        self.assertEqual(self.market.orders_cleared, [])
+        self.assertEqual(self.market.market_cleared, [])
 
     def test_close_market(self):
         self.market.close_market()

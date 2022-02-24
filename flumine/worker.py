@@ -154,27 +154,27 @@ def poll_account_balance(context: dict, flumine) -> None:
 
 
 def poll_market_closure(context: dict, flumine) -> None:
-    # todo client/cleared race condition
     markets = [
-        market
-        for market in list(flumine.markets.markets.values())
-        if market.closed
-        and (market.orders_cleared is False or market.market_cleared is False)
+        market for market in list(flumine.markets.markets.values()) if market.closed
     ]
     for client in flumine.clients:
-        if client.paper_trade or client.market_recording_mode:
+        if (
+            client.EXCHANGE != ExchangeType.BETFAIR
+            or client.paper_trade
+            or client.market_recording_mode
+        ):
             continue
         for market in markets:
-            if market.orders_cleared is False:
+            if client.id not in market.orders_cleared:
                 if _get_cleared_orders(
                     flumine, client.betting_client, market.market_id
                 ):
-                    market.orders_cleared = True
-            if market.market_cleared is False:
+                    market.orders_cleared.append(client.id)
+            if client.id not in market.market_cleared:
                 if _get_cleared_market(
                     flumine, client.betting_client, market.market_id
                 ):
-                    market.market_cleared = True
+                    market.market_cleared.append(client.id)
 
 
 def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:

@@ -188,13 +188,24 @@ class WorkersTest(unittest.TestCase):
     def test_poll_market_closure(
         self, mock__get_cleared_orders, mock__get_cleared_market
     ):
-        mock_client = mock.Mock(paper_trade=False, market_recording_mode=False)
-        mock_flumine = mock.Mock(clients=[mock_client])
-        market_one = mock.Mock(closed=False)
-        market_two = mock.Mock(closed=True, orders_cleared=True, market_cleared=True)
-        market_three = mock.Mock(
-            closed=True, orders_cleared=False, market_cleared=False
+        mock_client = mock.Mock(
+            id="123",
+            paper_trade=False,
+            market_recording_mode=False,
+            EXCHANGE=ExchangeType.BETFAIR,
         )
+        mock_client_sim = mock.Mock(
+            id="456",
+            paper_trade=False,
+            market_recording_mode=False,
+            EXCHANGE=ExchangeType.SIMULATED,
+        )
+        mock_flumine = mock.Mock(clients=[mock_client, mock_client_sim])
+        market_one = mock.Mock(closed=False)
+        market_two = mock.Mock(
+            closed=True, orders_cleared=["123"], market_cleared=["123"]
+        )
+        market_three = mock.Mock(closed=True, orders_cleared=[], market_cleared=[])
         mock_flumine.markets.markets = {
             1: market_one,
             2: market_two,

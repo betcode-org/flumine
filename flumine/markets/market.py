@@ -34,8 +34,8 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.update_market_catalogue = True
-        self.orders_cleared = False
-        self.market_cleared = False
+        self.orders_cleared = []
+        self.market_cleared = []
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
         self.blotter = Blotter(market_id)
         self._transaction_id = 0
@@ -47,8 +47,8 @@ class Market:
 
     def open_market(self) -> None:
         self.closed = False
-        self.orders_cleared = False
-        self.market_cleared = False
+        self.orders_cleared = []
+        self.market_cleared = []
         logger.info(
             "Market {0} opened".format(self.market_id),
             extra=self.info,
