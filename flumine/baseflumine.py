@@ -178,7 +178,9 @@ class BaseFlumine:
                 continue
             for strategy in self.strategies:
                 if sports_data.streaming_unique_id in strategy.stream_ids:
-                    strategy.process_sports_data(market, sports_data)
+                    utils.call_strategy_error_handling(
+                        strategy.process_sports_data, market, sports_data
+                    )
 
     def process_order_package(self, order_package) -> None:
         """Execute through client."""

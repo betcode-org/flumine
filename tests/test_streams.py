@@ -246,12 +246,48 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_not_called()
 
-    def test_add_stream_sports_data(self):
+    @mock.patch(
+        "flumine.streams.streams.SportsDataStream", autospec=streams.SportsDataStream
+    )
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_stream_sports_data(self, mock_increment, sports_data_stream_class):
         mock_strategy = mock.Mock(
             market_filter=[],
-            sports_data_filter=["raceSubscription", "cricketSubscription"],
+            sports_data_filter=["raceSubscription"],
         )
         self.streams.add_stream(mock_strategy)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        sports_data_stream_class.assert_has_calls(
+            [
+                call(
+                    flumine=self.mock_flumine,
+                    stream_id=mock_increment(),
+                    sports_data_filter="raceSubscription",
+                    streaming_timeout=mock_strategy.streaming_timeout,
+                )
+            ]
+        )
+
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_stream_sports_data_old(self, mock_increment):
+        mock_strategy = mock.Mock(
+            market_filter=[],
+            sports_data_filter=["cricketSubscription"],
+            streaming_timeout=3,
+        )
+        stream = mock.Mock(
+            stream_id=1,
+            spec=streams.SportsDataStream,
+            market_filter={},
+            sports_data_filter="cricketSubscription",
+            streaming_timeout=3,
+        )
+        self.streams._streams = [stream]
+
+        self.streams.add_stream(mock_strategy)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_not_called()
 
     @mock.patch("flumine.streams.streams.get_file_md")
     @mock.patch("flumine.streams.streams.HistoricalStream")
@@ -954,3 +990,26 @@ class TestSimulatedOrderStream(unittest.TestCase):
         mock_market.blotter = [order_one, order_two, order_three]
         self.stream.flumine.markets = [mock_market, mock.Mock(closed=True)]
         self.assertEqual(self.stream._get_current_orders(), [order_one])
+
+
+class TestSportsDataStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.SportsDataStream(
+            self.mock_flumine, 123, sports_data_filter="test", streaming_timeout=10
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.sports_data_filter, "test")
+        self.assertEqual(self.stream.streaming_timeout, 10)
+        self.assertIsNone(self.stream._stream)
+        self.assertEqual(orderstream.START_DELAY, 2)
+        self.assertEqual(orderstream.SNAP_DELTA, 5)
+
+    # def test_run(self):
+    #     pass
+    #
+    # def test_handle_output(self):
+    #     pass

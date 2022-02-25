@@ -40,7 +40,9 @@ class BaseStrategy:
         self,
         market_filter: Union[dict, list],
         market_data_filter: dict = None,
-        sports_data_filter: list[str] = None,  # 'raceSubscription', 'cricketSubscription'
+        sports_data_filter: list[
+            str
+        ] = None,  # 'raceSubscription', 'cricketSubscription'
         streaming_timeout: float = None,
         conflate_ms: int = None,
         stream_class: Type[BaseStream] = MarketStream,

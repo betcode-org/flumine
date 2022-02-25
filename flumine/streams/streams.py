@@ -140,10 +140,10 @@ class Streams:
                         strategy.stream_class, stream_id, strategy
                     )
                 )
-                stream = strategy.stream_class(
+                stream = SportsDataStream(
                     flumine=self.flumine,
                     stream_id=stream_id,
-                    sports_data_filter=strategy.sports_data_filter,
+                    sports_data_filter=subscription,
                     streaming_timeout=strategy.streaming_timeout,
                 )
                 self._streams.append(stream)
