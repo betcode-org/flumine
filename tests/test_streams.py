@@ -582,11 +582,16 @@ class TestDataStream(unittest.TestCase):
     # def test_handle_output(self):
     #     pass
 
+    @mock.patch("flumine.streams.datastream.FlumineCricketStream")
     @mock.patch("flumine.streams.datastream.FlumineRaceStream")
     @mock.patch("flumine.streams.datastream.FlumineOrderStream")
     @mock.patch("flumine.streams.datastream.FlumineMarketStream")
     def test_flumine_listener(
-        self, mock_market_stream, mock_order_stream, mock_race_stream
+        self,
+        mock_market_stream,
+        mock_order_stream,
+        mock_race_stream,
+        mock_cricket_stream,
     ):
         listener = datastream.FlumineListener()
         self.assertEqual(
@@ -597,6 +602,9 @@ class TestDataStream(unittest.TestCase):
         )
         self.assertEqual(
             listener._add_stream(123, "raceSubscription"), mock_race_stream()
+        )
+        self.assertEqual(
+            listener._add_stream(123, "cricketSubscription"), mock_cricket_stream()
         )
 
     def test_flumine_stream(self):
@@ -665,6 +673,25 @@ class TestDataStream(unittest.TestCase):
         stream._process(race_updates, 123)
 
         self.assertEqual(stream._lookup, "rc")
+        self.assertEqual(len(stream._caches), 2)
+        self.assertEqual(stream._updates_processed, 3)
+        mock_on_process.assert_called_with(
+            [mock_listener.stream_unique_id, "AAA", 123, race_updates]
+        )
+
+    @mock.patch("flumine.streams.datastream.FlumineCricketStream.on_process")
+    def test_flumine_cricket_stream(self, mock_on_process):
+        mock_listener = mock.Mock(stream_unique_id=0)
+        stream = datastream.FlumineCricketStream(mock_listener, 0)
+        stream._clk = "AAA"
+        race_updates = [
+            {"marketId": "1.123"},
+            {"marketId": "1.456"},
+            {"marketId": "1.123"},
+        ]
+        stream._process(race_updates, 123)
+
+        self.assertEqual(stream._lookup, "cc")
         self.assertEqual(len(stream._caches), 2)
         self.assertEqual(stream._updates_processed, 3)
         mock_on_process.assert_called_with(
