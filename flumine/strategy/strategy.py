@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Iterator, Union
+from typing import Type, Iterator, Union, List
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, Race, CricketMatch
 
@@ -40,7 +40,7 @@ class BaseStrategy:
         self,
         market_filter: Union[dict, list],
         market_data_filter: dict = None,
-        sports_data_filter: list[
+        sports_data_filter: List[
             str
         ] = None,  # 'raceSubscription', 'cricketSubscription'
         streaming_timeout: float = None,
