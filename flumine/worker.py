@@ -99,7 +99,12 @@ def keep_alive(context: dict, flumine) -> None:
             if client.betting_client.session_token:
                 resp = client.keep_alive()
                 if resp is None or resp.status == "SUCCESS":
-                    return
+                    continue
+        elif client.EXCHANGE == ExchangeType.BETCONNECT:
+            resp = client.keep_alive()
+            if resp:
+                continue
+        # keep-alive failed lets try a login
         client.login()
 
 
@@ -149,6 +154,7 @@ def poll_market_catalogue(context: dict, flumine) -> None:
 def poll_account_balance(context: dict, flumine) -> None:
     for client in flumine.clients:
         client.update_account_details()
+        logger.info("Client update account details", extra=client.info)
         if client.account_funds:
             flumine.log_control(events.BalanceEvent(client))
 

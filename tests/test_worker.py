@@ -68,8 +68,15 @@ class WorkersTest(unittest.TestCase):
         mock_client_betfair.betting_client.session_token = None
         mock_client_betfair_st = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
         mock_client_betfair_st.betting_client.session_token = "test"
+        mock_client_betconnect = mock.Mock(EXCHANGE=ExchangeType.BETCONNECT)
+        mock_client_betconnect.keep_alive.return_value = None
         mock_flumine = mock.Mock(
-            clients=[mock_client_simulated, mock_client_betfair, mock_client_betfair_st]
+            clients=[
+                mock_client_simulated,
+                mock_client_betfair,
+                mock_client_betfair_st,
+                mock_client_betconnect,
+            ]
         )
         worker.keep_alive(mock_context, mock_flumine)
 
@@ -77,6 +84,8 @@ class WorkersTest(unittest.TestCase):
         mock_client_betfair.login.assert_called_with()
         mock_client_betfair_st.keep_alive.assert_called_with()
         mock_client_betfair_st.login.assert_called_with()
+        mock_client_betconnect.keep_alive.assert_called_with()
+        mock_client_betconnect.login.assert_called_with()
 
     @mock.patch("flumine.worker.events")
     def test_poll_market_catalogue(self, mock_events):
