@@ -164,11 +164,6 @@ class BaseFlumine:
         for sports_data in event.event:
             # get marketId
             market_id = sports_data.market_id
-            # todo call all markets in event / race?
-            # race
-            # race_id = sports_data.race_id
-            # cricket
-            # event_id = sports_data.event_id
             # get market
             market = self.markets.markets.get(market_id)
             if market is None:

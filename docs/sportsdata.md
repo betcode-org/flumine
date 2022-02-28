@@ -2,6 +2,9 @@
 
 Flumine is able to connect to the sports-data-stream provided by Betfair for live data on cricket and races.
 
+!!! tip
+    Your appKey must be authorised to access the sports-data stream, contact bdp@betfair.com
+
 ## Cricket Subscription
 
 A cricket subscription can be added via the `sports_data_filter` on a strategy
