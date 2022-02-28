@@ -246,5 +246,5 @@ Simulation uses the `SimulatedExecution` execution class and tries to accurately
 Limitations #192:
 
 - Queue cancellations
-- Double counting of liquidity
+- Double counting of liquidity (active)
 - Currency fluctuations

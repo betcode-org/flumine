@@ -113,6 +113,7 @@ framework.run()
 
 - Streaming
 - Multiple strategies
+- Multiple clients
 - Order execution
 - Paper trading
 - Simulation
