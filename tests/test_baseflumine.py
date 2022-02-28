@@ -86,7 +86,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.streams = mock_streams
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
-        mock_strategy = mock.Mock(market_filter={})
+        mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
         self.base_flumine.add_strategy(mock_strategy)
         mock_streams.assert_called_with(mock_strategy)
         mock_strategies.assert_called_with(mock_strategy, self.base_flumine.clients)
@@ -138,6 +138,29 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market_book.runners = []
         mock_event.event = [mock_market_book]
         self.base_flumine._process_market_books(mock_event)
+
+    @mock.patch("flumine.baseflumine.utils.call_strategy_error_handling")
+    def test__process_sports_data(self, mock_call_strategy_error_handling):
+        mock_market = mock.Mock()
+        self.base_flumine.markets._markets = {"1.1": mock_market}
+        mock_strategy_one = mock.Mock(stream_ids=[123])
+        mock_strategy_two = mock.Mock(stream_ids=[])
+        self.base_flumine.strategies = [
+            mock_strategy_one,
+            mock_strategy_two,
+        ]
+        mock_sports_data = mock.Mock(streaming_unique_id=123, market_id="1.1")
+        mock_event = mock.Mock(event=[mock_sports_data])
+        self.base_flumine._process_sports_data(mock_event)
+        mock_call_strategy_error_handling.assert_has_calls(
+            [
+                mock.call(
+                    mock_strategy_one.process_sports_data,
+                    mock_market,
+                    mock_sports_data,
+                )
+            ]
+        )
 
     def test_process_order_package(self):
         mock_order_package = mock.Mock()

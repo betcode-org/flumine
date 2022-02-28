@@ -1,7 +1,7 @@
 import logging
-from typing import Type, Iterator, Union
+from typing import Type, Iterator, Union, List
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook
+from betfairlightweight.resources import MarketBook, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
@@ -39,6 +39,9 @@ class BaseStrategy:
         self,
         market_filter: Union[dict, list],
         market_data_filter: dict = None,
+        sports_data_filter: List[
+            str
+        ] = None,  # 'raceSubscription', 'cricketSubscription'
         streaming_timeout: float = None,
         conflate_ms: int = None,
         stream_class: Type[BaseStream] = MarketStream,
@@ -53,6 +56,7 @@ class BaseStrategy:
         """
         :param market_filter: Streaming market filter dict or list of market filters
         :param market_data_filter: Streaming market data filter
+        :param sports_data_filter: Streaming sports data filter (e.g. ["raceSubscription"])
         :param streaming_timeout: Streaming timeout in seconds, will call snap() on cache
         :param conflate_ms: Streaming conflation
         :param stream_class: Can be Market or Data (raw)
@@ -66,6 +70,7 @@ class BaseStrategy:
         """
         self.market_filter = market_filter
         self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
+        self.sports_data_filter = sports_data_filter or []
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms
         self.stream_class = stream_class
@@ -107,6 +112,12 @@ class BaseStrategy:
 
     def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook; place/cancel/replace orders
+        return
+
+    def process_sports_data(
+        self, market: Market, sports_data: Union[Race, CricketMatch]
+    ) -> None:
+        # process sports data
         return
 
     def process_raw_data(self, clk: str, publish_time: int, datum: dict) -> None:
