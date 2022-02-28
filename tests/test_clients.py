@@ -25,12 +25,16 @@ class ClientsTest(unittest.TestCase):
         )
 
     def test_add_client(self):
-        mock_client = unittest.mock.Mock(EXCHANGE="test")
-        self.clients._betting_clients = [mock_client]
+        mock_client = mock.Mock(EXCHANGE="test", username="test")
+        self.clients._clients = [mock_client]
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
-        self.clients._betting_clients = []
+        self.clients._clients = [mock.Mock(username="test")]
+        with self.assertRaises(exceptions.ClientError):
+            self.clients.add_client(mock_client)
+
+        self.clients._clients = []
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
@@ -114,7 +118,9 @@ class ClientsTest(unittest.TestCase):
 class BaseClientTest(unittest.TestCase):
     def setUp(self):
         self.mock_betting_client = mock.Mock(lightweight=False)
-        self.base_client = BaseClient(self.mock_betting_client, 1024, 100, 0.02, True, username="test")
+        self.base_client = BaseClient(
+            self.mock_betting_client, 1024, 100, 0.02, True, username="test"
+        )
 
     def test_init(self):
         self.assertEqual(self.base_client.betting_client, self.mock_betting_client)
@@ -204,11 +210,11 @@ class BaseClientTest(unittest.TestCase):
             assert self.base_client.min_bsp_liability
 
     def test_username(self):
+        self.assertEqual(self.base_client.username, self.base_client._username)
+        self.base_client._username = None
         self.assertEqual(
             self.base_client.username, self.base_client.betting_client.username
         )
-        self.base_client.betting_client = None
-        self.assertEqual(self.base_client.username, self.base_client._username)
 
     def test_info(self):
         self.assertTrue(self.base_client.info)
