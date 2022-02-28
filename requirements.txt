@@ -2,3 +2,4 @@ betfairlightweight==2.16.1
 tenacity>=7.0.0,<=8.0.1
 python-json-logger==2.0.2
 requests
+git+https://github.com/varneyo/betconnect@master#egg=betconnect

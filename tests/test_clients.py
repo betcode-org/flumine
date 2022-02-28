@@ -2,9 +2,10 @@ import unittest
 from unittest import mock
 from betfairlightweight.metadata import currency_parameters
 from betfairlightweight.exceptions import BetfairError
+from betconnect.exceptions import BetConnectException
 
 from flumine.clients.clients import ExchangeType, Clients
-from flumine.clients import BaseClient, BetfairClient, SimulatedClient
+from flumine.clients import BaseClient, BetfairClient, SimulatedClient, BetConnectClient
 from flumine.clients import betfairclient
 from flumine import exceptions
 
@@ -388,3 +389,77 @@ class SimulatedClientTest(unittest.TestCase):
             self.simulated_client.username,
             self.simulated_client._username,
         )
+
+
+class BetConnectClientTest(unittest.TestCase):
+    def setUp(self):
+        self.mock_betting_client = mock.Mock()
+        del self.mock_betting_client.lightweight
+        self.betconnect_client = BetConnectClient(self.mock_betting_client)
+
+    def test_login(self):
+        self.betconnect_client.login()
+        self.mock_betting_client.account.login.assert_called_with()
+
+    def test_login_error(self):
+        self.betconnect_client.betting_client.account.login.side_effect = (
+            BetConnectException
+        )
+        self.assertIsNone(self.betconnect_client.login())
+        self.mock_betting_client.account.login.assert_called_with()
+
+    def test_keep_alive(self):
+        self.mock_betting_client.session_expired = True
+        self.betconnect_client.keep_alive()
+        self.mock_betting_client.account.refresh_session_token.assert_called_with()
+
+    def test_keep_alive_error(self):
+        self.betconnect_client.betting_client.account.refresh_session_token.side_effect = (
+            BetConnectException
+        )
+        self.assertIsNone(self.betconnect_client.keep_alive())
+        self.mock_betting_client.account.refresh_session_token.assert_called_with()
+
+    def test_logout(self):
+        self.betconnect_client.logout()
+        self.mock_betting_client.account.logout.assert_called_with()
+
+    def test_logout_error(self):
+        self.betconnect_client.betting_client.account.logout.side_effect = (
+            BetConnectException
+        )
+        self.assertIsNone(self.betconnect_client.logout())
+        self.mock_betting_client.account.logout.assert_called_with()
+
+    @mock.patch(
+        "flumine.clients.betconnectclient.BetConnectClient._get_account_details"
+    )
+    @mock.patch("flumine.clients.betconnectclient.BetConnectClient._get_account_funds")
+    def test_update_account_details(self, mock_get_funds, mock_get_details):
+        self.betconnect_client.update_account_details()
+        mock_get_funds.assert_called_with()
+        mock_get_details.assert_called_with()
+        self.assertEqual(self.betconnect_client.account_details, mock_get_details())
+        self.assertEqual(self.betconnect_client.account_funds, mock_get_funds())
+
+    def test__get_account_details(self):
+        self.betconnect_client._get_account_details()
+        self.mock_betting_client.account.get_user_preferences.assert_called_with()
+
+    def test__get_account_details_error(self):
+        self.betconnect_client.betting_client.account.get_user_preferences.side_effect = (
+            BetConnectException
+        )
+        self.assertIsNone(self.betconnect_client._get_account_details())
+        self.mock_betting_client.account.get_user_preferences.assert_called_with()
+
+    def test__get_account_funds(self):
+        self.betconnect_client._get_account_funds()
+        self.mock_betting_client.account.get_balance.assert_called_with()
+
+    def test__get_account_funds_error(self):
+        self.betconnect_client.betting_client.account.get_balance.side_effect = (
+            BetConnectException
+        )
+        self.assertIsNone(self.betconnect_client._get_account_funds())
+        self.mock_betting_client.account.get_balance.assert_called_with()
