@@ -27,6 +27,7 @@ nav:
       - Markets: 'markets.md'
       - Controls: 'controls.md'
       - Workers: 'workers.md'
+      - Sports Data: 'sportsdata.md'
       - Advanced Usage: 'advanced.md'
       - Performance: 'performance.md'
       - Architecture: 'architecture.md'

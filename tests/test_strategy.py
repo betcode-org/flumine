@@ -50,6 +50,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy = strategy.BaseStrategy(
             market_filter=self.mock_market_filter,
             market_data_filter=self.mock_market_data_filter,
+            sports_data_filter=["cricketSubscription"],
             streaming_timeout=self.streaming_timeout,
             conflate_ms=self.conflate_ms,
             stream_class=strategy.MarketStream,
@@ -66,6 +67,7 @@ class BaseStrategyTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.strategy.market_filter, self.mock_market_filter)
         self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
+        self.assertEqual(self.strategy.sports_data_filter, ["cricketSubscription"])
         self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
         self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
         self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
@@ -148,6 +150,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_process_market_book(self):
         self.strategy.process_market_book(None, None)
+
+    def test_process_sports_data(self):
+        self.strategy.process_sports_data(None, None)
 
     def test_process_raw_data(self):
         self.strategy.process_raw_data(None, None, None)

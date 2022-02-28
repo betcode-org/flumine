@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+1.22.0 (2022-02-28)
++++++++++++++++++++
+
+**Improvements**
+
+- #564 sports data functionality added
+- blotter lookups updated to lists only (*breaking change)
+
 1.21.6 (2022-02-18)
 +++++++++++++++++++
 
