@@ -301,7 +301,7 @@ class BaseOrder:
             "simulated": self.simulated.info,
             "notes": self.notes_str,
             "market_notes": self.market_notes,
-            "client": self.client.id if self.client else None,
+            "client": self.client.username if self.client else None,
         }
 
     def json(self) -> str:

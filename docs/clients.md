@@ -17,7 +17,7 @@ from flumine import Flumine, clients
 
 framework = Flumine()
 
-client = clients.SimulatedClient(id_="123")
+client = clients.SimulatedClient(username="123")
 framework.add_client(client)
 ```
 

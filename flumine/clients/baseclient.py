@@ -22,7 +22,7 @@ class BaseClient:
         capital_base: int = DEFAULT_CAPITAL_BASE,
         commission_base: float = DEFAULT_COMMISSION_BASE,
         interactive_login: bool = False,
-        id_: str = None,
+        username: str = None,
         order_stream: bool = True,
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
@@ -33,7 +33,7 @@ class BaseClient:
             assert (
                 betting_client.lightweight is False
             ), "flumine requires resources, please set lightweight to False"
-        self.id = id_ or create_short_uuid()
+        self._username = username or create_short_uuid()
         self.betting_client = betting_client
         self.transaction_limit = transaction_limit
         self.capital_base = capital_base
@@ -77,7 +77,10 @@ class BaseClient:
 
     @property
     def username(self) -> str:
-        return self.betting_client.username
+        if self.betting_client:
+            return self.betting_client.username
+        else:
+            return self._username
 
     @property
     def current_transaction_count_total(self) -> Optional[int]:
@@ -108,9 +111,8 @@ class BaseClient:
     @property
     def info(self) -> dict:
         return {
-            "id": self.id,
-            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
             "username": self.username,
+            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
             "betting_client": self.betting_client,
             "current_transaction_count_total": self.current_transaction_count_total,
             "transaction_count_total": self.transaction_count_total,

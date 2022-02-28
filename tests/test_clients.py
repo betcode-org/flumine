@@ -114,7 +114,7 @@ class ClientsTest(unittest.TestCase):
 class BaseClientTest(unittest.TestCase):
     def setUp(self):
         self.mock_betting_client = mock.Mock(lightweight=False)
-        self.base_client = BaseClient(self.mock_betting_client, 1024, 100, 0.02, True)
+        self.base_client = BaseClient(self.mock_betting_client, 1024, 100, 0.02, True, username="test")
 
     def test_init(self):
         self.assertEqual(self.base_client.betting_client, self.mock_betting_client)
@@ -122,6 +122,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.capital_base, 100)
         self.assertEqual(self.base_client.commission_base, 0.02)
         self.assertTrue(self.base_client.interactive_login)
+        self.assertEqual(self.base_client._username, "test")
         self.assertIsNone(self.base_client.account_details)
         self.assertIsNone(self.base_client.account_funds)
         self.assertEqual(self.base_client.commission_paid, 0)
@@ -206,6 +207,8 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(
             self.base_client.username, self.base_client.betting_client.username
         )
+        self.base_client.betting_client = None
+        self.assertEqual(self.base_client.username, self.base_client._username)
 
     def test_info(self):
         self.assertTrue(self.base_client.info)
@@ -377,5 +380,5 @@ class SimulatedClientTest(unittest.TestCase):
     def test_username(self):
         self.assertEqual(
             self.simulated_client.username,
-            self.simulated_client.id,
+            self.simulated_client._username,
         )
