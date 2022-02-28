@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import Iterable, Optional, List
 from collections import defaultdict
 
@@ -63,14 +62,7 @@ class Blotter:
         """Returns all orders related to a strategy."""
         orders = self._strategy_orders[strategy]
         if order_status:
-            if isinstance(order_status, OrderStatus):
-                warnings.warn(
-                    "`order_status` to accept List[OrderStatus] only from v1.22.0",
-                    DeprecationWarning,
-                )
-                orders = [o for o in orders if o.status == order_status]
-            else:
-                orders = [o for o in orders if o.status in order_status]
+            orders = [o for o in orders if o.status in order_status]
         if matched_only:
             orders = [o for o in orders if o.size_matched > 0]
         return orders
@@ -86,14 +78,7 @@ class Blotter:
         """Returns all orders related to a strategy selection."""
         orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
         if order_status:
-            if isinstance(order_status, OrderStatus):
-                warnings.warn(
-                    "`order_status` to accept List[OrderStatus] only from v1.22.0",
-                    DeprecationWarning,
-                )
-                orders = [o for o in orders if o.status == order_status]
-            else:
-                orders = [o for o in orders if o.status in order_status]
+            orders = [o for o in orders if o.status in order_status]
         if matched_only:
             orders = [o for o in orders if o.size_matched > 0]
         return orders
