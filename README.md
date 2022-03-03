@@ -19,7 +19,7 @@ Support for market, order and custom streaming data.
 
 [join slack group](https://join.slack.com/t/betfairlightweight/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
-Tested on Python 3.6, 3.7, 3.8, 3.9 and 3.10.
+Tested on Python 3.7, 3.8, 3.9 and 3.10.
 
 ## installation
 
@@ -27,7 +27,7 @@ Tested on Python 3.6, 3.7, 3.8, 3.9 and 3.10.
 $ pip install flumine
 ```
 
-flumine requires Python 3.6+
+flumine requires Python 3.7+
 
 ## setup
 
