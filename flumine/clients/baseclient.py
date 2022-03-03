@@ -77,10 +77,10 @@ class BaseClient:
 
     @property
     def username(self) -> str:
-        if self._username:
-            return self._username
-        else:
+        if self.betting_client:
             return self.betting_client.username
+        else:
+            return self._username
 
     @property
     def current_transaction_count_total(self) -> Optional[int]:

@@ -211,11 +211,11 @@ class BaseClientTest(unittest.TestCase):
             assert self.base_client.min_bsp_liability
 
     def test_username(self):
-        self.assertEqual(self.base_client.username, self.base_client._username)
-        self.base_client._username = None
         self.assertEqual(
             self.base_client.username, self.base_client.betting_client.username
         )
+        self.base_client.betting_client = None
+        self.assertEqual(self.base_client.username, self.base_client._username)
 
     def test_info(self):
         self.assertTrue(self.base_client.info)
