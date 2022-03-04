@@ -12,6 +12,10 @@ Release History
 - backtest -> simulated rename (*breaking change)
 - #566 BetConnect client added
 
+**Bug Fixes**
+
+- #567 market_start_datetime fix
+
 **Libraries**
 
 - betconnect==0.0.7 requirement added

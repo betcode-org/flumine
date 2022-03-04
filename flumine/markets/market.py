@@ -148,10 +148,10 @@ class Market:
 
     @property
     def market_start_datetime(self):
-        if self.market_catalogue:
-            return self.market_catalogue.market_start_time
-        elif self.market_book:
+        if self.market_book:
             return self.market_book.market_definition.market_time
+        elif self.market_catalogue:
+            return self.market_catalogue.market_start_time
         else:
             return datetime.datetime.utcfromtimestamp(0)
 

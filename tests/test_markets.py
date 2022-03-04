@@ -195,9 +195,8 @@ class MarketTest(unittest.TestCase):
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):
-        mock_market_catalogue = mock.Mock(market_start_time=12)
-        mock_market_catalogue.event.id = 12
-        self.market.market_catalogue = mock_market_catalogue
+        self.market.market_catalogue.event.id = 12
+        self.market.market_book.market_definition.market_time = 12
 
         self.market.flumine.markets = []
         self.assertEqual(self.market.event, {})
@@ -252,6 +251,7 @@ class MarketTest(unittest.TestCase):
         )
 
     def test_seconds_to_start(self):
+        self.market.market_book = None
         mock_market_catalogue = mock.Mock()
         mock_market_catalogue.market_start_time = datetime.datetime.utcfromtimestamp(1)
         self.market.market_catalogue = mock_market_catalogue
@@ -267,7 +267,7 @@ class MarketTest(unittest.TestCase):
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_market_catalogue(self):
-        self.market.market_catalogue.market_start_time = (
+        self.market.market_book.market_definition.market_time = (
             datetime.datetime.utcfromtimestamp(1)
         )
         self.assertLess(self.market.seconds_to_start, 0)
