@@ -166,9 +166,8 @@ class ExecutionValidation(BaseControl):
             )
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if self.flumine.SIMULATED or order.client.paper_trade:
+        if self.flumine.clients.simulated:
             return
-
         if order.EXCHANGE == ExchangeType.BETFAIR:
             self.validate_order(order, package_type)
 

@@ -477,22 +477,13 @@ class TestExecutionValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
     def test__validate(self, mock_validate_order):
-        self.mock_flumine.SIMULATED = False
-        self.mock_order.client.paper_trade = False
+        self.mock_flumine.clients.simulated = False
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_called()
 
         mock_validate_order.reset_mock()
 
-        self.mock_flumine.SIMULATED = True
-        self.mock_order.client.paper_trade = False
-        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
-        mock_validate_order.assert_not_called()
-
-        mock_validate_order.reset_mock()
-
-        self.mock_flumine.SIMULATED = False
-        self.mock_order.client.paper_trade = True
+        self.mock_flumine.clients.simulated = True
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_not_called()
 
