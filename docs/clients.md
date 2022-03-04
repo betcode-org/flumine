@@ -10,7 +10,7 @@ Flumine is capable of using multiple clients, these can be of the same `Exchange
 
 ## Strategy use
 
-To add a client use the `add_client` this will allow strategies to use them via `framework.clients` or `strategy.clients`
+To add a client use the `add_client` this will allow use via `framework.clients` or `strategy.clients`
 
 ```python
 from flumine import Flumine, clients
@@ -29,6 +29,9 @@ betfair_client = self.clients.get_betfair_default()
 client = self.clients.get_client(ExchangeType.SIMULATED, username="123")
 ```
 
+!!! tip
+    `get_default` and `get_betfair_default` will use the first client added via `add_client` (ordered list)
+
 By default a transaction will use `clients.get_default()` however you can use a particular client:
 
 ```python
@@ -45,3 +48,7 @@ client = self.clients.get_client(ExchangeType.SIMULATED, username="123")
 with market.transaction(client=client) as t:
     t.place_order(order)
 ```
+
+## Future Development
+
+- BetConnect client [#566](https://github.com/liampauling/flumine/issues/566)
