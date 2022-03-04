@@ -240,11 +240,15 @@ class BaseFlumine:
                     market.market_catalogue = market_catalogue
                     self.log_control(events.MarketEvent(market))
                     logger.info(
-                        "Updated marketCatalogue for {0}".format(market.market_id),
+                        "Created marketCatalogue for {0}".format(market.market_id),
                         extra=market.info,
                     )
                 else:
                     market.market_catalogue = market_catalogue
+                    logger.info(
+                        "Updated marketCatalogue for {0}".format(market.market_id),
+                        extra=market.info,
+                    )
                 market.update_market_catalogue = False
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:

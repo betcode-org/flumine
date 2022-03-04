@@ -114,7 +114,7 @@ def poll_market_catalogue(context: dict, flumine) -> None:
     markets = [
         m.market_id
         for m in list(flumine.markets.markets.values())
-        if m.update_market_catalogue
+        if m.update_market_catalogue and not m.closed
     ]
     for market_ids in chunks(markets, 25):
         try:
@@ -171,16 +171,16 @@ def poll_market_closure(context: dict, flumine) -> None:
         ):
             continue
         for market in markets:
-            if client.id not in market.orders_cleared:
+            if client.username not in market.orders_cleared:
                 if _get_cleared_orders(
                     flumine, client.betting_client, market.market_id
                 ):
-                    market.orders_cleared.append(client.id)
-            if client.id not in market.market_cleared:
+                    market.orders_cleared.append(client.username)
+            if client.username not in market.market_cleared:
                 if _get_cleared_market(
                     flumine, client.betting_client, market.market_id
                 ):
-                    market.market_cleared.append(client.id)
+                    market.market_cleared.append(client.username)
 
 
 def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
