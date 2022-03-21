@@ -30,8 +30,11 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool):
+    def __init__(
+        self, market, id_: int, async_place_orders: bool, atomic: bool = False
+    ):
         self.market = market
+        self.atomic = atomic
         self._id = id_  # unique per market only
         self._async_place_orders = async_place_orders
         self._pending_orders = False
@@ -39,6 +42,7 @@ class Transaction:
         self._pending_cancel = []  # list of (<Order>, None)
         self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
+        self._control_error = False
 
     def place_order(
         self,
@@ -169,6 +173,7 @@ class Transaction:
             for control in self.market.flumine.client.trading_controls:
                 control(order, package_type)
         except ControlError:
+            self._control_error = True
             return False
         else:
             return True
@@ -200,8 +205,12 @@ class Transaction:
         return packages
 
     def __enter__(self):
+        self._control_error = False  # reset
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._pending_orders:
-            self.execute()
+            if self.atomic and self._control_error:
+                logger.error("Transaction not executed due to control exception")
+            else:
+                self.execute()
