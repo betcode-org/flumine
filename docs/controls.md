@@ -26,7 +26,7 @@ This works for markets and transactions and is supported by the operations `plac
 
 ## Logging Controls
 
-Custom logging is available using the `LoggingControl` class, the [base class](https://github.com/liampauling/flumine/blob/master/flumine/controls/loggingcontrols.py#L12) creates debug logs and can be used as follows:
+Custom logging is available using the `LoggingControl` class, the [base class](https://github.com/betcode-org/flumine/blob/master/flumine/controls/loggingcontrols.py#L12) creates debug logs and can be used as follows:
 
 ```python
 from flumine.controls.loggingcontrols import LoggingControl

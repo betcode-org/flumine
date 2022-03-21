@@ -119,7 +119,7 @@ class SimulatedMiddleware(Middleware):
                                 and x.handicap == order.handicap
                             ][0]
                             runner_adjustment_factor = runner.adjustment_factor
-                            # See https://github.com/liampauling/flumine/issues/454
+                            # See https://github.com/betcode-org/flumine/issues/454
                             multiplier = 1 - (
                                 removal_adjustment_factor
                                 / (100 - runner_adjustment_factor)
