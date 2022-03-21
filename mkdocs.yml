@@ -1,5 +1,5 @@
 site_name: flumine
-site_description: Trading framework for Betfair API-NG.
+site_description: Betting trading framework
 
 theme:
     name: 'material'
@@ -12,8 +12,8 @@ theme:
       - navigation.tabs
       - navigation.tabs.sticky
 
-repo_name: liampauling/flumine
-repo_url: https://github.com/liampauling/flumine
+repo_name: betcode-org/flumine
+repo_url: https://github.com/betcode-org/flumine
 edit_uri: ""
 
 nav:

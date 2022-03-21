@@ -169,7 +169,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware._process_runner_removal(mock_market, 12345, 0, 50)
 
         # The liability of £200 is adjusted by the multiplier of 37.5%, which s
-        # defined in the example here: https://github.com/liampauling/flumine/issues/454
+        # defined in the example here: https://github.com/betcode-org/flumine/issues/454
         self.assertEqual(mock_order.order_type.liability, 75)
 
     def test__process_runner_removal_sp_win_inplay(self):
@@ -194,7 +194,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.middleware._process_runner_removal(mock_market, 12345, 0, 50)
 
         # The liability of £200 is adjusted by the multiplier of 37.5%, which s
-        # defined in the example here: https://github.com/liampauling/flumine/issues/454
+        # defined in the example here: https://github.com/betcode-org/flumine/issues/454
         self.assertEqual(mock_order.order_type.liability, 75)
         # Size matched should be 75 / (10.0-1.0) \approx 8.33
         self.assertEqual(8.33, mock_order.current_order.size_matched)

@@ -3,7 +3,7 @@
 ## Live
 
 !!! tip
-    flumine uses `betfairlightweight` for communicating with the Betfair API, please see [docs](https://liampauling.github.io/betfair/) for how to use/setup before proceeding.
+    flumine uses `betfairlightweight` for communicating with the Betfair API, please see [docs](https://betcode-org.github.io/betfair/) for how to use/setup before proceeding.
 
 First, start by importing flumine/bflw and creating a trading and framework client:
 
