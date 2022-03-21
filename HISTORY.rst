@@ -10,6 +10,10 @@ Release History
 
 - betcode-org transfer/renames
 
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.2
+
 1.22.0 (2022-02-28)
 +++++++++++++++++++
 
