@@ -3,6 +3,8 @@ site_description: Betting trading framework
 
 theme:
     name: 'material'
+    logo: images/logo.png
+    favicon: images/logo.png
 
     palette:
       primary: 'blue grey'
