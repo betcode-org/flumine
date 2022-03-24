@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - logo / readme update
+- single strategy example added
 
 1.22.1 (2022-03-21)
 +++++++++++++++++++
