@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-2.0.0b0 (2022-**-**)
+2.0.0b1 (2022-**-**)
 +++++++++++++++++++
 
 **Improvements**
@@ -20,6 +20,25 @@ Release History
 
 - betconnect==0.0.7 requirement added
 - python 3.6 removed
+
+1.22.2 (2022-03-24)
++++++++++++++++++++
+
+**Improvements**
+
+- logo / readme update
+- single strategy example added
+
+1.22.1 (2022-03-21)
++++++++++++++++++++
+
+**Improvements**
+
+- betcode-org transfer/renames
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.2
 
 1.22.0 (2022-02-28)
 +++++++++++++++++++

@@ -6,8 +6,8 @@ flūmine
 
 <div align="center">
 <p>
-<a href="https://github.com/liampauling/flumine/actions?query=workflow%3Atest">
-    <img src="https://github.com/liampauling/flumine/workflows/test/badge.svg" alt="Build Status">
+<a href="https://github.com/betcode-org/flumine/actions?query=workflow%3Atest">
+    <img src="https://github.com/betcode-org/flumine/workflows/test/badge.svg" alt="Build Status">
 </a>
 <a href="https://coveralls.io/github/liampauling/flumine?branch=master">
     <img src="https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master" alt="Coverage">
@@ -28,7 +28,7 @@ Betfair trading framework with a focus on:
 
 Support for market, order and custom streaming data.
 
-[join slack group](https://join.slack.com/t/betfairlightweight/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
+[join slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
 Tested on Python 3.7, 3.8, 3.9 and 3.10.
 
