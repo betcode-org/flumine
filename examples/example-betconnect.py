@@ -1,13 +1,12 @@
 import time
 import logging
-import datetime
 import betconnect
 import betfairlightweight
 from betfairlightweight.filters import streaming_market_filter
 from pythonjsonlogger import jsonlogger
 from collections import defaultdict
 
-from flumine import Flumine, clients, BaseStrategy
+from flumine import Flumine, clients, BaseStrategy, utils
 
 logger = logging.getLogger()
 
@@ -28,12 +27,10 @@ class ExampleStrategy(BaseStrategy):
             "active_bookmakers": [],
             "active_sports": [],
             "active_regions": [],
-            "active_competitions": [],
             "active_fixtures": [],
             "active_markets": {},  # fixture_id: [market]
             "active_selections": defaultdict(list),  # market_id: [selection]
             "active_fixtures_lookup": {},
-            "lookup": {},  # date + venue + horse_name
         }
         # get betconnect client
         client = self.clients.get_client(
@@ -77,12 +74,8 @@ class ExampleStrategy(BaseStrategy):
                 context["active_selections"][selection.source_market_id].append(
                     selection
                 )
-
-            start_datetime = datetime.datetime.fromisoformat(
-                f"{fixture.start_date.date()} {fixture.time}"
-            )
             context["active_fixtures_lookup"][
-                (fixture.display_name, start_datetime)
+                (fixture.display_name, fixture.start_date_time)
             ] = fixture.fixture_id
 
     def check_market_book(self, market, market_book):
@@ -112,7 +105,7 @@ class ExampleStrategy(BaseStrategy):
             if runner.status == "ACTIVE":
                 # betfair
                 runner_name = runner_names[runner.selection_id]
-                best_back_price = runner.ex.available_to_back[0]["price"]
+                best_back_price = utils.get_price(runner.ex.available_to_back, 0)
                 # betconnect
                 selection = selections_lookup[runner_name]
                 max_price = selection.max_price
@@ -134,7 +127,7 @@ betconnect_client = clients.BetConnectClient(
 framework.add_client(betconnect_client)
 
 strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(market_ids=["1.195472380"]),
+    market_filter=streaming_market_filter(market_ids=["1.196548740"]),
     streaming_timeout=2,
 )
 framework.add_strategy(strategy)
