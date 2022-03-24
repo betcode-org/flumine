@@ -18,7 +18,7 @@ Release History
 
 **Libraries**
 
-- betconnect==0.0.7 requirement added
+- betconnect==0.1.1 requirement added
 - python 3.6 removed
 
 1.22.2 (2022-03-24)

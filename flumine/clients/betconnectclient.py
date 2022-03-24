@@ -16,11 +16,6 @@ class BetConnectClient(BaseClient):
 
     EXCHANGE = ExchangeType.BETCONNECT
 
-    def __init__(self, *args, **kwargs):
-        super(BetConnectClient, self).__init__(*args, **kwargs)
-        # todo https://github.com/varneyo/betconnect/issues/17
-        self.betting_client.session_timeout = 8 * 60 * 60
-
     def login(self) -> Optional[resources.Login]:
         try:
             return self.betting_client.account.login()
