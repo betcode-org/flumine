@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-2.0.0b1 (2022-**-**)
+2.0.0 (2022-03-25)
 +++++++++++++++++++
 
 **Improvements**
@@ -19,6 +19,7 @@ Release History
 
 **Libraries**
 
+- betfairlightweight upgraded to 2.16.3
 - betconnect==0.1.1 requirement added
 - python 3.6 removed
 
