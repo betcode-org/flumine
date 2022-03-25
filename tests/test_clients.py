@@ -26,19 +26,23 @@ class ClientsTest(unittest.TestCase):
         )
 
     def test_add_client(self):
-        mock_client = mock.Mock(EXCHANGE="test", username="test")
+        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, username="test")
         self.clients._clients = [mock_client]
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
-        self.clients._clients = [mock.Mock(username="test")]
+        with self.assertRaises(exceptions.ClientError):
+            self.clients.add_client(mock.Mock(EXCHANGE="test", username="test"))
+
+        self.clients._clients = []
+        self.clients._exchange_clients[ExchangeType.BETFAIR][
+            mock_client.username
+        ] = mock_client
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
         self.clients._clients = []
-        with self.assertRaises(exceptions.ClientError):
-            self.clients.add_client(mock_client)
-
+        self.clients._exchange_clients = {exchange: {} for exchange in ExchangeType}
         mock_client.EXCHANGE = ExchangeType.BETFAIR
         self.assertEqual(self.clients.add_client(mock_client), mock_client)
         self.assertEqual(self.clients._clients, [mock_client])

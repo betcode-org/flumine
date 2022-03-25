@@ -25,12 +25,17 @@ class Clients:
     def add_client(self, client):
         if client in self._clients:
             raise ClientError("Client already present")
-        if client.username in [c.username for c in self]:
-            raise ClientError("Client username already present")
         if client.EXCHANGE not in self._exchange_clients:
             raise ClientError("Unknown exchange type")
+        exchange = self._exchange_clients[client.EXCHANGE]
+        if client.username in exchange:
+            raise ClientError(
+                "Client username '{0}' already present in '{1}'".format(
+                    client.username, client.EXCHANGE
+                )
+            )
         self._clients.append(client)
-        self._exchange_clients[client.EXCHANGE][client.username] = client
+        exchange[client.username] = client
         logger.info("Client added", extra=client.info)
         return client
 
