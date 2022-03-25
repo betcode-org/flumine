@@ -42,3 +42,6 @@ class ResponsesTest(unittest.TestCase):
         self.assertEqual(self.responses.date_time_placed, 1)
         self.responses._date_time_placed = None
         self.assertEqual(self.responses.date_time_placed, 2)
+        self.responses._date_time_placed = None
+        self.responses.current_order = None
+        self.assertIsNone(self.responses.date_time_placed)

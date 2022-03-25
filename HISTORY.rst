@@ -15,6 +15,7 @@ Release History
 **Bug Fixes**
 
 - #567 market_start_datetime fix
+- PaperTrade bug fix on `elapsed_time`
 
 **Libraries**
 
