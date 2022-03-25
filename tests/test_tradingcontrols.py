@@ -31,9 +31,8 @@ class TestOrderValidation(unittest.TestCase):
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_order"
     )
     def test_validate_betfair(self, mock_validate_betfair_order):
-        mock_order = mock.Mock()
+        mock_order = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        mock_order.EXCHANGE = ExchangeType.BETFAIR
         mock_order.order_type.size = 12
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_validate_betfair_order.assert_called_with(mock_order)
@@ -204,8 +203,9 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_no_validation(self, mock_on_error):
-        self.mock_flumine.client.min_bet_validation = False
-        order = mock.Mock(side="BACK")
+        mock_client = mock.Mock()
+        mock_client.min_bet_validation = False
+        order = mock.Mock(client=mock_client, side="BACK")
         order.order_type.size = 0.01
         order.order_type.price = 2
         self.trading_control._validate_betfair_min_size(order, OrderTypes.LIMIT)
@@ -213,9 +213,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_limit(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 2
-        self.mock_flumine.client.min_bet_payout = 10
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=2, min_bet_payout=10)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.size = 2
         order.order_type.price = 2
@@ -224,9 +223,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_limit_large(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 0.10
-        self.mock_flumine.client.min_bet_payout = 100
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=0.10, min_bet_payout=100)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.size = 2
         order.order_type.price = 2
@@ -235,9 +233,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_limit_error(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 2
-        self.mock_flumine.client.min_bet_payout = 10
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=2, min_bet_payout=10)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.size = 1.99
         order.order_type.price = 2
@@ -249,9 +246,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_target_size_limit_error(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 2
-        self.mock_flumine.client.min_bet_payout = 10
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=2, min_bet_payout=10)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.size = None
         order.order_type.bet_target_size = 1.99
@@ -264,8 +260,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 2
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=2)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.liability = 2
         self.trading_control._validate_betfair_min_size(
@@ -275,8 +271,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_two(self, mock_on_error):
-        self.mock_flumine.client.min_bsp_liability = 10
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bsp_liability=10)
+        order = mock.Mock(client=mock_client)
         order.side = "LAY"
         order.order_type.liability = 10
         self.trading_control._validate_betfair_min_size(
@@ -286,8 +282,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_on_error(self, mock_on_error):
-        self.mock_flumine.client.min_bet_size = 2
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bet_size=2)
+        order = mock.Mock(client=mock_client)
         order.side = "BACK"
         order.order_type.liability = 1.99
         self.trading_control._validate_betfair_min_size(
@@ -299,8 +295,8 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_min_size_on_error_two(self, mock_on_error):
-        self.mock_flumine.client.min_bsp_liability = 10
-        order = mock.Mock()
+        mock_client = mock.Mock(min_bsp_liability=10)
+        order = mock.Mock(client=mock_client)
         order.side = "LAY"
         order.order_type.liability = 9.99
         self.trading_control._validate_betfair_min_size(
@@ -356,7 +352,7 @@ class TestExecutionValidation(unittest.TestCase):
             spec=OrderStream, _stream=mock.Mock(_running=True)
         )
         self.mock_flumine = mock.Mock(
-            BACKTEST=False,
+            SIMULATED=False,
             client=mock.Mock(paper_trade=False),
             streams=[self.mock_order_stream],
         )
@@ -481,22 +477,13 @@ class TestExecutionValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
     def test__validate(self, mock_validate_order):
-        self.mock_flumine.BACKTEST = False
-        self.mock_flumine.client.paper_trade = False
+        self.mock_flumine.clients.simulated = False
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_called()
 
         mock_validate_order.reset_mock()
 
-        self.mock_flumine.BACKTEST = True
-        self.mock_flumine.client.paper_trade = False
-        self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
-        mock_validate_order.assert_not_called()
-
-        mock_validate_order.reset_mock()
-
-        self.mock_flumine.BACKTEST = False
-        self.mock_flumine.client.paper_trade = True
+        self.mock_flumine.clients.simulated = True
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_not_called()
 
@@ -783,7 +770,6 @@ class TestStrategyExposure(unittest.TestCase):
         If exposures are double counted, the validation would fail.
         If exposures aren't double counted, then the validation will succeed
         """
-
         strategy = mock.Mock()
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10

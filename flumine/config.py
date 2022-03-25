@@ -14,7 +14,7 @@ hostname = customer_strategy_ref
 
 process_id = os.getpid()  # process id of app
 
-current_time = None  # used for backtesting
+current_time = None  # used for simulation
 
 raise_errors = False  # used for call_check_market / call_process_market_book
 
@@ -22,7 +22,7 @@ max_execution_workers = 32  # max number of workers in execution thread pool
 
 async_place_orders = False  # async place orders
 
-# latencies used for backtesting
+# latencies used for simulation
 place_latency = 0.120
 cancel_latency = 0.170
 update_latency = 0.150

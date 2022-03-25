@@ -30,8 +30,9 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool):
+    def __init__(self, market, id_: int, async_place_orders: bool, client):
         self.market = market
+        self._client = client
         self._id = id_  # unique per market only
         self._async_place_orders = async_place_orders
         self._pending_orders = False
@@ -47,6 +48,7 @@ class Transaction:
         execute: bool = True,
         force: bool = False,
     ) -> bool:
+        order.update_client(self._client)
         if (
             execute
             and not force
@@ -84,6 +86,12 @@ class Transaction:
     def cancel_order(
         self, order, size_reduction: float = None, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "cancel_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.CANCEL) is False
@@ -98,6 +106,12 @@ class Transaction:
     def update_order(
         self, order, new_persistence_type: str, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "update_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.UPDATE) is False
@@ -112,6 +126,12 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
+        if order.client != self._client:
+            raise OrderError(
+                "replace_order: Order client '{0}' does not match transaction client '{1}'".format(
+                    order.client, self._client
+                )
+            )
         if (
             not force
             and self._validate_controls(order, OrderPackageType.REPLACE) is False
@@ -156,6 +176,7 @@ class Transaction:
                         "market_id": self.market.market_id,
                         "order_packages": [o.info for o in packages],
                         "transaction_id": self._id,
+                        "client_username": self._client.username,
                     },
                 )
             self._pending_orders = False
@@ -166,7 +187,7 @@ class Transaction:
         try:
             for control in self.market.flumine.trading_controls:
                 control(order, package_type)
-            for control in self.market.flumine.client.trading_controls:
+            for control in self._client.trading_controls:
                 control(order, package_type)
         except ControlError:
             return False
@@ -187,7 +208,7 @@ class Transaction:
             for chunked_orders in chunks(package_orders, limit):
                 packages.append(
                     BetfairOrderPackage(
-                        client=self.market.flumine.client,
+                        client=self._client,
                         market_id=self.market.market_id,
                         orders=chunked_orders,
                         package_type=package_type,

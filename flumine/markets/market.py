@@ -34,8 +34,8 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.update_market_catalogue = True
-        self.orders_cleared = False
-        self.market_cleared = False
+        self.orders_cleared = []
+        self.market_cleared = []
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
         self.blotter = Blotter(market_id)
         self._transaction_id = 0
@@ -47,8 +47,8 @@ class Market:
 
     def open_market(self) -> None:
         self.closed = False
-        self.orders_cleared = False
-        self.market_cleared = False
+        self.orders_cleared = []
+        self.market_cleared = []
         logger.info(
             "Market {0} opened".format(self.market_id),
             extra=self.info,
@@ -62,12 +62,17 @@ class Market:
             extra=self.info,
         )
 
-    def transaction(self, async_place_orders: bool = None) -> Transaction:
+    def transaction(self, async_place_orders: bool = None, client=None) -> Transaction:
         if async_place_orders is None:
             async_place_orders = config.async_place_orders
+        if client is None:
+            client = self.flumine.clients.get_default()
         self._transaction_id += 1
         return Transaction(
-            self, id_=self._transaction_id, async_place_orders=async_place_orders
+            self,
+            id_=self._transaction_id,
+            async_place_orders=async_place_orders,
+            client=client,
         )
 
     # order
@@ -77,26 +82,27 @@ class Market:
         market_version: int = None,
         execute: bool = True,
         force: bool = False,
+        client=None,
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=client) as t:
             return t.place_order(order, market_version, execute, force)
 
     def cancel_order(
         self, order, size_reduction: float = None, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.cancel_order(order, size_reduction, force)
 
     def update_order(
         self, order, new_persistence_type: str, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.update_order(order, new_persistence_type, force)
 
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
-        with self.transaction() as t:
+        with self.transaction(client=order.client) as t:
             return t.replace_order(order, new_price, market_version, force)
 
     @property
@@ -142,10 +148,10 @@ class Market:
 
     @property
     def market_start_datetime(self):
-        if self.market_catalogue:
-            return self.market_catalogue.market_start_time
-        elif self.market_book:
+        if self.market_book:
             return self.market_book.market_definition.market_time
+        elif self.market_catalogue:
+            return self.market_catalogue.market_start_time
         else:
             return datetime.datetime.utcfromtimestamp(0)
 
@@ -177,8 +183,8 @@ class Market:
         elif self.market_book:
             return self.market_book.market_definition.race_type
 
-    def cleared(self, commission: float) -> dict:
-        orders = [order for order in self.blotter if order.size_matched]
+    def cleared(self, client) -> dict:
+        orders = self.blotter.client_orders(client, matched_only=True)
         profit = round(sum([order.simulated.profit for order in orders]), 2)
         return {
             "marketId": self.market_id,
@@ -190,7 +196,7 @@ class Market:
             "settledDate": None,
             "betCount": len(orders),
             "betOutcome": "WON" if profit >= 0 else "LOST",
-            "commission": round(max(profit * commission, 0), 2),
+            "commission": round(max(profit * client.commission_base, 0), 2),
             "profit": profit,
         }
 

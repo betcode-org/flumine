@@ -84,6 +84,7 @@ class BaseOrderTest(unittest.TestCase):
     def test_create_order_from_current(self):
         mock_add_market = mock.Mock()
         market_book = mock.Mock()
+        mock_client = mock.Mock()
         markets = Markets()
         market = Market(
             flumine=mock.Mock(), market_id="market_id", market_book=market_book
@@ -92,7 +93,7 @@ class BaseOrderTest(unittest.TestCase):
         cheap_hash = create_cheap_hash("strategy_name", 13)
         strategy = mock.Mock(name_hash=cheap_hash)
         strategies = Strategies()
-        strategies(strategy=strategy, client=mock.Mock())
+        strategies(strategy=strategy, clients=mock.Mock())
         current_order = mock.Mock(
             customer_order_ref=f"{cheap_hash}I123",
             market_id="market_id",
@@ -109,6 +110,7 @@ class BaseOrderTest(unittest.TestCase):
             strategies=strategies,
             current_order=current_order,
             add_market=mock_add_market,
+            client=mock_client,
         )
         self.assertEqual(market.blotter["123"], new_order)
         self.assertEqual(new_order.market_id, "market_id")
@@ -117,3 +119,4 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(new_order.order_type.ORDER_TYPE, OrderTypes.LIMIT)
         self.assertEqual(new_order.order_type.size, 2.0)
         self.assertEqual(new_order.order_type.price, 10.0)
+        self.assertEqual(new_order.client, mock_client)

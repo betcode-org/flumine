@@ -111,8 +111,8 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(self.market.market_book, self.mock_market_book)
         self.assertEqual(self.market.market_catalogue, self.mock_market_catalogue)
         self.assertTrue(self.market.update_market_catalogue)
-        self.assertFalse(self.market.orders_cleared)
-        self.assertFalse(self.market.market_cleared)
+        self.assertEqual(self.market.orders_cleared, [])
+        self.assertEqual(self.market.market_cleared, [])
         self.assertEqual(self.market.context, {"simulated": {}})
         self.assertIsNotNone(self.market.blotter)
         self.assertEqual(self.market._transaction_id, 0)
@@ -125,12 +125,12 @@ class MarketTest(unittest.TestCase):
 
     def test_open_market(self):
         self.market.closed = True
-        self.market.orders_cleared = True
-        self.market.market_cleared = True
+        self.market.orders_cleared = [1, 2]
+        self.market.market_cleared = [1]
         self.market.open_market()
         self.assertFalse(self.market.closed)
-        self.assertFalse(self.market.orders_cleared)
-        self.assertFalse(self.market.market_cleared)
+        self.assertEqual(self.market.orders_cleared, [])
+        self.assertEqual(self.market.market_cleared, [])
 
     def test_close_market(self):
         self.market.close_market()
@@ -141,7 +141,10 @@ class MarketTest(unittest.TestCase):
     def test_transaction(self, mock_transaction):
         transaction = self.market.transaction()
         mock_transaction.assert_called_with(
-            self.market, id_=self.market._transaction_id, async_place_orders=False
+            self.market,
+            id_=self.market._transaction_id,
+            async_place_orders=False,
+            client=self.market.flumine.clients.get_default(),
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -150,7 +153,10 @@ class MarketTest(unittest.TestCase):
         config.async_place_orders = True
         transaction = self.market.transaction()
         mock_transaction.assert_called_with(
-            self.market, id_=self.market._transaction_id, async_place_orders=True
+            self.market,
+            id_=self.market._transaction_id,
+            async_place_orders=True,
+            client=self.market.flumine.clients.get_default(),
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -158,7 +164,10 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
-        self.assertTrue(self.market.place_order(mock_order, 2, False, force=True))
+        self.assertTrue(
+            self.market.place_order(mock_order, 2, False, force=True, client=1)
+        )
+        mock_transaction.assert_called_with(client=1)
         mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -166,6 +175,7 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.cancel_order(mock_order, 2.02, force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.cancel_order.assert_called_with(mock_order, 2.02, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -173,6 +183,7 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.update_order.assert_called_with(mock_order, "test", True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -180,12 +191,12 @@ class MarketTest(unittest.TestCase):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
         self.assertTrue(self.market.replace_order(mock_order, 2, False, force=True))
+        mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
     def test_event(self):
-        mock_market_catalogue = mock.Mock(market_start_time=12)
-        mock_market_catalogue.event.id = 12
-        self.market.market_catalogue = mock_market_catalogue
+        self.market.market_catalogue.event.id = 12
+        self.market.market_book.market_definition.market_time = 12
 
         self.market.flumine.markets = []
         self.assertEqual(self.market.event, {})
@@ -240,6 +251,7 @@ class MarketTest(unittest.TestCase):
         )
 
     def test_seconds_to_start(self):
+        self.market.market_book = None
         mock_market_catalogue = mock.Mock()
         mock_market_catalogue.market_start_time = datetime.datetime.utcfromtimestamp(1)
         self.market.market_catalogue = mock_market_catalogue
@@ -255,7 +267,7 @@ class MarketTest(unittest.TestCase):
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_market_catalogue(self):
-        self.market.market_catalogue.market_start_time = (
+        self.market.market_book.market_definition.market_time = (
             datetime.datetime.utcfromtimestamp(1)
         )
         self.assertLess(self.market.seconds_to_start, 0)
@@ -328,19 +340,25 @@ class MarketTest(unittest.TestCase):
     @mock.patch("flumine.markets.market.Market.event_type_id")
     @mock.patch("flumine.markets.market.Market.event_id")
     def test_cleared(self, mock_event_id, mock_event_type_id):
+        mock_client = mock.Mock(commission_base=0.05)
+        mock_order = mock.Mock(
+            client=mock_client, size_matched=2.00, profit=20, lookup=(1, 2, 3)
+        )
+        mock_order.simulated.profit = 20
+        self.market.blotter["123"] = mock_order
         self.assertEqual(
-            self.market.cleared(0.05),
+            self.market.cleared(mock_client),
             {
-                "betCount": 0,
+                "betCount": 1,
                 "betOutcome": "WON",
-                "commission": 0.0,
+                "commission": 1.0,
                 "customerStrategyRef": config.customer_strategy_ref,
                 "eventId": mock_event_id,
                 "eventTypeId": mock_event_type_id,
                 "lastMatchedDate": None,
                 "marketId": "1.234",
                 "placedDate": None,
-                "profit": 0,
+                "profit": 20,
                 "settledDate": None,
             },
         )

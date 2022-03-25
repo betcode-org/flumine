@@ -25,6 +25,7 @@ class OrderStream(BaseStream):
                 "customer_strategy_refs": config.customer_strategy_ref,
                 "conflate_ms": self.conflate_ms,
                 "streaming_timeout": self.streaming_timeout,
+                "client_username": self.client.username,
             },
         )
         if not self._output_thread.is_alive():
@@ -83,6 +84,8 @@ class OrderStream(BaseStream):
                     continue
             last_snap = time.time()
             if order_books or self.flumine.markets.live_orders:
+                for order_book in order_books:
+                    order_book.client = self.client
                 self.flumine.handler_queue.put(CurrentOrdersEvent(order_books))
 
         logger.info("Stopped output_thread (OrderStream {0})".format(self.stream_id))

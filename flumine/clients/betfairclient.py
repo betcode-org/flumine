@@ -21,41 +21,89 @@ class BetfairClient(BaseClient):
 
     EXCHANGE = ExchangeType.BETFAIR
 
-    def login(self) -> resources.LoginResource:
-        if self.interactive_login:
-            return self.betting_client.login_interactive()
-        else:
-            return self.betting_client.login()
+    def login(self) -> Optional[resources.LoginResource]:
+        try:
+            if self.interactive_login:
+                return self.betting_client.login_interactive()
+            else:
+                return self.betting_client.login()
+        except BetfairError as e:
+            logger.error(
+                "BetfairClient `login` error",
+                exc_info=True,
+                extra={
+                    "client": self.betting_client,
+                    "trading_function": "login",
+                    "response": e,
+                },
+            )
 
-    def keep_alive(self) -> resources.KeepAliveResource:
+    def keep_alive(self) -> Optional[resources.KeepAliveResource]:
         if self.betting_client.session_expired:
-            return self.betting_client.keep_alive()
+            try:
+                return self.betting_client.keep_alive()
+            except BetfairError as e:
+                logger.error(
+                    "BetfairClient `keep_alive` error",
+                    exc_info=True,
+                    extra={
+                        "client": self.betting_client,
+                        "trading_function": "keep_alive",
+                        "response": e,
+                    },
+                )
 
-    def logout(self) -> resources.LogoutResource:
-        return self.betting_client.logout()
+    def logout(self) -> Optional[resources.LogoutResource]:
+        try:
+            return self.betting_client.logout()
+        except BetfairError as e:
+            logger.error(
+                "BetfairClient `logout` error",
+                exc_info=True,
+                extra={
+                    "client": self.betting_client,
+                    "trading_function": "logout",
+                    "response": e,
+                },
+            )
 
     def update_account_details(self) -> None:
         # get details
         account_details = self._get_account_details()
         if account_details:
             self.account_details = account_details
-
         # get funds
         account_funds = self._get_account_funds()
         if account_funds:
             self.account_funds = account_funds
 
-    def _get_account_details(self) -> resources.AccountDetails:
+    def _get_account_details(self) -> Optional[resources.AccountDetails]:
         try:
             return self.betting_client.account.get_account_details()
         except BetfairError as e:
-            logger.error("get_account_details error", extra={"error": e}, exc_info=True)
+            logger.error(
+                "BetfairClient `account.get_account_details` error",
+                exc_info=True,
+                extra={
+                    "client": self.betting_client,
+                    "trading_function": "account.get_account_details",
+                    "response": e,
+                },
+            )
 
-    def _get_account_funds(self) -> resources.AccountFunds:
+    def _get_account_funds(self) -> Optional[resources.AccountFunds]:
         try:
             return self.betting_client.account.get_account_funds()
         except BetfairError as e:
-            logger.error("get_account_funds error", extra={"error": e}, exc_info=True)
+            logger.error(
+                "BetfairClient `account.get_account_funds` error",
+                exc_info=True,
+                extra={
+                    "client": self.betting_client,
+                    "trading_function": "account.get_account_funds",
+                    "response": e,
+                },
+            )
 
     @property
     def min_bet_size(self) -> Optional[float]:

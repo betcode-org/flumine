@@ -7,6 +7,7 @@ from betfairlightweight import BetfairError, filters, exceptions
 from . import config
 from .events import events
 from .utils import chunks
+from .clients import ExchangeType
 
 logger = logging.getLogger(__name__)
 
@@ -93,35 +94,27 @@ def keep_alive(context: dict, flumine) -> None:
     """Attempt keep alive if required or
     login if keep alive failed
     """
-    client = flumine.client
-    if client.betting_client.session_token:
-        try:
+    for client in flumine.clients:
+        if client.EXCHANGE == ExchangeType.BETFAIR:
+            if client.betting_client.session_token:
+                resp = client.keep_alive()
+                if resp is None or resp.status == "SUCCESS":
+                    continue
+        elif client.EXCHANGE == ExchangeType.BETCONNECT:
             resp = client.keep_alive()
-            if resp is None or resp.status == "SUCCESS":
-                return
-        except BetfairError as e:
-            logger.error(
-                "keep_alive error",
-                exc_info=True,
-                extra={"trading_function": "keep_alive", "response": e},
-            )
-    # attempt login
-    try:
+            if resp:
+                continue
+        # keep-alive failed lets try a login
         client.login()
-    except BetfairError as e:
-        logger.error(
-            "login error",
-            exc_info=True,
-            extra={"trading_function": "login", "response": e},
-        )
 
 
 def poll_market_catalogue(context: dict, flumine) -> None:
-    client = flumine.client
+    # get betfair client
+    client = flumine.clients.get_betfair_default()
     markets = [
         m.market_id
         for m in list(flumine.markets.markets.values())
-        if m.update_market_catalogue
+        if m.update_market_catalogue and not m.closed
     ]
     for market_ids in chunks(markets, 25):
         try:
@@ -159,29 +152,35 @@ def poll_market_catalogue(context: dict, flumine) -> None:
 
 
 def poll_account_balance(context: dict, flumine) -> None:
-    client = flumine.client
-    client.update_account_details()
-    if client.account_funds:
-        flumine.log_control(events.BalanceEvent(client))
+    for client in flumine.clients:
+        client.update_account_details()
+        logger.info("Client update account details", extra=client.info)
+        if client.account_funds:
+            flumine.log_control(events.BalanceEvent(client))
 
 
 def poll_market_closure(context: dict, flumine) -> None:
-    client = flumine.client
-    if client.paper_trade:
-        return
     markets = [
-        market
-        for market in list(flumine.markets.markets.values())
-        if market.closed
-        and (market.orders_cleared is False or market.market_cleared is False)
+        market for market in list(flumine.markets.markets.values()) if market.closed
     ]
-    for market in markets:
-        if market.orders_cleared is False:
-            if _get_cleared_orders(flumine, client.betting_client, market.market_id):
-                market.orders_cleared = True
-        if market.market_cleared is False:
-            if _get_cleared_market(flumine, client.betting_client, market.market_id):
-                market.market_cleared = True
+    for client in flumine.clients:
+        if (
+            client.EXCHANGE != ExchangeType.BETFAIR
+            or client.paper_trade
+            or client.market_recording_mode
+        ):
+            continue
+        for market in markets:
+            if client.username not in market.orders_cleared:
+                if _get_cleared_orders(
+                    flumine, client.betting_client, market.market_id
+                ):
+                    market.orders_cleared.append(client.username)
+            if client.username not in market.market_cleared:
+                if _get_cleared_market(
+                    flumine, client.betting_client, market.market_id
+                ):
+                    market.market_cleared.append(client.username)
 
 
 def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:

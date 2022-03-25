@@ -1,7 +1,6 @@
 import logging
 
 from ..clients.clients import ExchangeType
-from ..order.order import OrderStatus
 from ..order.ordertype import OrderTypes
 from ..order.orderpackage import OrderPackageType, BaseOrder
 from . import BaseControl
@@ -63,7 +62,7 @@ class OrderValidation(BaseControl):
             self._on_error(order, "Order liability has more than 2dp")
 
     def _validate_betfair_min_size(self, order, order_type):
-        client = self.flumine.client
+        client = order.client
         if client.min_bet_validation is False:
             return  # some accounts do not have min bet restrictions
         if order_type == OrderTypes.LIMIT:
@@ -167,9 +166,8 @@ class ExecutionValidation(BaseControl):
             )
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if self.flumine.BACKTEST or self.flumine.client.paper_trade:
+        if self.flumine.clients.simulated:
             return
-
         if order.EXCHANGE == ExchangeType.BETFAIR:
             self.validate_order(order, package_type)
 

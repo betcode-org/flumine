@@ -77,4 +77,4 @@ class BaseStream(threading.Thread):
         if self._client:
             return self._client
         else:
-            return self.flumine.client
+            return self.flumine.clients.get_default()

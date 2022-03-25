@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from flumine import FlumineBacktest
+from flumine import FlumineSimulation
 from flumine.clients import ExchangeType
 from flumine.order.orderpackage import OrderPackageType
 from flumine import config
@@ -11,25 +11,25 @@ from flumine.markets.blotter import Blotter
 from flumine.order.order import OrderTypes
 
 
-class FlumineBacktestTest(unittest.TestCase):
+class FlumineSimulationTest(unittest.TestCase):
     def setUp(self):
         self.mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
-        self.flumine = FlumineBacktest(self.mock_client)
+        self.flumine = FlumineSimulation(self.mock_client)
 
     def test_init(self):
-        self.assertTrue(self.flumine.BACKTEST)
+        self.assertTrue(self.flumine.SIMULATED)
         self.assertEqual(self.flumine.handler_queue, [])
 
     def test_run_error(self):
-        mock_client = mock.Mock()
-        mock_client.EXCHANGE = 69
-        self.flumine.client = mock_client
+        self.flumine.clients._clients.clear()
+        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, paper_trade=False)
+        self.flumine.add_client(mock_client)
         with self.assertRaises(RunError):
             self.flumine.run()
 
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_end_flumine")
-    @mock.patch("flumine.backtest.backtest.events")
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_books")
+    @mock.patch("flumine.simulation.simulation.FlumineSimulation._process_end_flumine")
+    @mock.patch("flumine.simulation.simulation.events")
+    @mock.patch("flumine.simulation.simulation.FlumineSimulation._process_market_books")
     def test_run(
         self,
         mock__process_market_books,
@@ -45,9 +45,9 @@ class FlumineBacktestTest(unittest.TestCase):
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
         mock__process_end_flumine.assert_called_with()
 
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_end_flumine")
-    @mock.patch("flumine.backtest.backtest.events")
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_market_books")
+    @mock.patch("flumine.simulation.simulation.FlumineSimulation._process_end_flumine")
+    @mock.patch("flumine.simulation.simulation.events")
+    @mock.patch("flumine.simulation.simulation.FlumineSimulation._process_market_books")
     def test_run_event(
         self,
         mock__process_market_books,
@@ -69,12 +69,16 @@ class FlumineBacktestTest(unittest.TestCase):
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
         mock__process_end_flumine.assert_called_with()
 
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._process_backtest_orders")
-    @mock.patch("flumine.backtest.backtest.FlumineBacktest._check_pending_packages")
+    @mock.patch(
+        "flumine.simulation.simulation.FlumineSimulation._process_simulated_orders"
+    )
+    @mock.patch(
+        "flumine.simulation.simulation.FlumineSimulation._check_pending_packages"
+    )
     def test__process_market_books(
         self,
         mock__check_pending_packages,
-        mock__process_backtest_orders,
+        mock__process_simulated_orders,
     ):
         self.flumine.handler_queue.append(mock.Mock())
         mock_event = mock.Mock()
@@ -86,14 +90,14 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_event.event = [mock_market_book]
         self.flumine._process_market_books(mock_event)
         mock__check_pending_packages.assert_called_with("1.23")
-        mock__process_backtest_orders.assert_called_with(mock_market)
+        mock__process_simulated_orders.assert_called_with(mock_market)
 
     def test_process_order_package(self):
         mock_order_package = mock.Mock()
         self.flumine.process_order_package(mock_order_package)
         self.assertEqual(self.flumine.handler_queue, [mock_order_package])
 
-    def test__process_backtest_orders(self):
+    def test__process_simulated_orders(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter = Blotter("1.23")
         mock_order = mock.Mock(size_remaining=0, complete=False)
@@ -103,16 +107,16 @@ class FlumineBacktestTest(unittest.TestCase):
         mock_order_two.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order_two.trade.status = TradeStatus.COMPLETE
         mock_market.blotter._live_orders = [mock_order, mock_order_two]
-        self.flumine._process_backtest_orders(mock_market)
+        self.flumine._process_simulated_orders(mock_market)
         mock_order.execution_complete.assert_called()
         mock_order_two.execution_complete.assert_not_called()
 
-    def test__process_backtest_orders_strategies(self):
+    def test__process_simulated_orders_strategies(self):
         mock_market = mock.Mock(context={})
         mock_market.blotter.live_orders = []
         mock_strategy = mock.Mock()
         self.flumine.strategies = [mock_strategy]
-        self.flumine._process_backtest_orders(mock_market)
+        self.flumine._process_simulated_orders(mock_market)
         mock_strategy.process_orders.assert_called_with(
             mock_market, mock_market.blotter.strategy_orders(mock_strategy)
         )
@@ -250,10 +254,10 @@ class FlumineBacktestTest(unittest.TestCase):
         self.assertEqual(len(self.flumine.markets._markets), 4)
 
     def test_str(self):
-        assert str(self.flumine) == "<FlumineBacktest>"
+        assert str(self.flumine) == "<FlumineSimulation>"
 
     def test_repr(self):
-        assert repr(self.flumine) == "<FlumineBacktest>"
+        assert repr(self.flumine) == "<FlumineSimulation>"
 
     def test_enter_exit(self):
         control = mock.Mock()

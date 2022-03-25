@@ -19,26 +19,30 @@ class OrdersMiddleware(Middleware):
         self.flumine = flumine
 
     def add_market(self, market) -> None:
-        resp = self.flumine.client.betting_client.betting.list_current_orders(
-            customer_strategy_refs=[config.customer_strategy_ref],
-            order_projection="EXECUTION_COMPLETE",
-        )
-        for current_order in resp.orders:
-            logger.info(
-                "OrdersMiddleware: Processing order {0}".format(current_order.bet_id),
-                extra={
-                    "bet_id": current_order.bet_id,
-                    "market_id": current_order.market_id,
-                    "customer_strategy_ref": current_order.customer_strategy_ref,
-                    "customer_order_ref": current_order.customer_order_ref,
-                },
+        for client in self.flumine.clients:
+            resp = client.betting_client.betting.list_current_orders(
+                customer_strategy_refs=[config.customer_strategy_ref],
+                order_projection="EXECUTION_COMPLETE",
             )
-            order = self._create_order_from_current(current_order, market)
-            if order:
-                order.update_current_order(current_order)
-                order.execution_complete()
+            for current_order in resp.orders:
+                logger.info(
+                    "OrdersMiddleware: Processing order {0}".format(
+                        current_order.bet_id
+                    ),
+                    extra={
+                        "bet_id": current_order.bet_id,
+                        "market_id": current_order.market_id,
+                        "customer_strategy_ref": current_order.customer_strategy_ref,
+                        "customer_order_ref": current_order.customer_order_ref,
+                        "client_username": client.username,
+                    },
+                )
+                order = self._create_order_from_current(client, current_order, market)
+                if order:
+                    order.update_current_order(current_order)
+                    order.execution_complete()
 
-    def _create_order_from_current(self, current_order, market):
+    def _create_order_from_current(self, client, current_order, market):
         strategy_name_hash = current_order.customer_order_ref[
             :STRATEGY_NAME_HASH_LENGTH
         ]
@@ -56,6 +60,7 @@ class OrdersMiddleware(Middleware):
                     "customer_strategy_ref": current_order.customer_strategy_ref,
                     "customer_order_ref": current_order.customer_order_ref,
                     "strategy_name": str(strategy),
+                    "client_username": client.username,
                 },
             )
             return
@@ -66,7 +71,7 @@ class OrdersMiddleware(Middleware):
             current_order.handicap,
             strategy,
         )
-        order = trade.create_order_from_current(current_order, order_id)
+        order = trade.create_order_from_current(client, current_order, order_id)
         market.blotter[order.id] = order
         runner_context = strategy.get_runner_context(*order.lookup)
         runner_context.place(trade.id)
@@ -78,6 +83,7 @@ class OrdersMiddleware(Middleware):
                 "customer_strategy_ref": current_order.customer_strategy_ref,
                 "customer_order_ref": current_order.customer_order_ref,
                 "strategy_name": str(strategy),
+                "client_username": client.username,
             },
         )
         return order

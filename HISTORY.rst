@@ -3,6 +3,26 @@
 Release History
 ---------------
 
+2.0.0 (2022-03-25)
++++++++++++++++++++
+
+**Improvements**
+
+- #193 multi clients integrated
+- backtest -> simulated rename (*breaking change)
+- #566 BetConnect client added
+
+**Bug Fixes**
+
+- #567 market_start_datetime fix
+- PaperTrade bug fix on `elapsed_time`
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.3
+- betconnect==0.1.1 requirement added
+- python 3.6 removed
+
 1.22.2 (2022-03-24)
 +++++++++++++++++++
 

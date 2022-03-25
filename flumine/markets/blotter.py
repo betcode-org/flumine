@@ -46,6 +46,8 @@ class Blotter:
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
+        self._client_orders = defaultdict(list)
+        self._client_strategy_orders = defaultdict(list)
 
     def get_order_bet_id(self, bet_id: str) -> Optional[BaseOrder]:
         try:
@@ -77,6 +79,33 @@ class Blotter:
     ) -> list:
         """Returns all orders related to a strategy selection."""
         orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
+        if order_status:
+            orders = [o for o in orders if o.status in order_status]
+        if matched_only:
+            orders = [o for o in orders if o.size_matched > 0]
+        return orders
+
+    def client_orders(
+        self,
+        client,
+        order_status: Optional[List[OrderStatus]] = None,
+        matched_only: Optional[bool] = None,
+    ) -> list:
+        orders = self._client_orders[client]
+        if order_status:
+            orders = [o for o in orders if o.status in order_status]
+        if matched_only:
+            orders = [o for o in orders if o.size_matched > 0]
+        return orders
+
+    def client_strategy_orders(
+        self,
+        client,
+        strategy,
+        order_status: Optional[List[OrderStatus]] = None,
+        matched_only: Optional[bool] = None,
+    ) -> list:
+        orders = self._client_strategy_orders[(client, strategy)]
         if order_status:
             orders = [o for o in orders if o.status in order_status]
         if matched_only:
@@ -230,6 +259,8 @@ class Blotter:
         self._strategy_selection_orders[
             (order.trade.strategy, *order.lookup[1:])
         ].append(order)
+        self._client_orders[order.client].append(order)
+        self._client_strategy_orders[(order.client, order.trade.strategy)].append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]

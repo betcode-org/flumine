@@ -13,7 +13,7 @@ from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
-from ..backtest.simulated import Simulated
+from ..simulation.simulatedorder import SimulatedOrder
 from .. import config
 
 logger = logging.getLogger(__name__)
@@ -75,6 +75,7 @@ class BaseOrder:
         self.handicap = handicap
         self.lookup = self.market_id, self.selection_id, self.handicap
 
+        self.client = None
         self.runner_status = None  # RunnerBook.status
         self.market_type = None
         self.each_way_divisor = 1
@@ -90,7 +91,7 @@ class BaseOrder:
         self.bet_id = None
         self.update_data = {}  # stores cancel/update/replace data
         self.responses = Responses()  # raw api responses
-        self.simulated = Simulated(self)  # used in simulated execution
+        self.simulated = SimulatedOrder(self)  # used in simulated execution
         self._simulated = bool(self.simulated)  # cache in current class (2x quicker)
         self.publish_time = None  # marketBook.publish_time
         self.market_version = None  # marketBook.version
@@ -170,6 +171,10 @@ class BaseOrder:
     def update_current_order(self, current_order: CurrentOrder) -> None:
         self.responses.current_order = current_order
 
+    def update_client(self, client) -> None:
+        self.client = client
+        self._simulated = bool(self.simulated)
+
     def _is_complete(self) -> bool:
         """Returns False if order is
         live or pending in the market"""
@@ -181,7 +186,7 @@ class BaseOrder:
             return False  # default to False
 
     @property
-    def current_order(self) -> Union[CurrentOrder, Simulated]:
+    def current_order(self) -> Union[CurrentOrder, SimulatedOrder]:
         if self._simulated:
             return self.simulated
         elif self.responses.current_order:
@@ -296,6 +301,7 @@ class BaseOrder:
             "simulated": self.simulated.info,
             "notes": self.notes_str,
             "market_notes": self.market_notes,
+            "client": self.client.username if self.client else None,
         }
 
     def json(self) -> str:

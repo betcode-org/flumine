@@ -1,10 +1,10 @@
 import unittest
 
-from flumine import FlumineBacktest, clients, BaseStrategy, config
+from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
-from flumine.utils import get_price
+from flumine.utils import get_price, get_nearest_price
 
 
 class IntegrationTest(unittest.TestCase):
@@ -12,7 +12,7 @@ class IntegrationTest(unittest.TestCase):
         # change config to raise errors
         config.raise_errors = True
 
-    def test_backtest_basic(self):
+    def test_simulation_basic(self):
         class Ex(BaseStrategy):
             def check_market_book(self, market, market_book):
                 return True
@@ -20,13 +20,13 @@ class IntegrationTest(unittest.TestCase):
             def process_market_book(self, market, market_book):
                 return
 
-        client = clients.BacktestClient()
-        framework = FlumineBacktest(client=client)
+        client = clients.SimulatedClient()
+        framework = FlumineSimulation(client=client)
         strategy = Ex(market_filter={"markets": ["tests/resources/BASIC-1.132153978"]})
         framework.add_strategy(strategy)
         framework.run()
 
-    def test_backtest_pro(self):
+    def test_simulation_pro(self):
         class LimitOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
                 if not market_book.inplay and market.seconds_to_start < 100:
@@ -136,8 +136,8 @@ class IntegrationTest(unittest.TestCase):
                             )
                             market.place_order(order)
 
-        client = clients.BacktestClient()
-        framework = FlumineBacktest(client=client)
+        client = clients.SimulatedClient()
+        framework = FlumineSimulation(client=client)
         limit_strategy = LimitOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -194,9 +194,91 @@ class IntegrationTest(unittest.TestCase):
             # check transaction count
             self.assertEqual(market._transaction_id, 5182)
 
+    def test_simulation_multi_clients(self):
+        class LimitOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if market_book.inplay:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                with market.transaction(client=self.context["client"]) as t:
+                    for runner in market_book.runners:
+                        if runner.status == "ACTIVE":
+                            back = get_price(runner.ex.available_to_back, 0)
+                            runner_context = self.get_runner_context(
+                                market.market_id, runner.selection_id
+                            )
+                            if runner_context.trade_count == 0:
+                                trade = Trade(
+                                    market_book.market_id,
+                                    runner.selection_id,
+                                    runner.handicap,
+                                    self,
+                                )
+                                order = trade.create_order(
+                                    side="BACK",
+                                    order_type=LimitOrder(back, 2.00),
+                                )
+                                t.place_order(order)
+
+            def process_orders(self, market, orders):
+                for order in orders:
+                    if order.status == OrderStatus.EXECUTABLE:
+                        if order.elapsed_seconds and order.elapsed_seconds > 2:
+                            new_price = get_nearest_price(order.order_type.price - 1)
+                            market.replace_order(order, new_price)
+                        elif order.elapsed_seconds and order.elapsed_seconds > 10:
+                            market.cancel_order(order)
+
+        client_bpe_on = clients.SimulatedClient()
+        client_bpe_off = clients.SimulatedClient(best_price_execution=False)
+        framework = FlumineSimulation()
+        framework.add_client(client_bpe_on)
+        framework.add_client(client_bpe_off)
+        limit_strategy_bpe_on = LimitOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+            max_trade_count=100,
+            context={"client": client_bpe_on},
+        )
+        framework.add_strategy(limit_strategy_bpe_on)
+        limit_strategy_bpe_off = LimitOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+            max_trade_count=100,
+            context={"client": client_bpe_off},
+        )
+        framework.add_strategy(limit_strategy_bpe_off)
+        framework.run()
+
+        self.assertEqual(len(framework.markets), 1)
+
+        for market in framework.markets:
+            limit_orders_bpe_on = market.blotter.strategy_orders(limit_strategy_bpe_on)
+            self.assertEqual(
+                limit_orders_bpe_on, market.blotter.client_orders(client_bpe_on)
+            )
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_on]), 2), -17.75
+            )
+            self.assertEqual(len(limit_orders_bpe_on), 15)
+            limit_orders_bpe_off = market.blotter.strategy_orders(
+                limit_strategy_bpe_off
+            )
+            self.assertEqual(
+                limit_orders_bpe_off, market.blotter.client_orders(client_bpe_off)
+            )
+            self.assertEqual(
+                round(sum([o.simulated.profit for o in limit_orders_bpe_off]), 2),
+                -19.75,
+            )
+            self.assertEqual(len(limit_orders_bpe_off), 14)
+
     def test_event_processing(self):
-        client = clients.BacktestClient()
-        framework = FlumineBacktest(client=client)
+        client = clients.SimulatedClient()
+        framework = FlumineSimulation(client=client)
 
         class LimitOrdersInplay(BaseStrategy):
             def check_market_book(self, market, market_book):

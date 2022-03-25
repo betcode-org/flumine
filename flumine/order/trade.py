@@ -113,7 +113,7 @@ class Trade:
             size=size,
             persistence_type=order.order_type.persistence_type,
         )
-        order = BetfairOrder(
+        replacement_order = BetfairOrder(
             trade=self,
             side=order.side,
             order_type=order_type,
@@ -122,11 +122,12 @@ class Trade:
             context=order.context,
             notes=order.notes,
         )
-        self.orders.append(order)
-        return order
+        replacement_order.update_client(order.client)
+        self.orders.append(replacement_order)
+        return replacement_order
 
     def create_order_from_current(
-        self, current_order: CurrentOrder, order_id: str
+        self, client, current_order: CurrentOrder, order_id: str
     ) -> BetfairOrder:
         if current_order.order_type == "LIMIT":
             order_type = LimitOrder(
@@ -150,6 +151,7 @@ class Trade:
         )
         order.bet_id = current_order.bet_id
         order.id = order_id
+        order.update_client(client)
         # update dates
         order.date_time_created = current_order.placed_date
         order.date_time_execution_complete = (
@@ -159,11 +161,6 @@ class Trade:
         )
         self.orders.append(order)
         return order
-
-    @property
-    def client(self):
-        # 193 todo trade.client
-        return self.strategy.client
 
     @property
     def notes_str(self) -> str:

@@ -30,7 +30,7 @@ Support for market, order and custom streaming data.
 
 [join slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
-Tested on Python 3.6, 3.7, 3.8, 3.9 and 3.10.
+Tested on Python 3.7, 3.8, 3.9 and 3.10.
 
 ## installation
 
@@ -38,7 +38,7 @@ Tested on Python 3.6, 3.7, 3.8, 3.9 and 3.10.
 $ pip install flumine
 ```
 
-flumine requires Python 3.6+
+flumine requires Python 3.7+
 
 ## setup
 
@@ -130,8 +130,8 @@ framework.run()
 - Multiple strategies
 - Order execution
 - Paper trading
-- Backtesting
-- Event backtesting (multi market)
+- Simulation
+- Event simulation (multi market)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService
 
 ## Dependencies

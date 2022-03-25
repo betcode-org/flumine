@@ -34,4 +34,7 @@ class Responses:
         if self._date_time_placed:
             return self._date_time_placed
         elif self.current_order:
-            return self.current_order.placed_date
+            try:
+                return self.current_order.placed_date
+            except AttributeError:
+                return

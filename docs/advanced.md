@@ -4,6 +4,8 @@
 
 Functions:
 
+- `add_client` Adds a [client](/advanced/#clients) to the framework
+- `add_strategy` Adds a [strategy](/advanced/#strategies) to the framework
 - `add_worker` Adds a [worker](/advanced/#background-workers) to the framework
 - `add_client_control` Adds a [client control](/advanced/#client-controls) to the framework
 - `add_trading_control` Adds a [trading control](/advanced/#trading-controls) to the framework
@@ -13,9 +15,11 @@ Functions:
 The Flumine class can be adapted by overriding the following functions:
 
 - `_process_market_books()` called on MarketBook event
+- `_process_sports_data()` called on SportsData event
 - `_process_market_orders()` called when market has pending orders
 - `_process_order_package()` called on new OrderPackage
-- `_add_live_market()` called when new Market received through streams
+- `_add_market()` called when new Market received through streams
+- `_remove_market()` called when Market removed from framework
 - `_process_raw_data()` called on RawData event
 - `_process_market_catalogues` called on MarketCatalogue event
 - `_process_current_orders` called on currentOrders event
@@ -24,9 +28,6 @@ The Flumine class can be adapted by overriding the following functions:
 - `_process_cleared_orders()` called on ClearedOrders event
 - `_process_cleared_markets()` called on ClearedMarkets event
 - `_process_end_flumine()` called on Flumine termination
-
-## Base Strategy
-
 
 ## Streams
 
@@ -40,7 +41,7 @@ Similar to Market Streams but the raw streaming data is passed back, this reduce
 
 ### Historical Stream
 
-This is created on a per market basis when backtesting.
+This is created on a per market basis when simulating.
 
 ### Order Stream
 
@@ -52,11 +53,11 @@ Custom streams (aka threads) can be added as per:
 
 ```python
 from flumine.streams.basestream import BaseStream
+from flumine.events.events import CustomEvent
 
 
 class CustomStream(BaseStream):
     def run(self) -> None:
-        """
         # connect to stream / make API requests etc.
         response = api_call()
 
@@ -66,12 +67,10 @@ class CustomStream(BaseStream):
                 strategy.process_my_event(event)
 
         # push results through using custom event
-        event = events.CustomEvent(response, callback)
+        event = CustomEvent(response, callback)
 
         # put in main queue
         self.flumine.handler_queue.put(event)
-        """
-        pass
 
 
 custom_stream = CustomStream(framework, custom=True)
@@ -110,7 +109,7 @@ logger.setLevel(logging.INFO)
 
 #### simulated
 
-Updated to True when backtesting or paper trading
+Updated to True when simulating or paper trading
 
 #### simulated_strategy_isolation
 
@@ -130,7 +129,7 @@ OS process id of running application.
 
 #### current_time
 
-Used for backtesting
+Used for simulation
 
 #### raise_errors
 
@@ -146,19 +145,19 @@ Place orders sent with place orders flag, prevents waiting for bet delay
 
 #### place_latency
 
-Place latency used for backtesting / simulation execution
+Place latency used for simulation / simulation execution
 
 #### cancel_latency
 
-Cancel latency used for backtesting / simulation execution
+Cancel latency used for simulation / simulation execution
 
 #### update_latency
 
-Update latency used for backtesting / simulation execution
+Update latency used for simulation / simulation execution
 
 #### replace_latency
 
-Replace latency used for backtesting / simulation execution
+Replace latency used for simulation / simulation execution
 
 #### order_sep 
 

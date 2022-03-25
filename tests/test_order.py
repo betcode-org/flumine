@@ -39,6 +39,7 @@ class BaseOrderTest(unittest.TestCase):
             self.order.lookup,
             (self.order.market_id, self.order.selection_id, self.order.handicap),
         )
+        self.assertIsNone(self.order.client)
         self.assertIsNone(self.order.runner_status)
         self.assertIsNone(self.order.market_type)
         self.assertEqual(self.order.each_way_divisor, 1)
@@ -168,6 +169,13 @@ class BaseOrderTest(unittest.TestCase):
         self.order.update_current_order(mock_current_order)
         self.assertEqual(self.order.responses.current_order, mock_current_order)
 
+    def test_update_client(self):
+        self.order._simulated = False
+        mock_client = mock.Mock(paper_trade=True)
+        self.order.update_client(mock_client)
+        self.assertEqual(self.order.client, mock_client)
+        self.assertTrue(self.order._simulated)
+
     def test_current_order(self):
         self.assertIsNone(self.order.current_order)
         mock_responses = mock.Mock()
@@ -177,7 +185,7 @@ class BaseOrderTest(unittest.TestCase):
         mock_responses.current_order = 1
         self.assertEqual(self.order.current_order, 1)
 
-    @mock.patch("flumine.backtest.simulated.config")
+    @mock.patch("flumine.simulation.simulatedorder.config")
     def test_current_order_simulated(self, mock_config):
         mock_config.simulated = True
         order = BaseOrder(mock.Mock(), "", mock.Mock())
@@ -296,10 +304,11 @@ class BetfairOrderTest(unittest.TestCase):
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
         self.order.place(123, 456, False)
-        mock_placing.assert_called_with()
+        self.assertFalse(self.order._simulated)
         self.assertEqual(self.order.publish_time, 123)
         self.assertEqual(self.order.market_version, 456)
         self.assertFalse(self.order.async_)
+        mock_placing.assert_called_with()
 
     @mock.patch(
         "flumine.order.order.BetfairOrder.size_remaining",
@@ -564,6 +573,7 @@ class BetfairOrderTest(unittest.TestCase):
                 "runner_status": self.order.runner_status,
                 "market_notes": None,
                 "notes": "",
+                "client": None,
             },
         )
 

@@ -187,7 +187,7 @@ class HistoricalStream(BaseStream):
 
     def create_generator(self):
         self._listener.update_clk = (
-            False  # do not update clk on updates (not required when backtesting)
+            False  # do not update clk on updates (not required when simulating)
         )
         stream = FlumineHistoricalGeneratorStream(
             file_path=self.market_filter,

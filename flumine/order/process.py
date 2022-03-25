@@ -34,6 +34,7 @@ def process_current_orders(
     markets: Markets, strategies: Strategies, event, log_control, add_market
 ) -> None:
     for current_orders in event.event:
+        client = current_orders.client
         for current_order in current_orders.orders:
             order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
@@ -48,10 +49,11 @@ def process_current_orders(
                         "market_id": current_order.market_id,
                         "customer_strategy_ref": current_order.customer_strategy_ref,
                         "customer_order_ref": current_order.customer_order_ref,
+                        "client_username": client.username,
                     },
                 )
                 order = create_order_from_current(
-                    markets, strategies, current_order, add_market
+                    markets, strategies, current_order, add_market, client
                 )
                 if order is None:
                     continue
@@ -89,7 +91,7 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
 
 
 def create_order_from_current(
-    markets: Markets, strategies: Strategies, current_order, add_market
+    markets: Markets, strategies: Strategies, current_order, add_market, client
 ) -> Optional[BaseOrder]:
     strategy_name_hash = current_order.customer_order_ref[:STRATEGY_NAME_HASH_LENGTH]
     order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
@@ -116,7 +118,7 @@ def create_order_from_current(
     trade = Trade(
         market.market_id, current_order.selection_id, current_order.handicap, strategy
     )
-    order = trade.create_order_from_current(current_order, order_id)
+    order = trade.create_order_from_current(client, current_order, order_id)
     market.blotter[order.id] = order
     runner_context = strategy.get_runner_context(*order.lookup)
     runner_context.place(trade.id)
@@ -129,6 +131,7 @@ def create_order_from_current(
             "customer_strategy_ref": current_order.customer_strategy_ref,
             "customer_order_ref": current_order.customer_order_ref,
             "strategy_name": str(strategy),
+            "client_username": client.username,
         },
     )
     return order

@@ -4,7 +4,6 @@ from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, Race, CricketMatch
 
 from .runnercontext import RunnerContext
-from ..clients import BaseClient
 from ..markets.market import Market
 from ..streams.marketstream import BaseStream, MarketStream
 from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
@@ -50,7 +49,6 @@ class BaseStrategy:
         context: dict = None,
         max_selection_exposure: float = 100,
         max_order_exposure: float = 10,
-        client: BaseClient = None,
         max_trade_count: int = 1e6,
         max_live_trade_count: int = 1,
         multi_order_trades: bool = False,
@@ -66,7 +64,6 @@ class BaseStrategy:
         :param context: Dictionary holding additional user specific vars
         :param max_selection_exposure: Max exposure per selection
         :param max_order_exposure: Max exposure per order
-        :param client: flumine client used for order placement
         :param max_trade_count: max total number of trades per runner
         :param max_live_trade_count: max live (with executable orders) trades per runner
         :param multi_order_trades: allow multiple live orders per trade
@@ -81,7 +78,7 @@ class BaseStrategy:
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
-        self.client = client
+        self.clients = None
         self.max_trade_count = max_trade_count
         self.max_live_trade_count = max_live_trade_count
         self.multi_order_trades = multi_order_trades
@@ -222,7 +219,6 @@ class BaseStrategy:
             "max_trade_count": self.max_trade_count,
             "context": self.context,
             "name_hash": self.name_hash,
-            "client": str(self.client),
         }
 
     @property
@@ -237,10 +233,10 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy: BaseStrategy, client: BaseClient) -> None:
+    def __call__(self, strategy: BaseStrategy, clients) -> None:
         if strategy.name in [s.name for s in self]:
             logger.warning("Strategy of same name '{0}' already added".format(strategy))
-        strategy.client = client
+        strategy.clients = clients
         self._strategies.append(strategy)
         strategy.add()
 

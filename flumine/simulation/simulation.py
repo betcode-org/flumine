@@ -3,33 +3,33 @@ from collections import defaultdict
 
 from .utils import SimulatedDateTime
 from ..baseflumine import BaseFlumine
+from ..clients import BaseClient
 from ..events import events
 from .. import utils
-from ..clients import ExchangeType
 from ..exceptions import RunError
 from ..order.order import OrderTypes
 
 logger = logging.getLogger(__name__)
 
 
-class FlumineBacktest(BaseFlumine):
+class FlumineSimulation(BaseFlumine):
     """
     Single threaded implementation of flumine
-    for backtesting strategies with betfair
+    for simulating strategies with betfair
     historic (or self recorded) streaming data.
     """
 
-    BACKTEST = True
+    SIMULATED = True
 
-    def __init__(self, client):
-        super(FlumineBacktest, self).__init__(client)
+    def __init__(self, client: BaseClient = None):
+        super(FlumineSimulation, self).__init__(client)
         self.simulated_datetime = SimulatedDateTime()
         self.handler_queue = []
 
     def run(self) -> None:
-        if self.client.EXCHANGE != ExchangeType.SIMULATED:
+        if not self.clients.simulated:
             raise RunError(
-                "Incorrect client provided, only a Simulated client can be used when backtesting"
+                "Incorrect client provided, only a Simulated client can be used when simulating"
             )
         with self:
             with self.simulated_datetime:
@@ -104,7 +104,7 @@ class FlumineBacktest(BaseFlumine):
                                 )
                             )
                 self._process_end_flumine()
-                logger.info("Backtesting complete")
+                logger.info("Simulation complete")
 
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         # todo DRY!
@@ -137,7 +137,7 @@ class FlumineBacktest(BaseFlumine):
 
             # process current orders
             if market.blotter.active:
-                self._process_backtest_orders(market)
+                self._process_simulated_orders(market)
 
             for strategy in self.strategies:
                 if utils.call_strategy_error_handling(
@@ -151,7 +151,7 @@ class FlumineBacktest(BaseFlumine):
         # place in pending list (wait for latency+delay)
         self.handler_queue.append(order_package)
 
-    def _process_backtest_orders(self, market) -> None:
+    def _process_simulated_orders(self, market) -> None:
         """Remove order from blotter live
         orders if complete and process
         orders through strategies
@@ -189,7 +189,7 @@ class FlumineBacktest(BaseFlumine):
             self.handler_queue.remove(p)
 
     def __repr__(self) -> str:
-        return "<FlumineBacktest>"
+        return "<FlumineSimulation>"
 
     def __str__(self) -> str:
-        return "<FlumineBacktest>"
+        return "<FlumineSimulation>"

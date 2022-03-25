@@ -22,7 +22,7 @@ class Streams:
         self._stream_id = 0
 
     def __call__(self, strategy: BaseStrategy) -> None:
-        if self.flumine.BACKTEST:
+        if self.flumine.SIMULATED:
             markets = strategy.market_filter.get("markets")
             market_types = strategy.market_filter.get("market_types")
             country_codes = strategy.market_filter.get("country_codes")
@@ -243,7 +243,7 @@ class Streams:
         return stream
 
     def start(self) -> None:
-        if not self.flumine.BACKTEST:
+        if not self.flumine.SIMULATED:
             logger.info("Starting streams..")
             for stream in self:
                 stream.start()

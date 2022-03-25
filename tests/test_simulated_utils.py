@@ -1,11 +1,11 @@
 import unittest
 from unittest import mock
 
-from flumine.backtest import utils
+from flumine.simulation import utils
 
 
 class NewDateTimeTest(unittest.TestCase):
-    @mock.patch("flumine.backtest.utils.config")
+    @mock.patch("flumine.simulation.utils.config")
     def test_new_date_time(self, mock_config):
         mock_config.current_time = 123
         x = utils.NewDateTime
@@ -19,7 +19,7 @@ class SimulatedDateTimeTest(unittest.TestCase):
     def test_init(self):
         self.assertIsNone(self.s._real_datetime)
 
-    @mock.patch("flumine.backtest.utils.config")
+    @mock.patch("flumine.simulation.utils.config")
     def test_reset_real_datetime(self, mock_config):
         mock_real_datetime = mock.Mock()
         self.s._real_datetime = mock_real_datetime
@@ -27,13 +27,13 @@ class SimulatedDateTimeTest(unittest.TestCase):
         mock_real_datetime.utcnow.assert_called()
         self.assertEqual(mock_config.current_time, mock_real_datetime.utcnow())
 
-    @mock.patch("flumine.backtest.utils.config")
+    @mock.patch("flumine.simulation.utils.config")
     def test_call(self, mock_config):
         mock_dt = mock.Mock()
         self.s(mock_dt)
         self.assertEqual(mock_config.current_time, mock_dt)
 
-    @mock.patch("flumine.backtest.utils.config")
+    @mock.patch("flumine.simulation.utils.config")
     def test_context_manager(self, mock_config):
         with self.s as datetime:
             mock_config.current_time = 456
