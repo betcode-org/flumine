@@ -248,9 +248,7 @@ class Streams:
             for stream in self:
                 stream.start()
                 # wait for successful start
-                while not stream.custom and (
-                    not stream._stream or not stream._stream._running
-                ):
+                while not stream.custom and not stream.stream_running:
                     time.sleep(0.25)
 
     def stop(self) -> None:
