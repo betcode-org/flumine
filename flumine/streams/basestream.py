@@ -78,3 +78,10 @@ class BaseStream(threading.Thread):
             return self._client
         else:
             return self.flumine.clients.get_default()
+
+    @property
+    def stream_running(self) -> bool:
+        if self._stream:
+            return self._stream.running
+        else:
+            return False

@@ -131,8 +131,9 @@ class ExecutionValidation(BaseControl):
     @property
     def order_stream_connected(self):
         for stream in self.flumine.streams:
+            # todo handle multi clients / OrderStream
             if isinstance(stream, OrderStream):
-                if stream._stream._running:  # todo: add property in bflw
+                if stream.stream_running:
                     return True
         return False
 

@@ -528,6 +528,12 @@ class TestBaseStream(unittest.TestCase):
         self.stream._client = None
         self.assertEqual(self.stream.client, self.mock_flumine.clients.get_default())
 
+    def test_stream_running(self):
+        self.assertFalse(self.stream.stream_running)
+        mock_stream = mock.Mock(running=True)
+        self.stream._stream = mock_stream
+        self.assertTrue(self.stream.stream_running)
+
 
 class TestMarketStream(unittest.TestCase):
     def setUp(self) -> None:

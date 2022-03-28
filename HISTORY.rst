@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.0.1 (2022-03-28)
++++++++++++++++++++
+
+**Improvements**
+
+- Client docs improvement
+- `stream_running` added and logic cleanup
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.4
+
 2.0.0 (2022-03-25)
 +++++++++++++++++++
 

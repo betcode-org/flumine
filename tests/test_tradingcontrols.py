@@ -369,7 +369,7 @@ class TestExecutionValidation(unittest.TestCase):
 
     def test_order_stream_connected(self):
         self.assertTrue(self.trading_control.order_stream_connected)
-        self.mock_order_stream._stream._running = False
+        self.mock_order_stream.stream_running = False
         self.assertFalse(self.trading_control.order_stream_connected)
 
     def test_order_stream_missing(self):

@@ -17,6 +17,17 @@ from flumine import Flumine, clients
 
 framework = Flumine()
 
+client = clients.BetfairClient(trading)
+framework.add_client(client)
+```
+
+or when simulating:
+
+```python
+from flumine import FlumineSimulation, clients
+
+framework = FlumineSimulation()
+
 client = clients.SimulatedClient(username="123")
 framework.add_client(client)
 ```
