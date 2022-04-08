@@ -191,11 +191,7 @@ class SimulatedMiddleware(Middleware):
                     o for o in orders if o.status in LIVE_STATUS and o.simulated
                 ]
                 if live_orders:
-                    _lookup = {
-                        k: v.traded.copy()
-                        for k, v in market_analytics.items()
-                        if k[0] != "_"
-                    }
+                    _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
                     live_orders_sorted = self._sort_orders(live_orders)
                     for order in live_orders_sorted:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
@@ -203,11 +199,7 @@ class SimulatedMiddleware(Middleware):
         else:  # isolation per instance
             live_orders = list(market.blotter.live_orders)
             if live_orders:
-                _lookup = {
-                    k: v.traded.copy()
-                    for k, v in market_analytics.items()
-                    if k[0] != "_"
-                }
+                _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
                 live_orders_sorted = self._sort_orders(live_orders)
                 for order in live_orders_sorted:
                     if order.status in LIVE_STATUS and order.simulated:

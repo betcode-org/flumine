@@ -3,7 +3,7 @@ import unittest
 import datetime
 from unittest import mock
 
-from . import resources
+from tests import resources
 from flumine import utils, FlumineException
 
 

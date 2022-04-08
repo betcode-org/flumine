@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
-from . import resources
+from tests import resources
 from flumine.streams import streams, datastream, historicalstream, orderstream
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders

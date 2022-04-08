@@ -1,6 +1,6 @@
 import unittest
 
-from . import resources
+from tests import resources
 from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
