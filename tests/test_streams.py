@@ -3,10 +3,11 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flumine.streams import streams, datastream, historicalstream
+from . import resources
+from flumine.streams import streams, datastream, historicalstream, orderstream
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
-from flumine.streams import orderstream
+from flumine.streams.historicalstream import HistoricalStream, HistoricalMarketStream
 from flumine.exceptions import ListenerError
 
 
@@ -290,9 +291,9 @@ class StreamsTest(unittest.TestCase):
         mock_increment.assert_not_called()
 
     @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.HistoricalStream")
+    @mock.patch("flumine.streams.streams.HistoricalMarketStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream(
+    def test_add_historical_market_stream(
         self, mock_increment, mock_historical_stream_class, mock_get_file_md
     ):
         mock_historical_stream_class.__name__ = "test"
@@ -323,11 +324,11 @@ class StreamsTest(unittest.TestCase):
             inplay=True,
         )
 
-    def test_add_historical_stream_old(self):
+    def test_add_historical_market_stream_old(self):
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
         mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
+            spec=HistoricalMarketStream, event_processing=False, listener_kwargs={}
         )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
@@ -339,16 +340,16 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(len(self.streams), 1)
 
     @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.HistoricalStream")
+    @mock.patch("flumine.streams.streams.HistoricalMarketStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream_kwargs(
+    def test_add_historical_market_stream_kwargs(
         self, mock_increment, mock_historical_stream_class, mock_get_file_md
     ):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
         mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
+            spec=HistoricalMarketStream, event_processing=False, listener_kwargs={}
         )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
@@ -373,14 +374,14 @@ class StreamsTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.HistoricalStream")
+    @mock.patch("flumine.streams.streams.HistoricalMarketStream")
     def test_add_historical_stream_event_processing(
         self, mock_historical_stream_class, mock_get_file_md
     ):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
+        mock_stream = mock.Mock(spec=HistoricalMarketStream, event_processing=False)
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -392,7 +393,7 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.OrderStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream_conflate(
+    def test_add_historical_market_stream_conflate(
         self, mock_increment, mock_order_stream_class
     ):
         conflate_ms = 500
@@ -708,7 +709,7 @@ class TestDataStream(unittest.TestCase):
 class TestHistoricalStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.stream = streams.HistoricalStream(
+        self.stream = HistoricalStream(
             self.mock_flumine,
             123,
             0.01,
@@ -751,6 +752,39 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertFalse(self.stream._listener.debug)
         self.assertFalse(self.stream._listener.update_clk)
         self.assertEqual(generator, mock_generator().get_generator())
+
+
+class TestHistoricalMarketStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = HistoricalMarketStream(
+            self.mock_flumine,
+            123,
+            0.01,
+            100,
+            {"test": "me"},
+            {"please": "now"},
+            inplay=True,
+            seconds_to_start=123,
+        )
+
+    def test_init(self):
+        self.assertIsNone(self.stream.LISTENER)
+        self.assertIsNone(self.stream.MAX_LATENCY)
+
+    def test_run(self):
+        self.stream.run()
+
+    def test_handle_output(self):
+        self.stream.handle_output()
+
+    def test__read_loop(self):
+        self.stream.market_filter = resources.data_basic
+        data = [i for i in self.stream._read_loop()]
+        market_book = data[0][0]
+        self.assertEqual(len(data), 4)
+        self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
+        self.assertTrue(market_book.inplay)
 
 
 class TestFlumineMarketStream(unittest.TestCase):

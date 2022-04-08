@@ -45,11 +45,13 @@ class SimulatedMiddleware(Middleware):
         market_analytics = self.markets[market.market_id]
         runner_removals = []  # [(selectionId, handicap, adjustmentFactor)..]
         # optimisation to only process a runner on an update
-        runner_updates = self._process_streaming_update(market.market_book)
+        # todo fix?
+        # runner_updates = self._process_streaming_update_two(market_analytics, market.market_book)
 
         for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
-                update = bool(runner.selection_id in runner_updates)
+                # update = bool(runner.selection_id in runner_updates)
+                update = True
                 self._process_runner(market_analytics, runner, update)
             elif runner.status == "REMOVED":
                 _removal = (
@@ -183,6 +185,21 @@ class SimulatedMiddleware(Middleware):
             return [runner["id"] for runner in update.get("rc", [])]
 
     @staticmethod
+    def _process_streaming_update_two(market_analytics, market_book) -> list:
+        md_id = id(market_book.market_definition)
+        if market_analytics.get("_md_id") != md_id:
+            market_analytics["_md_id"] = md_id
+            return [runner.selection_id for runner in market_book.runners]
+
+        update = []
+        for runner in market_book.runners:
+            id_ = id(runner)
+            ma_runner = market_analytics.get((runner.selection_id, runner.handicap))
+            if ma_runner is None or ma_runner.id_ != id_:
+                update.append(runner.selection_id)
+        return update
+
+    @staticmethod
     def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01
@@ -204,7 +221,11 @@ class SimulatedMiddleware(Middleware):
                     o for o in orders if o.status in LIVE_STATUS and o.simulated
                 ]
                 if live_orders:
-                    _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                    _lookup = {
+                        k: v.traded.copy()
+                        for k, v in market_analytics.items()
+                        if k[0] != "_"
+                    }
                     live_orders_sorted = self._sort_orders(live_orders)
                     for order in live_orders_sorted:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
@@ -212,7 +233,11 @@ class SimulatedMiddleware(Middleware):
         else:  # isolation per instance
             live_orders = list(market.blotter.live_orders)
             if live_orders:
-                _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                _lookup = {
+                    k: v.traded.copy()
+                    for k, v in market_analytics.items()
+                    if k[0] != "_"
+                }
                 live_orders_sorted = self._sort_orders(live_orders)
                 for order in live_orders_sorted:
                     if order.status in LIVE_STATUS and order.simulated:
@@ -261,12 +286,13 @@ class SimulatedMiddleware(Middleware):
 class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
         self._runner = runner
+        self.id_ = id(runner)
         self.traded = {}  # price: size traded since last update
         self.middle = None  # middle of odds at last update
         self.matched = 0  # amount matched since last update
         self._traded_volume = runner.ex.traded_volume
         self._p_v = {
-            i["price"]: i["size"] for i in runner.ex.traded_volume
+            i.price: i.size for i in runner.ex.traded_volume
         }  # cached current volume
 
     def __call__(self, runner: RunnerBook, update: bool):
@@ -280,6 +306,7 @@ class RunnerAnalytics:
                 self.traded = self._calculate_traded(_tv)
             self._traded_volume = _tv
             self._runner = runner
+            self.id_ = id(runner)
         else:
             self.matched = 0
             self.traded = {}
@@ -287,7 +314,7 @@ class RunnerAnalytics:
     def _calculate_traded(self, traded_volume: list) -> dict:
         p_v, traded = self._p_v, {}
         # create dictionary
-        c_v = {i["price"]: i["size"] for i in traded_volume}
+        c_v = {i.price: i.size for i in traded_volume}
         # calculate difference
         for key, value in c_v.items():
             if key in p_v:
@@ -304,12 +331,12 @@ class RunnerAnalytics:
     def _calculate_middle(runner: RunnerBook) -> float:
         _back = runner.ex.available_to_back
         if _back:
-            back = _back[0]["price"]
+            back = _back[0].price
         else:
             back = 0
         _lay = runner.ex.available_to_lay
         if _lay:
-            lay = _lay[0]["price"]
+            lay = _lay[0].price
         else:
             lay = 1001
         return (float(back) + float(lay)) / 2

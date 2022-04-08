@@ -389,7 +389,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
 class RunnerAnalyticsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_runner = mock.Mock()
-        self.mock_runner.ex.traded_volume = [{"price": 1.01, "size": 2}]
+        self.mock_runner.ex.traded_volume = [mock.Mock(price=1.01, size=2)]
         self.runner_analytics = RunnerAnalytics(self.mock_runner)
 
     def test_init(self):
@@ -440,14 +440,14 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.assertEqual(self.runner_analytics._calculate_traded([]), {})
 
     def test__calculate_traded_dict_same(self):
-        traded_volume = [{"price": 1.01, "size": 69}]
-        self.runner_analytics._traded_volume = [{"price": 1.01, "size": 69}]
+        traded_volume = [mock.Mock(price=1.01, size=69)]
+        self.runner_analytics._traded_volume = [mock.Mock(price=1.01, size=69)]
         self.runner_analytics._p_v = {1.01: 69}
         self.assertEqual(self.runner_analytics._calculate_traded(traded_volume), {})
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69})
 
     def test__calculate_traded_dict_new(self):
-        traded_volume = [{"price": 1.01, "size": 69}]
+        traded_volume = [mock.Mock(price=1.01, size=69)]
         self.runner_analytics._traded_volume = []
         self.assertEqual(
             self.runner_analytics._calculate_traded(traded_volume), {1.01: 67.0}
@@ -456,10 +456,10 @@ class RunnerAnalyticsTest(unittest.TestCase):
 
     def test__calculate_traded_dict_new_multi(self):
         traded_volume = [
-            {"price": 1.01, "size": 69},
-            {"price": 10, "size": 32},
+            mock.Mock(price=1.01, size=69),
+            mock.Mock(price=10, size=32),
         ]
-        self.runner_analytics._traded_volume = [{"price": 1.01, "size": 30}]
+        self.runner_analytics._traded_volume = [mock.Mock(price=1.01, size=30)]
         self.runner_analytics._p_v = {1.01: 30}
         self.assertEqual(
             self.runner_analytics._calculate_traded(traded_volume),
@@ -472,11 +472,11 @@ class RunnerAnalyticsTest(unittest.TestCase):
         mock_runner.ex.available_to_back = []
         mock_runner.ex.available_to_lay = []
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 500.5)
-        mock_runner.ex.available_to_back = [{"price": 2.00}]
-        mock_runner.ex.available_to_lay = [{"price": 2.02}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=2, size=69)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=2.02, size=69)]
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 2.01)
-        mock_runner.ex.available_to_back = [{"price": 10.00}]
-        mock_runner.ex.available_to_lay = [{"price": 15.5}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=10, size=69)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=15.5, size=69)]
         self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 12.75)
 
     def test__calculate_matched(self):

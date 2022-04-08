@@ -6,7 +6,7 @@ from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
 from .sportsdatastream import SportsDataStream
 from .datastream import DataStream
-from .historicalstream import HistoricalStream
+from .historicalstream import HistoricalMarketStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from ..clients import ExchangeType, BaseClient
@@ -155,7 +155,7 @@ class Streams:
         market: str,
         event_processing: bool,
         **listener_kwargs
-    ) -> HistoricalStream:
+    ) -> HistoricalMarketStream:
         for stream in self:
             if (
                 stream.market_filter == market
@@ -170,7 +170,7 @@ class Streams:
                 logger.warning("EventId not found for market %s" % market)
             logger.info(
                 "Creating new {0} ({1}) for strategy {2}".format(
-                    HistoricalStream.__name__, stream_id, strategy
+                    HistoricalMarketStream.__name__, stream_id, strategy
                 ),
                 extra={
                     "strategy": strategy,
@@ -180,7 +180,7 @@ class Streams:
                     "event_processing": event_processing,
                 },
             )
-            stream = HistoricalStream(
+            stream = HistoricalMarketStream(
                 flumine=self.flumine,
                 stream_id=stream_id,
                 market_filter=market,
@@ -190,7 +190,7 @@ class Streams:
                 output_queue=False,
                 event_processing=event_processing,
                 event_id=event_id,
-                **listener_kwargs,
+                **listener_kwargs
             )
             self._streams.append(stream)
             return stream
@@ -259,7 +259,9 @@ class Streams:
         self._stream_id += int(1e3)
         return self._stream_id
 
-    def __iter__(self) -> Iterator[Union[MarketStream, DataStream, HistoricalStream]]:
+    def __iter__(
+        self,
+    ) -> Iterator[Union[MarketStream, DataStream, HistoricalMarketStream]]:
         return iter(self._streams)
 
     def __len__(self) -> int:

@@ -125,7 +125,7 @@ def get_nearest_price(price, cutoffs=CUTOFFS):
 
 def get_price(data: list, level: int) -> Optional[float]:
     try:
-        return data[level]["price"]
+        return data[level].price
     except KeyError:
         return
     except IndexError:
@@ -136,7 +136,7 @@ def get_price(data: list, level: int) -> Optional[float]:
 
 def get_size(data: list, level: int) -> Optional[float]:
     try:
-        return data[level]["size"]
+        return data[level].size
     except KeyError:
         return
     except IndexError:

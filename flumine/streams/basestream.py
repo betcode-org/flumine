@@ -47,11 +47,12 @@ class BaseStream(threading.Thread):
         self.event_id = event_id
         self.operation = operation
         self.listener_kwargs = listener_kwargs
-        self._listener = self.LISTENER(
-            output_queue=self._output_queue,
-            max_latency=self.MAX_LATENCY,
-            **listener_kwargs,
-        )
+        if self.LISTENER:
+            self._listener = self.LISTENER(
+                output_queue=self._output_queue,
+                max_latency=self.MAX_LATENCY,
+                **listener_kwargs,
+            )
         self._output_thread = threading.Thread(
             name="{0}_output_thread".format(self.name),
             target=self.handle_output,

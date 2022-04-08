@@ -135,8 +135,8 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=12, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=13, size=120)]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(self.simulated.market_version, mock_market_book.version)
@@ -153,8 +153,8 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=12, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=13, size=120)]
         mock__get_runner.return_value = mock_runner
         with self.assertRaises(NotImplementedError):
             self.simulated.place(mock_order_package, mock_market_book, {}, 1)
@@ -189,12 +189,12 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=10, size=120)]
         mock_runner.ex.available_to_lay = [
-            {"price": 10.5, "size": 120},
-            {"price": 11.5, "size": 10},
-            {"price": 12, "size": 22},
-            {"price": 15, "size": 32},
+            mock.Mock(price=10.5, size=120),
+            mock.Mock(price=11.5, size=10),
+            mock.Mock(price=12, size=22),
+            mock.Mock(price=15, size=32),
         ]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
@@ -209,8 +209,8 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 15, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 16, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=15, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=16, size=120)]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(resp.status, "FAILURE")
@@ -225,8 +225,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=11, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=12, size=120)]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 12)
@@ -243,12 +243,12 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [
-            {"price": 10.5, "size": 120},
-            {"price": 11.5, "size": 10},
-            {"price": 12, "size": 22},
-            {"price": 14, "size": 32},
+            mock.Mock(price=10.5, size=120),
+            mock.Mock(price=11.5, size=10),
+            mock.Mock(price=12, size=22),
+            mock.Mock(price=14, size=32),
         ]
-        mock_runner.ex.available_to_lay = [{"price": 15, "size": 32}]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=15, size=32)]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(resp.average_price_matched, 0)
@@ -263,8 +263,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 10.5, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=10, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=10.5, size=120)]
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(resp.status, "FAILURE")
@@ -279,8 +279,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.side = "BACK"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 10.5, "size": 120}]
+        mock_runner.ex.available_to_back = [mock.Mock(price=10, size=120)]
+        mock_runner.ex.available_to_lay = [mock.Mock(price=10.5, size=120)]
         mock_runner.status = "REMOVED"
         mock__get_runner.return_value = mock_runner
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
@@ -439,22 +439,31 @@ class SimulatedOrderTest(unittest.TestCase):
     )
     def test__process_price_matched_back(self, mock_side):
         self.simulated._process_price_matched(
-            1234567, 12.0, 2.00, [{"price": 15, "size": 120}]
+            1234567, 12.0, 2.00, [mock.Mock(price=15, size=120)]
         )
         self.assertEqual(self.simulated.matched, [[1234567, 15, 2]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234568, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 1}]
+            1234568,
+            12.0,
+            2.00,
+            [mock.Mock(price=15, size=1), mock.Mock(price=12, size=1)],
         )
         self.assertEqual(self.simulated.matched, [[1234568, 15, 1], [1234568, 12, 1]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234569, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 12, "size": 0.5}]
+            1234569,
+            12.0,
+            2.00,
+            [mock.Mock(price=15, size=1), mock.Mock(price=12, size=0.5)],
         )
         self.assertEqual(self.simulated.matched, [[1234569, 15, 1], [1234569, 12, 0.5]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234570, 12.0, 2.00, [{"price": 15, "size": 1}, {"price": 11, "size": 0.5}]
+            1234570,
+            12.0,
+            2.00,
+            [mock.Mock(price=15, size=1), mock.Mock(price=11, size=0.5)],
         )
         self.assertEqual(self.simulated.matched, [[1234570, 15, 1]])
 
@@ -465,12 +474,15 @@ class SimulatedOrderTest(unittest.TestCase):
     )
     def test__process_price_matched_lay(self, mock_side):
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 2.02, "size": 120}]
+            1234571, 3.0, 20.00, [mock.Mock(price=2.02, size=120)]
         )
         self.assertEqual(self.simulated.matched, [[1234571, 2.02, 20]])
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 2.02, "size": 1}, {"price": 3, "size": 20}]
+            1234571,
+            3.0,
+            20.00,
+            [mock.Mock(price=2.02, size=1), mock.Mock(price=3, size=20)],
         )
         self.assertEqual(self.simulated.matched, [[1234571, 2.02, 1], [1234571, 3, 19]])
         self.simulated.matched = []
@@ -478,14 +490,17 @@ class SimulatedOrderTest(unittest.TestCase):
             1234571,
             3.0,
             20.00,
-            [{"price": 2.02, "size": 1}, {"price": 2.9, "size": 0.5}],
+            [mock.Mock(price=2.02, size=1), mock.Mock(price=2.9, size=0.5)],
         )
         self.assertEqual(
             self.simulated.matched, [[1234571, 2.02, 1], [1234571, 2.9, 0.5]]
         )
         self.simulated.matched = []
         self.simulated._process_price_matched(
-            1234571, 3.0, 20.00, [{"price": 3, "size": 1}, {"price": 11, "size": 0.5}]
+            1234571,
+            3.0,
+            20.00,
+            [mock.Mock(price=3, size=1), mock.Mock(price=11, size=0.5)],
         )
         self.assertEqual(self.simulated.matched, [[1234571, 3, 1]])
 

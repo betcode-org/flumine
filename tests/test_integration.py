@@ -1,5 +1,6 @@
 import unittest
 
+from . import resources
 from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
@@ -22,7 +23,7 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        strategy = Ex(market_filter={"markets": ["tests/resources/BASIC-1.132153978"]})
+        strategy = Ex(market_filter={"markets": [resources.data_basic]})
         framework.add_strategy(strategy)
         framework.run()
 
@@ -139,27 +140,27 @@ class IntegrationTest(unittest.TestCase):
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
         limit_strategy = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=1,
         )
         framework.add_strategy(limit_strategy)
         limit_replace_strategy = LimitReplaceOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=1,
         )
         framework.add_strategy(limit_replace_strategy)
         limit_inplay_strategy = LimitOrdersInplay(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_inplay_strategy)
         market_strategy = MarketOnCloseOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
         )
@@ -236,7 +237,7 @@ class IntegrationTest(unittest.TestCase):
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
         limit_strategy_bpe_on = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=100,
@@ -244,7 +245,7 @@ class IntegrationTest(unittest.TestCase):
         )
         framework.add_strategy(limit_strategy_bpe_on)
         limit_strategy_bpe_off = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            market_filter={"markets": [resources.data_pro]},
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=100,
@@ -310,9 +311,9 @@ class IntegrationTest(unittest.TestCase):
         limit_inplay_strategy = LimitOrdersInplay(
             market_filter={
                 "markets": [
-                    "tests/resources/SELF-1.181223994",
-                    "tests/resources/SELF-1.181223995",
-                    "tests/resources/PRO-1.170258213",
+                    resources.data_self_win,
+                    resources.data_self_place,
+                    resources.data_pro,
                 ],
                 "event_processing": True,
             },
