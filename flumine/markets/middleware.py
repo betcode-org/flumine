@@ -44,15 +44,9 @@ class SimulatedMiddleware(Middleware):
     def __call__(self, market) -> None:
         market_analytics = self.markets[market.market_id]
         runner_removals = []  # [(selectionId, handicap, adjustmentFactor)..]
-        # optimisation to only process a runner on an update
-        # todo fix?
-        # runner_updates = self._process_streaming_update_two(market_analytics, market.market_book)
-
         for runner in market.market_book.runners:
             if runner.status == "ACTIVE":
-                # update = bool(runner.selection_id in runner_updates)
-                update = True
-                self._process_runner(market_analytics, runner, update)
+                self._process_runner(market_analytics, runner)
             elif runner.status == "REMOVED":
                 _removal = (
                     runner.selection_id,
@@ -176,30 +170,6 @@ class SimulatedMiddleware(Middleware):
                         )
 
     @staticmethod
-    def _process_streaming_update(market_book) -> list:
-        # return list of runners that have been updated
-        update = market_book.streaming_update
-        if update.get("img") or update.get("marketDefinition"):
-            return [runner.selection_id for runner in market_book.runners]
-        else:
-            return [runner["id"] for runner in update.get("rc", [])]
-
-    @staticmethod
-    def _process_streaming_update_two(market_analytics, market_book) -> list:
-        md_id = id(market_book.market_definition)
-        if market_analytics.get("_md_id") != md_id:
-            market_analytics["_md_id"] = md_id
-            return [runner.selection_id for runner in market_book.runners]
-
-        update = []
-        for runner in market_book.runners:
-            id_ = id(runner)
-            ma_runner = market_analytics.get((runner.selection_id, runner.handicap))
-            if ma_runner is None or ma_runner.id_ != id_:
-                update.append(runner.selection_id)
-        return update
-
-    @staticmethod
     def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01
@@ -271,16 +241,14 @@ class SimulatedMiddleware(Middleware):
         return lay_orders + back_orders + moc
 
     @staticmethod
-    def _process_runner(
-        market_analytics: dict, runner: RunnerBook, update: bool
-    ) -> None:
+    def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
         try:
             runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
         except KeyError:
             runner_analytics = market_analytics[
                 (runner.selection_id, runner.handicap)
             ] = RunnerAnalytics(runner)
-        runner_analytics(runner, update)
+        runner_analytics(runner)
 
 
 class RunnerAnalytics:
@@ -288,17 +256,14 @@ class RunnerAnalytics:
         self._runner = runner
         self.id_ = id(runner)
         self.traded = {}  # price: size traded since last update
-        self.middle = None  # middle of odds at last update
-        self.matched = 0  # amount matched since last update
         self._traded_volume = runner.ex.traded_volume
         self._p_v = {
             i.price: i.size for i in runner.ex.traded_volume
         }  # cached current volume
 
-    def __call__(self, runner: RunnerBook, update: bool):
-        if update:
-            self.middle = self._calculate_middle(self._runner)  # use last update
-            self.matched = self._calculate_matched(runner)
+    def __call__(self, runner: RunnerBook):
+        id_ = id(runner)
+        if id_ != self.id_:
             _tv = runner.ex.traded_volume
             if self._traded_volume == _tv:
                 self.traded = {}
@@ -306,9 +271,8 @@ class RunnerAnalytics:
                 self.traded = self._calculate_traded(_tv)
             self._traded_volume = _tv
             self._runner = runner
-            self.id_ = id(runner)
+            self.id_ = id_
         else:
-            self.matched = 0
             self.traded = {}
 
     def _calculate_traded(self, traded_volume: list) -> dict:
@@ -326,27 +290,3 @@ class RunnerAnalytics:
         # cache for next update
         self._p_v = c_v
         return traded
-
-    @staticmethod
-    def _calculate_middle(runner: RunnerBook) -> float:
-        _back = runner.ex.available_to_back
-        if _back:
-            back = _back[0].price
-        else:
-            back = 0
-        _lay = runner.ex.available_to_lay
-        if _lay:
-            lay = _lay[0].price
-        else:
-            lay = 1001
-        return (float(back) + float(lay)) / 2
-
-    def _calculate_matched(self, runner: RunnerBook) -> float:
-        prev_total_matched = self._runner.total_matched or 0
-        total_matched = (
-            runner.total_matched or prev_total_matched
-        )  # handles non-runner -> 0
-        if total_matched != prev_total_matched:
-            return round(total_matched - prev_total_matched, 2)
-        else:
-            return 0.0
