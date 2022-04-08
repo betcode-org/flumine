@@ -218,6 +218,10 @@ class HistoricalMarketStream(BaseStream):
         in_play = self.listener_kwargs.get("inplay")
         seconds_to_start = self.listener_kwargs.get("seconds_to_start")
         cumulative_runner_tv = self.listener_kwargs.get("cumulative_runner_tv", False)
+        if in_play is None and seconds_to_start is None:
+            process_all = True
+        else:
+            process_all = False
         # process files
         files = betfair_data.bflw.Files(
             [self.market_filter],
@@ -226,22 +230,22 @@ class HistoricalMarketStream(BaseStream):
         )
         for file in files:
             for update in file:
-                for market_book in update:
-                    active = True
-                    if market_book.status == "OPEN":
-                        if in_play:
-                            if not market_book.inplay:
-                                active = False
-                        elif seconds_to_start:
-                            _now = datetime.datetime.utcfromtimestamp(
-                                market_book.publish_time_epoch / 1e3
-                            )
-                            _market_time = market_book.market_definition.market_time
-                            _seconds_to_start = (_market_time - _now).total_seconds()
-                            if _seconds_to_start > seconds_to_start:
-                                active = False
-                        if in_play is False:
-                            if market_book.inplay:
-                                active = False
-                    if active:
+                if process_all:
+                    yield update
+                else:
+                    for market_book in update:
+                        if market_book.status == "OPEN":
+                            if in_play:
+                                if not market_book.inplay:
+                                    continue
+                            elif seconds_to_start:
+                                _seconds_to_start = (
+                                    market_book.market_definition.market_time
+                                    - market_book.publish_time
+                                ).total_seconds()
+                                if _seconds_to_start > seconds_to_start:
+                                    continue
+                            if in_play is False:
+                                if market_book.inplay:
+                                    continue
                         yield [market_book]

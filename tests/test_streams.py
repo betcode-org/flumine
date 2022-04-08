@@ -778,13 +778,48 @@ class TestHistoricalMarketStream(unittest.TestCase):
     def test_handle_output(self):
         self.stream.handle_output()
 
-    def test__read_loop(self):
+    def test__read_loop_inplay(self):
         self.stream.market_filter = resources.data_basic
         data = [i for i in self.stream._read_loop()]
-        market_book = data[0][0]
         self.assertEqual(len(data), 4)
-        self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
-        self.assertTrue(market_book.inplay)
+        for d in data:
+            market_book = d[0]
+            self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
+            self.assertTrue(market_book.inplay)
+
+    def test__read_loop_not_inplay(self):
+        self.stream.market_filter = resources.data_basic
+        self.stream.listener_kwargs["inplay"] = False
+        self.stream.listener_kwargs["seconds_to_start"] = None
+        data = [i for i in self.stream._read_loop()]
+        self.assertEqual(len(data), 478)
+        for d in data:
+            market_book = d[0]
+            self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
+            if market_book.status == "OPEN":
+                self.assertFalse(market_book.inplay)
+
+    def test__read_loop_not_seconds(self):
+        self.stream.market_filter = resources.data_basic
+        self.stream.listener_kwargs["inplay"] = False
+        self.stream.listener_kwargs["seconds_to_start"] = 1230
+        data = [i for i in self.stream._read_loop()]
+        self.assertEqual(len(data), 23)
+        for d in data:
+            market_book = d[0]
+            self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
+            if market_book.status == "OPEN":
+                self.assertFalse(market_book.inplay)
+
+    def test__read_loop_all(self):
+        self.stream.market_filter = resources.data_basic
+        self.stream.listener_kwargs["inplay"] = None
+        self.stream.listener_kwargs["seconds_to_start"] = None
+        data = [i for i in self.stream._read_loop()]
+        self.assertEqual(len(data), 480)
+        for d in data:
+            market_book = d[0]
+            self.assertEqual(market_book.streaming_unique_id, self.stream.stream_id)
 
 
 class TestFlumineMarketStream(unittest.TestCase):
