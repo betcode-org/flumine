@@ -1,5 +1,6 @@
 import logging
 import datetime
+import betfair_data
 from typing import Optional
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
 from betfairlightweight.streaming.stream import MarketStream, RaceStream
@@ -196,3 +197,55 @@ class HistoricalStream(BaseStream):
             unique_id=self.stream_id,
         )
         return stream.get_generator()
+
+
+class HistoricalMarketStream(BaseStream):
+
+    LISTENER = None
+    MAX_LATENCY = None
+
+    def run(self) -> None:
+        pass
+
+    def handle_output(self) -> None:
+        pass
+
+    def create_generator(self):
+        return self._read_loop
+
+    def _read_loop(self) -> list:
+        # listener_kwargs filtering
+        in_play = self.listener_kwargs.get("inplay")
+        seconds_to_start = self.listener_kwargs.get("seconds_to_start")
+        cumulative_runner_tv = self.listener_kwargs.get("cumulative_runner_tv", False)
+        if in_play is None and seconds_to_start is None:
+            process_all = True
+        else:
+            process_all = False
+        # process files
+        files = betfair_data.bflw.Files(
+            [self.market_filter],
+            cumulative_runner_tv=cumulative_runner_tv,
+            streaming_unique_id=self.stream_id,
+        )
+        for file in files:
+            for update in file:
+                if process_all:
+                    yield update
+                else:
+                    for market_book in update:
+                        if market_book.status == "OPEN":
+                            if in_play:
+                                if not market_book.inplay:
+                                    continue
+                            elif seconds_to_start:
+                                _seconds_to_start = (
+                                    market_book.market_definition.market_time
+                                    - market_book.publish_time
+                                ).total_seconds()
+                                if _seconds_to_start > seconds_to_start:
+                                    continue
+                            if in_play is False:
+                                if market_book.inplay:
+                                    continue
+                        yield [market_book]
