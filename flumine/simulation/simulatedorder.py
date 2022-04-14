@@ -8,7 +8,7 @@ from .utils import (
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
 )
-from ..utils import get_price, wap
+from ..utils import get_price, wap, get_price_size
 from ..order.ordertype import OrderTypes
 from .. import config
 
@@ -143,8 +143,9 @@ class SimulatedOrder:
 
             # calculate position in queue
             for avail in available:
-                if avail.price == price:
-                    self._piq = avail.size
+                avail_price, avail_size = get_price_size(avail)
+                if avail_price == price:
+                    self._piq = avail_size
                     break
 
             logger.debug(
@@ -256,18 +257,19 @@ class SimulatedOrder:
         # calculate matched on execution
         size_remaining = size
         for avail in available:
+            avail_price, avail_size = get_price_size(avail)
             if size_remaining == 0:
                 break
-            elif (self.side == "BACK" and price <= avail.price) or (
-                self.side == "LAY" and price >= avail.price
+            elif (self.side == "BACK" and price <= avail_price) or (
+                self.side == "LAY" and price >= avail_price
             ):
                 _size_remaining = size_remaining
-                size_remaining = max(size_remaining - avail.size, 0)
+                size_remaining = max(size_remaining - avail_size, 0)
                 if size_remaining == 0:
                     _size_matched = _size_remaining
                 else:
-                    _size_matched = avail.size
-                _matched = [publish_time, avail.price, round(_size_matched, 2)]
+                    _size_matched = avail_size
+                _matched = [publish_time, avail_price, round(_size_matched, 2)]
                 self._update_matched(_matched)
             else:
                 break

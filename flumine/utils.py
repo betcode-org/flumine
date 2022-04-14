@@ -126,23 +126,26 @@ def get_nearest_price(price, cutoffs=CUTOFFS):
 def get_price(data: list, level: int) -> Optional[float]:
     try:
         return data[level].price
-    except KeyError:
-        return
+    except AttributeError:
+        return data[level]["price"]
     except IndexError:
-        return
-    except TypeError:
         return
 
 
 def get_size(data: list, level: int) -> Optional[float]:
     try:
         return data[level].size
-    except KeyError:
-        return
+    except AttributeError:
+        return data[level]["size"]
     except IndexError:
         return
-    except TypeError:
-        return
+
+
+def get_price_size(avail) -> tuple:
+    try:
+        return avail.price, avail.size
+    except AttributeError:
+        return avail["price"], avail["size"]
 
 
 def get_sp(runner: RunnerBook) -> Optional[float]:

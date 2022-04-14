@@ -5,6 +5,7 @@ from betfairlightweight.resources.bettingresources import RunnerBook
 from ..order.order import OrderStatus, OrderTypes
 from ..utils import wap
 from .. import config
+from ..patching import EX
 
 logger = logging.getLogger(__name__)
 
@@ -249,9 +250,11 @@ class RunnerAnalytics:
         self.id_ = id(runner)
         self.traded = {}  # price: size traded since last update
         self._traded_volume = runner.ex.traded_volume
-        self._p_v = {
-            i.price: i.size for i in runner.ex.traded_volume
-        }  # cached current volume
+        if isinstance(runner.ex, EX):
+            self.resources = False
+        else:
+            self.resources = True
+        self._p_v = self._create_dict(self._traded_volume)  # cached current volume
 
     def __call__(self, runner: RunnerBook):
         id_ = id(runner)
@@ -270,7 +273,7 @@ class RunnerAnalytics:
     def _calculate_traded(self, traded_volume: list) -> dict:
         p_v, traded = self._p_v, {}
         # create dictionary
-        c_v = {i.price: i.size for i in traded_volume}
+        c_v = self._create_dict(traded_volume)
         # calculate difference
         for key, value in c_v.items():
             if key in p_v:
@@ -282,3 +285,9 @@ class RunnerAnalytics:
         # cache for next update
         self._p_v = c_v
         return traded
+
+    def _create_dict(self, traded_volume: list) -> dict:
+        if self.resources:
+            return {i.price: i.size for i in traded_volume}
+        else:
+            return {i["price"]: i["size"] for i in traded_volume}
