@@ -12,6 +12,7 @@ Release History
 
 **Libraries**
 
+- betconnect upgraded to 0.1.2
 - black upgraded to 22.3.0
 
 2.0.1 (2022-03-28)
