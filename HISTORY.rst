@@ -10,6 +10,10 @@ Release History
 
 - Event lookup added to Markets
 
+**Libraries**
+
+- black upgraded to 22.3.0
+
 2.0.1 (2022-03-28)
 +++++++++++++++++++
 
