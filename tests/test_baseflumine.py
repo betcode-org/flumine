@@ -339,24 +339,30 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
-        mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
+        mock_market = mock.Mock(
+            market_id="1.23", event_id=1, closed=False, elapsed_seconds_closed=None
+        )
         mock_market.market_book.streaming_unique_id = 2
-        self.base_flumine.markets._markets = {
-            "1.23": mock_market,
-            "4.56": mock.Mock(market_id="4.56", closed=True, elapsed_seconds_closed=25),
-            "7.89": mock.Mock(
-                market_id="7.89", closed=True, elapsed_seconds_closed=3601
+        markets = [
+            mock_market,
+            mock.Mock(
+                market_id="4.56", event_id=1, closed=True, elapsed_seconds_closed=25
             ),
-            "1.01": mock.Mock(
-                market_id="1.01", closed=False, elapsed_seconds_closed=3601
+            mock.Mock(
+                market_id="7.89", event_id=1, closed=True, elapsed_seconds_closed=3601
             ),
-        }
-        mock_event = mock.Mock()
+            mock.Mock(
+                market_id="1.01", event_id=2, closed=False, elapsed_seconds_closed=3601
+            ),
+        ]
+        for market in markets:
+            self.base_flumine.markets.add_market(market.market_id, market)
         mock_market_book = mock.Mock(market_id="1.23")
-        mock_event.event = mock_market_book
+        mock_event = mock.Mock(event=mock_market_book)
         self.base_flumine._process_close_market(mock_event)
 
         self.assertEqual(len(self.base_flumine.markets._markets), 3)
+        self.assertEqual(len(self.base_flumine.markets.events), 2)
 
     @mock.patch("flumine.baseflumine.BaseFlumine._process_cleared_markets")
     @mock.patch("flumine.baseflumine.events")

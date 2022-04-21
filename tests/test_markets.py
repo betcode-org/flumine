@@ -13,11 +13,13 @@ class MarketsTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {})
 
     def test_add_market(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(event_id=1234)
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(self.markets.events, {1234: [mock_market]})
 
     def test_add_market_reopen(self):
         mock_market = mock.Mock()
@@ -34,10 +36,12 @@ class MarketsTest(unittest.TestCase):
         mock_market.close_market.assert_called_with()
 
     def test_remove_market(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(event_id=1234)
         self.markets._markets = {"1.1": mock_market}
+        self.markets.events = {1234: [mock_market]}
         self.markets.remove_market("1.1")
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {1234: []})
 
     def test_get_order(self):
         mock_market = mock.Mock()
