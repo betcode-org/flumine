@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.0.2 (2022-04-21)
++++++++++++++++++++
+
+**Improvements**
+
+- Event lookup added to Markets
+
 2.0.1 (2022-03-28)
 +++++++++++++++++++
 

@@ -1,5 +1,6 @@
 import logging
 from typing import Iterator, Optional
+from collections import defaultdict
 
 from .market import Market
 from ..order.order import BetfairOrder
@@ -10,12 +11,14 @@ logger = logging.getLogger(__name__)
 class Markets:
     def __init__(self):
         self._markets = {}  # marketId: <Market>
+        self.events = defaultdict(list)  # eventId: [<Market>, ]
 
     def add_market(self, market_id: str, market: Market) -> None:
         if market_id in self._markets:
             self._markets[market_id].open_market()
         else:
             self._markets[market_id] = market
+            self.events[market.event_id].append(market)
 
     def close_market(self, market_id: str) -> Market:
         market = self._markets[market_id]
@@ -23,8 +26,11 @@ class Markets:
         return market
 
     def remove_market(self, market_id: str) -> None:
-        del self._markets[market_id].blotter
+        market = self._markets[market_id]
         del self._markets[market_id]
+        self.events[market.event_id].remove(market)
+        del market.blotter
+        del market
         logger.info("Market removed", extra={"market_id": market_id})
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
