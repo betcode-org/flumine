@@ -73,7 +73,7 @@ class LowestLayer(BaseStrategy):
 def _calculate_underround(runners: list) -> float:
     return sum(
         [
-            1 / r.ex.available_to_lay[0]["price"]
+            1 / get_price(r.ex.available_to_lay, 0)
             for r in runners
             if r.ex.available_to_lay
         ]

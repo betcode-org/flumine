@@ -340,19 +340,22 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy.stream_ids = [1, 2, 3]
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock(
-            market_id="1.23", event_id=1, closed=False, elapsed_seconds_closed=None
+            market_id="1.23", event_id="1", closed=False, elapsed_seconds_closed=None
         )
         mock_market.market_book.streaming_unique_id = 2
         markets = [
             mock_market,
             mock.Mock(
-                market_id="4.56", event_id=1, closed=True, elapsed_seconds_closed=25
+                market_id="4.56", event_id="1", closed=True, elapsed_seconds_closed=25
             ),
             mock.Mock(
-                market_id="7.89", event_id=1, closed=True, elapsed_seconds_closed=3601
+                market_id="7.89", event_id="1", closed=True, elapsed_seconds_closed=3601
             ),
             mock.Mock(
-                market_id="1.01", event_id=2, closed=False, elapsed_seconds_closed=3601
+                market_id="1.01",
+                event_id="2",
+                closed=False,
+                elapsed_seconds_closed=3601,
             ),
         ]
         for market in markets:

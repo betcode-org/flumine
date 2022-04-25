@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.0.3 (2022-04-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Middleware slim down
+- examples cleanup
+
 2.0.2 (2022-04-21)
 +++++++++++++++++++
 
