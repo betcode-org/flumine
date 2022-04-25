@@ -43,6 +43,13 @@ class MarketsTest(unittest.TestCase):
         self.assertEqual(self.markets._markets, {})
         self.assertEqual(self.markets.events, {1234: []})
 
+    def test_remove_market_no_event(self):
+        mock_market = mock.Mock(event_id=1234)
+        self.markets._markets = {"1.1": mock_market}
+        self.markets.remove_market("1.1")
+        self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {1234: []})
+
     def test_get_order(self):
         mock_market = mock.Mock()
         mock_market.closed = False

@@ -28,10 +28,22 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         market = self._markets[market_id]
         del self._markets[market_id]
-        self.events[market.event_id].remove(market)
+        if market in self.events[market.event_id]:
+            self.events[market.event_id].remove(market)
+        else:
+            logger.warning(
+                "Event not present in markets.events",
+                extra={
+                    "market_id": market_id,
+                    "event_id": market.event_id,
+                    "events": self.events,
+                },
+            )
         del market.blotter
         del market
-        logger.info("Market removed", extra={"market_id": market_id})
+        logger.info(
+            "Market removed", extra={"market_id": market_id, "events": self.events}
+        )
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:
         try:
