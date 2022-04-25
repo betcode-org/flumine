@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - Middleware slim down
+- simulate rename
 
 2.0.2 (2022-04-21)
 +++++++++++++++++++

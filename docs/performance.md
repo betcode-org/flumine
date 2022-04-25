@@ -123,7 +123,7 @@ The heaviest load on CPU comes from reading the files and processing into py obj
 Profiling code is always the best option for finding improvements, `cprofilev` is a commonly used python library for this:
 
 ```bash
-python -m cprofilev examples/backtest.py
+python -m cprofilev examples/simulate.py
 ```
 
 ### Middleware
