@@ -268,7 +268,7 @@ class RunnerAnalytics:
             self.traded = {}
         else:
             self.traded = self._calculate_traded(_tv)
-        self._traded_volume = _tv
+            self._traded_volume = _tv
         self._runner = runner
 
     def _calculate_traded(self, traded_volume: list) -> dict:
