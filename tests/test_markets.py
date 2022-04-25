@@ -16,10 +16,10 @@ class MarketsTest(unittest.TestCase):
         self.assertEqual(self.markets.events, {})
 
     def test_add_market(self):
-        mock_market = mock.Mock(event_id=1234)
+        mock_market = mock.Mock(event_id="1234")
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
-        self.assertEqual(self.markets.events, {1234: [mock_market]})
+        self.assertEqual(self.markets.events, {"1234": [mock_market]})
 
     def test_add_market_reopen(self):
         mock_market = mock.Mock()
