@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
--
+- Middleware slim down
 
 2.0.2 (2022-04-21)
 +++++++++++++++++++
