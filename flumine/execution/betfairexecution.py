@@ -226,23 +226,6 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
-        # temp logging for latency testing
-        logger.info(
-            "Latency log",
-            extra={
-                "trading_function": trading_function.__name__,
-                "session": http_session,
-                "latency": round(order_package.elapsed_seconds, 4),
-                "order_latency": [
-                    round(o.elapsed_seconds_created, 4) for o in order_package.orders
-                ],
-                "order_package": order_package.info,
-                "thread_pool": {
-                    "num_threads": len(self._thread_pool._threads),
-                    "work_queue_size": self._thread_pool._work_queue.qsize(),
-                },
-            },
-        )
         if order_package.elapsed_seconds > 0.1 and order_package.retry_count == 0:
             logger.warning(
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",
