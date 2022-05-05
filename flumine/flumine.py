@@ -6,44 +6,58 @@ from . import worker
 
 logger = logging.getLogger(__name__)
 
+MARKET_BOOK_EVENT = EventType.MARKET_BOOK
+CURRENT_ORDERS_EVENT = EventType.CURRENT_ORDERS
+SPORTS_DATA_EVENT = EventType.SPORTS_DATA
+CUSTOM_EVENT_EVENT = EventType.CUSTOM_EVENT
+RAW_DATA_EVENT = EventType.RAW_DATA
+MARKET_CATALOGUE_EVENT = EventType.MARKET_CATALOGUE
+CLEARED_MARKETS_EVENT = EventType.CLEARED_MARKETS
+CLEARED_ORDERS_EVENT = EventType.CLEARED_ORDERS
+CLOSE_MARKET_EVENT = EventType.CLOSE_MARKET
+TERMINATOR_EVENT = EventType.TERMINATOR
+
 
 class Flumine(BaseFlumine):
     def run(self) -> None:
         """
         Main run thread
         """
+        handler_queue_get = self.handler_queue.get
         with self:
             while True:
-                event = self.handler_queue.get()
-                if event.EVENT_TYPE == EventType.TERMINATOR:
-                    break
+                event = handler_queue_get()
+                event_type = event.EVENT_TYPE
 
-                elif event.EVENT_TYPE == EventType.MARKET_CATALOGUE:
-                    self._process_market_catalogues(event)
-
-                elif event.EVENT_TYPE == EventType.MARKET_BOOK:
+                if event_type == MARKET_BOOK_EVENT:
                     self._process_market_books(event)
 
-                elif event.EVENT_TYPE == EventType.SPORTS_DATA:
-                    self._process_sports_data(event)
-
-                elif event.EVENT_TYPE == EventType.RAW_DATA:
-                    self._process_raw_data(event)
-
-                elif event.EVENT_TYPE == EventType.CURRENT_ORDERS:
+                elif event_type == CURRENT_ORDERS_EVENT:
                     self._process_current_orders(event)
 
-                elif event.EVENT_TYPE == EventType.CLEARED_MARKETS:
+                elif event_type == CUSTOM_EVENT_EVENT:
+                    self._process_custom_event(event)
+
+                elif event_type == SPORTS_DATA_EVENT:
+                    self._process_sports_data(event)
+
+                elif event_type == RAW_DATA_EVENT:
+                    self._process_raw_data(event)
+
+                elif event_type == MARKET_CATALOGUE_EVENT:
+                    self._process_market_catalogues(event)
+
+                elif event_type == CLEARED_MARKETS_EVENT:
                     self._process_cleared_markets(event)
 
-                elif event.EVENT_TYPE == EventType.CLEARED_ORDERS:
+                elif event_type == CLEARED_ORDERS_EVENT:
                     self._process_cleared_orders(event)
 
-                elif event.EVENT_TYPE == EventType.CLOSE_MARKET:
+                elif event_type == CLOSE_MARKET_EVENT:
                     self._process_close_market(event)
 
-                elif event.EVENT_TYPE == EventType.CUSTOM_EVENT:
-                    self._process_custom_event(event)
+                elif event_type == TERMINATOR_EVENT:
+                    break
 
                 else:
                     logger.error("Unknown item in handler_queue: %s" % str(event))
