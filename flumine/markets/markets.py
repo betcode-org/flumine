@@ -18,7 +18,8 @@ class Markets:
             self._markets[market_id].open_market()
         else:
             self._markets[market_id] = market
-            self.events[market.event_id].append(market)
+            if market.event_id:
+                self.events[market.event_id].append(market)
 
     def close_market(self, market_id: str) -> Market:
         market = self._markets[market_id]
@@ -28,21 +29,14 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         market = self._markets[market_id]
         del self._markets[market_id]
-        if market in self.events[market.event_id]:
-            self.events[market.event_id].remove(market)
-        else:
-            logger.warning(
-                "Event not present in markets.events",
-                extra={
-                    "market_id": market_id,
-                    "event_id": market.event_id,
-                    "events": self.events,
-                },
-            )
+        event_id = market.event_id
+        if event_id in self.events:
+            self.events[event_id].remove(market)
         del market.blotter
         del market
         logger.info(
-            "Market removed", extra={"market_id": market_id, "events": self.events}
+            "Market removed",
+            extra={"market_id": market_id, "event_id": event_id, "events": self.events},
         )
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:

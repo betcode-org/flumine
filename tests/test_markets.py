@@ -21,6 +21,12 @@ class MarketsTest(unittest.TestCase):
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
         self.assertEqual(self.markets.events, {"1234": [mock_market]})
 
+    def test_add_market_no_event_id(self):
+        mock_market = mock.Mock(event_id=None)
+        self.markets.add_market("1.1", mock_market)
+        self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(self.markets.events, {})
+
     def test_add_market_reopen(self):
         mock_market = mock.Mock()
         self.markets._markets = {"1.1": mock_market}
@@ -48,7 +54,7 @@ class MarketsTest(unittest.TestCase):
         self.markets._markets = {"1.1": mock_market}
         self.markets.remove_market("1.1")
         self.assertEqual(self.markets._markets, {})
-        self.assertEqual(self.markets.events, {1234: []})
+        self.assertEqual(self.markets.events, {})
 
     def test_get_order(self):
         mock_market = mock.Mock()

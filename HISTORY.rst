@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.0.5 (2022-05-05)
++++++++++++++++++++
+
+**Improvements**
+
+- Handle queue event handling optimisations
+
+**Bug Fixes**
+
+- Market event removal on market recording
+
 2.0.4 (2022-04-25)
 +++++++++++++++++++
 
