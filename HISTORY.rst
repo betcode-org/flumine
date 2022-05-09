@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.0.6 (2022-05-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Order profit property added
+
 2.0.5 (2022-05-05)
 +++++++++++++++++++
 

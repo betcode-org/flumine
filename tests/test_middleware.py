@@ -249,29 +249,6 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         # Size matched should be 100 / (10.0-1.0) \approx 11.11
         self.assertEqual(11.11, mock_order.current_order.size_matched)
 
-    def test__process_streaming_update(self):
-        mock_market_book = mock.Mock(
-            streaming_update={"img": True, "rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [1, 2]
-        )
-        mock_market_book = mock.Mock(
-            streaming_update={"marketDefinition": {1: 2}, "rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [1, 2]
-        )
-        mock_market_book = mock.Mock(
-            streaming_update={"rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [3, 4]
-        )
-
     def test__calculate_reduction_factor(self):
         self.assertEqual(self.middleware._calculate_reduction_factor(10, 10), 9)
         self.assertEqual(self.middleware._calculate_reduction_factor(1000, 0), 1000)

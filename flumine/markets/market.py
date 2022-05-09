@@ -185,7 +185,7 @@ class Market:
 
     def cleared(self, client) -> dict:
         orders = self.blotter.client_orders(client, matched_only=True)
-        profit = round(sum([order.simulated.profit for order in orders]), 2)
+        profit = round(sum([order.profit for order in orders]), 2)
         return {
             "marketId": self.market_id,
             "eventId": self.event_id,
