@@ -73,7 +73,7 @@ class OrderStream(BaseStream):
                     block=True, timeout=self.streaming_timeout
                 )
             except queue.Empty:
-                if (
+                if self.flumine.markets.open_market_ids and (
                     self.flumine.markets.live_orders
                     or (time.time() - last_snap) > SNAP_DELTA
                 ):
