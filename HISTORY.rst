@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - Order profit property added
+- Order stream output updated orders only (order_updates_only)
 
 2.0.5 (2022-05-05)
 +++++++++++++++++++

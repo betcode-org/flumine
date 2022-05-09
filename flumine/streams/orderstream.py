@@ -77,9 +77,7 @@ class OrderStream(BaseStream):
                     self.flumine.markets.live_orders
                     or (time.time() - last_snap) > SNAP_DELTA
                 ):
-                    order_books = self._listener.snap(
-                        market_ids=self.flumine.markets.open_market_ids
-                    )
+                    order_books = []
                 else:
                     continue
             last_snap = time.time()
