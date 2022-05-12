@@ -183,6 +183,11 @@ class Market:
         elif self.market_book:
             return self.market_book.market_definition.race_type
 
+    @property
+    def status(self) -> Optional[str]:
+        if self.market_book:
+            return self.market_book.status
+
     def cleared(self, client) -> dict:
         orders = self.blotter.client_orders(client, matched_only=True)
         profit = round(sum([order.profit for order in orders]), 2)

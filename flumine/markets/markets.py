@@ -57,7 +57,7 @@ class Markets:
 
     @property
     def open_market_ids(self) -> list:
-        return [m.market_id for m in self if not m.closed]
+        return [m.market_id for m in self if m.status == "OPEN"]
 
     @property
     def live_orders(self) -> bool:
