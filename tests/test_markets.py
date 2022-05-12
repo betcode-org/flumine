@@ -83,10 +83,8 @@ class MarketsTest(unittest.TestCase):
 
     def test_open_market_ids(self):
         self.assertEqual(self.markets.open_market_ids, [])
-        mock_market = mock.Mock()
-        mock_market.closed = False
-        mock_market_two = mock.Mock()
-        mock_market_two.closed = True
+        mock_market = mock.Mock(status="OPEN")
+        mock_market_two = mock.Mock(status="CLOSED")
         self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
         self.assertEqual(self.markets.open_market_ids, [mock_market.market_id])
 
@@ -353,6 +351,11 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.race_type, mock_market_book.market_definition.race_type
         )
+
+    def test_status(self):
+        mock_market_book = mock.Mock(status="OPEN")
+        self.market.market_book = mock_market_book
+        self.assertEqual(self.market.status, mock_market_book.status)
 
     @mock.patch("flumine.markets.market.Market.event_type_id")
     @mock.patch("flumine.markets.market.Market.event_id")

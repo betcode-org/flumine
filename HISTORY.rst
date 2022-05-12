@@ -3,13 +3,15 @@
 Release History
 ---------------
 
-2.0.6 (2022-05-09)
+2.1.0 (2022-05-12)
 +++++++++++++++++++
 
 **Improvements**
 
+- Market `status` added and `markets.open_market_ids` is now open markets only
 - Order profit property added
 - Order stream output updated orders only (order_updates_only)
+- _process_current_orders refactored to reduce duplicate calls
 
 2.0.5 (2022-05-05)
 +++++++++++++++++++

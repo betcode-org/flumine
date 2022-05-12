@@ -1,10 +1,8 @@
 import unittest
 from unittest import mock
-
-from flumine.order.order import OrderStatus, OrderTypes
-
 from betfairlightweight.resources.bettingresources import PriceSize
 
+from flumine.order.order import OrderStatus, OrderTypes
 from flumine import config
 from flumine.markets.market import Market
 from flumine.markets.markets import Markets
@@ -28,7 +26,8 @@ class BaseOrderTest(unittest.TestCase):
     def tearDown(self) -> None:
         config.simulated = False
 
-    def test_process_current_orders_with_default_sep(self):
+    @mock.patch("flumine.order.process.process_current_order")
+    def test_process_current_orders_with_default_sep(self, mock_process_current_order):
         mock_log_control = mock.Mock()
         mock_add_market = mock.Mock()
         market_book = mock.Mock()
@@ -46,7 +45,8 @@ class BaseOrderTest(unittest.TestCase):
         )
         betfair_order = BetfairOrder(trade=trade, side="BACK", order_type=mock.Mock())
         betfair_order.id = "123"
-        market.blotter = {"123": betfair_order}
+        betfair_order.complete = True
+        market.blotter["123"] = betfair_order
         event = mock.Mock(event=[mock.Mock(orders=[current_order])])
 
         process.process_current_orders(
@@ -56,7 +56,10 @@ class BaseOrderTest(unittest.TestCase):
             log_control=mock_log_control,
             add_market=mock_add_market,
         )
-        self.assertEqual(current_order, betfair_order.responses.current_order)
+        mock_process_current_order.assert_called_with(
+            betfair_order, current_order, mock_log_control
+        )
+        self.assertEqual(market.blotter._live_orders, [])
 
     def test_process_current_order(self):
         mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
