@@ -13,6 +13,10 @@ Release History
 - Order stream output updated orders only (order_updates_only)
 - _process_current_orders refactored to reduce duplicate calls
 
+**Bug Fixes**
+
+- #586 loggingcontrol doc strings
+
 2.0.5 (2022-05-05)
 +++++++++++++++++++
 
