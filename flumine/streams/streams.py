@@ -210,6 +210,7 @@ class Streams:
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
+            order_updates_only=True,
         )
         self._streams.append(stream)
         return stream

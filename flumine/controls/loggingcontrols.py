@@ -39,7 +39,7 @@ class LoggingControl(Thread):
                         extra={"event": event},
                     )
 
-    def process_event(self, event: events.BaseEvent):
+    def process_event(self, event) -> None:
         if event.EVENT_TYPE == EventType.CONFIG:
             self._process_config(event)
 
@@ -80,73 +80,75 @@ class LoggingControl(Thread):
         else:
             logger.error("Unwanted item in logging control: {0}".format(event))
 
-    def _process_config(self, event):
+    def _process_config(self, event: events.ConfigEvent) -> None:
         """
         :param event.event: config.py file
         """
         logger.debug("process_config: %s" % event)
 
-    def _process_strategy(self, event):
+    def _process_strategy(self, event: events.StrategyEvent) -> None:
         """
-        :param event.event: Strategy class
+        :param event.event: Strategy
         """
         logger.debug("process_strategy: %s" % event)
 
-    def _process_market(self, event):
+    def _process_market(self, event: events.MarketEvent) -> None:
         """
-        :param event.event: Market class
+        :param event.event: Market
         """
         logger.debug("process_market: %s" % event)
 
-    def _process_trade(self, event):
+    def _process_trade(self, event: events.TradeEvent) -> None:
         """
-        :param event.event: Trade class
+        :param event.event: Trade
         """
         logger.debug("process_trade: %s" % event)
 
-    def _process_order(self, event):
+    def _process_order(self, event: events.OrderEvent) -> None:
         """
-        :param event.event: Order class
+        :param event.event: Order
         """
         logger.debug("process_order: %s" % event)
 
-    def _process_balance(self, event):
+    def _process_balance(self, event: events.BalanceEvent) -> None:
         """
-        :param event.event: Client class
+        :param event.event: Client
         """
         logger.debug("process_balance: %s" % event)
 
-    def _process_cleared_orders(self, event):
+    def _process_cleared_orders(self, event: events.ClearedOrdersEvent) -> None:
         """
-        :param event.event: betfairlightweight resources.ClearedOrders
+        :param event.event: betfairlightweight.resources.ClearedOrders
         """
         logger.debug("process_cleared_orders: %s" % event)
 
-    def _process_cleared_orders_meta(self, event):
+    def _process_cleared_orders_meta(
+        self, event: events.ClearedOrdersMetaEvent
+    ) -> None:
         """
-        :param event.event: list of orders
+        :param event.event: list of Order
         """
         logger.debug("process_cleared_orders_meta: %s" % event)
 
-    def _process_cleared_markets(self, event):
+    def _process_cleared_markets(self, event: events.ClearedMarketsEvent) -> None:
         """
-        :param event.event: betfairlightweight resources.ClearedOrders
+        :param event.event: betfairlightweight.resources.ClearedOrders
         """
         logger.debug("process_cleared_markets: %s" % event)
 
-    def _process_closed_market(self, event):
+    def _process_closed_market(self, event: events.CloseMarketEvent) -> None:
         """
-        :param event.event: Market class
+        :param event.event: betfairlightweight.resources.MarketBook
         """
         logger.debug("process_closed_market: %s" % event)
 
-    def _process_custom_event(self, event):
+    def _process_custom_event(self, event: events.CustomEvent) -> None:
         """
         :param event.event: Custom event
         """
         logger.debug("process_custom_event: %s" % event)
 
-    def _process_end_flumine(self, event):
+    def _process_end_flumine(self, event: events.TerminationEvent) -> None:
         """
         :param event.event: Termination Event
         """

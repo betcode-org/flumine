@@ -407,6 +407,7 @@ class StreamsTest(unittest.TestCase):
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
+            order_updates_only=True,
         )
 
     @mock.patch("flumine.streams.streams.SimulatedOrderStream")

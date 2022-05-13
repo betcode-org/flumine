@@ -62,7 +62,7 @@ class BacktestLoggingControl(LoggingControl):
                         "price_matched": order.average_price_matched,
                         "size": size,
                         "size_matched": order.size_matched,
-                        "profit": order.simulated.profit,
+                        "profit": order.profit,
                         "side": order.side,
                         "elapsed_seconds_executable": order.elapsed_seconds_executable,
                         "order_status": order.status.value,

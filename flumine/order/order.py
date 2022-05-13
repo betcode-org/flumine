@@ -253,6 +253,16 @@ class BaseOrder:
             ).total_seconds()
 
     @property
+    def profit(self) -> float:
+        if self._simulated:
+            return self.simulated.profit
+        else:
+            if self.cleared_order:
+                return self.cleared_order.profit
+            else:
+                return 0.0
+
+    @property
     def market_id(self) -> str:
         return self.trade.market_id
 

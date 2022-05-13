@@ -171,15 +171,6 @@ class SimulatedMiddleware(Middleware):
                         )
 
     @staticmethod
-    def _process_streaming_update(market_book) -> list:
-        # return list of runners that have been updated
-        update = market_book.streaming_update
-        if update.get("img") or update.get("marketDefinition"):
-            return [runner.selection_id for runner in market_book.runners]
-        else:
-            return [runner["id"] for runner in update.get("rc", [])]
-
-    @staticmethod
     def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01

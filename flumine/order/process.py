@@ -67,8 +67,13 @@ def process_current_orders(
                 )
                 if order is None:
                     continue
-
+            # process order status
             process_current_order(order, current_order, log_control)
+            # complete order if required
+            if order.complete:
+                market = markets.markets[order.market_id]
+                if order in market.blotter.live_orders:
+                    market.blotter.complete_order(order)
 
 
 def process_current_order(order: BaseOrder, current_order, log_control) -> None:
