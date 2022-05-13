@@ -78,7 +78,7 @@ class OrderStream(BaseStream):
                     for m in self.flumine.markets
                     if m.blotter.active and m.status == "OPEN"
                 ]
-                if active_open_markets and (time.time() - last_snap) > SNAP_DELTA:
+                if active_open_markets or (time.time() - last_snap) > SNAP_DELTA:
                     order_books = []
                 else:
                     continue
