@@ -194,6 +194,20 @@ class BaseFlumineTest(unittest.TestCase):
         mock_middleware.remove_market.assert_called_with(mock_market)
         mock_strategy.remove_market.assert_called_with(mock_market.market_id)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__remove_market_no_clear(self, _):
+        mock_strategy = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy]
+        mock_markets = mock.Mock()
+        self.base_flumine.markets = mock_markets
+        mock_middleware = mock.Mock()
+        self.base_flumine._market_middleware = [mock_middleware]
+        mock_market = mock.Mock()
+        self.base_flumine._remove_market(mock_market, clear=False)
+        mock_markets.remove_market.assert_not_called()
+        mock_middleware.remove_market.assert_called_with(mock_market)
+        mock_strategy.remove_market.assert_called_with(mock_market.market_id)
+
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
     def test__process_raw_data(self, mock__add_market):
         mock_event = mock.Mock()

@@ -1,9 +1,14 @@
+import os
 import logging
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
-from ..utils import wap
+from ..utils import wap, call_strategy_error_handling
+from ..streams.historicalstream import (
+    HistoricListener,
+    FlumineHistoricalGeneratorStream,
+)
 from .. import config
 
 logger = logging.getLogger(__name__)
@@ -277,3 +282,61 @@ class RunnerAnalytics:
         # cache for next update
         self._p_v = c_v
         return traded
+
+
+class SimulatedSportsDataMiddleware(Middleware):
+    """
+    Middleware to allow simulation of historic
+    sports data.
+    Creates generator of sports data that is cycled
+    chronologically with the MarketBooks calling
+    `strategy.process_sports_data`
+    """
+
+    def __init__(self, operation: str, directory: str):
+        self.operation = operation  # "cricketSubscription" or "raceSubscription"
+        self.directory = directory  # sports data directory (marketId used for lookup)
+        self._gen = None
+        self._next = None
+
+    def __call__(self, market) -> None:
+        pt = market.market_book.publish_time_epoch
+        while True:
+            for update in self._next:
+                if pt > update.publish_time_epoch:
+                    for strategy in market.flumine.strategies:
+                        if (
+                            market.market_book.streaming_unique_id
+                            in strategy.stream_ids
+                        ):
+                            call_strategy_error_handling(
+                                strategy.process_sports_data, market, update
+                            )
+                else:
+                    return
+            try:
+                self._next = next(self._gen)
+            except StopIteration:
+                break
+
+    def add_market(self, market) -> None:
+        # create sports data generator
+        file_path = os.path.join(self.directory, market.market_id)
+        self._gen = self._create_generator(file_path, self.operation, 123)()
+        self._next = next(self._gen)
+
+    def remove_market(self, market) -> None:
+        # clear gens
+        self._gen = None
+        self._next = None
+
+    @staticmethod
+    def _create_generator(file_path: str, operation: str, unique_id: int):
+        listener = HistoricListener(max_latency=None, update_clk=False)
+        stream = FlumineHistoricalGeneratorStream(
+            file_path=file_path,
+            listener=listener,
+            operation=operation,
+            unique_id=unique_id,
+        )
+        return stream.get_generator()

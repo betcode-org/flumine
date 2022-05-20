@@ -10,6 +10,7 @@ from flumine.markets.middleware import (
     WIN_MINIMUM_ADJUSTMENT_FACTOR,
     PLACE_MINIMUM_ADJUSTMENT_FACTOR,
     LIVE_STATUS,
+    SimulatedSportsDataMiddleware,
 )
 from flumine.order.ordertype import MarketOnCloseOrder
 
@@ -419,3 +420,75 @@ class RunnerAnalyticsTest(unittest.TestCase):
             {1.01: 39.0, 10: 32},
         )
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69, 10: 32})
+
+
+class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.middleware = SimulatedSportsDataMiddleware("cricketSubscription", "test")
+
+    def test_init(self):
+        self.assertEqual(self.middleware.operation, "cricketSubscription")
+        self.assertEqual(self.middleware.directory, "test")
+        self.assertIsNone(self.middleware._gen)
+        self.assertIsNone(self.middleware._next)
+
+    @mock.patch("flumine.markets.middleware.call_strategy_error_handling")
+    def test_call(self, mock_call_strategy_error_handling):
+        mock_gen = mock.Mock()
+        mock_update_one = mock.Mock(publish_time_epoch=121)
+        mock_update_two = mock.Mock(publish_time_epoch=122)
+        mock_update_three = mock.Mock(publish_time_epoch=123)
+        mock_gen.__next__ = mock.Mock(
+            side_effect=[[mock_update_two], [mock_update_three]]
+        )
+        self.middleware._gen = mock_gen
+        self.middleware._next = [mock_update_one]
+        mock_strategy = mock.Mock(stream_ids=[456])
+        mock_market = mock.Mock(market_id="marketId")
+        mock_market.market_book.publish_time_epoch = 123
+        mock_market.market_book.streaming_unique_id = 456
+        mock_market.flumine.strategies = [mock_strategy]
+        self.middleware(mock_market)
+        mock_call_strategy_error_handling.call_count = 2
+        mock_call_strategy_error_handling.assert_has_calls(
+            [
+                mock.call(
+                    mock_strategy.process_sports_data, mock_market, mock_update_one
+                ),
+                mock.call(
+                    mock_strategy.process_sports_data, mock_market, mock_update_two
+                ),
+            ]
+        )
+
+    @mock.patch(
+        "flumine.markets.middleware.SimulatedSportsDataMiddleware._create_generator"
+    )
+    def test_add_market(self, mock__create_generator):
+        mock_market = mock.Mock(market_id="marketId")
+        self.assertIsNone(self.middleware.add_market(mock_market))
+        mock__create_generator.assert_called_with(
+            "test/marketId", "cricketSubscription", 123
+        )
+        self.assertEqual(self.middleware._gen, mock__create_generator()())
+        self.assertEqual(self.middleware._next, next(mock__create_generator()()))
+
+    def test_remove_market(self):
+        self.middleware.remove_market(mock.Mock())
+        self.assertIsNone(self.middleware._gen)
+        self.assertIsNone(self.middleware._next)
+
+    @mock.patch("flumine.markets.middleware.FlumineHistoricalGeneratorStream")
+    @mock.patch("flumine.markets.middleware.HistoricListener")
+    def test__create_generator(self, mock_listener, mock_stream):
+        gen = self.middleware._create_generator(
+            "test/marketId", "cricketSubscription", 123
+        )
+        mock_listener.assert_called_with(max_latency=None, update_clk=False)
+        mock_stream.assert_called_with(
+            file_path="test/marketId",
+            listener=mock_listener(),
+            operation="cricketSubscription",
+            unique_id=123,
+        )
+        self.assertEqual(gen, mock_stream().get_generator())
