@@ -63,6 +63,72 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
+        "flumine.execution.transaction.Transaction._do_validate_controls",
+        return_value=True,
+    )
+    def test_place_order_with_all_or_nothing_success(
+        self,
+        mock__do_validate_controls,
+        mock_get_market_notes,
+    ):
+        self.transaction.all_or_nothing = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order2.trade.market_notes = None
+
+        with self.transaction:
+            self.assertTrue(self.transaction.place_order(mock_order1))
+            self.assertTrue(self.transaction.place_order(mock_order2))
+            self.assertEqual(0, self.transaction.execute.call_count)
+
+        self.assertEqual(1, self.transaction.execute.call_count)
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    def test_place_order_with_all_or_nothing_fail(
+        self,
+        mock_get_market_notes,
+    ):
+        c = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal c
+            if c == 0:
+                c = c + 1
+                return
+
+            raise ControlError("Intentional")
+
+        self.transaction._do_validate_controls = mock.Mock(side_effect=side_effect)
+
+        self.transaction.all_or_nothing = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order2.trade.market_notes = None
+
+        """
+        The second mock order will raise a ControlError
+        """
+        with self.assertRaises(ControlError):
+            with self.transaction:
+                self.assertTrue(self.transaction.place_order(mock_order1))
+                self.assertTrue(self.transaction.place_order(mock_order2))
+
+        self.assertEqual(0, self.transaction.execute.call_count)
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
