@@ -110,7 +110,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_simulated_two = mock.MagicMock(matched=[[123, 8.6, 10]])
         mock_simulated_two.__bool__.return_value = False
         mock_order_two = mock.Mock(simulated=mock_simulated_two, info={})
-        mock_market = mock.Mock(blotter=[mock_order, mock_order_two])
+        mock_market = mock.Mock(blotter=[mock_order, mock_order_two], market_type="WIN")
         self.middleware._process_runner_removal(mock_market, 12345, 0, 16.2)
         self.assertEqual(mock_order.simulated.matched, [[123, 7.21, 10]])
         self.assertEqual(mock_order.simulated.average_price_matched, 7.21)
