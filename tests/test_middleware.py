@@ -38,7 +38,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(self.middleware.markets, {})
         self.assertEqual(self.middleware._runner_removals, [])
         self.assertEqual(WIN_MINIMUM_ADJUSTMENT_FACTOR, 2.5)
-        self.assertEqual(PLACE_MINIMUM_ADJUSTMENT_FACTOR, 0)
+        self.assertEqual(PLACE_MINIMUM_ADJUSTMENT_FACTOR, 4)
         self.assertEqual(
             LIVE_STATUS,
             [
@@ -115,6 +115,99 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         self.assertEqual(mock_order.simulated.matched, [[123, 7.21, 10]])
         self.assertEqual(mock_order.simulated.average_price_matched, 7.21)
         self.assertEqual(mock_order_two.simulated.matched, [[123, 8.6, 10]])
+
+    def test__process_runner_removal_WIN_and_MARKET_ON_CLOSE(self):
+        """
+        From the rules;
+        https://support.betfair.com/app/answers/detail/a_id/408/~/exchange%3A-in-a-horse-race,-how-will-non-runners-be-treated%3F
+        The match at 11.5 will be reduced to
+            £7.25 = 11.5 * (100-36.93) / 100
+        The remaining liability of £2@11.5 will be reduced to
+            £12.51 = 2 * ( 11.5 * (100-36.93) / 100 - 1)
+        """
+        mock_simulated = mock.MagicMock(matched=[[123, 11.5, 1.05]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(
+            simulated=mock_simulated,
+            info={},
+            side="LAY",
+            order_type=mock.Mock(
+                persistence_type="MARKET_ON_CLOSE",
+                price=11.5,
+            ),
+            size_cancelled=0,
+            size_remaining=2.0,
+        )
+        mock_simulated_two = mock.MagicMock(matched=[[123, 12, 1.23]])
+        mock_simulated_two.__bool__.return_value = False
+        mock_order_two = mock.Mock(simulated=mock_simulated_two, info={})
+        mock_market = mock.Mock(blotter=[mock_order, mock_order_two], market_type="WIN")
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 36.93)
+        self.assertEqual(mock_order.simulated.matched, [[123, 7.25, 1.05]])
+        self.assertEqual(mock_order.simulated.average_price_matched, 7.25)
+        self.assertEqual(OrderTypes.MARKET_ON_CLOSE, mock_order.order_type.ORDER_TYPE)
+        self.assertEqual(12.51, mock_order.order_type.liability)
+
+        self.assertEqual(mock_order_two.simulated.matched, [[123, 12, 1.23]])
+
+    def test__process_runner_removal_PLACE(self):
+        """
+        From the rules;
+        https://support.betfair.com/app/answers/detail/a_id/408/~/exchange%3A-in-a-horse-race,-how-will-non-runners-be-treated%3F
+        The match at 11.5 will be reduced to
+        7.62 = 1 + 10.5 * (100-36.93) / 100
+        """
+        mock_simulated = mock.MagicMock(matched=[[123, 11.5, 1.05]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(simulated=mock_simulated, info={})
+        mock_simulated_two = mock.MagicMock(matched=[[123, 12, 1.23]])
+        mock_simulated_two.__bool__.return_value = False
+        mock_order_two = mock.Mock(simulated=mock_simulated_two, info={})
+        mock_market = mock.Mock(
+            blotter=[mock_order, mock_order_two], market_type="PLACE"
+        )
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 36.93)
+        self.assertEqual(mock_order.simulated.matched, [[123, 7.62, 1.05]])
+        self.assertEqual(mock_order.simulated.average_price_matched, 7.62)
+        self.assertEqual(mock_order_two.simulated.matched, [[123, 12, 1.23]])
+
+    def test__process_runner_removal_PLACE_and_MARKET_ON_CLOSE(self):
+        """
+        From the rules;
+        https://support.betfair.com/app/answers/detail/a_id/408/~/exchange%3A-in-a-horse-race,-how-will-non-runners-be-treated%3F
+        The match at 11.5 will be reduced to
+        7.62 = 1 + 10.5 * (100-36.93) / 100
+        which has liability:
+            6.9534675 = (7.62-1) * 1.05
+        The remaining liability of £2@11.5 will be reduced to
+            £13.24 = 2 * 10.5 * (100-36.93) / 100
+        """
+        mock_simulated = mock.MagicMock(matched=[[123, 11.5, 1.05]])
+        mock_simulated.__bool__.return_value = True
+        mock_order = mock.Mock(
+            simulated=mock_simulated,
+            info={},
+            side="LAY",
+            order_type=mock.Mock(
+                persistence_type="MARKET_ON_CLOSE",
+                price=11.5,
+            ),
+            size_cancelled=0,
+            size_remaining=2.0,
+        )
+        mock_simulated_two = mock.MagicMock(matched=[[123, 12, 1.23]])
+        mock_simulated_two.__bool__.return_value = False
+        mock_order_two = mock.Mock(simulated=mock_simulated_two, info={})
+        mock_market = mock.Mock(
+            blotter=[mock_order, mock_order_two], market_type="PLACE"
+        )
+        self.middleware._process_runner_removal(mock_market, 12345, 0, 36.93)
+        self.assertEqual(mock_order.simulated.matched, [[123, 7.62, 1.05]])
+        self.assertEqual(mock_order.simulated.average_price_matched, 7.62)
+        self.assertEqual(OrderTypes.MARKET_ON_CLOSE, mock_order.order_type.ORDER_TYPE)
+        self.assertEqual(13.24, mock_order.order_type.liability)
+
+        self.assertEqual(mock_order_two.simulated.matched, [[123, 12, 1.23]])
 
     def test__process_runner_removal_under_limit(self):
         mock_simulated = mock.MagicMock(matched=[[123, 8.6, 10]])

@@ -10,7 +10,8 @@ from .. import config
 logger = logging.getLogger(__name__)
 
 WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
-PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+# PLACE MARKET DOCS: https://support.betfair.com/app/answers/detail/a_id/406
+PLACE_MINIMUM_ADJUSTMENT_FACTOR = 4.0
 LIVE_STATUS = [
     OrderStatus.EXECUTABLE,
     OrderStatus.CANCELLING,
@@ -152,12 +153,10 @@ class SimulatedMiddleware(Middleware):
                                 ),
                                 extra=order.info,
                             )
-                    elif (
-                        removal_adjustment_factor
-                        and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
-                    ):
-                        # todo place market
-                        if market.market_type == "WIN":
+                    elif removal_adjustment_factor:
+                        if (market.market_type == "WIN") and (
+                            removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
+                        ):
                             for match in order.simulated.matched:
                                 match[1] = self._calculate_reduction_factor(
                                     match[1], removal_adjustment_factor
@@ -171,18 +170,14 @@ class SimulatedMiddleware(Middleware):
                                     order.order_type.persistence_type
                                     == "MARKET_ON_CLOSE"
                                 ):
-                                    existing_liability = sum(
-                                        (match[1] - 1) * match[2]
-                                        for match in order.simulated.matched
-                                    )
                                     price_adjusted = (order.order_type.price) * (
                                         1 - (removal_adjustment_factor / 100)
                                     )
-                                    remaining_liability = (
-                                        price_adjusted - 1
-                                    ) * order.size_remaining
+                                    remaining_liability = round(
+                                        (price_adjusted - 1) * order.size_remaining, 2
+                                    )
                                     order.order_type = MarketOnCloseOrder(
-                                        existing_liability + remaining_liability
+                                        remaining_liability
                                     )
                                 else:
                                     order.size_cancelled += order.size_remaining
@@ -194,7 +189,9 @@ class SimulatedMiddleware(Middleware):
                                 ),
                                 extra=order.info,
                             )
-                        elif market.market_type in {"PLACE", "OTHER_PLACE"}:
+                        elif (market.market_type in {"PLACE", "OTHER_PLACE"}) and (
+                            removal_adjustment_factor >= PLACE_MINIMUM_ADJUSTMENT_FACTOR
+                        ):
                             for match in order.simulated.matched:
                                 match[
                                     1
@@ -205,23 +202,19 @@ class SimulatedMiddleware(Middleware):
                                 order.simulated.matched
                             )
 
-                            if order.side == "LAY" and (removal_adjustment_factor >= 4):
+                            if order.side == "LAY":
                                 if (
                                     order.order_type.persistence_type
                                     == "MARKET_ON_CLOSE"
                                 ):
-                                    existing_liability = sum(
-                                        (match[1] - 1) * match[2]
-                                        for match in order.simulated.matched
-                                    )
                                     price_adjusted = 1 + (
                                         order.order_type.price - 1
                                     ) * (1 - (removal_adjustment_factor / 100))
-                                    remaining_liability = (
-                                        price_adjusted - 1
-                                    ) * order.size_remaining
+                                    remaining_liability = round(
+                                        (price_adjusted - 1) * order.size_remaining, 2
+                                    )
                                     order.order_type = MarketOnCloseOrder(
-                                        existing_liability + remaining_liability
+                                        remaining_liability
                                     )
                                 else:
                                     order.size_cancelled += order.size_remaining
