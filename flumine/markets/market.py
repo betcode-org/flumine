@@ -78,7 +78,7 @@ class Market:
             id_=self._transaction_id,
             async_place_orders=async_place_orders,
             client=client,
-            all_or_nothing=all_or_nothing,
+            atomic=all_or_nothing,
         )
 
     # order

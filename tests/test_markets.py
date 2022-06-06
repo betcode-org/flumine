@@ -160,7 +160,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=False,
             client=self.market.flumine.clients.get_default(),
-            all_or_nothing=False,
+            atomic=False,
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -173,7 +173,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=True,
             client=self.market.flumine.clients.get_default(),
-            all_or_nothing=False,
+            atomic=False,
         )
         self.assertEqual(transaction, mock_transaction())
 
