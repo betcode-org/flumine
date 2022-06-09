@@ -98,8 +98,6 @@ class Transaction:
         if new_trade:
             self.market.flumine.log_control(events.TradeEvent(order.trade))
         if execute:  # handles replaceOrder
-            runner_context = order.trade.strategy.get_runner_context(*order.lookup)
-            runner_context.place(order.trade.id)
             self._pending_place.append((order, market_version))
             self._pending_orders = True
         return True
@@ -170,6 +168,9 @@ class Transaction:
     def execute(self) -> int:
         packages = []
         if self._pending_place:
+            for order, market_version in self._pending_place:
+                runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+                runner_context.place(order.trade.id)
             packages += self._create_order_package(
                 self._pending_place,
                 OrderPackageType.PLACE,
