@@ -53,6 +53,9 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.PLACE)
         self.transaction._pending_place = [(mock_order, None)]
         self.assertTrue(self.transaction._pending_orders)
+        mock_order.trade.strategy.get_runner_context.assert_called_with(
+            *mock_order.lookup
+        )
         self.transaction.market.blotter.has_trade.assert_called_with(
             mock_order.trade.id
         )
@@ -469,7 +472,7 @@ class TransactionTest(unittest.TestCase):
         mock_package = mock.Mock()
         mock__create_order_package.return_value = [mock_package]
         self.assertEqual(self.transaction.execute(), 0)
-        mock_order = mock.Mock(lookup=(1, 2, 3))
+        mock_order = mock.Mock()
         self.transaction._pending_place = [(mock_order, 1234)]
         self.transaction._pending_cancel = [(mock_order, None)]
         self.transaction._pending_update = [(mock_order, None)]
@@ -493,10 +496,6 @@ class TransactionTest(unittest.TestCase):
         )
         self.assertFalse(self.transaction._pending_orders)
 
-        mock_order.trade.strategy.get_runner_context.assert_called_with(
-            *mock_order.lookup
-        )
-
     @mock.patch("flumine.execution.transaction.Transaction._create_order_package")
     def test_execute_async(self, mock__create_order_package):
         self.transaction._pending_orders = True
@@ -504,7 +503,7 @@ class TransactionTest(unittest.TestCase):
         mock_package = mock.Mock()
         mock__create_order_package.return_value = [mock_package]
         self.assertEqual(self.transaction.execute(), 0)
-        mock_order = mock.Mock(lookup=(1, 2, 3))
+        mock_order = mock.Mock()
         self.transaction._pending_place = [(mock_order, 1234)]
         self.transaction._pending_cancel = [(mock_order, None)]
         self.transaction._pending_update = [(mock_order, None)]
