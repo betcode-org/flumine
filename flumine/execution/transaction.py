@@ -289,8 +289,14 @@ class Transaction:
             self.execute()
 
     def _clear(self):
+        for order, _ in self._pending_place:
+            self._unwind(order)
         self._pending_place.clear()
         self._pending_update.clear()
         self._pending_replace.clear()
         self._pending_cancel.clear()
         self._pending_orders = False
+
+    def _unwind(self, order):
+        runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+        runner_context.live_trades.remove(order.trade.id)
