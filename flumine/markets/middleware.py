@@ -214,7 +214,10 @@ class SimulatedMiddleware(Middleware):
                                     order.order_type = MarketOnCloseOrder(
                                         remaining_liability
                                     )
-                                elif removal_adjustment_factor >= PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION:
+                                elif (
+                                    removal_adjustment_factor
+                                    >= PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION
+                                ):
                                     order.size_cancelled += order.size_remaining
                                     order.size_remaining = 0
 
