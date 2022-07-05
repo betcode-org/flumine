@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
 # PLACE MARKET DOCS: https://support.betfair.com/app/answers/detail/a_id/406
-PLACE_MINIMUM_ADJUSTMENT_FACTOR = 4.0
+PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION = 4.0
 LIVE_STATUS = [
     OrderStatus.EXECUTABLE,
     OrderStatus.CANCELLING,
@@ -189,9 +189,7 @@ class SimulatedMiddleware(Middleware):
                                 ),
                                 extra=order.info,
                             )
-                        elif (market.market_type in {"PLACE", "OTHER_PLACE"}) and (
-                            removal_adjustment_factor >= PLACE_MINIMUM_ADJUSTMENT_FACTOR
-                        ):
+                        elif market.market_type in {"PLACE", "OTHER_PLACE"}:
                             for match in order.simulated.matched:
                                 match[
                                     1
@@ -216,7 +214,7 @@ class SimulatedMiddleware(Middleware):
                                     order.order_type = MarketOnCloseOrder(
                                         remaining_liability
                                     )
-                                else:
+                                elif removal_adjustment_factor >= PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION:
                                     order.size_cancelled += order.size_remaining
                                     order.size_remaining = 0
 
