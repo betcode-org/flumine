@@ -10,6 +10,11 @@ Release History
 
 - Handle market removal race condition
 
+**Libraries**
+
+- black upgraded to 22.6.0
+- python-json-logger upgraded to 2.0.4
+
 2.2.0 (2022-05-17)
 +++++++++++++++++++
 
