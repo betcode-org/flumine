@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.2.1 (2022-07-13)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Handle market removal race condition
+
 2.2.0 (2022-05-17)
 +++++++++++++++++++
 
