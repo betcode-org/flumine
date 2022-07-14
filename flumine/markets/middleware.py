@@ -303,6 +303,8 @@ class SimulatedSportsDataMiddleware(Middleware):
         pt = market.market_book.publish_time_epoch
         while True:
             for update in self._next:
+                if update.market_id != market.market_id:
+                    continue
                 if pt > update.publish_time_epoch:
                     for strategy in market.flumine.strategies:
                         if (

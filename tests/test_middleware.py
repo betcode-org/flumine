@@ -435,16 +435,17 @@ class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
     @mock.patch("flumine.markets.middleware.call_strategy_error_handling")
     def test_call(self, mock_call_strategy_error_handling):
         mock_gen = mock.Mock()
-        mock_update_one = mock.Mock(publish_time_epoch=121)
-        mock_update_two = mock.Mock(publish_time_epoch=122)
-        mock_update_three = mock.Mock(publish_time_epoch=123)
+        mock_update_one = mock.Mock(publish_time_epoch=121, market_id="1.1")
+        mock_update_two = mock.Mock(publish_time_epoch=122, market_id="1.1")
+        mock_update_three = mock.Mock(publish_time_epoch=123, market_id="1.1")
+        mock_update_four = mock.Mock(publish_time_epoch=121, market_id="1.2")
         mock_gen.__next__ = mock.Mock(
-            side_effect=[[mock_update_two], [mock_update_three]]
+            side_effect=[[mock_update_four], [mock_update_two], [mock_update_three]]
         )
         self.middleware._gen = mock_gen
         self.middleware._next = [mock_update_one]
         mock_strategy = mock.Mock(stream_ids=[456])
-        mock_market = mock.Mock(market_id="marketId")
+        mock_market = mock.Mock(market_id="1.1")
         mock_market.market_book.publish_time_epoch = 123
         mock_market.market_book.streaming_unique_id = 456
         mock_market.flumine.strategies = [mock_strategy]
