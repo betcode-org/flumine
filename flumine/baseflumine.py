@@ -202,13 +202,14 @@ class BaseFlumine:
             middleware.add_market(market)
         return market
 
-    def _remove_market(self, market: Market) -> None:
+    def _remove_market(self, market: Market, clear: bool = True) -> None:
         logger.info("Removing market {0}".format(market.market_id), extra=self.info)
         for middleware in self._market_middleware:
             middleware.remove_market(market)
         for strategy in self.strategies:
             strategy.remove_market(market.market_id)
-        self.markets.remove_market(market.market_id)
+        if clear:
+            self.markets.remove_market(market.market_id)
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, clk, publish_time, data = event.event
@@ -345,6 +346,8 @@ class BaseFlumine:
             ]
             for market in closed_markets:
                 self._remove_market(market)
+        else:
+            self._remove_market(market, clear=False)
 
     def _process_cleared_orders(self, event):
         market_id = event.event.market_id
