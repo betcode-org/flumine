@@ -2,8 +2,12 @@ import logging
 import datetime
 from typing import Optional
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
-from betfairlightweight.streaming.stream import MarketStream, RaceStream
-from betfairlightweight.streaming.cache import MarketBookCache, RaceCache
+from betfairlightweight.streaming.stream import MarketStream, RaceStream, CricketStream
+from betfairlightweight.streaming.cache import (
+    MarketBookCache,
+    RaceCache,
+    CricketMatchCache,
+)
 from betfairlightweight.resources.baseresource import BaseResource
 from betfairlightweight.compat import json
 
@@ -128,6 +132,35 @@ class FlumineRaceStream(RaceStream):
         return active
 
 
+class FlumineCricketStream(CricketStream):
+    """
+    `_process` updated to not call `on_process`
+    which reduces some function calls.
+    """
+
+    def _process(self, cricket_changes: list, publish_time: int) -> bool:
+        caches = []
+        for cricket_change in cricket_changes:
+            market_id = cricket_change["marketId"]
+            event_id = cricket_change["eventId"]
+            cricket_match_cache = self._caches.get(market_id)
+
+            if cricket_match_cache is None:
+                cricket_match_cache = CricketMatchCache(
+                    market_id, event_id, publish_time, self._lightweight
+                )
+                self._caches[market_id] = cricket_match_cache
+                logger.info(
+                    "[%s: %s]: %s added, %s markets in cache"
+                    % (self, self.unique_id, market_id, len(self._caches))
+                )
+
+            cricket_match_cache.update_cache(cricket_change, publish_time)
+            caches.append(cricket_match_cache)
+            self._updates_processed += 1
+        return True
+
+
 class HistoricListener(StreamListener):
     """
     Custom listener to restrict processing by
@@ -146,6 +179,10 @@ class HistoricListener(StreamListener):
             raise ListenerError("Unable to process order stream")
         elif operation == "raceSubscription":
             return FlumineRaceStream(self, unique_id)
+        elif operation == "cricketSubscription":
+            return FlumineCricketStream(self, unique_id)
+        else:
+            raise ListenerError("Unable to process '{0}' stream".format(operation))
 
     def on_data(self, raw_data: str) -> Optional[bool]:
         try:

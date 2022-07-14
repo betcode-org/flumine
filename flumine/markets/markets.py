@@ -31,7 +31,8 @@ class Markets:
         del self._markets[market_id]
         event_id = market.event_id
         if event_id in self.events:
-            self.events[event_id].remove(market)
+            if market in self.events[event_id]:
+                self.events[event_id].remove(market)
         del market.blotter
         del market
         logger.info(
