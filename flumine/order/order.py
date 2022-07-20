@@ -268,7 +268,7 @@ class BaseOrder:
 
     @property
     def customer_order_ref(self) -> str:
-        return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
+        return "%s%s%s" % (self.trade.strategy.name_hash, self.sep, self.id)
 
     @property
     def notes_str(self) -> str:

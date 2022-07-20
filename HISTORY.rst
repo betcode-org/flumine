@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.2.2 (2022-07-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Various small improvements to reduce CPU cycles
+
 2.2.1 (2022-07-14)
 +++++++++++++++++++
 
