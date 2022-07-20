@@ -19,6 +19,8 @@ PENDING_STATUS = [
     OrderStatus.VIOLATION,
     OrderStatus.EXPIRED,
 ]
+ORDER_TYPE_LIMIT = OrderTypes.LIMIT
+ORDER_TYPES_SP = (OrderTypes.LIMIT_ON_CLOSE, OrderTypes.MARKET_ON_CLOSE)
 
 
 class Blotter:
@@ -191,24 +193,23 @@ class Blotter:
                 continue
             if order.status in PENDING_STATUS:
                 continue
-            if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT:
                 _size_matched = order.size_matched  # cache
+                _order_side = order.side
                 if _size_matched:
-                    if order.side == "BACK":
+                    if _order_side == "BACK":
                         mb.append((order.average_price_matched, _size_matched))
                     else:
                         ml.append((order.average_price_matched, _size_matched))
                 if not order.complete:
                     _size_remaining = order.size_remaining  # cache
-                    if order.order_type.price and _size_remaining:
-                        if order.side == "BACK":
-                            ub.append((order.order_type.price, _size_remaining))
+                    order_type_price = order.order_type.price
+                    if order_type_price and _size_remaining:
+                        if _order_side == "BACK":
+                            ub.append((order_type_price, _size_remaining))
                         else:
-                            ul.append((order.order_type.price, _size_remaining))
-            elif order.order_type.ORDER_TYPE in (
-                OrderTypes.LIMIT_ON_CLOSE,
-                OrderTypes.MARKET_ON_CLOSE,
-            ):
+                            ul.append((order_type_price, _size_remaining))
+            elif order.order_type.ORDER_TYPE in ORDER_TYPES_SP:
                 if order.side == "BACK":
                     moc_lose_liability -= order.order_type.liability
                 else:
