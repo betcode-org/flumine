@@ -32,23 +32,29 @@ class BlotterTest(unittest.TestCase):
 
     def test_get_order_bet_id(self):
         self.assertIsNone(self.blotter.get_order_bet_id("123"))
-        mock_order = mock.Mock(lookup=(1, 2, 3), bet_id="123")
+        mock_order = mock.Mock(selection_id=2, handicap=3, bet_id="123")
         self.blotter["456"] = mock_order
         self.assertEqual(self.blotter.get_order_bet_id("123"), mock_order)
 
     def test_strategy_orders(self):
         mock_order_one = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTABLE, size_matched=1
+            selection_id=2, handicap=3, status=OrderStatus.EXECUTABLE, size_matched=1
         )
         mock_order_one.trade.strategy = 69
         self.blotter["12345"] = mock_order_one
         mock_order_two = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=0
+            selection_id=2,
+            handicap=3,
+            status=OrderStatus.EXECUTION_COMPLETE,
+            size_matched=0,
         )
         mock_order_two.trade.strategy = 69
         self.blotter["12345"] = mock_order_two
         mock_order_three = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=1
+            selection_id=2,
+            handicap=3,
+            status=OrderStatus.EXECUTION_COMPLETE,
+            size_matched=1,
         )
         mock_order_three.trade.strategy = 69
         self.blotter["12345"] = mock_order_three
@@ -72,17 +78,23 @@ class BlotterTest(unittest.TestCase):
 
     def test_strategy_selection_orders(self):
         mock_order_one = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTABLE, size_matched=1
+            selection_id=2, handicap=3, status=OrderStatus.EXECUTABLE, size_matched=1
         )
         mock_order_one.trade.strategy = 69
         self.blotter["12345"] = mock_order_one
         mock_order_two = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=0
+            selection_id=2,
+            handicap=3,
+            status=OrderStatus.EXECUTION_COMPLETE,
+            size_matched=0,
         )
         mock_order_two.trade.strategy = 69
         self.blotter["12345"] = mock_order_two
         mock_order_three = mock.Mock(
-            lookup=(1, 2, 3), status=OrderStatus.EXECUTION_COMPLETE, size_matched=1
+            selection_id=2,
+            handicap=3,
+            status=OrderStatus.EXECUTION_COMPLETE,
+            size_matched=1,
         )
         mock_order_three.trade.strategy = 69
         self.blotter["12345"] = mock_order_three
@@ -112,7 +124,8 @@ class BlotterTest(unittest.TestCase):
         mock_client_one = mock.Mock()
         mock_order_one = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTABLE,
             size_matched=1,
         )
@@ -120,7 +133,8 @@ class BlotterTest(unittest.TestCase):
         self.blotter["12345"] = mock_order_one
         mock_order_two = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTION_COMPLETE,
             size_matched=0,
         )
@@ -128,7 +142,8 @@ class BlotterTest(unittest.TestCase):
         self.blotter["12345"] = mock_order_two
         mock_order_three = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTION_COMPLETE,
             size_matched=1,
         )
@@ -159,21 +174,24 @@ class BlotterTest(unittest.TestCase):
         mock_client_one = mock.Mock()
         mock_order_one = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTABLE,
             size_matched=1,
         )
         self.blotter["12345"] = mock_order_one
         mock_order_two = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTION_COMPLETE,
             size_matched=0,
         )
         self.blotter["12345"] = mock_order_two
         mock_order_three = mock.Mock(
             client=mock_client_one,
-            lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             status=OrderStatus.EXECUTION_COMPLETE,
             size_matched=1,
         )
@@ -272,6 +290,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -297,6 +317,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -306,6 +328,8 @@ class BlotterTest(unittest.TestCase):
         mock_order_excluded = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -334,6 +358,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -359,6 +385,8 @@ class BlotterTest(unittest.TestCase):
         mock_order1 = mock.Mock(
             trade=mock_trade,
             lookup=lookup,
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -368,6 +396,8 @@ class BlotterTest(unittest.TestCase):
         mock_order2 = mock.Mock(
             trade=mock_trade,
             lookup=lookup,
+            selection_id=123,
+            handicap=0,
             side="LAY",
             average_price_matched=5.6,
             size_matched=0.0,
@@ -394,6 +424,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=0.0,
@@ -419,6 +451,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -448,6 +482,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="LAY",
             average_price_matched=5.6,
             size_matched=2.0,
@@ -477,6 +513,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             order_type=MarketOnCloseOrder(liability=10.0),
         )
@@ -499,6 +537,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="LAY",
             order_type=MarketOnCloseOrder(liability=10.0),
         )
@@ -521,6 +561,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="LAY",
             order_type=LimitOnCloseOrder(price=1.01, liability=10.0),
         )
@@ -543,6 +585,8 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(
             trade=mock_trade,
             lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
             side="BACK",
             order_type=LimitOrder(price=5, size=10.0),
             status=OrderStatus.VIOLATION,
@@ -585,6 +629,8 @@ class BlotterTest(unittest.TestCase):
             self.blotter[order[0]] = mock.Mock(
                 trade=mock_trade,
                 lookup=(self.blotter.market_id, order[1], 0),
+                selection_id=order[1],
+                handicap=0,
                 side=order[2],
                 average_price_matched=order[3],
                 size_matched=order[4],
@@ -623,6 +669,8 @@ class BlotterTest(unittest.TestCase):
             self.blotter[order[0]] = mock.Mock(
                 trade=mock_trade,
                 lookup=(self.blotter.market_id, order[1], 0),
+                selection_id=order[1],
+                handicap=0,
                 side=order[2],
                 average_price_matched=order[3],
                 size_matched=order[4],
@@ -650,7 +698,9 @@ class BlotterTest(unittest.TestCase):
 
     def test__setitem(self):
         mock_client = mock.Mock()
-        mock_order = mock.Mock(lookup=(1, 2, 3), bet_id="456", client=mock_client)
+        mock_order = mock.Mock(
+            selection_id=2, handicap=3, bet_id="456", client=mock_client
+        )
         self.blotter["123"] = mock_order
         self.assertTrue(self.blotter.active)
         self.assertEqual(self.blotter._orders, {"123": mock_order})

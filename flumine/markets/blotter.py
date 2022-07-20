@@ -254,13 +254,15 @@ class Blotter:
         self._orders[customer_order_ref] = order
         self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
+        strategy = order.trade.strategy
         self._trades[order.trade.id].append(order)
-        self._strategy_orders[order.trade.strategy].append(order)
+        self._strategy_orders[strategy].append(order)
         self._strategy_selection_orders[
-            (order.trade.strategy, *order.lookup[1:])
+            (strategy, order.selection_id, order.handicap)
         ].append(order)
-        self._client_orders[order.client].append(order)
-        self._client_strategy_orders[(order.client, order.trade.strategy)].append(order)
+        client = order.client
+        self._client_orders[client].append(order)
+        self._client_strategy_orders[(client, strategy)].append(order)
 
     def __getitem__(self, customer_order_ref: str):
         return self._orders[customer_order_ref]
