@@ -47,6 +47,8 @@ class OrderStream(BaseStream):
                     include_overall_position=False,
                 ),
                 conflate_ms=self.conflate_ms,
+                initial_clk=self._listener.initial_clk,
+                clk=self._listener.clk,
             )
             self._stream.start()
         except BetfairError:
