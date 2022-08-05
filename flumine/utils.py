@@ -291,7 +291,7 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
     """
     runner = get_runner_book(market.market_book, selection_id)
     if runner:
-        return "{0},{1},{2}".format(
+        return "%s,%s,%s" % (
             get_price(runner.ex.available_to_back, 0),
             get_price(runner.ex.available_to_lay, 0),
             runner.last_price_traded,

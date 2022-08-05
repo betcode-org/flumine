@@ -6,7 +6,7 @@
 
 # flūmine
 
-![Build Status](https://github.com/betcode-org/flumine/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/betfairlightweight) [![Downloads](https://pepy.tech/badge/flumine)](https://pepy.tech/project/flumine)
+![Build Status](https://github.com/betcode-org/flumine/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine) [![Downloads](https://pepy.tech/badge/flumine)](https://pepy.tech/project/flumine)
 
 Betting trading framework with a focus on:
 

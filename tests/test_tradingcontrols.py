@@ -606,6 +606,8 @@ class TestStrategyExposure(unittest.TestCase):
         order1 = mock.Mock(
             market_id="market_id",
             lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             side="BACK",
             size_remaining=9.0,
             average_price_matched=0.0,
@@ -620,6 +622,8 @@ class TestStrategyExposure(unittest.TestCase):
 
         order2 = mock.Mock(
             lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             side="BACK",
             size_remaining=5.0,
             average_price_matched=0.0,
@@ -742,7 +746,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_trade.strategy = mock_strategy
 
         existing_matched_order = mock.Mock(
-            market_id="1.234", lookup=(1, 2, 3), side="BACK"
+            market_id="1.234", lookup=(1, 2, 3), side="BACK", selection_id=2, handicap=3
         )
         existing_matched_order.trade = mock_trade
         existing_matched_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -750,7 +754,9 @@ class TestStrategyExposure(unittest.TestCase):
         existing_matched_order.average_price_matched = 6.0
         existing_matched_order.size_remaining = 0.0
 
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order = mock.Mock(
+            market_id="1.234", lookup=(1, 2, 3), side="LAY", selection_id=2, handicap=3
+        )
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.order_type.size = 9.0

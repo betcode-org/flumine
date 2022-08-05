@@ -3,6 +3,38 @@
 Release History
 ---------------
 
+2.2.3 (2022-08-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #455 Handle cancel race condition
+
+2.2.2 (2022-07-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Various small improvements to reduce CPU cycles
+
+2.2.1 (2022-07-14)
++++++++++++++++++++
+
+**Improvements**
+
+- #572 SimulatedSportsData middleware and example strategy added
+- Remove market added to simulation
+
+**Bug Fixes**
+
+- Handle market removal race condition
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.6
+- black upgraded to 22.6.0
+- python-json-logger upgraded to 2.0.4
+
 2.2.0 (2022-05-17)
 +++++++++++++++++++
 
