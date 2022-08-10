@@ -208,12 +208,18 @@ class BaseFlumineTest(unittest.TestCase):
         mock_middleware.remove_market.assert_called_with(mock_market)
         mock_strategy.remove_market.assert_called_with(mock_market.market_id)
 
+    @mock.patch("flumine.baseflumine.utils.call_process_raw_data")
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
-    def test__process_raw_data(self, mock__add_market):
+    def test__process_raw_data(self, mock__add_market, mock_call_process_raw_data):
+        mock_strategy = mock.Mock(stream_ids=[12])
+        self.base_flumine.strategies = [mock_strategy]
         mock_event = mock.Mock()
         mock_event.event = (12, "AAA", 12345, [{"id": "1.23"}])
         self.base_flumine._process_raw_data(mock_event)
         mock__add_market.assert_called_with("1.23", None)
+        mock_call_process_raw_data.assert_called_with(
+            mock_strategy, "AAA", 12345, {"id": "1.23"}
+        )
 
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
