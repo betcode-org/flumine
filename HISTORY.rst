@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+2.2.4 (2022-08-12)
++++++++++++++++++++
+
+**Improvements**
+
+- Add error handling to process_raw_data
+
+**Bug Fixes**
+
+- Correctly set replacement order datetime created
+
+**Libraries**
+
+- betconnect upgraded to 0.1.3
+
 2.2.3 (2022-08-01)
 +++++++++++++++++++
 
