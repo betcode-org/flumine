@@ -1,3 +1,4 @@
+import datetime
 import logging
 import collections
 import unittest
@@ -102,8 +103,11 @@ class TradeTest(unittest.TestCase):
             self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
     def test_create_order_replacement(self):
+        now = datetime.datetime.utcnow()
         mock_order = mock.Mock(sep="-")
-        replacement_order = self.trade.create_order_replacement(mock_order, 12, 2.00)
+        replacement_order = self.trade.create_order_replacement(
+            mock_order, 12, 2.00, now
+        )
         self.assertEqual(self.trade.orders, [replacement_order])
         self.assertEqual(replacement_order.trade, self.trade)
         self.assertEqual(replacement_order.side, mock_order.side)
@@ -118,6 +122,8 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(replacement_order.context, mock_order.context)
         self.assertEqual(replacement_order.notes, mock_order.notes)
         self.assertEqual(replacement_order.client, mock_order.client)
+        self.assertEqual(replacement_order.date_time_created, now)
+        self.assertEqual(replacement_order.responses.date_time_created, now)
 
     def test_create_order_from_current_limit(self):
         mock_client = mock.Mock()

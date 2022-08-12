@@ -145,6 +145,11 @@ class OrderPackageTest(unittest.TestCase):
             {"version": self.order_package._market_version},
         )
 
+    def test_date_time_created(self):
+        self.assertEqual(
+            self.order_package.date_time_created, self.order_package._time_created
+        )
+
     def test_iter(self):
         self.assertEqual([i for i in self.order_package], self.order_package.orders)
 

@@ -104,7 +104,11 @@ class Trade:
         return order
 
     def create_order_replacement(
-        self, order: BetfairOrder, new_price: float, size: float
+        self,
+        order: BetfairOrder,
+        new_price: float,
+        size: float,
+        date_time_created: datetime,
     ) -> BetfairOrder:
         """Create new order due to replace
         execution"""
@@ -122,6 +126,8 @@ class Trade:
             context=order.context,
             notes=order.notes,
         )
+        replacement_order.date_time_created = date_time_created
+        replacement_order.responses.date_time_created = date_time_created
         replacement_order.update_client(order.client)
         self.orders.append(replacement_order)
         return replacement_order
