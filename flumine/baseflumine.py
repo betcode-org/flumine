@@ -231,7 +231,7 @@ class BaseFlumine:
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
-                    strategy.process_raw_data(clk, publish_time, datum)
+                    utils.call_process_raw_data(strategy, clk, publish_time, datum)
 
     def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
