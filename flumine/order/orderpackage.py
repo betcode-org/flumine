@@ -1,5 +1,6 @@
 import uuid
 import time
+import datetime
 from enum import Enum
 from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
@@ -129,6 +130,10 @@ class BaseOrderPackage(BaseEvent):
     def market_version(self) -> Optional[dict]:
         if self._market_version:
             return {"version": self._market_version}
+
+    @property
+    def date_time_created(self) -> datetime.datetime:
+        return self._time_created
 
     def __iter__(self) -> Iterator[BaseOrder]:
         return iter(self.orders)
