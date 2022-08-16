@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-2.2.4 (2022-08-12)
+2.2.4 (2022-08-16)
 +++++++++++++++++++
 
 **Improvements**
@@ -16,6 +16,7 @@ Release History
 
 **Libraries**
 
+- betfairlightweight upgraded to 2.16.7
 - betconnect upgraded to 0.1.3
 
 2.2.3 (2022-08-01)
