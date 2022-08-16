@@ -186,6 +186,7 @@ class BetfairExecution(BaseExecution):
                             order,
                             instruction_report.place_instruction_reports.instruction.limit_order.price,
                             instruction_report.place_instruction_reports.instruction.limit_order.size,
+                            order_package.date_time_created,
                         )
                         self._order_logger(
                             replacement_order,

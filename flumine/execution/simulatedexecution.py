@@ -138,6 +138,7 @@ class SimulatedExecution(BaseExecution):
                     order,
                     instruction.get("newPrice"),
                     cancel_instruction_report.size_cancelled,
+                    order_package.date_time_created,
                 )
                 place_instruction_report = replacement_order.simulated.place(
                     order_package, market.market_book, instruction, self._bet_id
