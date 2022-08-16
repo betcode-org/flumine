@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.2.4 (2022-08-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Add error handling to process_raw_data
+
+**Bug Fixes**
+
+- Correctly set replacement order datetime created
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.7
+- betconnect upgraded to 0.1.3
+
 2.2.3 (2022-08-01)
 +++++++++++++++++++
 

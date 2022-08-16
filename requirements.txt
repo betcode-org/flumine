@@ -1,5 +1,5 @@
-betfairlightweight==2.16.6
+betfairlightweight==2.16.7
 tenacity>=7.0.0,<=8.0.1
 python-json-logger==2.0.4
 requests
-betconnect==0.1.2
+betconnect==0.1.3

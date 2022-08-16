@@ -303,6 +303,43 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             utils.call_process_orders_error_handling(mock_strategy, mock_market, [])
 
+    def test_call_process_raw_data(self):
+        mock_strategy = mock.Mock()
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    def test_call_process_raw_data_error_handling_flumine_error(self):
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_orders.side_effect = FlumineException
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    def test_call_process_raw_data_error_handling_error(self):
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_orders.side_effect = ValueError
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    @mock.patch("flumine.utils.config")
+    def test_call_process_raw_data_error_handling_raise(self, mock_config):
+        mock_config.raise_errors = True
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_raw_data.side_effect = ValueError
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        with self.assertRaises(ValueError):
+            utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+
     def test_get_runner_book(self):
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock(selection_id=123, handicap=0)
