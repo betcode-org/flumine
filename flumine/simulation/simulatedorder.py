@@ -173,6 +173,12 @@ class SimulatedOrder:
         order_status: str = None,
         error_code: str = None,
     ) -> SimulatedPlaceResponse:
+        if self.order.client.simulated_full_match:
+            if status == "SUCCESS" and self.size_remaining:
+                self.matched.append(
+                    [0, self.order.order_type.price, self.size_remaining]
+                )
+                self.size_matched, self.average_price_matched = wap(self.matched)
         if order_status is None:
             if self.size_remaining == 0:
                 order_status = "EXECUTION_COMPLETE"
@@ -181,7 +187,7 @@ class SimulatedOrder:
         return SimulatedPlaceResponse(
             status=status,
             order_status=order_status,
-            bet_id=str(bet_id),
+            bet_id=str(bet_id) if bet_id else bet_id,
             average_price_matched=self.average_price_matched,
             size_matched=self.size_matched,
             placed_date=datetime.datetime.utcnow(),

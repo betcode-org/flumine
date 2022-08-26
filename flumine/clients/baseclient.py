@@ -28,6 +28,7 @@ class BaseClient:
         min_bet_validation: bool = True,
         paper_trade: bool = False,
         market_recording_mode: bool = False,
+        simulated_full_match: bool = False,
     ):
         if hasattr(betting_client, "lightweight"):
             assert (
@@ -37,13 +38,16 @@ class BaseClient:
         self.betting_client = betting_client
         self.transaction_limit = transaction_limit
         self.capital_base = capital_base
-        self.commission_base = commission_base
+        self.commission_base = commission_base  # not implemented
         self.interactive_login = interactive_login
         self.order_stream = order_stream
-        self.best_price_execution = best_price_execution
+        self.best_price_execution = best_price_execution  # simulation only
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
-        self.paper_trade = paper_trade
-        self.market_recording_mode = market_recording_mode
+        self.paper_trade = paper_trade  # simulated order placement using live data
+        self.market_recording_mode = market_recording_mode  # no order stream / workers
+        self.simulated_full_match = (
+            simulated_full_match  # simulated 100% match on successful place
+        )
 
         self.account_details = None
         self.account_funds = None

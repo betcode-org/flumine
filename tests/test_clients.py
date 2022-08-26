@@ -143,6 +143,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertTrue(self.base_client.best_price_execution)
         self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)
+        self.assertFalse(self.base_client.simulated_full_match)
 
     def test_init_assert(self):
         with self.assertRaises(AssertionError):
