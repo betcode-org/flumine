@@ -10,7 +10,9 @@ class SimulatedOrderTest(unittest.TestCase):
         self.mock_order_type = mock.Mock(
             price=12, size=2.00, ORDER_TYPE=OrderTypes.LIMIT
         )
-        mock_client = mock.Mock(paper_trade=False, min_bsp_liability=10)
+        mock_client = mock.Mock(
+            paper_trade=False, min_bsp_liability=10, simulated_full_match=False
+        )
         mock_trade = mock.Mock()
         self.mock_order = mock.Mock(
             selection_id=1234,
@@ -335,6 +337,30 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.bet_id, "1234")
         self.assertEqual(resp.status, "SUCCESS")
         self.assertEqual(resp.order_status, "EXECUTION_COMPLETE")
+
+    def test__create_place_response_full_match(self):
+        self.mock_order.client.simulated_full_match = True
+        resp = self.simulated._create_place_response(1234)
+        self.assertEqual(resp.average_price_matched, 12)
+        self.assertEqual(resp.size_matched, 2)
+        self.assertEqual(self.simulated.matched, [[0, 12, 2.0]])
+        self.assertEqual(self.simulated.size_matched, 2)
+        self.assertEqual(self.simulated.average_price_matched, 12)
+        self.assertEqual(resp.bet_id, "1234")
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.order_status, "EXECUTION_COMPLETE")
+
+    def test__create_place_response_failure_full_match(self):
+        self.mock_order.client.simulated_full_match = True
+        resp = self.simulated._create_place_response(None, status="FAILURE")
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_matched, 0)
+        self.assertEqual(self.simulated.average_price_matched, 0)
+        self.assertIsNone(resp.bet_id)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.order_status, "EXECUTABLE")
 
     def test_cancel(self):
         self.simulated.order.update_data = {}

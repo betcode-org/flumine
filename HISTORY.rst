@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.2.5 (2022-08-26)
++++++++++++++++++++
+
+**Improvements**
+
+- `simulated_full_match` added to client
+
+**Libraries**
+
+- betconnect upgraded to 0.1.4
+
 2.2.4 (2022-08-16)
 +++++++++++++++++++
 
