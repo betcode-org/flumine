@@ -41,7 +41,7 @@ class BetfairExecution(BaseExecution):
             # update transaction counts
             order_package.client.add_transaction(len(order_package))
 
-    def place(self, order_package: OrderPackageType, session: requests.Session):
+    def place(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.place_orders(
             market_id=order_package.market_id,
             instructions=order_package.place_instructions,
@@ -95,7 +95,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def cancel(self, order_package: OrderPackageType, session: requests.Session):
+    def cancel(self, order_package: BaseOrderPackage, session: requests.Session):
         # temp copy to prevent an empty list of instructions sent
         # this can occur if order is matched during the execution
         # cycle, resulting in all orders being cancelled!
@@ -137,7 +137,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def update(self, order_package: OrderPackageType, session: requests.Session):
+    def update(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.update_orders(
             market_id=order_package.market_id,
             instructions=order_package.update_instructions,
@@ -214,7 +214,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def replace(self, order_package: OrderPackageType, session: requests.Session):
+    def replace(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.replace_orders(
             market_id=order_package.market_id,
             instructions=order_package.replace_instructions,

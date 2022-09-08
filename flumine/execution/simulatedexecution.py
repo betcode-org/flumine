@@ -118,19 +118,21 @@ class SimulatedExecution(BaseExecution):
         ):
             with order.trade:
                 # cancel current order
+                err = False
                 cancel_instruction_report = order.simulated.cancel(market.market_book)
                 if cancel_instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif cancel_instruction_report.status == "FAILURE":
-                    order.executable()  # todo do not carry out replace
+                    order.executable()
                     failed_transaction_count += 1
-                else:
-                    order.execution_complete()  # todo do not carry out replace
+                    err = True
                 self._order_logger(
                     order,
                     cancel_instruction_report,
                     OrderPackageType.CANCEL,
                 )
+                if err:
+                    continue
 
                 # place new order
                 self._bet_id += 1
