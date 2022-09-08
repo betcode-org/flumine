@@ -1278,12 +1278,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
-        mock_replacement_order.simulated.place.assert_called_with(
-            mock_order_package,
-            self.mock_market.market_book,
-            {"newPrice": 2.54},
-            self.execution._bet_id,
-        )
+        mock_replacement_order.simulated.place.assert_not_called()
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, OrderPackageType.CANCEL
         )
