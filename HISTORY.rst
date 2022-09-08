@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.2.6 (2022-09-08)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #612 simulation replace cancel error fix
+
+**Libraries**
+
+- betconnect upgraded to 0.1.5
+- black upgraded to 22.8.0
+
 2.2.5 (2022-08-26)
 +++++++++++++++++++
 
