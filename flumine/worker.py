@@ -202,7 +202,7 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
             )
             return False
         except BetfairError as e:
-            logger.error(
+            logger.warning(
                 "_get_cleared_orders error",
                 extra={"trading_function": "list_cleared_orders", "response": e},
                 exc_info=True,

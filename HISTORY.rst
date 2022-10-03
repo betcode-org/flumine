@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.2.7 (2022-09-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Changes list_cleared_orders error to warning
+
 2.2.6 (2022-09-08)
 +++++++++++++++++++
 
