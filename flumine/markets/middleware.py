@@ -311,9 +311,12 @@ class SimulatedSportsDataMiddleware(Middleware):
                             market.market_book.streaming_unique_id
                             in strategy.stream_ids
                         ):
-                            call_strategy_error_handling(
-                                strategy.process_sports_data, market, update
-                            )
+                            if call_strategy_error_handling(
+                                strategy.check_sports_data, market, update
+                            ):
+                                call_strategy_error_handling(
+                                    strategy.process_sports_data, market, update
+                                )
                 else:
                     return
             try:

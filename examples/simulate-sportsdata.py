@@ -26,6 +26,10 @@ class ExampleStrategy(BaseStrategy):
     wicket.
     """
 
+    def check_sports_data(self, market, sports_data) -> bool:
+        # process_sports_data only executed if this returns True
+        return True
+
     def process_sports_data(self, market, sports_data) -> None:
         # called on each update from sports-data-stream
         if not sports_data.match_stats:
