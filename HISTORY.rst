@@ -3,6 +3,23 @@
 Release History
 ---------------
 
+2.3.0 (2022-10-27)
++++++++++++++++++++
+
+**Improvements**
+
+- check_sports added to mimic check_market
+
+**Bug Fixes**
+
+- #621 string formating mistypes
+- #622 control handle all ladder types
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.17.0
+- black upgraded to 22.10.0
+
 2.2.7 (2022-09-29)
 +++++++++++++++++++
 

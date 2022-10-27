@@ -3,6 +3,7 @@ import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
+from .. import config
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType, BaseOrder
 from ..events.events import OrderEvent
 
@@ -16,7 +17,7 @@ class BaseExecution:
 
     EXCHANGE = None
 
-    def __init__(self, flumine, max_workers: int = None):
+    def __init__(self, flumine, max_workers: int = config.max_execution_workers):
         self.flumine = flumine
         self._max_workers = max_workers
         self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)

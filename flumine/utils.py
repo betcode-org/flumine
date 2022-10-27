@@ -106,8 +106,21 @@ def make_prices(min_price, cutoffs):
     return prices
 
 
+def make_line_prices(min_unit: float, max_unit: float, interval: float) -> list:
+    prices = []
+    price = min_unit
+    while True:
+        price += interval
+        if price > max_unit:
+            break
+        else:
+            prices.append(price)
+    return prices
+
+
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
 PRICES_FLOAT = [float(price) for price in PRICES]
+FINEST_PRICES = make_prices(MIN_PRICE, ((1000, 100),))
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):

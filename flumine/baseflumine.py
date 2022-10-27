@@ -58,10 +58,8 @@ class BaseFlumine:
         self.strategies = Strategies()
 
         # order execution class
-        self.simulated_execution = SimulatedExecution(
-            self, config.max_execution_workers
-        )
-        self.betfair_execution = BetfairExecution(self, config.max_execution_workers)
+        self.simulated_execution = SimulatedExecution(self)
+        self.betfair_execution = BetfairExecution(self)
 
         # add client
         if client:
@@ -185,7 +183,9 @@ class BaseFlumine:
                 )
                 continue
             for strategy in self.strategies:
-                if sports_data.streaming_unique_id in strategy.stream_ids:
+                if utils.call_strategy_error_handling(
+                    strategy.check_sports, market, sports_data
+                ):
                     utils.call_strategy_error_handling(
                         strategy.process_sports_data, market, sports_data
                     )

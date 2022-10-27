@@ -50,8 +50,20 @@ class OrderValidation(BaseControl):
     def _validate_betfair_price(self, order):
         if order.order_type.price is None:
             self._on_error(order, "Order price is None")
-        elif utils.as_dec(order.order_type.price) not in utils.PRICES:
-            self._on_error(order, "Order price is not valid")
+        if order.order_type.price_ladder_definition == "CLASSIC":
+            if utils.as_dec(order.order_type.price) not in utils.PRICES:
+                self._on_error(order, "Order price is not valid for CLASSIC ladder")
+        elif order.order_type.price_ladder_definition == "FINEST":
+            if utils.as_dec(order.order_type.price) not in utils.FINEST_PRICES:
+                self._on_error(order, "Order price is not valid for FINEST ladder")
+        elif order.order_type.price_ladder_definition == "LINE_RANGE":
+            prices = utils.make_line_prices(
+                order.order_type.line_range_info.min_unit_value,
+                order.order_type.line_range_info.max_unit_value,
+                order.order_type.line_range_info.interval,
+            )
+            if utils.as_dec(order.order_type.price) not in prices:
+                self._on_error(order, "Order price is not valid for LINE_RANGE ladder")
 
     def _validate_betfair_liability(self, order):
         if order.order_type.liability is None:

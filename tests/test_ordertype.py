@@ -30,7 +30,18 @@ class BaseOrderTypeTest(unittest.TestCase):
 
 class LimitOrderTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.order_type = LimitOrder(1.01, 2, "PERSIST", "YES", 34.5, "NO", 2)
+        self.mock_line_range_info = mock.Mock()
+        self.order_type = LimitOrder(
+            1.01,
+            2,
+            "PERSIST",
+            "YES",
+            34.5,
+            "NO",
+            2,
+            "FINEST",
+            self.mock_line_range_info,
+        )
 
     def test_init(self):
         self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETFAIR)
@@ -42,6 +53,8 @@ class LimitOrderTest(unittest.TestCase):
         self.assertEqual(self.order_type.min_fill_size, 34.5)
         self.assertEqual(self.order_type.bet_target_type, "NO")
         self.assertEqual(self.order_type.bet_target_size, 2)
+        self.assertEqual(self.order_type.price_ladder_definition, "FINEST")
+        self.assertEqual(self.order_type.line_range_info, self.mock_line_range_info)
 
     def test_place_instruction(self):
         self.assertEqual(
@@ -69,6 +82,7 @@ class LimitOrderTest(unittest.TestCase):
                 "price": 1.01,
                 "size": 2,
                 "time_in_force": "YES",
+                "price_ladder_definition": "FINEST",
             },
         )
 
