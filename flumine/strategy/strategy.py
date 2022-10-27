@@ -151,9 +151,12 @@ class BaseStrategy:
         # validate context
         reset_elapsed_seconds = runner_context.reset_elapsed_seconds
         if reset_elapsed_seconds and reset_elapsed_seconds < order.trade.reset_seconds:
-            order.violation_msg = "strategy.validate_order failed: reset_elapsed_seconds (%s) < reset_seconds (%s)".format(
-                reset_elapsed_seconds,
-                order.trade.reset_seconds,
+            order.violation_msg = (
+                "strategy.validate_order failed: reset_elapsed_seconds (%s) < reset_seconds (%s)"
+                % (
+                    reset_elapsed_seconds,
+                    order.trade.reset_seconds,
+                )
             )
             return False
 
@@ -162,20 +165,25 @@ class BaseStrategy:
             placed_elapsed_seconds
             and placed_elapsed_seconds < order.trade.place_reset_seconds
         ):
-            order.violation_msg = "strategy.validate_order failed: placed_elapsed_seconds (%s) < place_reset_seconds (%s)".format(
-                placed_elapsed_seconds,
-                order.trade.place_reset_seconds,
+            order.violation_msg = (
+                "strategy.validate_order failed: placed_elapsed_seconds (%s) < place_reset_seconds (%s)"
+                % (
+                    placed_elapsed_seconds,
+                    order.trade.place_reset_seconds,
+                )
             )
             return False
 
         if runner_context.trade_count >= self.max_trade_count:
-            order.violation_msg = "strategy.validate_order failed: trade_count (%s) >= max_trade_count (%s)".format(
-                runner_context.trade_count, self.max_trade_count
+            order.violation_msg = (
+                "strategy.validate_order failed: trade_count (%s) >= max_trade_count (%s)"
+                % (runner_context.trade_count, self.max_trade_count)
             )
             return False
         elif runner_context.live_trade_count >= self.max_live_trade_count:
-            order.violation_msg = "strategy.validate_order failed: live_trade_count (%s) >= max_live_trade_count (%s)".format(
-                runner_context.live_trade_count, self.max_live_trade_count
+            order.violation_msg = (
+                "strategy.validate_order failed: live_trade_count (%s) >= max_live_trade_count (%s)"
+                % (runner_context.live_trade_count, self.max_live_trade_count)
             )
             return False
 

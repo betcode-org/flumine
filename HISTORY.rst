@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.3.0 (2022-10-27)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Bug Fixes**
+
+- #621 string formating mistypes
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.17.0
+- black upgraded to 22.10.0
+
 2.2.7 (2022-09-29)
 +++++++++++++++++++
 

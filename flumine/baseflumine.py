@@ -58,10 +58,8 @@ class BaseFlumine:
         self.strategies = Strategies()
 
         # order execution class
-        self.simulated_execution = SimulatedExecution(
-            self, config.max_execution_workers
-        )
-        self.betfair_execution = BetfairExecution(self, config.max_execution_workers)
+        self.simulated_execution = SimulatedExecution(self)
+        self.betfair_execution = BetfairExecution(self)
 
         # add client
         if client:
