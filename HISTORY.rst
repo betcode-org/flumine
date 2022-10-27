@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
--
+- check_sports added to mimic check_market
 
 **Bug Fixes**
 
