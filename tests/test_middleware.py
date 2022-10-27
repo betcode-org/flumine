@@ -432,7 +432,9 @@ class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
         self.assertIsNone(self.middleware._gen)
         self.assertIsNone(self.middleware._next)
 
-    @mock.patch("flumine.markets.middleware.call_strategy_error_handling")
+    @mock.patch(
+        "flumine.markets.middleware.call_strategy_error_handling", return_value=True
+    )
     def test_call(self, mock_call_strategy_error_handling):
         mock_gen = mock.Mock()
         mock_update_one = mock.Mock(publish_time_epoch=121, market_id="1.1")
@@ -454,7 +456,13 @@ class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
         mock_call_strategy_error_handling.assert_has_calls(
             [
                 mock.call(
+                    mock_strategy.check_sports_data, mock_market, mock_update_one
+                ),
+                mock.call(
                     mock_strategy.process_sports_data, mock_market, mock_update_one
+                ),
+                mock.call(
+                    mock_strategy.check_sports_data, mock_market, mock_update_two
                 ),
                 mock.call(
                     mock_strategy.process_sports_data, mock_market, mock_update_two

@@ -89,14 +89,6 @@ class BaseStrategy:
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
-    def check_market(self, market: Market, market_book: MarketBook) -> bool:
-        if market_book.streaming_unique_id not in self.stream_ids:
-            return False  # strategy not subscribed to market stream
-        elif self.check_market_book(market, market_book):
-            return True
-        else:
-            return False
-
     def add(self) -> None:
         # called when strategy is added to framework
         return
@@ -106,6 +98,14 @@ class BaseStrategy:
         # e.g. subscribe to extra streams
         return
 
+    def check_market(self, market: Market, market_book: MarketBook) -> bool:
+        if market_book.streaming_unique_id not in self.stream_ids:
+            return False  # strategy not subscribed to market stream
+        elif self.check_market_book(market, market_book):
+            return True
+        else:
+            return False
+
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         return False
@@ -113,6 +113,22 @@ class BaseStrategy:
     def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook; place/cancel/replace orders
         return
+
+    def check_sports(
+        self, market: Market, sports_data: Union[Race, CricketMatch]
+    ) -> bool:
+        if sports_data.streaming_unique_id not in self.stream_ids:
+            return False  # strategy not subscribed to sports stream
+        elif self.check_sports_data(market, sports_data):
+            return True
+        else:
+            return False
+
+    def check_sports_data(
+        self, market: Market, sports_data: Union[Race, CricketMatch]
+    ) -> bool:
+        # process_sports_data only executed if this returns True
+        return False
 
     def process_sports_data(
         self, market: Market, sports_data: Union[Race, CricketMatch]
