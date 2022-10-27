@@ -46,8 +46,9 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(len(utils.create_cheap_hash("test", 16)), 16)
 
-    def test_as_dec(self):
-        utils.as_dec(2.00)
+    @mock.patch("flumine.utils.Decimal")
+    def test_as_dec(self, mock_decimal):
+        self.assertEqual(utils.as_dec(2.00), mock_decimal.return_value)
 
     # def test_arrange(self):
     #     utils.arange()
@@ -55,6 +56,10 @@ class UtilsTest(unittest.TestCase):
     def test_make_prices(self):
         prices = utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
         self.assertEqual(len(prices), 350)
+
+    def test_make_line_prices(self):
+        prices = utils.make_line_prices(-0.5, 9.5, 1.0)
+        self.assertEqual(prices, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
 
     def test_get_nearest_price(self):
         self.assertEqual(utils.get_nearest_price(1.011), 1.01)

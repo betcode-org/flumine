@@ -13,6 +13,7 @@ Release History
 **Bug Fixes**
 
 - #621 string formating mistypes
+- #622 control handle all ladder types
 
 **Libraries**
 
