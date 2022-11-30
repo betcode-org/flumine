@@ -86,9 +86,12 @@ class LimitOnCloseOrder(BaseOrderType):
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
 
-    def __init__(self, liability: float, price: float):
+    def __init__(
+        self, liability: float, price: float, price_ladder_definition: str = "CLASSIC"
+    ):
         self.liability = liability
         self.price = price
+        self.price_ladder_definition = price_ladder_definition
 
     def place_instruction(self) -> dict:
         return limit_on_close_order(liability=self.liability, price=self.price)
@@ -99,6 +102,7 @@ class LimitOnCloseOrder(BaseOrderType):
             "order_type": self.ORDER_TYPE.value,
             "liability": self.liability,
             "price": self.price,
+            "price_ladder_definition": self.price_ladder_definition,
         }
 
 
