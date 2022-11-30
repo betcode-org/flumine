@@ -215,9 +215,11 @@ class IntegrationTest(unittest.TestCase):
                 round(sum([o.profit for o in limit_inplay_orders]), 2), 19.88
             )
             self.assertEqual(len(limit_inplay_orders), 14)
-            limit_on_close_orders = market.blotter.strategy_orders(limit_strategy)
+            limit_on_close_orders = market.blotter.strategy_orders(
+                limit_on_close_strategy
+            )
             self.assertEqual(
-                round(sum([o.profit for o in limit_on_close_orders]), 2), -16.8
+                round(sum([o.profit for o in limit_on_close_orders]), 2), -53.20
             )
             self.assertEqual(len(limit_on_close_orders), 14)
             market_orders = market.blotter.strategy_orders(market_strategy)
