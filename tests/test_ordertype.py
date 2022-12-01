@@ -96,6 +96,7 @@ class LimitOnCloseOrderTest(unittest.TestCase):
         self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT_ON_CLOSE)
         self.assertEqual(self.order_type.liability, 64)
         self.assertEqual(self.order_type.price, 1.01)
+        self.assertEqual(self.order_type.price_ladder_definition, "CLASSIC")
 
     def test_place_instruction(self):
         self.assertEqual(
@@ -105,7 +106,12 @@ class LimitOnCloseOrderTest(unittest.TestCase):
     def test_info(self):
         self.assertEqual(
             self.order_type.info,
-            {"liability": 64, "order_type": "Limit on close", "price": 1.01},
+            {
+                "liability": 64,
+                "order_type": "Limit on close",
+                "price": 1.01,
+                "price_ladder_definition": "CLASSIC",
+            },
         )
 
 

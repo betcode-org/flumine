@@ -307,6 +307,33 @@ class MarketTest(unittest.TestCase):
         self.market.date_time_closed = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)
 
+    def test_market_start_datetime(self):
+        self.assertEqual(
+            self.market.market_start_datetime,
+            self.mock_market_book.market_definition.market_time,
+        )
+        self.market.market_book = None
+        self.assertEqual(
+            self.market.market_start_datetime,
+            self.mock_market_catalogue.market_start_time,
+        )
+        self.market.market_catalogue = None
+        self.assertEqual(
+            self.market.market_start_datetime, datetime.datetime.utcfromtimestamp(0)
+        )
+
+    @mock.patch(
+        "flumine.markets.market.Market.market_start_datetime",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+    def test_market_start_hour_minute(self, mock_market_start_datetime):
+        self.assertIsNone(self.market.market_start_hour_minute)
+        mock_market_start_datetime.return_value = datetime.datetime.utcfromtimestamp(
+            12000000000
+        )
+        self.assertEqual(self.market.market_start_hour_minute, "2120")
+
     def test_event_name_mc(self):
         mock_market_catalogue = mock.Mock()
         self.market.market_catalogue = mock_market_catalogue

@@ -156,6 +156,12 @@ class Market:
             return datetime.datetime.utcfromtimestamp(0)
 
     @property
+    def market_start_hour_minute(self) -> Optional[str]:
+        msd = self.market_start_datetime
+        if msd:
+            return "{0:02d}{1:02d}".format(msd.hour, msd.minute)
+
+    @property
     def event_name(self) -> Optional[str]:
         if self.market_catalogue:
             return self.market_catalogue.event.name

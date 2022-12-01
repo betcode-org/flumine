@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.3.1 (2022-12-01)
++++++++++++++++++++
+
+**Improvements**
+
+- execution_cls added to Client
+- market.market_start_hour_minute added
+
+**Bug Fixes**
+
+- Add price ladder definition to limitoncloseorder
+
+**Libraries**
+
+- python 3.11 testing added
+
 2.3.0 (2022-10-27)
 +++++++++++++++++++
 

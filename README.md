@@ -24,7 +24,7 @@ Support for market, order and custom streaming data.
 
 [join betcode slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
-Tested on Python 3.7, 3.8, 3.9 and 3.10.
+Tested on Python 3.7, 3.8, 3.9, 3.10 and 3.11.
 
 ## installation
 

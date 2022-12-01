@@ -3,7 +3,7 @@ import unittest
 from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
-from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
+from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder, LimitOnCloseOrder
 from flumine.utils import get_price, get_nearest_price
 
 
@@ -112,6 +112,31 @@ class IntegrationTest(unittest.TestCase):
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
                             market.cancel_order(order)
 
+        class LimitOnCloseOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if not market_book.inplay and market.seconds_to_start < 100:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                for runner in market_book.runners:
+                    if runner.status == "ACTIVE":
+                        runner_context = self.get_runner_context(
+                            market.market_id, runner.selection_id
+                        )
+                        if runner_context.trade_count == 0:
+                            back = get_price(runner.ex.available_to_back, 0)
+                            trade = Trade(
+                                market_book.market_id,
+                                runner.selection_id,
+                                runner.handicap,
+                                self,
+                            )
+                            order = trade.create_order(
+                                side="BACK",
+                                order_type=LimitOnCloseOrder(liability=10, price=back),
+                            )
+                            market.place_order(order)
+
         class MarketOnCloseOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
                 if not market_book.inplay and market.seconds_to_start < 100:
@@ -158,6 +183,12 @@ class IntegrationTest(unittest.TestCase):
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_inplay_strategy)
+        limit_on_close_strategy = LimitOnCloseOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+        )
+        framework.add_strategy(limit_on_close_strategy)
         market_strategy = MarketOnCloseOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -184,11 +215,18 @@ class IntegrationTest(unittest.TestCase):
                 round(sum([o.profit for o in limit_inplay_orders]), 2), 19.88
             )
             self.assertEqual(len(limit_inplay_orders), 14)
+            limit_on_close_orders = market.blotter.strategy_orders(
+                limit_on_close_strategy
+            )
+            self.assertEqual(
+                round(sum([o.profit for o in limit_on_close_orders]), 2), -53.20
+            )
+            self.assertEqual(len(limit_on_close_orders), 14)
             market_orders = market.blotter.strategy_orders(market_strategy)
             self.assertEqual(round(sum([o.profit for o in market_orders]), 2), -6.68)
             self.assertEqual(len(market_orders), 14)
             # check transaction count
-            self.assertEqual(market._transaction_id, 5182)
+            self.assertEqual(market._transaction_id, 5196)
 
     def test_simulation_multi_clients(self):
         class LimitOrders(BaseStrategy):

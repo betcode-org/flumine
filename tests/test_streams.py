@@ -326,9 +326,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_historical_stream_old(self):
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
-        )
+        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -347,9 +345,7 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
-        )
+        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -380,7 +376,7 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
+        mock_stream = mock.Mock(event_processing=False)
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
