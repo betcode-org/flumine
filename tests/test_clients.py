@@ -144,6 +144,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)
         self.assertFalse(self.base_client.simulated_full_match)
+        self.assertIsNone(self.base_client.execution)
 
     def test_init_assert(self):
         with self.assertRaises(AssertionError):
@@ -173,6 +174,15 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.EXCHANGE = ExchangeType.BETFAIR
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
+
+    def test_add_execution_cls(self):
+        mock_flumine = mock.Mock()
+        self.base_client.EXCHANGE = ExchangeType.SIMULATED
+        mock_execution_cls = mock.Mock()
+        self.base_client._execution_cls = mock_execution_cls
+        self.base_client.add_execution(mock_flumine)
+        self.assertEqual(self.base_client.execution, mock_execution_cls.return_value)
+        mock_execution_cls.assert_called_with(mock_flumine)
 
     def test_add_execution_paper(self):
         self.base_client.paper_trade = True
