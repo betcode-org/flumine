@@ -1,6 +1,8 @@
 import threading
 import queue
 import logging
+from typing import Union
+
 import betfairlightweight
 from betfairlightweight import StreamListener
 from tenacity import wait_exponential
@@ -20,7 +22,7 @@ class BaseStream(threading.Thread):
         stream_id: int = None,
         streaming_timeout: float = None,  # snaps listener if no update
         conflate_ms: int = None,
-        market_filter: dict = None,
+        market_filter: Union[dict, str] = None,
         market_data_filter: dict = None,
         sports_data_filter: str = None,
         custom: bool = False,

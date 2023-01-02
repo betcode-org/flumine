@@ -1,3 +1,7 @@
+import bz2
+import gzip
+import io
+import os.path
 import re
 import uuid
 import json
@@ -6,7 +10,7 @@ import hashlib
 import datetime
 import functools
 from pathlib import Path
-from typing import Optional, Tuple, Callable, Union
+from typing import Optional, Tuple, Callable, Union, TextIO
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
 
@@ -53,17 +57,38 @@ def create_short_uuid() -> str:
 
 
 def file_line_count(file_path: str) -> int:
-    with open(file_path) as f:
+    with stream_reader(file_path) as f:
         for i, l in enumerate(f):
             pass
     return i + 1
 
 
+def stream_reader(path: str) -> TextIO:
+    """Return a text reader for the given path, transparently handling compression inferred by the filename.
+
+    Generally used by methods which read stored streams.
+    """
+    # this is true when builtins.open is patched, e.g. `with unittest.mock.patch("builtins.open", smart_open.open):`
+    if open is not io.open:
+        return open(path, "rt")
+
+    _, ext = os.path.splitext(path)
+    if ext == ".bz2":
+        # as seen in the betfair historical data API
+        return bz2.open(path, "rt")
+    if ext == ".gz":
+        # as seen in example flumine stream recorder
+        return gzip.open(path, "rt")
+    # as seen in example flumine stream recorder, and unpacked tars from historical data API
+    return open(path, "r")
+
+
 def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
-    # get value from raw streaming file marketDefinition
+    """Try getting the ``value`` field of the marketDefinition from the given stream file."""
     if isinstance(file_dir, tuple):
         file_dir = file_dir[0]
-    with open(file_dir, "r") as f:
+    # extract the data if possible
+    with stream_reader(file_dir) as f:
         first_line = f.readline()
         update = json.loads(first_line)
     if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:

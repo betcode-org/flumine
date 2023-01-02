@@ -13,7 +13,7 @@ from betfairlightweight.compat import json
 
 from .basestream import BaseStream
 from ..exceptions import ListenerError
-from ..utils import create_time
+from ..utils import create_time, stream_reader
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +205,7 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
         self.listener.register_stream(self.unique_id, self.operation)
         listener_on_data = self.listener.on_data  # cache functions
         stream_snap = self.listener.stream.snap
-        with open(self.file_path, "r") as f:
+        with stream_reader(self.file_path) as f:
             for update in f:
                 if listener_on_data(update):
                     yield stream_snap()

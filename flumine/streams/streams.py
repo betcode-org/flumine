@@ -156,6 +156,14 @@ class Streams:
         event_processing: bool,
         **listener_kwargs
     ) -> HistoricalStream:
+        """Return a (cached) HistoricalStream for the given market file.
+
+        :param strategy: strategy
+        :param market: path to a line-delimited JSON file - .gz extension supported
+        :param event_processing: passed to the HistoricalStream initialisation
+        :param listener_kwargs: passed as kwargs to the HistoricalStream initialisation
+        """
+        # return the pre-existing stream if we have encountered it before
         for stream in self:
             if (
                 stream.market_filter == market
@@ -163,37 +171,39 @@ class Streams:
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
-        else:
-            stream_id = self._increment_stream_id()
-            event_id = get_file_md(market, "eventId")
-            if event_processing and event_id is None:
-                logger.warning("EventId not found for market %s" % market)
-            logger.info(
-                "Creating new {0} ({1}) for strategy {2}".format(
-                    HistoricalStream.__name__, stream_id, strategy
-                ),
-                extra={
-                    "strategy": strategy,
-                    "stream_id": stream_id,
-                    "market_filter": market,
-                    "event_id": event_id,
-                    "event_processing": event_processing,
-                },
-            )
-            stream = HistoricalStream(
-                flumine=self.flumine,
-                stream_id=stream_id,
-                market_filter=market,
-                market_data_filter=strategy.market_data_filter,
-                streaming_timeout=strategy.streaming_timeout,
-                conflate_ms=strategy.conflate_ms,
-                output_queue=False,
-                event_processing=event_processing,
-                event_id=event_id,
-                **listener_kwargs,
-            )
-            self._streams.append(stream)
-            return stream
+
+        # add a new stream
+        stream_id = self._increment_stream_id()
+        event_id = get_file_md(market, "eventId")
+        if event_processing and event_id is None:
+            logger.warning("EventId not found for market %s" % market)
+        logger.info(
+            "Creating new %s (%s) for strategy %s",
+            HistoricalStream.__name__,
+            stream_id,
+            strategy,
+            extra={
+                "strategy": strategy,
+                "stream_id": stream_id,
+                "market_filter": market,
+                "event_id": event_id,
+                "event_processing": event_processing,
+            },
+        )
+        stream = HistoricalStream(
+            flumine=self.flumine,
+            stream_id=stream_id,
+            market_filter=market,
+            market_data_filter=strategy.market_data_filter,
+            streaming_timeout=strategy.streaming_timeout,
+            conflate_ms=strategy.conflate_ms,
+            output_queue=False,
+            event_processing=event_processing,
+            event_id=event_id,
+            **listener_kwargs,
+        )
+        self._streams.append(stream)
+        return stream
 
     """ order data """
 
