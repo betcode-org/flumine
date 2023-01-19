@@ -186,9 +186,7 @@ class BaseExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
         self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
-        mock_order.responses.placed.assert_called_with(
-            mock_instruction_report, dt=True
-        )
+        mock_order.responses.placed.assert_called_with(mock_instruction_report, dt=True)
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
     def test__order_logger_place_no_bet_id(self):

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.3.2 (2023-01-19)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #629 simulation: async_place_orders prevents order cancellation
+
 2.3.1 (2022-12-01)
 +++++++++++++++++++
 
