@@ -138,7 +138,7 @@ class BaseExecution:
             },
         )
         if package_type == OrderPackageType.PLACE:
-            dt = False if order.async_ else True
+            dt = False if order.async_ and not order.simulated else True
             order.responses.placed(instruction_report, dt=dt)
             if instruction_report.bet_id:
                 order.bet_id = instruction_report.bet_id
