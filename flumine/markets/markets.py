@@ -33,7 +33,6 @@ class Markets:
         if event_id in self.events:
             if market in self.events[event_id]:
                 self.events[event_id].remove(market)
-        del market.blotter
         del market
         logger.info(
             "Market removed",
