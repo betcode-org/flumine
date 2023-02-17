@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.3.4 (2023-02-17)
++++++++++++++++++++
+
+**Improvements**
+
+- #639 simulation fill or kill
+
+**Bug Fixes**
+
+- OrderStream race condition
+
 2.3.3 (2023-02-09)
 +++++++++++++++++++
 
