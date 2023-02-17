@@ -8,7 +8,7 @@ from .utils import (
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
 )
-from ..utils import get_price, wap
+from ..utils import get_price, get_size, wap
 from ..order.ordertype import OrderTypes
 from .. import config
 
@@ -59,7 +59,6 @@ class SimulatedOrder:
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int
     ) -> SimulatedPlaceResponse:
         # simulates placeOrder request->matching->response
-        # todo instruction/fillkill/timeInForce etc
         # validate market status
         if market_book.status != "OPEN":
             self.size_voided += self.size_remaining
@@ -94,6 +93,12 @@ class SimulatedOrder:
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             price = self.order.order_type.price
             size = self.order.order_type.size
+            if "limitOrder" in instruction:
+                time_in_force = instruction["limitOrder"].get("timeInForce")
+                min_fill_size = instruction["limitOrder"].get("minFillSize", size)
+            else:
+                time_in_force = None
+                min_fill_size = None
             if size is None:
                 raise NotImplementedError(
                     "Simulated betTargetSize placement not implemented"
@@ -110,6 +115,31 @@ class SimulatedOrder:
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
+                elif time_in_force == "FILL_OR_KILL":
+                    available_size = get_size(runner.ex.available_to_back, 0)
+                    if price > available_to_back:
+                        self.size_lapsed += self.size_remaining
+                        return self._create_place_response(bet_id)
+                    elif price == available_to_back:
+                        if available_size < min_fill_size:
+                            self.size_lapsed += self.size_remaining
+                            return self._create_place_response(bet_id)
+                        self._process_price_matched(
+                            market_book.publish_time_epoch,
+                            price,
+                            size,
+                            runner.ex.available_to_back,
+                        )
+                        return self._create_place_response(bet_id)
+                    else:
+                        self._process_price_matched_vwap(
+                            market_book.publish_time_epoch,
+                            price,
+                            size,
+                            runner.ex.available_to_back,
+                            min_fill_size=min_fill_size,
+                        )
+                        return self._create_place_response(bet_id)
                 elif available_to_back >= price:
                     self._process_price_matched(
                         market_book.publish_time_epoch,
@@ -131,6 +161,31 @@ class SimulatedOrder:
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
+                elif time_in_force == "FILL_OR_KILL":
+                    available_size = get_size(runner.ex.available_to_lay, 0)
+                    if price < available_to_lay:
+                        self.size_lapsed += self.size_remaining
+                        return self._create_place_response(bet_id)
+                    elif price == available_to_lay:
+                        if available_size < min_fill_size:
+                            self.size_lapsed += self.size_remaining
+                            return self._create_place_response(bet_id)
+                        self._process_price_matched(
+                            market_book.publish_time_epoch,
+                            price,
+                            size,
+                            runner.ex.available_to_lay,
+                        )
+                        return self._create_place_response(bet_id)
+                    else:
+                        self._process_price_matched_vwap(
+                            market_book.publish_time_epoch,
+                            price,
+                            size,
+                            runner.ex.available_to_lay,
+                            min_fill_size=min_fill_size,
+                        )
+                        return self._create_place_response(bet_id)
                 elif available_to_lay <= price:
                     self._process_price_matched(
                         market_book.publish_time_epoch,
@@ -277,6 +332,44 @@ class SimulatedOrder:
                 self._update_matched(_matched)
             else:
                 break
+
+    def _process_price_matched_vwap(
+        self,
+        publish_time: int,
+        price: float,
+        size: float,
+        available: list,
+        min_fill_size: float,
+    ) -> None:
+        # calculate vwap matched on execution
+        size_remaining = size
+        for avail in available:
+            if size_remaining == 0:
+                break
+            # create copy of current matched
+            _all_matched = self.matched.copy()
+            # get current match
+            _size_remaining = size_remaining
+            size_remaining = max(size_remaining - avail["size"], 0)
+            if size_remaining == 0:
+                _size_matched = _size_remaining
+            else:
+                _size_matched = avail["size"]
+            _matched = [publish_time, avail["price"], round(_size_matched, 2)]
+            _all_matched.append(_matched)
+            # get potential vwap
+            _, _average_price_matched = wap(_all_matched)
+            # check
+            if self.side == "BACK" and _average_price_matched >= price:
+                self._update_matched(_matched)
+            elif self.side == "LAY" and _average_price_matched <= price:
+                self._update_matched(_matched)
+            else:
+                break
+        if self.size_matched < min_fill_size:
+            self.matched = []
+            self.size_matched, self.average_price_matched = wap(self.matched)
+            self.size_lapsed += self.size_remaining
 
     def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
