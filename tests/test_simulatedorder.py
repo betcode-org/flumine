@@ -889,8 +889,23 @@ class SimulatedOrderTest(unittest.TestCase):
         "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
     )
     def test__process_traded_back(self, mock__calculate_process_traded):
-        self.simulated._process_traded(1234579, {12: 120})
+        mock__calculate_process_traded.return_value = 5.
+        traded = {12: 120}
+        self.simulated._process_traded(1234579, traded)
         mock__calculate_process_traded.assert_called_with(1234579, 120)
+        self.assertEqual(traded, {12: 115})
+
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
+    )
+    def test__process_traded_over_fill(self, mock__calculate_process_traded):
+        for side in ("BACK", "LAY"):
+            self.simulated.order.side = side
+            mock__calculate_process_traded.return_value = 130.
+            traded = {12: 120}
+            self.simulated._process_traded(1234579, traded)
+            mock__calculate_process_traded.assert_called_with(1234579, 120)
+            self.assertEqual(traded, {12: 0})
 
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
@@ -903,9 +918,12 @@ class SimulatedOrderTest(unittest.TestCase):
         "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"
     )
     def test__process_traded_lay(self, mock__calculate_process_traded):
+        mock__calculate_process_traded.return_value = 10.
         self.simulated.order.side = "LAY"
-        self.simulated._process_traded(1234581, {12: 120})
+        traded = {12: 120}
+        self.simulated._process_traded(1234581, traded)
         mock__calculate_process_traded.assert_called_with(1234581, 120)
+        self.assertEqual(traded, {12: 110})
 
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder._calculate_process_traded"

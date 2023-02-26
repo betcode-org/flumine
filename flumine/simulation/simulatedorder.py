@@ -434,11 +434,11 @@ class SimulatedOrder:
             if side == "BACK" and traded_price >= price:
                 matched = self._calculate_process_traded(publish_time, traded_size)
                 if matched:
-                    traded[traded_price] = traded_size - matched
+                    traded[traded_price] = max(traded_size - matched, 0.)
             elif side == "LAY" and traded_price <= price:
                 matched = self._calculate_process_traded(publish_time, traded_size)
                 if matched:
-                    traded[traded_price] = traded_size - matched
+                    traded[traded_price] = max(traded_size - matched, 0.)
 
     def _calculate_process_traded(self, publish_time: int, traded_size: float) -> float:
         _traded_size = traded_size / 2
