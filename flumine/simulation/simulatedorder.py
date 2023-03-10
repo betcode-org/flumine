@@ -116,7 +116,7 @@ class SimulatedOrder:
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
                 elif time_in_force == "FILL_OR_KILL":
-                    available_size = get_size(runner.ex.available_to_back, 0)
+                    available_size = get_size(runner.ex.available_to_back, 0) or 0
                     if price > available_to_back:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
@@ -162,7 +162,7 @@ class SimulatedOrder:
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
                 elif time_in_force == "FILL_OR_KILL":
-                    available_size = get_size(runner.ex.available_to_lay, 0)
+                    available_size = get_size(runner.ex.available_to_lay, 0) or 0
                     if price < available_to_lay:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
