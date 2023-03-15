@@ -95,7 +95,7 @@ class SimulatedOrder:
             size = self.order.order_type.size
             if "limitOrder" in instruction:
                 time_in_force = instruction["limitOrder"].get("timeInForce")
-                min_fill_size = instruction["limitOrder"].get("minFillSize", size)
+                min_fill_size = instruction["limitOrder"].get("minFillSize", 0)
             else:
                 time_in_force = None
                 min_fill_size = None
