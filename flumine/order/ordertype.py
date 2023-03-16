@@ -16,7 +16,6 @@ class OrderTypes(Enum):
 
 
 class BaseOrderType:
-
     EXCHANGE = None
     ORDER_TYPE = None
 
@@ -29,7 +28,6 @@ class BaseOrderType:
 
 
 class LimitOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT
 
@@ -82,7 +80,6 @@ class LimitOrder(BaseOrderType):
 
 
 class LimitOnCloseOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
 
@@ -107,7 +104,6 @@ class LimitOnCloseOrder(BaseOrderType):
 
 
 class MarketOnCloseOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
 

@@ -95,7 +95,7 @@ class SimulatedOrder:
             size = self.order.order_type.size
             if "limitOrder" in instruction:
                 time_in_force = instruction["limitOrder"].get("timeInForce")
-                min_fill_size = instruction["limitOrder"].get("minFillSize", size)
+                min_fill_size = instruction["limitOrder"].get("minFillSize", 0)
             else:
                 time_in_force = None
                 min_fill_size = None
@@ -116,7 +116,7 @@ class SimulatedOrder:
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
                 elif time_in_force == "FILL_OR_KILL":
-                    available_size = get_size(runner.ex.available_to_back, 0)
+                    available_size = get_size(runner.ex.available_to_back, 0) or 0
                     if price > available_to_back:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
@@ -162,7 +162,7 @@ class SimulatedOrder:
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
                 elif time_in_force == "FILL_OR_KILL":
-                    available_size = get_size(runner.ex.available_to_lay, 0)
+                    available_size = get_size(runner.ex.available_to_lay, 0) or 0
                     if price < available_to_lay:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
@@ -434,11 +434,11 @@ class SimulatedOrder:
             if side == "BACK" and traded_price >= price:
                 matched = self._calculate_process_traded(publish_time, traded_size)
                 if matched:
-                    traded[traded_price] = traded_size - matched
+                    traded[traded_price] = max(traded_size - matched, 0.0)
             elif side == "LAY" and traded_price <= price:
                 matched = self._calculate_process_traded(publish_time, traded_size)
                 if matched:
-                    traded[traded_price] = traded_size - matched
+                    traded[traded_price] = max(traded_size - matched, 0.0)
 
     def _calculate_process_traded(self, publish_time: int, traded_size: float) -> float:
         _traded_size = traded_size / 2

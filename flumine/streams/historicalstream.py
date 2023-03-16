@@ -212,7 +212,6 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
 
 
 class HistoricalStream(BaseStream):
-
     LISTENER = HistoricListener
     MAX_LATENCY = None
 

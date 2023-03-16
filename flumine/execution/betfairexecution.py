@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class BetfairExecution(BaseExecution):
-
     EXCHANGE = ExchangeType.BETFAIR
 
     def execute_place(
@@ -20,7 +19,7 @@ class BetfairExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.place, order_package, http_session)
         if response:
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.place_instruction_reports
             ):
                 with order.trade:
@@ -116,7 +115,7 @@ class BetfairExecution(BaseExecution):
         response = self._execution_helper(self.update, order_package, http_session)
         if response:
             failed_transaction_count = 0
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.update_instruction_reports
             ):
                 with order.trade:
@@ -152,7 +151,7 @@ class BetfairExecution(BaseExecution):
         if response:
             failed_transaction_count = 0
             market = self.flumine.markets.markets[order_package.market_id]
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.replace_instruction_reports
             ):
                 with order.trade:

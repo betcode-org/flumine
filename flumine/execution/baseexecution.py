@@ -14,7 +14,6 @@ BET_ID_START = 100000000000  # simulated start betId->
 
 
 class BaseExecution:
-
     EXCHANGE = None
 
     def __init__(self, flumine, max_workers: int = config.max_execution_workers):

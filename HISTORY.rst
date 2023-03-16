@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.3.5 (2023-03-16)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #650 Fix min_fill_size simulation bug (@mzaja)
+- #647 Prevent overfills of the traded in simulated order (@clivewij)
+- FK price is None and therefore size is None
+
+**Libraries**
+
+- tenacity upgraded to 8.2.3
+- python-json-logger upgraded to 2.0.7
+- betconnect upgraded to 0.1.6
+- black upgraded to 23.1.0
+
 2.3.4 (2023-02-17)
 +++++++++++++++++++
 
