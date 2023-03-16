@@ -43,7 +43,6 @@ class FlumineStream(BFBaseStream):
 
 
 class FlumineMarketStream(FlumineStream):
-
     _lookup = "mc"
 
     def _process(self, data: list, publish_time: int) -> bool:
@@ -74,7 +73,6 @@ class FlumineMarketStream(FlumineStream):
 
 
 class FlumineOrderStream(FlumineStream):
-
     _lookup = "oc"
 
     def _process(self, data: list, publish_time: int) -> bool:
@@ -94,7 +92,6 @@ class FlumineOrderStream(FlumineStream):
 
 
 class FlumineRaceStream(FlumineStream):
-
     _lookup = "rc"
 
     def _process(self, data: list, publish_time: int) -> bool:
@@ -114,7 +111,6 @@ class FlumineRaceStream(FlumineStream):
 
 
 class FlumineCricketStream(FlumineStream):
-
     _lookup = "cc"
 
     def _process(self, data: list, publish_time: int) -> bool:
@@ -134,7 +130,6 @@ class FlumineCricketStream(FlumineStream):
 
 
 class DataStream(BaseStream):
-
     LISTENER = FlumineListener
 
     def __init__(self, *args, **kwargs):

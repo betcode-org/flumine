@@ -54,7 +54,6 @@ COMPLETE_STATUS = [
 
 
 class BaseOrder:
-
     EXCHANGE = None
 
     def __init__(
@@ -324,7 +323,6 @@ class BaseOrder:
 
 
 class BetfairOrder(BaseOrder):
-
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates

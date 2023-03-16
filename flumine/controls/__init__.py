@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseControl:
-
     NAME = None
 
     def __init__(self, flumine, *args, **kwargs):

@@ -9,7 +9,6 @@ from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
 
 class SimulatedExecution(BaseExecution):
-
     EXCHANGE = ExchangeType.SIMULATED
 
     def handler(self, order_package: BaseOrderPackage) -> None:

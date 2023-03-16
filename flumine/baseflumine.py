@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFlumine:
-
     SIMULATED = False
 
     def __init__(self, client: BaseClient = None):

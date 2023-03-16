@@ -143,7 +143,6 @@ class BaseOrderPackage(BaseEvent):
 
 
 class BetfairOrderPackage(BaseOrderPackage):
-
     EXCHANGE = ExchangeType.BETFAIR
 
     @property
