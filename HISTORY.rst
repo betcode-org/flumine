@@ -9,6 +9,7 @@ Release History
 **Bug Fixes**
 
 - #650 Fix min_fill_size simulation bug (@mzaja)
+- #647 Prevent overfills of the traded in simulated order (@clivewij)
 - FK price is None and therefore size is None
 
 **Libraries**
