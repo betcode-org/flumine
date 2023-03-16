@@ -177,8 +177,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.market_version, mock_market_book.version)
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 1)
-        self.assertEqual(self.simulated.matched, 
-                         [[mock_market_book.publish_time_epoch, 12, 1]]
+        self.assertEqual(
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
@@ -200,7 +200,9 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
-    def test_place_limit_back_fill_or_kill_min_fill_size_matched(self, mock__get_runner):
+    def test_place_limit_back_fill_or_kill_min_fill_size_matched(
+        self, mock__get_runner
+    ):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
@@ -216,12 +218,13 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 1)
         self.assertEqual(
-            self.simulated.matched, 
-            [[mock_market_book.publish_time_epoch, 12, 1]]
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
-        
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
-    def test_place_limit_back_fill_or_kill_min_fill_size_cancelled(self, mock__get_runner):
+    def test_place_limit_back_fill_or_kill_min_fill_size_cancelled(
+        self, mock__get_runner
+    ):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
@@ -229,7 +232,9 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}}
+        instruction = {
+            "limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}
+        }
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -237,7 +242,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_vwap(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
@@ -360,8 +365,8 @@ class SimulatedOrderTest(unittest.TestCase):
         )
         self.assertEqual(resp.average_price_matched, 12)
         self.assertEqual(resp.size_matched, 1)
-        self.assertEqual(self.simulated.matched, 
-                         [[mock_market_book.publish_time_epoch, 12, 1]]
+        self.assertEqual(
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
@@ -381,7 +386,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-    
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_min_fill_size_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
@@ -403,7 +408,9 @@ class SimulatedOrderTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
-    def test_place_limit_lay_fill_or_kill_min_fill_size_cancelled(self, mock__get_runner):
+    def test_place_limit_lay_fill_or_kill_min_fill_size_cancelled(
+        self, mock__get_runner
+    ):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         self.simulated.order.side = "LAY"
@@ -412,7 +419,9 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}}
+        instruction = {
+            "limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}
+        }
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
