@@ -121,15 +121,14 @@ class SimulatedOrder:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                     elif price == available_to_back:
-                        if available_size < min_fill_size:
-                            self.size_lapsed += self.size_remaining
-                            return self._create_place_response(bet_id)
-                        self._process_price_matched(
-                            market_book.publish_time_epoch,
-                            price,
-                            size,
-                            runner.ex.available_to_back,
-                        )
+                        if available_size >= min_fill_size:
+                            self._process_price_matched(
+                                market_book.publish_time_epoch,
+                                price,
+                                size,
+                                runner.ex.available_to_back,
+                            )
+                        self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                     else:
                         self._process_price_matched_vwap(
@@ -139,6 +138,7 @@ class SimulatedOrder:
                             runner.ex.available_to_back,
                             min_fill_size=min_fill_size,
                         )
+                        self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                 elif available_to_back >= price:
                     self._process_price_matched(
@@ -167,15 +167,14 @@ class SimulatedOrder:
                         self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                     elif price == available_to_lay:
-                        if available_size < min_fill_size:
-                            self.size_lapsed += self.size_remaining
-                            return self._create_place_response(bet_id)
-                        self._process_price_matched(
-                            market_book.publish_time_epoch,
-                            price,
-                            size,
-                            runner.ex.available_to_lay,
-                        )
+                        if available_size >= min_fill_size:
+                            self._process_price_matched(
+                                market_book.publish_time_epoch,
+                                price,
+                                size,
+                                runner.ex.available_to_lay,
+                            )
+                        self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                     else:
                         self._process_price_matched_vwap(
@@ -185,6 +184,7 @@ class SimulatedOrder:
                             runner.ex.available_to_lay,
                             min_fill_size=min_fill_size,
                         )
+                        self.size_lapsed += self.size_remaining
                         return self._create_place_response(bet_id)
                 elif available_to_lay <= price:
                     self._process_price_matched(
