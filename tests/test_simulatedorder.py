@@ -182,7 +182,7 @@ class SimulatedOrderTest(unittest.TestCase):
         )
         self.assertEqual(self.simulated.size_lapsed, 1)
         self.assertEqual(self.simulated.size_remaining, 0)
-        
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
@@ -202,9 +202,10 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_lapsed, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
-        
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_no_price(self, mock__get_runner):
+        self.mock_order.order_type.price = 1.01
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
@@ -222,7 +223,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_lapsed, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
-        
+
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_min_fill_size_matched(
         self, mock__get_runner
@@ -248,9 +249,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.size_remaining, 0)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
-    def test_place_limit_back_fill_or_kill_min_fill_size_lapsed(
-        self, mock__get_runner
-    ):
+    def test_place_limit_back_fill_or_kill_min_fill_size_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
@@ -465,9 +464,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.size_remaining, 0)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
-    def test_place_limit_lay_fill_or_kill_min_fill_size_lapsed(
-        self, mock__get_runner
-    ):
+    def test_place_limit_lay_fill_or_kill_min_fill_size_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         self.simulated.order.side = "LAY"
