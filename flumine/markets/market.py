@@ -111,7 +111,6 @@ class Market:
         for market in self.flumine.markets:
             if (
                 self.event_id == market.event_id
-                and self.market_start_datetime == market.market_start_datetime
             ):
                 event[market.market_type].append(market)
         return event
