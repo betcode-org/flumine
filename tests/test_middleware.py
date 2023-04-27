@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from flumine.markets.middleware import (
@@ -477,7 +478,7 @@ class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
         mock_market = mock.Mock(market_id="marketId")
         self.assertIsNone(self.middleware.add_market(mock_market))
         mock__create_generator.assert_called_with(
-            "test/marketId", "cricketSubscription", 123
+            str(Path("test/marketId")), "cricketSubscription", 123
         )
         self.assertEqual(self.middleware._gen, mock__create_generator()())
         self.assertEqual(self.middleware._next, next(mock__create_generator()()))

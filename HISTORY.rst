@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.3.6 (2023-04-27)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #654 Simulated fill or kill bets matched as regular bets (@mzaja)
+- Don't check market_start_time for football events (@kwassmuss)
+
+**Libraries**
+
+- black upgraded to 23.3.0
+
 2.3.5 (2023-03-16)
 +++++++++++++++++++
 
