@@ -109,10 +109,9 @@ class Market:
     def event(self) -> dict:
         event = defaultdict(list)
         for market in self.flumine.markets:
-            if (
-                self.event_id == market.event_id
-                and ( self.market_start_datetime == market.market_start_datetime 
-                      or self.event_type_id == '1' )
+            if self.event_id == market.event_id and (
+                self.market_start_datetime == market.market_start_datetime
+                or self.event_type_id == "1"
             ):
                 event[market.market_type].append(market)
         return event
