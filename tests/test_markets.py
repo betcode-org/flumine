@@ -1,6 +1,7 @@
 import unittest
 import datetime
 from unittest import mock
+from collections import defaultdict
 
 from flumine.markets.markets import Markets
 from flumine.markets.market import Market
@@ -221,8 +222,7 @@ class MarketTest(unittest.TestCase):
     def test_event(self):
         self.market.market_catalogue.event.id = 12
         self.market.market_book.market_definition.market_time = 12
-
-        self.market.flumine.markets = []
+        self.market.flumine.markets.events = defaultdict(list)
         self.assertEqual(self.market.event, {})
 
         m_one = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
@@ -230,7 +230,11 @@ class MarketTest(unittest.TestCase):
         m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
         m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
         m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
-        self.market.flumine.markets = [m_one, m_two, m_three, m_four, m_five]
+        self.market.flumine.markets.events[m_one.event_id].append(m_one)
+        self.market.flumine.markets.events[m_two.event_id].append(m_two)
+        self.market.flumine.markets.events[m_three.event_id].append(m_three)
+        self.market.flumine.markets.events[m_four.event_id].append(m_four)
+        self.market.flumine.markets.events[m_five.event_id].append(m_five)
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
 
     def test_event_type_id_mc(self):
