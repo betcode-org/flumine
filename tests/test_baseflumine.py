@@ -6,7 +6,7 @@ from flumine.baseflumine import (
     FlumineException,
     MaxTransactionCount,
     SimulatedMiddleware,
-    Market
+    Market,
 )
 from flumine.clients import ExchangeType
 from flumine.exceptions import ClientError
@@ -146,7 +146,9 @@ class BaseFlumineTest(unittest.TestCase):
             with self.subTest(call_count=call_count):
                 self.base_flumine._process_market_books(mock_event)
                 mock_strategy.process_added_market.assert_called_once()
-                self.assertEqual(mock_strategy.process_market_book.call_count, call_count)
+                self.assertEqual(
+                    mock_strategy.process_market_book.call_count, call_count
+                )
         market, market_book = mock_strategy.process_added_market.call_args[0]
         self.assertIs(market_book, mock_market_book)
         self.assertIsInstance(market, Market)
