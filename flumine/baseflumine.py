@@ -146,7 +146,8 @@ class BaseFlumine:
                     )
 
             market = self.markets.markets.get(market_id)
-            if market is None:
+            market_is_new = market is None
+            if market_is_new:
                 market = self._add_market(market_id, market_book)
             elif market.closed:
                 self.markets.add_market(market_id, market)
@@ -163,6 +164,10 @@ class BaseFlumine:
                 utils.call_middleware_error_handling(middleware, market)
 
             for strategy in self.strategies:
+                if market_is_new:
+                    utils.call_strategy_error_handling(
+                        strategy.process_added_market, market, market_book
+                    )
                 if utils.call_strategy_error_handling(
                     strategy.check_market, market, market_book
                 ):
