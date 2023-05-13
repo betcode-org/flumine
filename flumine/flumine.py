@@ -23,38 +23,28 @@ class Flumine(BaseFlumine):
         """
         Main run thread
         """
+
+        lookup = {
+            MARKET_BOOK_EVENT: self._process_market_books,
+            CURRENT_ORDERS_EVENT: self._process_current_orders,
+            CUSTOM_EVENT_EVENT: self._process_custom_event,
+            SPORTS_DATA_EVENT: self._process_sports_data,
+            RAW_DATA_EVENT: self._process_raw_data,
+            MARKET_CATALOGUE_EVENT: self._process_market_catalogues,
+            CLEARED_MARKETS_EVENT: self._process_cleared_markets,
+            CLEARED_ORDERS_EVENT: self._process_cleared_orders,
+            CLOSE_MARKET_EVENT: self._process_close_market,
+        }
+
         handler_queue_get = self.handler_queue.get
         with self:
             while True:
                 event = handler_queue_get()
                 event_type = event.EVENT_TYPE
+                event_handler = lookup.get(event_type)
 
-                if event_type == MARKET_BOOK_EVENT:
-                    self._process_market_books(event)
-
-                elif event_type == CURRENT_ORDERS_EVENT:
-                    self._process_current_orders(event)
-
-                elif event_type == CUSTOM_EVENT_EVENT:
-                    self._process_custom_event(event)
-
-                elif event_type == SPORTS_DATA_EVENT:
-                    self._process_sports_data(event)
-
-                elif event_type == RAW_DATA_EVENT:
-                    self._process_raw_data(event)
-
-                elif event_type == MARKET_CATALOGUE_EVENT:
-                    self._process_market_catalogues(event)
-
-                elif event_type == CLEARED_MARKETS_EVENT:
-                    self._process_cleared_markets(event)
-
-                elif event_type == CLEARED_ORDERS_EVENT:
-                    self._process_cleared_orders(event)
-
-                elif event_type == CLOSE_MARKET_EVENT:
-                    self._process_close_market(event)
+                if event_handler:
+                    event_handler(event)
 
                 elif event_type == TERMINATOR_EVENT:
                     break
