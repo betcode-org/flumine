@@ -38,7 +38,7 @@ class BetfairClient(BaseClient):
                 },
             )
 
-    def keep_alive(self) -> Optional[resources.KeepAliveResource]:
+    def keep_alive(self) -> Optional[resources.KeepAliveResource, bool]:
         if self.betting_client.session_expired:
             try:
                 return self.betting_client.keep_alive()
@@ -52,6 +52,8 @@ class BetfairClient(BaseClient):
                         "response": e,
                     },
                 )
+        else:
+            return True
 
     def logout(self) -> Optional[resources.LogoutResource]:
         try:
