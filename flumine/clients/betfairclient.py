@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 from betfairlightweight import BetfairError, resources
 from betfairlightweight.metadata import currency_parameters
 
@@ -38,7 +38,7 @@ class BetfairClient(BaseClient):
                 },
             )
 
-    def keep_alive(self) -> Optional[resources.KeepAliveResource, bool]:
+    def keep_alive(self) -> Optional[Union[resources.KeepAliveResource, bool]]:
         if self.betting_client.session_expired:
             try:
                 return self.betting_client.keep_alive()
