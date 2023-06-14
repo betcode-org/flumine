@@ -326,9 +326,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_historical_stream_old(self):
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
-        )
+        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -347,9 +345,7 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(
-            spec=streams.HistoricalStream, event_processing=False, listener_kwargs={}
-        )
+        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -380,7 +376,7 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(spec=streams.HistoricalStream, event_processing=False)
+        mock_stream = mock.Mock(event_processing=False)
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
@@ -933,6 +929,22 @@ class TestFlumineRaceStream(unittest.TestCase):
         mock_create_time.assert_called_with(1234, "13.10")
 
 
+class TestFlumineCricketStream(unittest.TestCase):
+    def setUp(self) -> None:
+        self.listener = mock.Mock()
+        self.stream = historicalstream.FlumineCricketStream(self.listener, 0)
+
+    def test__process(self):
+        self.assertTrue(
+            self.stream._process(
+                [{"marketId": "1.23", "eventId": "13.10"}],
+                11111111111111,
+            )
+        )
+        self.assertEqual(len(self.stream._caches), 1)
+        self.assertEqual(self.stream._updates_processed, 1)
+
+
 class TestHistoricListener(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
@@ -959,6 +971,16 @@ class TestHistoricListener(unittest.TestCase):
         self.assertEqual(
             self.listener._add_stream(123, "raceSubscription"), mock_stream()
         )
+
+    @mock.patch("flumine.streams.historicalstream.FlumineCricketStream")
+    def test__add_stream_cricket(self, mock_stream):
+        self.assertEqual(
+            self.listener._add_stream(123, "cricketSubscription"), mock_stream()
+        )
+
+    def test__add_stream_err(self):
+        with self.assertRaises(ListenerError):
+            self.listener._add_stream(123, "courtSubscription")
 
     def test_on_data(self):
         mock_stream = mock.Mock(_lookup="mc")

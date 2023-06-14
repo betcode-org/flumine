@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseControl:
-
     NAME = None
 
     def __init__(self, flumine, *args, **kwargs):
@@ -20,7 +19,7 @@ class BaseControl:
         raise NotImplementedError
 
     def _on_error(self, order: BaseOrder, error: str) -> None:
-        violation_msg = "Order has violated: {0} Error: {1}".format(self.NAME, error)
+        violation_msg = "Order has violated: %s Error: %s" % (self.NAME, error)
         order.violation(violation_msg)
         if logger.isEnabledFor(logging.WARNING):
             logger.warning(

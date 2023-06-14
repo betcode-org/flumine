@@ -55,7 +55,6 @@ COMPLETE_STATUS = [
 
 
 class BaseOrder:
-
     EXCHANGE = None
 
     def __init__(
@@ -254,12 +253,22 @@ class BaseOrder:
             ).total_seconds()
 
     @property
+    def profit(self) -> float:
+        if self._simulated:
+            return self.simulated.profit
+        else:
+            if self.cleared_order:
+                return self.cleared_order.profit
+            else:
+                return 0.0
+
+    @property
     def market_id(self) -> str:
         return self.trade.market_id
 
     @property
     def customer_order_ref(self) -> str:
-        return "{0}{1}{2}".format(self.trade.strategy.name_hash, self.sep, self.id)
+        return "%s%s%s" % (self.trade.strategy.name_hash, self.sep, self.id)
 
     @property
     def notes_str(self) -> str:
@@ -315,7 +324,6 @@ class BaseOrder:
 
 
 class BetfairOrder(BaseOrder):
-
     EXCHANGE = ExchangeType.BETFAIR
 
     # updates

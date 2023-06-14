@@ -106,8 +106,21 @@ def make_prices(min_price, cutoffs):
     return prices
 
 
+def make_line_prices(min_unit: float, max_unit: float, interval: float) -> list:
+    prices = []
+    price = min_unit
+    while True:
+        price += interval
+        if price > max_unit:
+            break
+        else:
+            prices.append(price)
+    return prices
+
+
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
 PRICES_FLOAT = [float(price) for price in PRICES]
+FINEST_PRICES = make_prices(MIN_PRICE, ((1000, 100),))
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):
@@ -273,6 +286,23 @@ def call_process_orders_error_handling(strategy, market, strategy_orders: list) 
             raise
 
 
+def call_process_raw_data(strategy, clk: str, publish_time: int, datum: dict) -> None:
+    try:
+        strategy.process_raw_data(clk, publish_time, datum)
+    except FlumineException as e:
+        logger.error(
+            "FlumineException %s in %s" % (e, strategy),
+            exc_info=True,
+        )
+    except Exception as e:
+        logger.critical(
+            "Unknown error %s in %s" % (e, strategy),
+            exc_info=True,
+        )
+        if config.raise_errors:
+            raise
+
+
 def get_runner_book(
     market_book: MarketBook, selection_id: int, handicap=0
 ) -> Optional[RunnerBook]:
@@ -291,7 +321,7 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
     """
     runner = get_runner_book(market.market_book, selection_id)
     if runner:
-        return "{0},{1},{2}".format(
+        return "%s,%s,%s" % (
             get_price(runner.ex.available_to_back, 0),
             get_price(runner.ex.available_to_lay, 0),
             runner.last_price_traded,

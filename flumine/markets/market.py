@@ -108,10 +108,12 @@ class Market:
     @property
     def event(self) -> dict:
         event = defaultdict(list)
-        for market in self.flumine.markets:
+        market_start_datetime = self.market_start_datetime
+        event_type_id = self.event_type_id
+        for market in self.flumine.markets.events[self.event_id]:
             if (
-                self.event_id == market.event_id
-                and self.market_start_datetime == market.market_start_datetime
+                market_start_datetime == market.market_start_datetime
+                or event_type_id == "1"
             ):
                 event[market.market_type].append(market)
         return event
@@ -156,6 +158,12 @@ class Market:
             return datetime.datetime.utcfromtimestamp(0)
 
     @property
+    def market_start_hour_minute(self) -> Optional[str]:
+        msd = self.market_start_datetime
+        if msd:
+            return "{0:02d}{1:02d}".format(msd.hour, msd.minute)
+
+    @property
     def event_name(self) -> Optional[str]:
         if self.market_catalogue:
             return self.market_catalogue.event.name
@@ -183,9 +191,14 @@ class Market:
         elif self.market_book:
             return self.market_book.market_definition.race_type
 
+    @property
+    def status(self) -> Optional[str]:
+        if self.market_book:
+            return self.market_book.status
+
     def cleared(self, client) -> dict:
         orders = self.blotter.client_orders(client, matched_only=True)
-        profit = round(sum([order.simulated.profit for order in orders]), 2)
+        profit = round(sum([order.profit for order in orders]), 2)
         return {
             "marketId": self.market_id,
             "eventId": self.event_id,

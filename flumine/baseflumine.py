@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseFlumine:
-
     SIMULATED = False
 
     def __init__(self, client: BaseClient = None):
@@ -58,10 +57,8 @@ class BaseFlumine:
         self.strategies = Strategies()
 
         # order execution class
-        self.simulated_execution = SimulatedExecution(
-            self, config.max_execution_workers
-        )
-        self.betfair_execution = BetfairExecution(self, config.max_execution_workers)
+        self.simulated_execution = SimulatedExecution(self)
+        self.betfair_execution = BetfairExecution(self)
 
         # add client
         if client:
@@ -185,7 +182,9 @@ class BaseFlumine:
                 )
                 continue
             for strategy in self.strategies:
-                if sports_data.streaming_unique_id in strategy.stream_ids:
+                if utils.call_strategy_error_handling(
+                    strategy.check_sports, market, sports_data
+                ):
                     utils.call_strategy_error_handling(
                         strategy.process_sports_data, market, sports_data
                     )
@@ -202,13 +201,14 @@ class BaseFlumine:
             middleware.add_market(market)
         return market
 
-    def _remove_market(self, market: Market) -> None:
+    def _remove_market(self, market: Market, clear: bool = True) -> None:
         logger.info("Removing market {0}".format(market.market_id), extra=self.info)
         for middleware in self._market_middleware:
             middleware.remove_market(market)
         for strategy in self.strategies:
             strategy.remove_market(market.market_id)
-        self.markets.remove_market(market.market_id)
+        if clear:
+            self.markets.remove_market(market.market_id)
 
     def _process_raw_data(self, event: events.RawDataEvent) -> None:
         stream_id, clk, publish_time, data = event.event
@@ -230,7 +230,7 @@ class BaseFlumine:
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
-                    strategy.process_raw_data(clk, publish_time, datum)
+                    utils.call_process_raw_data(strategy, clk, publish_time, datum)
 
     def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
@@ -259,15 +259,12 @@ class BaseFlumine:
             )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
-                blotter = market.blotter
-                for order in blotter.live_orders:
-                    if order.complete:
-                        blotter.complete_order(order)
                 for strategy in self.strategies:
-                    strategy_orders = blotter.strategy_orders(strategy)
-                    utils.call_process_orders_error_handling(
-                        strategy, market, strategy_orders
-                    )
+                    strategy_orders = market.blotter.strategy_orders(strategy)
+                    if strategy_orders:
+                        utils.call_process_orders_error_handling(
+                            strategy, market, strategy_orders
+                        )
 
     def _process_custom_event(self, event: events.CustomEvent) -> None:
         try:
@@ -348,6 +345,8 @@ class BaseFlumine:
             ]
             for market in closed_markets:
                 self._remove_market(market)
+        else:
+            self._remove_market(market, clear=False)
 
     def _process_cleared_orders(self, event):
         market_id = event.event.market_id

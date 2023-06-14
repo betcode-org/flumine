@@ -28,6 +28,8 @@ class BaseClient:
         min_bet_validation: bool = True,
         paper_trade: bool = False,
         market_recording_mode: bool = False,
+        simulated_full_match: bool = False,
+        execution_cls=None,
     ):
         if hasattr(betting_client, "lightweight"):
             assert (
@@ -37,18 +39,22 @@ class BaseClient:
         self.betting_client = betting_client
         self.transaction_limit = transaction_limit
         self.capital_base = capital_base
-        self.commission_base = commission_base
+        self.commission_base = commission_base  # not implemented
         self.interactive_login = interactive_login
         self.order_stream = order_stream
-        self.best_price_execution = best_price_execution
+        self.best_price_execution = best_price_execution  # simulation only
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
-        self.paper_trade = paper_trade
-        self.market_recording_mode = market_recording_mode
+        self.paper_trade = paper_trade  # simulated order placement using live data
+        self.market_recording_mode = market_recording_mode  # no order stream / workers
+        self.simulated_full_match = (
+            simulated_full_match  # simulated 100% match on successful place
+        )
 
         self.account_details = None
         self.account_funds = None
         self.commission_paid = 0
 
+        self._execution_cls = execution_cls
         self.execution = None  # set during flumine init
         self.trading_controls = []
 
@@ -65,10 +71,13 @@ class BaseClient:
         raise NotImplementedError
 
     def add_execution(self, flumine) -> None:
-        if self.EXCHANGE == ExchangeType.SIMULATED or self.paper_trade:
-            self.execution = flumine.simulated_execution
-        elif self.EXCHANGE == ExchangeType.BETFAIR:
-            self.execution = flumine.betfair_execution
+        if self._execution_cls:
+            self.execution = self._execution_cls(flumine)
+        else:
+            if self.EXCHANGE == ExchangeType.SIMULATED or self.paper_trade:
+                self.execution = flumine.simulated_execution
+            elif self.EXCHANGE == ExchangeType.BETFAIR:
+                self.execution = flumine.betfair_execution
 
     def add_transaction(self, count: int, failed: bool = False) -> None:
         for control in self.trading_controls:

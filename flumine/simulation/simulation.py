@@ -174,7 +174,10 @@ class FlumineSimulation(BaseFlumine):
                         blotter.complete_order(order)
         for strategy in self.strategies:
             strategy_orders = blotter.strategy_orders(strategy)
-            utils.call_process_orders_error_handling(strategy, market, strategy_orders)
+            if strategy_orders:
+                utils.call_process_orders_error_handling(
+                    strategy, market, strategy_orders
+                )
 
     def _check_pending_packages(self, market_id: str) -> None:
         processed = []

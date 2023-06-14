@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class BetfairExecution(BaseExecution):
-
     EXCHANGE = ExchangeType.BETFAIR
 
     def execute_place(
@@ -20,7 +19,7 @@ class BetfairExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.place, order_package, http_session)
         if response:
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.place_instruction_reports
             ):
                 with order.trade:
@@ -41,7 +40,7 @@ class BetfairExecution(BaseExecution):
             # update transaction counts
             order_package.client.add_transaction(len(order_package))
 
-    def place(self, order_package: OrderPackageType, session: requests.Session):
+    def place(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.place_orders(
             market_id=order_package.market_id,
             instructions=order_package.place_instructions,
@@ -76,7 +75,10 @@ class BetfairExecution(BaseExecution):
                         else:
                             order.executable()
                     elif instruction_report.status == "FAILURE":
-                        order.executable()
+                        if instruction_report.error_code == "BET_TAKEN_OR_LAPSED":
+                            order.execution_complete()
+                        else:
+                            order.executable()
                         failed_transaction_count += 1
                     elif instruction_report.status == "TIMEOUT":
                         order.executable()
@@ -92,7 +94,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def cancel(self, order_package: OrderPackageType, session: requests.Session):
+    def cancel(self, order_package: BaseOrderPackage, session: requests.Session):
         # temp copy to prevent an empty list of instructions sent
         # this can occur if order is matched during the execution
         # cycle, resulting in all orders being cancelled!
@@ -113,7 +115,7 @@ class BetfairExecution(BaseExecution):
         response = self._execution_helper(self.update, order_package, http_session)
         if response:
             failed_transaction_count = 0
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.update_instruction_reports
             ):
                 with order.trade:
@@ -134,7 +136,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def update(self, order_package: OrderPackageType, session: requests.Session):
+    def update(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.update_orders(
             market_id=order_package.market_id,
             instructions=order_package.update_instructions,
@@ -149,7 +151,7 @@ class BetfairExecution(BaseExecution):
         if response:
             failed_transaction_count = 0
             market = self.flumine.markets.markets[order_package.market_id]
-            for (order, instruction_report) in zip(
+            for order, instruction_report in zip(
                 order_package, response.replace_instruction_reports
             ):
                 with order.trade:
@@ -183,6 +185,7 @@ class BetfairExecution(BaseExecution):
                             order,
                             instruction_report.place_instruction_reports.instruction.limit_order.price,
                             instruction_report.place_instruction_reports.instruction.limit_order.size,
+                            order_package.date_time_created,
                         )
                         self._order_logger(
                             replacement_order,
@@ -210,7 +213,7 @@ class BetfairExecution(BaseExecution):
                     failed_transaction_count, failed=True
                 )
 
-    def replace(self, order_package: OrderPackageType, session: requests.Session):
+    def replace(self, order_package: BaseOrderPackage, session: requests.Session):
         return order_package.client.betting_client.betting.replace_orders(
             market_id=order_package.market_id,
             instructions=order_package.replace_instructions,
@@ -226,23 +229,6 @@ class BetfairExecution(BaseExecution):
         order_package: BaseOrderPackage,
         http_session: requests.Session,
     ):
-        # temp logging for latency testing
-        logger.info(
-            "Latency log",
-            extra={
-                "trading_function": trading_function.__name__,
-                "session": http_session,
-                "latency": round(order_package.elapsed_seconds, 4),
-                "order_latency": [
-                    round(o.elapsed_seconds_created, 4) for o in order_package.orders
-                ],
-                "order_package": order_package.info,
-                "thread_pool": {
-                    "num_threads": len(self._thread_pool._threads),
-                    "work_queue_size": self._thread_pool._work_queue.qsize(),
-                },
-            },
-        )
         if order_package.elapsed_seconds > 0.1 and order_package.retry_count == 0:
             logger.warning(
                 "High latency between current time and OrderPackage creation time, it is likely that the thread pool is currently exhausted",

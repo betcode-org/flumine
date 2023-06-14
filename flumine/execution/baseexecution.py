@@ -3,6 +3,7 @@ import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
+from .. import config
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType, BaseOrder
 from ..events.events import OrderEvent
 
@@ -13,10 +14,9 @@ BET_ID_START = 100000000000  # simulated start betId->
 
 
 class BaseExecution:
-
     EXCHANGE = None
 
-    def __init__(self, flumine, max_workers: int = None):
+    def __init__(self, flumine, max_workers: int = config.max_execution_workers):
         self.flumine = flumine
         self._max_workers = max_workers
         self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)
@@ -137,7 +137,7 @@ class BaseExecution:
             },
         )
         if package_type == OrderPackageType.PLACE:
-            dt = False if order.async_ else True
+            dt = False if order.async_ and not order.simulated else True
             order.responses.placed(instruction_report, dt=dt)
             if instruction_report.bet_id:
                 order.bet_id = instruction_report.bet_id

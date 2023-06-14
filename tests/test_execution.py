@@ -167,7 +167,7 @@ class BaseExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.baseexecution.OrderEvent")
     def test__order_logger_place_async(self, mock_order_event):
-        mock_order = mock.Mock(async_=True)
+        mock_order = mock.Mock(async_=True, simulated=False)
         mock_instruction_report = mock.Mock()
         self.execution._order_logger(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
@@ -176,6 +176,17 @@ class BaseExecutionTest(unittest.TestCase):
         mock_order.responses.placed.assert_called_with(
             mock_instruction_report, dt=False
         )
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
+
+    @mock.patch("flumine.execution.baseexecution.OrderEvent")
+    def test__order_logger_place_async_simulated(self, mock_order_event):
+        mock_order = mock.Mock(async_=True, simulated=True)
+        mock_instruction_report = mock.Mock()
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, mock_instruction_report.bet_id)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report, dt=True)
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
 
     def test__order_logger_place_no_bet_id(self):
@@ -497,6 +508,37 @@ class BetfairExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report, OrderPackageType.CANCEL
         )
         mock_order.executable.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_package.client.add_transaction.assert_called_with(1, failed=True)
+
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution.cancel")
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_cancel_failure_lapsed(
+        self, mock__execution_helper, mock_cancel, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(bet_id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.Mock(info={})
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_report = mock.Mock()
+        mock_instruction_report = mock.Mock(
+            status="FAILURE", error_code="BET_TAKEN_OR_LAPSED"
+        )
+        mock_instruction_report.instruction.bet_id = 123
+        mock_report.cancel_instruction_reports = [mock_instruction_report]
+        mock__execution_helper.return_value = mock_report
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__execution_helper.assert_called_with(
+            mock_cancel, mock_order_package, mock_session
+        )
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report, OrderPackageType.CANCEL
+        )
+        mock_order.execution_complete.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1, failed=True)
@@ -1247,12 +1289,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
         self.execution.execute_replace(mock_order_package, None)
         mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
-        mock_replacement_order.simulated.place.assert_called_with(
-            mock_order_package,
-            self.mock_market.market_book,
-            {"newPrice": 2.54},
-            self.execution._bet_id,
-        )
+        mock_replacement_order.simulated.place.assert_not_called()
         mock__order_logger.assert_called_with(
             mock_order, mock_sim_resp, OrderPackageType.CANCEL
         )

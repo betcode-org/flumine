@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from flumine.markets.middleware import (
@@ -10,6 +11,7 @@ from flumine.markets.middleware import (
     WIN_MINIMUM_ADJUSTMENT_FACTOR,
     PLACE_MINIMUM_ADJUSTMENT_FACTOR,
     LIVE_STATUS,
+    SimulatedSportsDataMiddleware,
 )
 from flumine.order.ordertype import MarketOnCloseOrder
 
@@ -60,7 +62,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_market_book.runners = [mock_runner]
         mock_market.market_book = mock_market_book
         self.middleware(mock_market)
-        mock__process_runner.assert_called_with({}, mock_runner, True)
+        mock__process_runner.assert_called_with({}, mock_runner)
         self.assertEqual(mock_market.context, {"simulated": {}})
         mock__process_simulated_orders.assert_called_with(mock_market, {})
 
@@ -249,29 +251,6 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         # Size matched should be 100 / (10.0-1.0) \approx 11.11
         self.assertEqual(11.11, mock_order.current_order.size_matched)
 
-    def test__process_streaming_update(self):
-        mock_market_book = mock.Mock(
-            streaming_update={"img": True, "rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [1, 2]
-        )
-        mock_market_book = mock.Mock(
-            streaming_update={"marketDefinition": {1: 2}, "rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [1, 2]
-        )
-        mock_market_book = mock.Mock(
-            streaming_update={"rc": [{"id": 3}, {"id": 4}]},
-            runners=[mock.Mock(selection_id=1), mock.Mock(selection_id=2)],
-        )
-        self.assertEqual(
-            self.middleware._process_streaming_update(mock_market_book), [3, 4]
-        )
-
     def test__calculate_reduction_factor(self):
         self.assertEqual(self.middleware._calculate_reduction_factor(10, 10), 9)
         self.assertEqual(self.middleware._calculate_reduction_factor(1000, 0), 1000)
@@ -378,12 +357,12 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     def test__process_runner(self, mock_runner_analytics):
         market_analytics = {}
         mock_runner = mock.Mock()
-        self.middleware._process_runner(market_analytics, mock_runner, True)
+        self.middleware._process_runner(market_analytics, mock_runner)
         self.assertEqual(len(market_analytics), 1)
-        self.middleware._process_runner(market_analytics, mock_runner, False)
+        self.middleware._process_runner(market_analytics, mock_runner)
         self.assertEqual(len(market_analytics), 1)
         mock_runner_analytics.assert_called_with(mock_runner)
-        mock_runner_analytics().assert_called_with(mock_runner, False)
+        mock_runner_analytics().assert_called_with(mock_runner)
 
 
 class RunnerAnalyticsTest(unittest.TestCase):
@@ -398,42 +377,18 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, self.mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, {})
-        self.assertEqual(self.runner_analytics.matched, 0)
-        self.assertIsNone(self.runner_analytics.middle)
         self.assertEqual(self.runner_analytics._p_v, {1.01: 2})
 
-    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
-    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
     @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
-    def test_call(
-        self, mock__calculate_traded, mock__calculate_middle, mock__calculate_matched
-    ):
+    def test_call(self, mock__calculate_traded):
         mock_runner = mock.Mock()
-        self.runner_analytics(mock_runner, True)
+        self.runner_analytics(mock_runner)
         mock__calculate_traded.assert_called_with(mock_runner.ex.traded_volume)
-        mock__calculate_middle.assert_called_with(self.mock_runner)
-        mock__calculate_matched.assert_called_with(mock_runner)
         self.assertEqual(
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
-        self.assertEqual(self.runner_analytics.middle, mock__calculate_middle())
-        self.assertEqual(self.runner_analytics.matched, mock__calculate_matched())
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
         self.assertEqual(self.runner_analytics._runner, mock_runner)
-
-    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_matched")
-    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_middle")
-    @mock.patch("flumine.markets.middleware.RunnerAnalytics._calculate_traded")
-    def test_call_no_update(
-        self, mock__calculate_traded, mock__calculate_middle, mock__calculate_matched
-    ):
-        mock_runner = mock.Mock()
-        self.runner_analytics(mock_runner, False)
-        mock__calculate_traded.assert_not_called()
-        mock__calculate_middle.assert_not_called()
-        mock__calculate_matched.assert_not_called()
-        self.assertEqual(self.runner_analytics.matched, 0)
-        self.assertEqual(self.runner_analytics.traded, {})
 
     def test__calculate_traded_dict_empty(self):
         self.runner_analytics._traded_volume = []
@@ -467,28 +422,83 @@ class RunnerAnalyticsTest(unittest.TestCase):
         )
         self.assertEqual(self.runner_analytics._p_v, {1.01: 69, 10: 32})
 
-    def test__calculate_middle(self):
-        mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = []
-        mock_runner.ex.available_to_lay = []
-        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 500.5)
-        mock_runner.ex.available_to_back = [{"price": 2.00}]
-        mock_runner.ex.available_to_lay = [{"price": 2.02}]
-        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 2.01)
-        mock_runner.ex.available_to_back = [{"price": 10.00}]
-        mock_runner.ex.available_to_lay = [{"price": 15.5}]
-        self.assertEqual(self.runner_analytics._calculate_middle(mock_runner), 12.75)
 
-    def test__calculate_matched(self):
-        self.runner_analytics._runner.total_matched = 12344
-        mock_runner = mock.Mock(total_matched=12345)
-        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 1)
-        self.runner_analytics._runner = mock_runner
-        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)
+class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.middleware = SimulatedSportsDataMiddleware("cricketSubscription", "test")
 
-    def test__calculate_matched_runner_removal(self):
-        self.runner_analytics._runner.total_matched = 12344
-        mock_runner = mock.Mock(total_matched=0)
-        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)
-        self.runner_analytics._runner = mock_runner
-        self.assertEqual(self.runner_analytics._calculate_matched(mock_runner), 0)
+    def test_init(self):
+        self.assertEqual(self.middleware.operation, "cricketSubscription")
+        self.assertEqual(self.middleware.directory, "test")
+        self.assertIsNone(self.middleware._gen)
+        self.assertIsNone(self.middleware._next)
+
+    @mock.patch(
+        "flumine.markets.middleware.call_strategy_error_handling", return_value=True
+    )
+    def test_call(self, mock_call_strategy_error_handling):
+        mock_gen = mock.Mock()
+        mock_update_one = mock.Mock(publish_time_epoch=121, market_id="1.1")
+        mock_update_two = mock.Mock(publish_time_epoch=122, market_id="1.1")
+        mock_update_three = mock.Mock(publish_time_epoch=123, market_id="1.1")
+        mock_update_four = mock.Mock(publish_time_epoch=121, market_id="1.2")
+        mock_gen.__next__ = mock.Mock(
+            side_effect=[[mock_update_four], [mock_update_two], [mock_update_three]]
+        )
+        self.middleware._gen = mock_gen
+        self.middleware._next = [mock_update_one]
+        mock_strategy = mock.Mock(stream_ids=[456])
+        mock_market = mock.Mock(market_id="1.1")
+        mock_market.market_book.publish_time_epoch = 123
+        mock_market.market_book.streaming_unique_id = 456
+        mock_market.flumine.strategies = [mock_strategy]
+        self.middleware(mock_market)
+        mock_call_strategy_error_handling.call_count = 2
+        mock_call_strategy_error_handling.assert_has_calls(
+            [
+                mock.call(
+                    mock_strategy.check_sports_data, mock_market, mock_update_one
+                ),
+                mock.call(
+                    mock_strategy.process_sports_data, mock_market, mock_update_one
+                ),
+                mock.call(
+                    mock_strategy.check_sports_data, mock_market, mock_update_two
+                ),
+                mock.call(
+                    mock_strategy.process_sports_data, mock_market, mock_update_two
+                ),
+            ]
+        )
+
+    @mock.patch(
+        "flumine.markets.middleware.SimulatedSportsDataMiddleware._create_generator"
+    )
+    def test_add_market(self, mock__create_generator):
+        mock_market = mock.Mock(market_id="marketId")
+        self.assertIsNone(self.middleware.add_market(mock_market))
+        mock__create_generator.assert_called_with(
+            str(Path("test/marketId")), "cricketSubscription", 123
+        )
+        self.assertEqual(self.middleware._gen, mock__create_generator()())
+        self.assertEqual(self.middleware._next, next(mock__create_generator()()))
+
+    def test_remove_market(self):
+        self.middleware.remove_market(mock.Mock())
+        self.assertIsNone(self.middleware._gen)
+        self.assertIsNone(self.middleware._next)
+
+    @mock.patch("flumine.markets.middleware.FlumineHistoricalGeneratorStream")
+    @mock.patch("flumine.markets.middleware.HistoricListener")
+    def test__create_generator(self, mock_listener, mock_stream):
+        gen = self.middleware._create_generator(
+            "test/marketId", "cricketSubscription", 123
+        )
+        mock_listener.assert_called_with(max_latency=None, update_clk=False)
+        mock_stream.assert_called_with(
+            file_path="test/marketId",
+            listener=mock_listener(),
+            operation="cricketSubscription",
+            unique_id=123,
+        )
+        self.assertEqual(gen, mock_stream().get_generator())

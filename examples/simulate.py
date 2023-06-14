@@ -32,7 +32,7 @@ framework.add_strategy(strategy)
 framework.run()
 
 for market in framework.markets:
-    print("Profit: {0:.2f}".format(sum([o.simulated.profit for o in market.blotter])))
+    print("Profit: {0:.2f}".format(sum([o.profit for o in market.blotter])))
     for order in market.blotter:
         print(
             order.selection_id,
@@ -41,5 +41,5 @@ for market in framework.markets:
             order.order_type.price,
             order.average_price_matched,
             order.size_matched,
-            order.simulated.profit,
+            order.profit,
         )

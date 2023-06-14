@@ -1,6 +1,7 @@
 import unittest
 import datetime
 from unittest import mock
+from collections import defaultdict
 
 from flumine.markets.markets import Markets
 from flumine.markets.market import Market
@@ -13,11 +14,19 @@ class MarketsTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {})
 
     def test_add_market(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(event_id="1234")
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(self.markets.events, {"1234": [mock_market]})
+
+    def test_add_market_no_event_id(self):
+        mock_market = mock.Mock(event_id=None)
+        self.markets.add_market("1.1", mock_market)
+        self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(self.markets.events, {})
 
     def test_add_market_reopen(self):
         mock_market = mock.Mock()
@@ -34,10 +43,28 @@ class MarketsTest(unittest.TestCase):
         mock_market.close_market.assert_called_with()
 
     def test_remove_market(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(event_id=1234)
+        self.markets._markets = {"1.1": mock_market}
+        self.markets.events = {1234: [mock_market]}
+        self.markets.remove_market("1.1")
+        self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {1234: []})
+
+    def test_remove_market_no_event(self):
+        mock_market = mock.Mock(event_id=1234)
         self.markets._markets = {"1.1": mock_market}
         self.markets.remove_market("1.1")
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.events, {})
+
+    def test_remove_market_err(self):
+        mock_market = mock.Mock(event_id=1234)
+        mock_market_two = mock.Mock(event_id=1234)
+        self.markets._markets = {"1.1": mock_market, "2.2": mock_market_two}
+        self.markets.events = {1234: [mock_market]}
+        self.markets.remove_market("2.2")
+        self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(self.markets.events, {1234: [mock_market]})
 
     def test_get_order(self):
         mock_market = mock.Mock()
@@ -66,10 +93,8 @@ class MarketsTest(unittest.TestCase):
 
     def test_open_market_ids(self):
         self.assertEqual(self.markets.open_market_ids, [])
-        mock_market = mock.Mock()
-        mock_market.closed = False
-        mock_market_two = mock.Mock()
-        mock_market_two.closed = True
+        mock_market = mock.Mock(status="OPEN")
+        mock_market_two = mock.Mock(status="CLOSED")
         self.markets._markets = {"1.1": mock_market, "2.1": mock_market_two}
         self.assertEqual(self.markets.open_market_ids, [mock_market.market_id])
 
@@ -197,8 +222,7 @@ class MarketTest(unittest.TestCase):
     def test_event(self):
         self.market.market_catalogue.event.id = 12
         self.market.market_book.market_definition.market_time = 12
-
-        self.market.flumine.markets = []
+        self.market.flumine.markets.events = defaultdict(list)
         self.assertEqual(self.market.event, {})
 
         m_one = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
@@ -206,7 +230,11 @@ class MarketTest(unittest.TestCase):
         m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
         m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
         m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
-        self.market.flumine.markets = [m_one, m_two, m_three, m_four, m_five]
+        self.market.flumine.markets.events[m_one.event_id].append(m_one)
+        self.market.flumine.markets.events[m_two.event_id].append(m_two)
+        self.market.flumine.markets.events[m_three.event_id].append(m_three)
+        self.market.flumine.markets.events[m_four.event_id].append(m_four)
+        self.market.flumine.markets.events[m_five.event_id].append(m_five)
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
 
     def test_event_type_id_mc(self):
@@ -283,6 +311,33 @@ class MarketTest(unittest.TestCase):
         self.market.date_time_closed = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)
 
+    def test_market_start_datetime(self):
+        self.assertEqual(
+            self.market.market_start_datetime,
+            self.mock_market_book.market_definition.market_time,
+        )
+        self.market.market_book = None
+        self.assertEqual(
+            self.market.market_start_datetime,
+            self.mock_market_catalogue.market_start_time,
+        )
+        self.market.market_catalogue = None
+        self.assertEqual(
+            self.market.market_start_datetime, datetime.datetime.utcfromtimestamp(0)
+        )
+
+    @mock.patch(
+        "flumine.markets.market.Market.market_start_datetime",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+    def test_market_start_hour_minute(self, mock_market_start_datetime):
+        self.assertIsNone(self.market.market_start_hour_minute)
+        mock_market_start_datetime.return_value = datetime.datetime.utcfromtimestamp(
+            12000000000
+        )
+        self.assertEqual(self.market.market_start_hour_minute, "2120")
+
     def test_event_name_mc(self):
         mock_market_catalogue = mock.Mock()
         self.market.market_catalogue = mock_market_catalogue
@@ -336,6 +391,11 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.race_type, mock_market_book.market_definition.race_type
         )
+
+    def test_status(self):
+        mock_market_book = mock.Mock(status="OPEN")
+        self.market.market_book = mock_market_book
+        self.assertEqual(self.market.status, mock_market_book.status)
 
     @mock.patch("flumine.markets.market.Market.event_type_id")
     @mock.patch("flumine.markets.market.Market.event_id")

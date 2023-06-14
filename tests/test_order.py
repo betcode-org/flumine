@@ -254,6 +254,19 @@ class BaseOrderTest(unittest.TestCase):
         self.order.date_time_execution_complete = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.order.elapsed_seconds_executable, 0)
 
+    def test_profit(self):
+        self.order._simulated = True
+        mock_simulated = mock.Mock(profit=1)
+        self.order.simulated = mock_simulated
+        self.assertEqual(self.order.profit, 1)
+
+    def test_profit_cleared(self):
+        self.order._simulated = False
+        self.assertEqual(self.order.profit, 0)
+        mock_cleared = mock.Mock(profit=1)
+        self.order.cleared_order = mock_cleared
+        self.assertEqual(self.order.profit, 1)
+
     def test_market_id(self):
         self.assertEqual(self.order.market_id, self.mock_trade.market_id)
 

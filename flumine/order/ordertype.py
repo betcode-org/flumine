@@ -1,4 +1,5 @@
 from enum import Enum
+from betfairlightweight.resources.bettingresources import LineRangeInfo
 from betfairlightweight.filters import (
     limit_order,
     limit_on_close_order,
@@ -15,7 +16,6 @@ class OrderTypes(Enum):
 
 
 class BaseOrderType:
-
     EXCHANGE = None
     ORDER_TYPE = None
 
@@ -28,7 +28,6 @@ class BaseOrderType:
 
 
 class LimitOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT
 
@@ -41,6 +40,8 @@ class LimitOrder(BaseOrderType):
         min_fill_size: float = None,
         bet_target_type: str = None,
         bet_target_size: float = None,
+        price_ladder_definition: str = "CLASSIC",
+        line_range_info: LineRangeInfo = None,
     ):
         self.price = price
         self.size = size
@@ -49,6 +50,8 @@ class LimitOrder(BaseOrderType):
         self.min_fill_size = min_fill_size
         self.bet_target_type = bet_target_type
         self.bet_target_size = bet_target_size
+        self.price_ladder_definition = price_ladder_definition
+        self.line_range_info = line_range_info
 
     def place_instruction(self) -> dict:
         return limit_order(
@@ -72,17 +75,20 @@ class LimitOrder(BaseOrderType):
             "min_fill_size": self.min_fill_size,
             "bet_target_type": self.bet_target_type,
             "bet_target_size": self.bet_target_size,
+            "price_ladder_definition": self.price_ladder_definition,
         }
 
 
 class LimitOnCloseOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
 
-    def __init__(self, liability: float, price: float):
+    def __init__(
+        self, liability: float, price: float, price_ladder_definition: str = "CLASSIC"
+    ):
         self.liability = liability
         self.price = price
+        self.price_ladder_definition = price_ladder_definition
 
     def place_instruction(self) -> dict:
         return limit_on_close_order(liability=self.liability, price=self.price)
@@ -93,11 +99,11 @@ class LimitOnCloseOrder(BaseOrderType):
             "order_type": self.ORDER_TYPE.value,
             "liability": self.liability,
             "price": self.price,
+            "price_ladder_definition": self.price_ladder_definition,
         }
 
 
 class MarketOnCloseOrder(BaseOrderType):
-
     EXCHANGE = ExchangeType.BETFAIR
     ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
 

@@ -46,8 +46,9 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(len(utils.create_cheap_hash("test", 16)), 16)
 
-    def test_as_dec(self):
-        utils.as_dec(2.00)
+    @mock.patch("flumine.utils.Decimal")
+    def test_as_dec(self, mock_decimal):
+        self.assertEqual(utils.as_dec(2.00), mock_decimal.return_value)
 
     # def test_arrange(self):
     #     utils.arange()
@@ -55,6 +56,10 @@ class UtilsTest(unittest.TestCase):
     def test_make_prices(self):
         prices = utils.make_prices(utils.MIN_PRICE, utils.CUTOFFS)
         self.assertEqual(len(prices), 350)
+
+    def test_make_line_prices(self):
+        prices = utils.make_line_prices(-0.5, 9.5, 1.0)
+        self.assertEqual(prices, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
 
     def test_get_nearest_price(self):
         self.assertEqual(utils.get_nearest_price(1.011), 1.01)
@@ -302,6 +307,43 @@ class UtilsTest(unittest.TestCase):
         mock_market = mock.Mock()
         with self.assertRaises(ValueError):
             utils.call_process_orders_error_handling(mock_strategy, mock_market, [])
+
+    def test_call_process_raw_data(self):
+        mock_strategy = mock.Mock()
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    def test_call_process_raw_data_error_handling_flumine_error(self):
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_orders.side_effect = FlumineException
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    def test_call_process_raw_data_error_handling_error(self):
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_orders.side_effect = ValueError
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
+        mock_strategy.process_raw_data.assert_called_with(clk, publish_time, datum)
+
+    @mock.patch("flumine.utils.config")
+    def test_call_process_raw_data_error_handling_raise(self, mock_config):
+        mock_config.raise_errors = True
+        mock_strategy = mock.MagicMock()
+        mock_strategy.process_raw_data.side_effect = ValueError
+        clk = "test"
+        publish_time = 123
+        datum = {"id": 1}
+        with self.assertRaises(ValueError):
+            utils.call_process_raw_data(mock_strategy, clk, publish_time, datum)
 
     def test_get_runner_book(self):
         mock_market_book = mock.Mock()

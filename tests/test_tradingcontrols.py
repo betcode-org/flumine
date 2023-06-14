@@ -156,6 +156,7 @@ class TestOrderValidation(unittest.TestCase):
     def test__validate_betfair_price(self, mock_on_error):
         order = mock.Mock()
         order.order_type.price = 2
+        order.order_type.price_ladder_definition = "CLASSIC"
         self.trading_control._validate_betfair_price(order)
         mock_on_error.assert_not_called()
 
@@ -170,8 +171,53 @@ class TestOrderValidation(unittest.TestCase):
     def test__validate_betfair_price_on_error_two(self, mock_on_error):
         order = mock.Mock()
         order.order_type.price = -1
+        order.order_type.price_ladder_definition = "CLASSIC"
         self.trading_control._validate_betfair_price(order)
-        mock_on_error.assert_called_with(order, "Order price is not valid")
+        mock_on_error.assert_called_with(
+            order, "Order price is not valid for CLASSIC ladder"
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_price_finest(self, mock_on_error):
+        order = mock.Mock()
+        order.order_type.price = 999.01
+        order.order_type.price_ladder_definition = "FINEST"
+        self.trading_control._validate_betfair_price(order)
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_price_finest_error(self, mock_on_error):
+        order = mock.Mock()
+        order.order_type.price = 1000.01
+        order.order_type.price_ladder_definition = "FINEST"
+        self.trading_control._validate_betfair_price(order)
+        mock_on_error.assert_called_with(
+            order, "Order price is not valid for FINEST ladder"
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_price_line_range(self, mock_on_error):
+        order = mock.Mock()
+        order.order_type.price = 999.5
+        order.order_type.price_ladder_definition = "LINE_RANGE"
+        order.order_type.line_range_info = mock.Mock(
+            min_unit_value=-0.5, max_unit_value=999.5, interval=1.0
+        )
+        self.trading_control._validate_betfair_price(order)
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betfair_price_line_range_error(self, mock_on_error):
+        order = mock.Mock()
+        order.order_type.price = 1000.0
+        order.order_type.price_ladder_definition = "LINE_RANGE"
+        order.order_type.line_range_info = mock.Mock(
+            min_unit_value=-0.5, max_unit_value=999.5, interval=1.0
+        )
+        self.trading_control._validate_betfair_price(order)
+        mock_on_error.assert_called_with(
+            order, "Order price is not valid for LINE_RANGE ladder"
+        )
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_liability(self, mock_on_error):
@@ -606,6 +652,8 @@ class TestStrategyExposure(unittest.TestCase):
         order1 = mock.Mock(
             market_id="market_id",
             lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             side="BACK",
             size_remaining=9.0,
             average_price_matched=0.0,
@@ -620,6 +668,8 @@ class TestStrategyExposure(unittest.TestCase):
 
         order2 = mock.Mock(
             lookup=(1, 2, 3),
+            selection_id=2,
+            handicap=3,
             side="BACK",
             size_remaining=5.0,
             average_price_matched=0.0,
@@ -742,7 +792,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_trade.strategy = mock_strategy
 
         existing_matched_order = mock.Mock(
-            market_id="1.234", lookup=(1, 2, 3), side="BACK"
+            market_id="1.234", lookup=(1, 2, 3), side="BACK", selection_id=2, handicap=3
         )
         existing_matched_order.trade = mock_trade
         existing_matched_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -750,7 +800,9 @@ class TestStrategyExposure(unittest.TestCase):
         existing_matched_order.average_price_matched = 6.0
         existing_matched_order.size_remaining = 0.0
 
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order = mock.Mock(
+            market_id="1.234", lookup=(1, 2, 3), side="LAY", selection_id=2, handicap=3
+        )
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.order_type.size = 9.0

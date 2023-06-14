@@ -73,13 +73,13 @@ class OrderStream(BaseStream):
                     block=True, timeout=self.streaming_timeout
                 )
             except queue.Empty:
-                if (
-                    self.flumine.markets.live_orders
-                    or (time.time() - last_snap) > SNAP_DELTA
-                ):
-                    order_books = self._listener.snap(
-                        market_ids=self.flumine.markets.open_market_ids
-                    )
+                active_open_markets = [
+                    m
+                    for m in self.flumine.markets
+                    if m.blotter.active and m.status == "OPEN"
+                ]
+                if active_open_markets or (time.time() - last_snap) > SNAP_DELTA:
+                    order_books = []
                 else:
                     continue
             last_snap = time.time()

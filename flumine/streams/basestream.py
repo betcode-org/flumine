@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseStream(threading.Thread):
-
     LISTENER = StreamListener
     MAX_LATENCY = 0.5
     RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=60)

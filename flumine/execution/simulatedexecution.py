@@ -9,7 +9,6 @@ from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
 
 class SimulatedExecution(BaseExecution):
-
     EXCHANGE = ExchangeType.SIMULATED
 
     def handler(self, order_package: BaseOrderPackage) -> None:
@@ -118,19 +117,21 @@ class SimulatedExecution(BaseExecution):
         ):
             with order.trade:
                 # cancel current order
+                err = False
                 cancel_instruction_report = order.simulated.cancel(market.market_book)
                 if cancel_instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif cancel_instruction_report.status == "FAILURE":
-                    order.executable()  # todo do not carry out replace
+                    order.executable()
                     failed_transaction_count += 1
-                else:
-                    order.execution_complete()  # todo do not carry out replace
+                    err = True
                 self._order_logger(
                     order,
                     cancel_instruction_report,
                     OrderPackageType.CANCEL,
                 )
+                if err:
+                    continue
 
                 # place new order
                 self._bet_id += 1
@@ -138,6 +139,7 @@ class SimulatedExecution(BaseExecution):
                     order,
                     instruction.get("newPrice"),
                     cancel_instruction_report.size_cancelled,
+                    order_package.date_time_created,
                 )
                 place_instruction_report = replacement_order.simulated.place(
                     order_package, market.market_book, instruction, self._bet_id

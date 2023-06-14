@@ -3,7 +3,7 @@ import unittest
 from flumine import FlumineSimulation, clients, BaseStrategy, config
 from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
-from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder
+from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder, LimitOnCloseOrder
 from flumine.utils import get_price, get_nearest_price
 
 
@@ -112,6 +112,31 @@ class IntegrationTest(unittest.TestCase):
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
                             market.cancel_order(order)
 
+        class LimitOnCloseOrders(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                if not market_book.inplay and market.seconds_to_start < 100:
+                    return True
+
+            def process_market_book(self, market, market_book):
+                for runner in market_book.runners:
+                    if runner.status == "ACTIVE":
+                        runner_context = self.get_runner_context(
+                            market.market_id, runner.selection_id
+                        )
+                        if runner_context.trade_count == 0:
+                            back = get_price(runner.ex.available_to_back, 0)
+                            trade = Trade(
+                                market_book.market_id,
+                                runner.selection_id,
+                                runner.handicap,
+                                self,
+                            )
+                            order = trade.create_order(
+                                side="BACK",
+                                order_type=LimitOnCloseOrder(liability=10, price=back),
+                            )
+                            market.place_order(order)
+
         class MarketOnCloseOrders(BaseStrategy):
             def check_market_book(self, market, market_book):
                 if not market_book.inplay and market.seconds_to_start < 100:
@@ -158,6 +183,12 @@ class IntegrationTest(unittest.TestCase):
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_inplay_strategy)
+        limit_on_close_strategy = LimitOnCloseOrders(
+            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            max_order_exposure=1000,
+            max_selection_exposure=105,
+        )
+        framework.add_strategy(limit_on_close_strategy)
         market_strategy = MarketOnCloseOrders(
             market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
             max_order_exposure=1000,
@@ -170,29 +201,32 @@ class IntegrationTest(unittest.TestCase):
 
         for market in framework.markets:
             limit_orders = market.blotter.strategy_orders(limit_strategy)
-            self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders]), 2), -16.8
-            )
+            self.assertEqual(round(sum([o.profit for o in limit_orders]), 2), -16.8)
             self.assertEqual(len(limit_orders), 14)
             limit_replace_orders = market.blotter.strategy_orders(
                 limit_replace_strategy
             )
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_replace_orders]), 2), -16.8
+                round(sum([o.profit for o in limit_replace_orders]), 2), -16.8
             )
             self.assertEqual(len(limit_replace_orders), 28)
             limit_inplay_orders = market.blotter.strategy_orders(limit_inplay_strategy)
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
+                round(sum([o.profit for o in limit_inplay_orders]), 2), 19.88
             )
             self.assertEqual(len(limit_inplay_orders), 14)
-            market_orders = market.blotter.strategy_orders(market_strategy)
-            self.assertEqual(
-                round(sum([o.simulated.profit for o in market_orders]), 2), -6.68
+            limit_on_close_orders = market.blotter.strategy_orders(
+                limit_on_close_strategy
             )
+            self.assertEqual(
+                round(sum([o.profit for o in limit_on_close_orders]), 2), -53.20
+            )
+            self.assertEqual(len(limit_on_close_orders), 14)
+            market_orders = market.blotter.strategy_orders(market_strategy)
+            self.assertEqual(round(sum([o.profit for o in market_orders]), 2), -6.68)
             self.assertEqual(len(market_orders), 14)
             # check transaction count
-            self.assertEqual(market._transaction_id, 5182)
+            self.assertEqual(market._transaction_id, 5196)
 
     def test_simulation_multi_clients(self):
         class LimitOrders(BaseStrategy):
@@ -261,7 +295,7 @@ class IntegrationTest(unittest.TestCase):
                 limit_orders_bpe_on, market.blotter.client_orders(client_bpe_on)
             )
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders_bpe_on]), 2), -17.75
+                round(sum([o.profit for o in limit_orders_bpe_on]), 2), -17.75
             )
             self.assertEqual(len(limit_orders_bpe_on), 15)
             limit_orders_bpe_off = market.blotter.strategy_orders(
@@ -271,7 +305,7 @@ class IntegrationTest(unittest.TestCase):
                 limit_orders_bpe_off, market.blotter.client_orders(client_bpe_off)
             )
             self.assertEqual(
-                round(sum([o.simulated.profit for o in limit_orders_bpe_off]), 2),
+                round(sum([o.profit for o in limit_orders_bpe_off]), 2),
                 -19.75,
             )
             self.assertEqual(len(limit_orders_bpe_off), 14)
@@ -327,18 +361,14 @@ class IntegrationTest(unittest.TestCase):
         # Different event
         win_market = framework.markets.markets["1.170258213"]
         limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
-        self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 19.88
-        )
+        self.assertEqual(round(sum([o.profit for o in limit_inplay_orders]), 2), 19.88)
         self.assertEqual(len(limit_inplay_orders), 14)
         self.assertEqual(win_market._transaction_id, 165)
 
         # Same event
         win_market = framework.markets.markets["1.181223994"]
         limit_inplay_orders = win_market.blotter.strategy_orders(limit_inplay_strategy)
-        self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), 101.44
-        )
+        self.assertEqual(round(sum([o.profit for o in limit_inplay_orders]), 2), 101.44)
         self.assertEqual(len(limit_inplay_orders), 86)
         self.assertEqual(win_market._transaction_id, 1329)
 
@@ -346,9 +376,7 @@ class IntegrationTest(unittest.TestCase):
         limit_inplay_orders = place_market.blotter.strategy_orders(
             limit_inplay_strategy
         )
-        self.assertEqual(
-            round(sum([o.simulated.profit for o in limit_inplay_orders]), 2), -95.02
-        )
+        self.assertEqual(round(sum([o.profit for o in limit_inplay_orders]), 2), -95.02)
         self.assertEqual(len(limit_inplay_orders), 200)
         self.assertEqual(place_market._transaction_id, 2436)
 

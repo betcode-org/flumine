@@ -3,6 +3,236 @@
 Release History
 ---------------
 
+2.3.6 (2023-04-27)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #654 Simulated fill or kill bets matched as regular bets (@mzaja)
+- Don't check market_start_time for football events (@kwassmuss)
+
+**Libraries**
+
+- black upgraded to 23.3.0
+
+2.3.5 (2023-03-16)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #650 Fix min_fill_size simulation bug (@mzaja)
+- #647 Prevent overfills of the traded in simulated order (@clivewij)
+- FK price is None and therefore size is None
+
+**Libraries**
+
+- tenacity upgraded to 8.2.3
+- python-json-logger upgraded to 2.0.7
+- betconnect upgraded to 0.1.6
+- black upgraded to 23.1.0
+
+2.3.4 (2023-02-17)
++++++++++++++++++++
+
+**Improvements**
+
+- #639 simulation fill or kill
+
+**Bug Fixes**
+
+- OrderStream race condition
+
+2.3.3 (2023-02-09)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.17.1
+
+2.3.2 (2023-01-19)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #629 simulation: async_place_orders prevents order cancellation
+
+2.3.1 (2022-12-01)
++++++++++++++++++++
+
+**Improvements**
+
+- execution_cls added to Client
+- market.market_start_hour_minute added
+
+**Bug Fixes**
+
+- Add price ladder definition to limitoncloseorder
+
+**Libraries**
+
+- python 3.11 testing added
+
+2.3.0 (2022-10-27)
++++++++++++++++++++
+
+**Improvements**
+
+- check_sports added to mimic check_market
+
+**Bug Fixes**
+
+- #621 string formating mistypes
+- #622 control handle all ladder types
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.17.0
+- black upgraded to 22.10.0
+
+2.2.7 (2022-09-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Changes list_cleared_orders error to warning
+
+2.2.6 (2022-09-08)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #612 simulation replace cancel error fix
+
+**Libraries**
+
+- betconnect upgraded to 0.1.5
+- black upgraded to 22.8.0
+
+2.2.5 (2022-08-26)
++++++++++++++++++++
+
+**Improvements**
+
+- `simulated_full_match` added to client
+
+**Libraries**
+
+- betconnect upgraded to 0.1.4
+
+2.2.4 (2022-08-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Add error handling to process_raw_data
+
+**Bug Fixes**
+
+- Correctly set replacement order datetime created
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.7
+- betconnect upgraded to 0.1.3
+
+2.2.3 (2022-08-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #455 Handle cancel race condition
+
+2.2.2 (2022-07-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Various small improvements to reduce CPU cycles
+
+2.2.1 (2022-07-14)
++++++++++++++++++++
+
+**Improvements**
+
+- #572 SimulatedSportsData middleware and example strategy added
+- Remove market added to simulation
+
+**Bug Fixes**
+
+- Handle market removal race condition
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.6
+- black upgraded to 22.6.0
+- python-json-logger upgraded to 2.0.4
+
+2.2.0 (2022-05-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Revert delta order stream
+
+2.1.1 (2022-05-16)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.16.5
+
+2.1.0 (2022-05-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Market `status` added and `markets.open_market_ids` is now open markets only
+- Order profit property added
+- Order stream output updated orders only (order_updates_only)
+- _process_current_orders refactored to reduce duplicate calls
+
+**Bug Fixes**
+
+- #586 loggingcontrol doc strings
+
+2.0.5 (2022-05-05)
++++++++++++++++++++
+
+**Improvements**
+
+- Handle queue event handling optimisations
+
+**Bug Fixes**
+
+- Market event removal on market recording
+
+2.0.4 (2022-04-25)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Market event removal
+
+2.0.3 (2022-04-25)
++++++++++++++++++++
+
+**Improvements**
+
+- Middleware slim down
+- examples cleanup
+
+2.0.2 (2022-04-21)
++++++++++++++++++++
+
+**Improvements**
+
+- Event lookup added to Markets
+
+**Libraries**
+
+- betconnect upgraded to 0.1.2
+- black upgraded to 22.3.0
+
 2.0.1 (2022-03-28)
 +++++++++++++++++++
 
