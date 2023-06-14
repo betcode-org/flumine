@@ -11,6 +11,7 @@ from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
+from .trade import Trade
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 from ..simulation.simulatedorder import SimulatedOrder
@@ -59,7 +60,7 @@ class BaseOrder:
 
     def __init__(
         self,
-        trade,
+        trade: Trade,
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
