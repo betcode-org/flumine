@@ -3,6 +3,23 @@
 Release History
 ---------------
 
+2.3.7 (2023-07-24)
++++++++++++++++++++
+
+**Improvements**
+
+- #659 Add process_added_market method to BaseStrategy (@mzaja)
+
+**Bug Fixes**
+
+- Log in if client.keep_alive() fails in BetfairClient (@jorgegarcia7)
+- Include min_unit price in make_line_prices (@Code0x58)
+
+**Libraries**
+
+- betconnect upgraded to 0.1.7
+- betfairlightweight upgraded to 2.17.3
+
 2.3.6 (2023-04-27)
 +++++++++++++++++++
 
