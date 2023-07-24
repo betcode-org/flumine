@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.4.0 (2023-07-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Simulation against available prices now available using config
+
 2.3.7 (2023-07-24)
 +++++++++++++++++++
 

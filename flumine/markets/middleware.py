@@ -197,7 +197,10 @@ class SimulatedMiddleware(Middleware):
                     o for o in orders if o.status in LIVE_STATUS and o.simulated
                 ]
                 if live_orders:
-                    _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                    _lookup = {
+                        k: (v.runner, v.traded.copy())
+                        for k, v in market_analytics.items()
+                    }
                     live_orders_sorted = self._sort_orders(live_orders)
                     for order in live_orders_sorted:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
@@ -205,7 +208,9 @@ class SimulatedMiddleware(Middleware):
         else:  # isolation per instance
             live_orders = list(market.blotter.live_orders)
             if live_orders:
-                _lookup = {k: v.traded.copy() for k, v in market_analytics.items()}
+                _lookup = {
+                    k: (v.runner, v.traded.copy()) for k, v in market_analytics.items()
+                }
                 live_orders_sorted = self._sort_orders(live_orders)
                 for order in live_orders_sorted:
                     if order.status in LIVE_STATUS and order.simulated:
@@ -251,7 +256,7 @@ class SimulatedMiddleware(Middleware):
 
 class RunnerAnalytics:
     def __init__(self, runner: RunnerBook):
-        self._runner = runner
+        self.runner = runner
         self.traded = {}  # price: size traded since last update
         self._traded_volume = runner.ex.traded_volume
         self._p_v = {
@@ -265,7 +270,7 @@ class RunnerAnalytics:
         else:
             self.traded = self._calculate_traded(_tv)
             self._traded_volume = _tv
-        self._runner = runner
+        self.runner = runner
 
     def _calculate_traded(self, traded_volume: list) -> dict:
         p_v, traded = self._p_v, {}

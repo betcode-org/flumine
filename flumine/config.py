@@ -3,6 +3,7 @@ import socket
 
 simulated = False
 simulated_strategy_isolation = True
+simulation_available_prices = False
 
 instance_id = None  # instance id (e.g. AWS ec2 instanceId)
 
