@@ -98,7 +98,7 @@ def keep_alive(context: dict, flumine) -> None:
         if client.EXCHANGE == ExchangeType.BETFAIR:
             if client.betting_client.session_token:
                 resp = client.keep_alive()
-                if resp is None or resp.status == "SUCCESS":
+                if resp is True or resp.status == "SUCCESS":
                     continue
         elif client.EXCHANGE == ExchangeType.BETCONNECT:
             resp = client.keep_alive()
