@@ -14,6 +14,7 @@ Release History
 
 - Log in if client.keep_alive() fails in BetfairClient (@jorgegarcia7)
 - Include min_unit price in make_line_prices (@Code0x58)
+- #667 Rename strategy info to prevent jsonlogger conflict
 
 **Libraries**
 

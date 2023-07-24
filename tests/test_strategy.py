@@ -279,7 +279,7 @@ class BaseStrategyTest(unittest.TestCase):
                 "conflate_ms": self.conflate_ms,
                 "market_data_filter": self.mock_market_data_filter,
                 "market_filter": self.mock_market_filter,
-                "name": "test",
+                "strategy_name": "test",
                 "name_hash": "a94a8fe5ccb19",
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,

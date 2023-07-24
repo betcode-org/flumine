@@ -236,7 +236,7 @@ class BaseStrategy:
     @property
     def info(self) -> dict:
         return {
-            "name": self.name,
+            "strategy_name": self.name,
             "market_filter": self.market_filter,
             "market_data_filter": self.market_data_filter,
             "streaming_timeout": self.streaming_timeout,
