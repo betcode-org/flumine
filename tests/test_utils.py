@@ -58,7 +58,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(len(prices), 350)
 
     def test_make_line_prices(self):
-        prices = utils.make_line_prices(-0.5, 9.5, 1.0)
+        prices = utils.make_line_prices(0.5, 9.5, 1.0)
         self.assertEqual(prices, [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
 
     def test_get_nearest_price(self):

@@ -107,15 +107,13 @@ def make_prices(min_price, cutoffs):
 
 
 def make_line_prices(min_unit: float, max_unit: float, interval: float) -> list:
-    prices = []
+    prices = [min_unit]
     price = min_unit
     while True:
         price += interval
         if price > max_unit:
-            break
-        else:
-            prices.append(price)
-    return prices
+            return prices
+        prices.append(price)
 
 
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
