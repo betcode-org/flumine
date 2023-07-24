@@ -6,6 +6,7 @@ from flumine.baseflumine import (
     FlumineException,
     MaxTransactionCount,
     SimulatedMiddleware,
+    Market,
 )
 from flumine.clients import ExchangeType
 from flumine.exceptions import ClientError
@@ -134,10 +135,24 @@ class BaseFlumineTest(unittest.TestCase):
 
     def test__process_market_books(self):
         mock_event = mock.Mock()
-        mock_market_book = mock.Mock(publish_time_epoch=123)
+        self.base_flumine.streams = mock.Mock()
+        mock_strategy = mock.Mock()
+        self.base_flumine.add_strategy(mock_strategy)
+        mock_market_book = mock.Mock(publish_time_epoch=123, market_id="1.123")
         mock_market_book.runners = []
         mock_event.event = [mock_market_book]
-        self.base_flumine._process_market_books(mock_event)
+        for call_count in range(1, 5):
+            # process_added_market must be called only once, the first time
+            with self.subTest(call_count=call_count):
+                self.base_flumine._process_market_books(mock_event)
+                mock_strategy.process_added_market.assert_called_once()
+                self.assertEqual(
+                    mock_strategy.process_market_book.call_count, call_count
+                )
+        market, market_book = mock_strategy.process_added_market.call_args[0]
+        self.assertIs(market_book, mock_market_book)
+        self.assertIsInstance(market, Market)
+        self.assertIs(market.market_book, mock_market_book)
 
     @mock.patch("flumine.baseflumine.utils.call_strategy_error_handling")
     def test__process_sports_data(self, mock_call_strategy_error_handling):

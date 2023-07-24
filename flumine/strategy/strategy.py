@@ -106,6 +106,10 @@ class BaseStrategy:
         else:
             return False
 
+    def process_added_market(self, market: Market, market_book: MarketBook) -> None:
+        # called when a market is newly added to the framework
+        return
+
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         return False
