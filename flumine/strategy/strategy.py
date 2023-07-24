@@ -106,6 +106,10 @@ class BaseStrategy:
         else:
             return False
 
+    def process_new_market(self, market: Market, market_book: MarketBook) -> None:
+        # called when a market is newly added to the framework
+        return
+
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
         # process_market_book only executed if this returns True
         return False
@@ -232,7 +236,7 @@ class BaseStrategy:
     @property
     def info(self) -> dict:
         return {
-            "name": self.name,
+            "strategy_name": self.name,
             "market_filter": self.market_filter,
             "market_data_filter": self.market_data_filter,
             "streaming_timeout": self.streaming_timeout,

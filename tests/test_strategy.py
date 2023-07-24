@@ -136,6 +136,9 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
         mock_check_market_book.assert_called_with(mock_market, mock_market_book)
 
+    def test_process_new_market(self):
+        self.strategy.process_new_market(None, None)
+
     def test_check_market_book(self):
         self.assertFalse(self.strategy.check_market_book(None, None))
 
@@ -276,7 +279,7 @@ class BaseStrategyTest(unittest.TestCase):
                 "conflate_ms": self.conflate_ms,
                 "market_data_filter": self.mock_market_data_filter,
                 "market_filter": self.mock_market_filter,
-                "name": "test",
+                "strategy_name": "test",
                 "name_hash": "a94a8fe5ccb19",
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,
