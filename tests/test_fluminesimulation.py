@@ -9,6 +9,7 @@ from flumine.exceptions import RunError
 from flumine.order.trade import TradeStatus
 from flumine.markets.blotter import Blotter
 from flumine.order.order import OrderTypes
+from flumine.markets.market import Market
 
 
 class FlumineSimulationTest(unittest.TestCase):
@@ -91,6 +92,26 @@ class FlumineSimulationTest(unittest.TestCase):
         self.flumine._process_market_books(mock_event)
         mock__check_pending_packages.assert_called_with("1.23")
         mock__process_simulated_orders.assert_called_with(mock_market)
+
+    def test__process_market_books_new_market(self):
+        mock_strategy = mock.Mock()
+        self.flumine.add_strategy(mock_strategy)
+        mock_market_book = mock.Mock(market_id="1.23")
+        mock_market_book.runners = []
+        mock_event = mock.Mock()
+        mock_event.event = [mock_market_book]
+        for call_count in range(1, 5):
+            # process_new_market must be called only once, the first time
+            with self.subTest(call_count=call_count):
+                self.flumine._process_market_books(mock_event)
+                mock_strategy.process_new_market.assert_called_once()
+                self.assertEqual(
+                    mock_strategy.process_market_book.call_count, call_count
+                )
+        market, market_book = mock_strategy.process_new_market.call_args[0]
+        self.assertIs(market_book, mock_market_book)
+        self.assertIsInstance(market, Market)
+        self.assertIs(market.market_book, mock_market_book)
 
     def test_process_order_package(self):
         mock_order_package = mock.Mock()

@@ -122,7 +122,8 @@ class FlumineSimulation(BaseFlumine):
 
             # get market
             market = self.markets.markets.get(market_id)
-            if market is None:
+            market_is_new = market is None
+            if market_is_new:
                 market = self._add_market(market_id, market_book)
                 self.log_control(events.MarketEvent(market))
             elif market.closed:
@@ -140,6 +141,10 @@ class FlumineSimulation(BaseFlumine):
                 self._process_simulated_orders(market)
 
             for strategy in self.strategies:
+                if market_is_new:
+                    utils.call_strategy_error_handling(
+                        strategy.process_new_market, market, market_book
+                    )
                 if utils.call_strategy_error_handling(
                     strategy.check_market, market, market_book
                 ):
