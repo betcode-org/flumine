@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
-- #659 Add process_added_market method to BaseStrategy (@mzaja)
+- #659 Add process_new_market method to BaseStrategy (@mzaja)
 
 **Bug Fixes**
 

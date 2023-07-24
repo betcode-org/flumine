@@ -166,7 +166,7 @@ class BaseFlumine:
             for strategy in self.strategies:
                 if market_is_new:
                     utils.call_strategy_error_handling(
-                        strategy.process_added_market, market, market_book
+                        strategy.process_new_market, market, market_book
                     )
                 if utils.call_strategy_error_handling(
                     strategy.check_market, market, market_book

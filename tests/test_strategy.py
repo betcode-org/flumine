@@ -136,8 +136,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
         mock_check_market_book.assert_called_with(mock_market, mock_market_book)
 
-    def test_process_added_market(self):
-        self.strategy.process_added_market(None, None)
+    def test_process_new_market(self):
+        self.strategy.process_new_market(None, None)
 
     def test_check_market_book(self):
         self.assertFalse(self.strategy.check_market_book(None, None))

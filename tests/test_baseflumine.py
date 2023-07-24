@@ -142,14 +142,14 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market_book.runners = []
         mock_event.event = [mock_market_book]
         for call_count in range(1, 5):
-            # process_added_market must be called only once, the first time
+            # process_new_market must be called only once, the first time
             with self.subTest(call_count=call_count):
                 self.base_flumine._process_market_books(mock_event)
-                mock_strategy.process_added_market.assert_called_once()
+                mock_strategy.process_new_market.assert_called_once()
                 self.assertEqual(
                     mock_strategy.process_market_book.call_count, call_count
                 )
-        market, market_book = mock_strategy.process_added_market.call_args[0]
+        market, market_book = mock_strategy.process_new_market.call_args[0]
         self.assertIs(market_book, mock_market_book)
         self.assertIsInstance(market, Market)
         self.assertIs(market.market_book, mock_market_book)
