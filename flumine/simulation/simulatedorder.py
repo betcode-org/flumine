@@ -33,7 +33,7 @@ class SimulatedOrder:
         self._piq = 0.0
         self._bsp_reconciled = False
 
-    def __call__(self, market_book: MarketBook, traded: dict) -> None:
+    def __call__(self, market_book: MarketBook, runner_traded: tuple) -> None:
         # simulates order matching
         if self._bsp_reconciled is False and market_book.bsp_reconciled:
             if self.take_sp:
@@ -52,8 +52,14 @@ class SimulatedOrder:
                         return
 
             # todo estimated piq cancellations
+            traded = runner_traded[1]
             if traded:
                 self._process_traded(market_book.publish_time_epoch, traded)
+
+            if config.simulation_available_prices:
+                self._process_available(
+                    market_book.publish_time_epoch, runner_traded[0]
+                )
 
     def place(
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int
@@ -463,6 +469,37 @@ class SimulatedOrder:
                     "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
                 )
             return traded_size
+
+    def _process_available(self, publish_time: int, runner: RunnerBook) -> None:
+        # todo prevent double counting
+        price = self.order.order_type.price
+        side = self.side
+        if side == "BACK":
+            for update in runner.ex.available_to_back:
+                if update["price"] >= price:
+                    self._calculate_process_available(
+                        publish_time, update["price"], update["size"]
+                    )
+        elif side == "LAY":
+            for update in runner.ex.available_to_lay:
+                if update["price"] <= price:
+                    self._calculate_process_available(
+                        publish_time, update["price"], update["size"]
+                    )
+
+    def _calculate_process_available(
+        self, publish_time: int, price: float, size: float
+    ) -> None:
+        size = round(min(self.size_remaining, size), 2)
+        if size:
+            self._update_matched(
+                [
+                    publish_time,
+                    price,
+                    size,
+                ]
+            )
+        self._piq = 0
 
     @property
     def take_sp(self) -> bool:

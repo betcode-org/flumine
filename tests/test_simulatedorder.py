@@ -48,7 +48,8 @@ class SimulatedOrderTest(unittest.TestCase):
     ):
         mock_market_book = mock.Mock(bsp_reconciled=False)
         traded = {1: 2}
-        self.simulated(mock_market_book, traded)
+        mock_runner_book = mock.Mock()
+        self.simulated(mock_market_book, (mock_runner_book, traded))
         mock__process_sp.assert_not_called()
         mock__process_traded.assert_called_with(
             mock_market_book.publish_time_epoch, traded
@@ -1113,6 +1114,31 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated._piq = 4.00
         self.assertEqual(self.simulated._calculate_process_traded(1234585, 20.00), 12)
         self.assertEqual(self.simulated.matched, [[1234585, 12, 2.0]])
+        self.assertEqual(self.simulated._piq, 0)
+
+    def test__process_available_back(self):
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [
+            {"price": 13, "size": 1},
+            {"price": 12, "size": 1},
+        ]
+        self.simulated._process_available(123, mock_runner)
+        self.assertEqual(self.simulated.matched, [[123, 13, 1], [123, 12, 1]])
+
+    def test_process_available_lay(self):
+        self.simulated.order.side = "LAY"
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [
+            {"price": 10, "size": 1},
+            {"price": 11, "size": 1},
+        ]
+        self.simulated._process_available(123, mock_runner)
+        self.assertEqual(self.simulated.matched, [[123, 10, 1], [123, 11, 1]])
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._update_matched")
+    def test__calculate_process_available(self, mock__update_matched):
+        self.simulated._calculate_process_available(123, 12, 2)
+        mock__update_matched.assert_called_with([123, 12, 2])
         self.assertEqual(self.simulated._piq, 0)
 
     def test_take_sp(self):

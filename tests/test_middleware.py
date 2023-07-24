@@ -278,12 +278,15 @@ class SimulatedMiddlewareTest(unittest.TestCase):
         mock_market.blotter._strategy_orders = {
             "test": [mock_order, mock_order_two, mock_order_three]
         }
+        mock_runner = mock.Mock(traded={1: 2})
         mock_market_analytics = {
-            (mock_order.selection_id, mock_order.handicap): mock.Mock(traded={1: 2})
+            (mock_order.selection_id, mock_order.handicap): mock_runner
         }
         mock_market.market_book = mock_market_book
         self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
-        mock_order.simulated.assert_called_with(mock_market_book, {1: 2})
+        mock_order.simulated.assert_called_with(
+            mock_market_book, (mock_runner.runner, {1: 2})
+        )
         mock_order_two.simulated.assert_not_called()
 
     @mock.patch("flumine.markets.middleware.config")
@@ -307,12 +310,15 @@ class SimulatedMiddlewareTest(unittest.TestCase):
             mock_order_two,
             mock_order_three,
         ]
+        mock_runner = mock.Mock(traded={1: 2})
         mock_market_analytics = {
-            (mock_order.selection_id, mock_order.handicap): mock.Mock(traded={1: 2})
+            (mock_order.selection_id, mock_order.handicap): mock_runner
         }
         mock_market.market_book = mock_market_book
         self.middleware._process_simulated_orders(mock_market, mock_market_analytics)
-        mock_order.simulated.assert_called_with(mock_market_book, {1: 2})
+        mock_order.simulated.assert_called_with(
+            mock_market_book, (mock_runner.runner, {1: 2})
+        )
         mock_order_two.simulated.assert_not_called()
 
     def test__sort_orders(self):
@@ -372,7 +378,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
         self.runner_analytics = RunnerAnalytics(self.mock_runner)
 
     def test_init(self):
-        self.assertEqual(self.runner_analytics._runner, self.mock_runner)
+        self.assertEqual(self.runner_analytics.runner, self.mock_runner)
         self.assertEqual(
             self.runner_analytics._traded_volume, self.mock_runner.ex.traded_volume
         )
@@ -388,7 +394,7 @@ class RunnerAnalyticsTest(unittest.TestCase):
             self.runner_analytics._traded_volume, mock_runner.ex.traded_volume
         )
         self.assertEqual(self.runner_analytics.traded, mock__calculate_traded())
-        self.assertEqual(self.runner_analytics._runner, mock_runner)
+        self.assertEqual(self.runner_analytics.runner, mock_runner)
 
     def test__calculate_traded_dict_empty(self):
         self.runner_analytics._traded_volume = []

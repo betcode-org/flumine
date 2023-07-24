@@ -115,6 +115,10 @@ Updated to True when simulating or paper trading
 
 Defaults to True to match orders per strategy, when False prevents double counting of passive liquidity on all orders regardless of strategy.
 
+#### simulation_available_prices
+
+When True will simulate matches against available prices after initial execution, note this will double count liquidity.
+
 #### instance_id
 
 Store server id or similar (e.g. AWS ec2 instanceId)
