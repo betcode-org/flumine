@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.4.1 (2023-07-25)
++++++++++++++++++++
+
+**Improvements**
+
+- #671 Add process_new_market method to simulation (@mzaja)
+
 2.4.0 (2023-07-24)
 +++++++++++++++++++
 
