@@ -8,7 +8,7 @@ Release History
 
 **Bug Fixes**
 
-- Update marketCatalogue fix when recording data
+- #674 Update marketCatalogue fix when recording data
 
 2.4.1 (2023-07-25)
 +++++++++++++++++++
