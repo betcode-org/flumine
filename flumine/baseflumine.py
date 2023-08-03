@@ -222,16 +222,15 @@ class BaseFlumine:
                 market_id = datum["id"]
                 market = self.markets.markets.get(market_id)
                 if market is None:
-                    self._add_market(market_id, None)
+                    market = self._add_market(market_id, None)
                 elif market.closed:
                     self.markets.add_market(market_id, market)
 
-                if (
-                    "marketDefinition" in datum
-                    and datum["marketDefinition"]["status"] == "CLOSED"
-                ):
-                    datum["_stream_id"] = stream_id
-                    self.handler_queue.put(events.CloseMarketEvent(datum))
+                if "marketDefinition" in datum:
+                    market.update_market_catalogue = True
+                    if datum["marketDefinition"]["status"] == "CLOSED":
+                        datum["_stream_id"] = stream_id
+                        self.handler_queue.put(events.CloseMarketEvent(datum))
 
             for strategy in self.strategies:
                 if stream_id in strategy.stream_ids:
