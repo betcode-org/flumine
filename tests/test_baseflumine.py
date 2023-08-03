@@ -252,6 +252,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock__add_market.assert_called_with("1.23", None)
         mock_queue.put.assert_called_with(mock_events.CloseMarketEvent())
         self.assertEqual(mock_event.event[3][0]["_stream_id"], mock_event.event[0])
+        self.assertTrue(mock__add_market.return_value.update_market_catalogue)
 
     @mock.patch("flumine.baseflumine.BaseFlumine._add_market")
     def test__process_raw_data_no_id(self, mock__add_market):

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.4.2 (2023-08-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #674 Update marketCatalogue fix when recording data
+
 2.4.1 (2023-07-25)
 +++++++++++++++++++
 
