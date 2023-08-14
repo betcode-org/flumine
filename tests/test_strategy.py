@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine.strategy import strategy
+from flumine.strategy.runnercontext import RunnerContext
 
 
 class StrategiesTest(unittest.TestCase):
@@ -41,6 +42,20 @@ class StrategiesTest(unittest.TestCase):
 
 
 class BaseStrategyTest(unittest.TestCase):
+    @staticmethod
+    def create_runner_context(
+        completed_trades: list, live_trades: list
+    ) -> RunnerContext:
+        """
+        Crates a RunnerContext object and initialises it with custom trade ids.
+        """
+        runner_ctx = RunnerContext(12345678)
+        for trade_id in completed_trades + live_trades:
+            runner_ctx.place(trade_id)
+        for trade_id in completed_trades:
+            runner_ctx.reset(trade_id)
+        return runner_ctx
+
     def setUp(self) -> None:
         self.mock_market_filter = mock.Mock()
         self.mock_market_data_filter = mock.Mock()
