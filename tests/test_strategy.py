@@ -42,15 +42,26 @@ class StrategiesTest(unittest.TestCase):
 
 
 class BaseStrategyTest(unittest.TestCase):
-    @staticmethod
     def create_runner_context(
-        completed_trades: list, live_trades: list
+        self,
+        completed_trades: list = [],
+        live_trades: list = [],
+        place_elapsed_seconds: float = None,
+        reset_elapsed_seconds: float = None,
     ) -> RunnerContext:
         """
         Crates a RunnerContext object and initialises it with custom trade ids.
         """
+        all_trades = completed_trades + live_trades
+        # Assert that all provided trade ids are unique
+        self.assertTrue(len(set(all_trades)) == len(all_trades))
+        # Properties cannot be replaced with attributes on class instances because
+        # assignment invokes a setter, but they can be replaced on a class level
+        RunnerContext.placed_elapsed_seconds = place_elapsed_seconds
+        RunnerContext.reset_elapsed_seconds = reset_elapsed_seconds
+        ## Create runner context and fill it with trades
         runner_ctx = RunnerContext(12345678)
-        for trade_id in completed_trades + live_trades:
+        for trade_id in all_trades:
             runner_ctx.place(trade_id)
         for trade_id in completed_trades:
             runner_ctx.reset(trade_id)
@@ -72,8 +83,8 @@ class BaseStrategyTest(unittest.TestCase):
             context={"trigger": 0.123},
             max_selection_exposure=1,
             max_order_exposure=2,
-            max_trade_count=3,
-            max_live_trade_count=4,
+            max_trade_count=5,
+            max_live_trade_count=3,
             multi_order_trades=False,
         )
 
@@ -89,8 +100,8 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.max_selection_exposure, 1)
         self.assertEqual(self.strategy.max_order_exposure, 2)
         self.assertIsNone(self.strategy.clients)
-        self.assertEqual(self.strategy.max_trade_count, 3)
-        self.assertEqual(self.strategy.max_live_trade_count, 4)
+        self.assertEqual(self.strategy.max_trade_count, 5)
+        self.assertEqual(self.strategy.max_live_trade_count, 3)
         self.assertEqual(self.strategy.streams, [])
         self.assertEqual(self.strategy.historic_stream_ids, [])
         self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
@@ -223,40 +234,54 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_validate_order(self):
         mock_order = mock.Mock()
-        runner_context = mock.Mock(
-            trade_count=0,
-            live_trade_count=0,
-            placed_elapsed_seconds=None,
-            reset_elapsed_seconds=None,
-        )
+        mock_order.trade.id = "99"  # Unused trade id, nonexistent in runner_context
+        # No orders/trades placed yet
+        runner_context = self.create_runner_context()
         self.strategy.log_validation = True
         self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
-        # trade count
-        runner_context.trade_count = 3
+        # trade count (5 is limit)
+        runner_context = self.create_runner_context(["1", "2", "3", "4", "5"])
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
-        # live trade count
-        runner_context.trade_count = 1
-        runner_context.live_trade_count = 4
+        # live trade count (3 is limit)
+        runner_context = self.create_runner_context([], ["3", "4", "5"])
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
         # place elapsed
-        runner_context.trade_count = 1
-        runner_context.live_trade_count = 1
-        runner_context.placed_elapsed_seconds = 0.49
+        runner_context = self.create_runner_context(
+            live_trades=["1"], place_elapsed_seconds=0.49
+        )
         mock_order.trade.place_reset_seconds = 0.5
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
         # reset elapsed
-        runner_context.trade_count = 1
-        runner_context.live_trade_count = 1
-        runner_context.placed_elapsed_seconds = None
-        runner_context.reset_elapsed_seconds = 0.49
+        runner_context = self.create_runner_context(
+            completed_trades=["1"], place_elapsed_seconds=1, reset_elapsed_seconds=0.49
+        )
         mock_order.trade.reset_seconds = 0.5
         self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
 
+    def test_validate_order_reused_trade(self):
+        """Reusing the Trade object to place a new order."""
+        mock_order = mock.Mock()
+        mock_order.trade.id = "1"  # Reuse completed trade
+        # trade count (5 is limit)
+        runner_context = self.create_runner_context(["1", "2", "3", "4", "5"])
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
+        # live trade count (3 is limit)
+        runner_context = self.create_runner_context([], ["3", "4", "5"])
+        self.assertFalse(self.strategy.validate_order(runner_context, mock_order))
+        mock_order.trade.id = "4"  # Reuse live trade
+        # trade count (5 is limit)
+        runner_context = self.create_runner_context(["1", "2"], ["3", "4", "5"])
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
+        # live trade count (3 is limit)
+        runner_context = self.create_runner_context([], ["2", "3", "4"])
+        self.assertTrue(self.strategy.validate_order(runner_context, mock_order))
+    
     def test_validate_order_multi(self):
         mock_order = mock.Mock()
         mock_order.trade.id = "test"
         runner_context = mock.Mock(
             trade_count=10,
+            trades=[],
             live_trade_count=10,
             live_trades=["test"],
             placed_elapsed_seconds=None,
@@ -299,10 +324,10 @@ class BaseStrategyTest(unittest.TestCase):
                 "stream_ids": [],
                 "streaming_timeout": self.streaming_timeout,
                 "context": {"trigger": 0.123},
-                "max_live_trade_count": 4,
+                "max_live_trade_count": 3,
                 "max_order_exposure": 2,
                 "max_selection_exposure": 1,
-                "max_trade_count": 3,
+                "max_trade_count": 5,
             },
         )
 

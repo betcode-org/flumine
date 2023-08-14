@@ -194,13 +194,17 @@ class BaseStrategy:
             )
             return False
 
-        if runner_context.trade_count >= self.max_trade_count:
+        if (runner_context.trade_count >= self.max_trade_count) and (
+            order.trade.id not in runner_context.trades
+        ):
             order.violation_msg = (
                 "strategy.validate_order failed: trade_count (%s) >= max_trade_count (%s)"
                 % (runner_context.trade_count, self.max_trade_count)
             )
             return False
-        elif runner_context.live_trade_count >= self.max_live_trade_count:
+        elif (runner_context.live_trade_count >= self.max_live_trade_count) and (
+            order.trade.id not in runner_context.live_trades
+        ):
             order.violation_msg = (
                 "strategy.validate_order failed: live_trade_count (%s) >= max_live_trade_count (%s)"
                 % (runner_context.live_trade_count, self.max_live_trade_count)
