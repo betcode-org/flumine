@@ -90,7 +90,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
         self.base_flumine.add_strategy(mock_strategy)
         mock_streams.assert_called_with(mock_strategy)
-        mock_strategies.assert_called_with(mock_strategy, self.base_flumine.clients, self.base_flumine)
+        mock_strategies.assert_called_with(
+            mock_strategy, self.base_flumine.clients, self.base_flumine
+        )
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
 
     def test_add_worker(self):
