@@ -96,7 +96,7 @@ class BaseFlumine:
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy {0}".format(strategy))
         self.streams(strategy)  # create required streams
-        self.strategies(strategy, self.clients)  # store in strategies
+        self.strategies(strategy, self.clients, self)  # store in strategies
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
@@ -424,7 +424,7 @@ class BaseFlumine:
         # process config (logging)
         self.log_control(events.ConfigEvent(config))
         # start strategies
-        self.strategies.start()
+        self.strategies.start(self)
         # start streams
         self.streams.start()
 

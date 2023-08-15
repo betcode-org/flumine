@@ -89,11 +89,11 @@ class BaseStrategy:
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
-    def add(self) -> None:
+    def add(self, flumine) -> None:
         # called when strategy is added to framework
         return
 
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         # called when flumine starts but before streams start
         # e.g. subscribe to extra streams
         return
@@ -262,16 +262,32 @@ class Strategies:
     def __init__(self):
         self._strategies = []
 
-    def __call__(self, strategy: BaseStrategy, clients) -> None:
+    def __call__(self, strategy: BaseStrategy, clients, flumine) -> None:
         if strategy.name in [s.name for s in self]:
             logger.warning("Strategy of same name '{0}' already added".format(strategy))
         strategy.clients = clients
         self._strategies.append(strategy)
-        strategy.add()
+        try:
+            strategy.add(flumine)
+        except TypeError:  # Wrong call signature
+            logger.warning(
+                "Deprecation warning: Call signature of BaseStrategy.add(self) "
+                "has changed to BaseStrategy.add(self, flumine). Please update "
+                f"{strategy.__class__.__name__} to match the new call signature."
+            )
+            strategy.add()
 
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         for s in self:
-            s.start()
+            try:
+                s.start(flumine)
+            except TypeError:  # Wrong call signature
+                logger.warning(
+                    "Deprecation warning: Call signature of BaseStrategy.start(self) "
+                    "has changed to BaseStrategy.start(self, flumine). Please update "
+                    f"{s.__class__.__name__} to match the new call signature."
+                )
+                s.start()
 
     def finish(self, flumine) -> None:
         for s in self:
