@@ -4,6 +4,8 @@ from collections import defaultdict
 from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
+from ..order.ordertype import MarketOnCloseOrder
+from ..utils import wap
 from ..utils import wap, call_strategy_error_handling
 from ..streams.historicalstream import (
     HistoricListener,
@@ -14,7 +16,8 @@ from .. import config
 logger = logging.getLogger(__name__)
 
 WIN_MINIMUM_ADJUSTMENT_FACTOR = 2.5
-PLACE_MINIMUM_ADJUSTMENT_FACTOR = 0  # todo implement correctly (https://en-betfair.custhelp.com/app/answers/detail/a_id/406)
+# PLACE MARKET DOCS: https://support.betfair.com/app/answers/detail/a_id/406
+PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION = 4.0
 LIVE_STATUS = [
     OrderStatus.EXECUTABLE,
     OrderStatus.CANCELLING,
@@ -156,28 +159,91 @@ class SimulatedMiddleware(Middleware):
                                 ),
                                 extra=order.info,
                             )
-                    elif (
-                        removal_adjustment_factor
-                        and removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
-                    ):
-                        # todo place market
-                        for match in order.simulated.matched:
-                            match[1] = self._calculate_reduction_factor(
-                                match[1], removal_adjustment_factor
+                    elif removal_adjustment_factor:
+                        if (market.market_type == "WIN") and (
+                            removal_adjustment_factor >= WIN_MINIMUM_ADJUSTMENT_FACTOR
+                        ):
+                            for match in order.simulated.matched:
+                                match[1] = self._calculate_reduction_factor(
+                                    match[1], removal_adjustment_factor
+                                )
+                            _, order.simulated.average_price_matched = wap(
+                                order.simulated.matched
                             )
-                        _, order.simulated.average_price_matched = wap(
-                            order.simulated.matched
-                        )
-                        logger.warning(
-                            "Order adjusted due to non runner {0}".format(
-                                order.selection_id
-                            ),
-                            extra=order.info,
-                        )
+
+                            if order.side == "LAY":
+                                if (
+                                    order.order_type.persistence_type
+                                    == "MARKET_ON_CLOSE"
+                                ):
+                                    price_adjusted = (order.order_type.price) * (
+                                        1 - (removal_adjustment_factor / 100)
+                                    )
+                                    remaining_liability = round(
+                                        (price_adjusted - 1) * order.size_remaining, 2
+                                    )
+                                    order.order_type = MarketOnCloseOrder(
+                                        remaining_liability
+                                    )
+                                else:
+                                    order.size_cancelled += order.size_remaining
+                                    order.size_remaining = 0
+
+                            logger.warning(
+                                "Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
+                        elif market.market_type in {"PLACE", "OTHER_PLACE"}:
+                            for match in order.simulated.matched:
+                                match[
+                                    1
+                                ] = self._calculate_reduction_factor_for_place_market(
+                                    match[1], removal_adjustment_factor
+                                )
+                            _, order.simulated.average_price_matched = wap(
+                                order.simulated.matched
+                            )
+
+                            if order.side == "LAY":
+                                if (
+                                    order.order_type.persistence_type
+                                    == "MARKET_ON_CLOSE"
+                                ):
+                                    price_adjusted = 1 + (
+                                        order.order_type.price - 1
+                                    ) * (1 - (removal_adjustment_factor / 100))
+                                    remaining_liability = round(
+                                        (price_adjusted - 1) * order.size_remaining, 2
+                                    )
+                                    order.order_type = MarketOnCloseOrder(
+                                        remaining_liability
+                                    )
+                                elif (
+                                    removal_adjustment_factor
+                                    >= PLACE_MINIMUM_ADJUSTMENT_FACTOR_FOR_CANCELLATION
+                                ):
+                                    order.size_cancelled += order.size_remaining
+                                    order.size_remaining = 0
+
+                            logger.warning(
+                                "Order adjusted due to non runner {0}".format(
+                                    order.selection_id
+                                ),
+                                extra=order.info,
+                            )
 
     @staticmethod
     def _calculate_reduction_factor(price: float, adjustment_factor: float) -> float:
         price_adjusted = round(price * (1 - (adjustment_factor / 100)), 2)
+        return max(price_adjusted, 1.01)  # min: 1.01
+
+    @staticmethod
+    def _calculate_reduction_factor_for_place_market(
+        price: float, adjustment_factor: float
+    ) -> float:
+        price_adjusted = round(1 + (price - 1) * (1 - (adjustment_factor / 100)), 2)
         return max(price_adjusted, 1.01)  # min: 1.01
 
     def _process_simulated_orders(self, market, market_analytics: dict) -> None:
