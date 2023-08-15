@@ -62,7 +62,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(market.blotter._live_orders, [])
 
     def test_process_current_order(self):
-        mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
+        mock_order = mock.Mock(status=OrderStatus.EXECUTABLE, async_=False)
         mock_order.current_order.status = "EXECUTION_COMPLETE"
         mock_current_order = mock.Mock()
         mock_log_control = mock.Mock()
@@ -83,6 +83,21 @@ class BaseOrderTest(unittest.TestCase):
         mock_order.responses.placed.assert_called_with()
         mock_order_event.assert_called_with(mock_order)
         mock_log_control.assert_called_with(mock_order_event())
+
+    def test_process_current_order_fill_or_kill(self):
+        mock_order = mock.Mock(
+            status=OrderStatus.PENDING,
+            async_=False,
+            bet_id=None,
+            order_type=mock.Mock(time_in_force="FILL_OR_KILL"),
+        )
+        mock_order.current_order.status = "EXECUTION_COMPLETE"
+        mock_current_order = mock.Mock(bet_id=1234, status="EXECUTION_COMPLETE")
+        mock_log_control = mock.Mock()
+        process.process_current_order(mock_order, mock_current_order, mock_log_control)
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.execution_complete.assert_called()
+        self.assertEqual(mock_order.bet_id, 1234)
 
     def test_create_order_from_current(self):
         mock_add_market = mock.Mock()
