@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         # this data needs to be updated and would ideally be placed inside a worker
         # context placeholder
         self.context["betconnect"] = context = {
