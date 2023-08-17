@@ -43,7 +43,9 @@ class FlumineSimulation(BaseFlumine):
                 """
                 event_streams = defaultdict(list)  # event_group: [<Stream>, ..]
                 for stream in self.streams:
-                    event_group = stream.event_group if stream.event_processing else None
+                    event_group = (
+                        stream.event_group if stream.event_processing else None
+                    )
                     event_streams[event_group].append(stream)
 
                 for event_group, streams in event_streams.items():
@@ -82,7 +84,9 @@ class FlumineSimulation(BaseFlumine):
                             # add back
                             cycles.append([publish_time_epoch, market_book, stream_gen])
                         self.handler_queue.clear()
-                        logger.info("Completed historical event group '{0}'".format(event_group))
+                        logger.info(
+                            "Completed historical event group '{0}'".format(event_group)
+                        )
                     else:
                         for stream in streams:
                             logger.info(

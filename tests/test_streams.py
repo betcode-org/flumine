@@ -51,6 +51,7 @@ class StreamsTest(unittest.TestCase):
             mock_strategy,
             "dubs of the mad skint and british",
             False,
+            {},
             canary_yellow=True,
         )
         self.assertEqual(len(mock_strategy.streams), 1)
@@ -305,11 +306,12 @@ class StreamsTest(unittest.TestCase):
         mock_strategy.stream_class = streams.MarketStream
 
         self.streams.add_historical_stream(
-            mock_strategy, "GANG", event_processing=False, inplay=True
+            mock_strategy, "GANG", event_processing=False, event_groups={}, inplay=True
         )
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
         mock_get_file_md.assert_called_with("GANG", "eventId")
+        event_id = mock_get_file_md()
         mock_historical_stream_class.assert_called_with(
             flumine=self.mock_flumine,
             stream_id=mock_increment(),
@@ -319,19 +321,22 @@ class StreamsTest(unittest.TestCase):
             conflate_ms=mock_strategy.conflate_ms,
             output_queue=False,
             event_processing=False,
-            event_id=mock_get_file_md(),
+            event_group=event_id,
+            event_id=event_id,
             inplay=True,
         )
 
-    def test_add_historical_stream_old(self):
+    def test_add_historical_stream_which_already_exists(self):
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
+        mock_stream = mock.Mock(
+            event_processing=False, event_group=1, event_id=1, listener_kwargs={}
+        )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
         stream = self.streams.add_historical_stream(
-            mock_strategy, "GANG", event_processing=False, **{}
+            mock_strategy, "GANG", event_processing=False, event_groups={}, **{}
         )
         self.assertEqual(stream, mock_stream)
         self.assertEqual(len(self.streams), 1)
@@ -345,16 +350,23 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(event_processing=False, listener_kwargs={})
+        mock_stream = mock.Mock(
+            event_processing=False, event_group=1, event_id=1, listener_kwargs={}
+        )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
 
         self.streams.add_historical_stream(
-            mock_strategy, "GANG", event_processing=False, **{"inplay": True}
+            mock_strategy,
+            "GANG",
+            event_processing=False,
+            event_groups={},
+            **{"inplay": True},
         )
         self.assertEqual(len(self.streams), 2)
         mock_increment.assert_called_with()
         mock_get_file_md.assert_called_with("GANG", "eventId")
+        event_id = mock_get_file_md()
         mock_historical_stream_class.assert_called_with(
             flumine=self.mock_flumine,
             stream_id=mock_increment(),
@@ -364,7 +376,8 @@ class StreamsTest(unittest.TestCase):
             conflate_ms=mock_strategy.conflate_ms,
             output_queue=False,
             event_processing=False,
-            event_id=mock_get_file_md(),
+            event_group=event_id,
+            event_id=event_id,
             inplay=True,
         )
 
@@ -376,12 +389,19 @@ class StreamsTest(unittest.TestCase):
         mock_historical_stream_class.__name__ = "test"
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(event_processing=False)
+        event_id = 1
+        mock_stream = mock.Mock(
+            event_processing=False, event_group=event_id, event_id=event_id
+        )
         mock_stream.market_filter = "GANG"
         self.streams._streams = [mock_stream]
+        mock_get_file_md.return_value = event_id
 
         stream = self.streams.add_historical_stream(
-            mock_strategy, "GANG", event_processing=True
+            mock_strategy,
+            "GANG",
+            event_processing=True,
+            event_groups={},
         )
         self.assertEqual(stream, mock_historical_stream_class())
         self.assertEqual(len(self.streams), 2)

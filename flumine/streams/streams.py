@@ -166,7 +166,8 @@ class Streams:
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
-                and stream.event_group == event_groups.get(stream.event_id)
+                and stream.event_group
+                == event_groups.get(stream.event_id, stream.event_id)
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
