@@ -46,16 +46,41 @@ class StrategiesTest(unittest.TestCase):
     def test_call(self):
         mock_strategy = mock.Mock()
         mock_clients = mock.Mock()
-        self.strategies(mock_strategy, mock_clients)
+        mock_flumine = mock.Mock()
+        self.strategies(mock_strategy, mock_clients, mock_flumine)
         self.assertEqual(self.strategies._strategies, [mock_strategy])
-        mock_strategy.add.assert_called_with()
+        mock_strategy.add.assert_called_with(mock_flumine)
         self.assertEqual(mock_strategy.clients, mock_clients)
 
     def test_start(self):
         mock_strategy = mock.Mock()
+        mock_flumine = mock.Mock()
         self.strategies._strategies.append(mock_strategy)
-        self.strategies.start()
-        mock_strategy.start.assert_called_with()
+        self.strategies.start(mock_flumine)
+        mock_strategy.start.assert_called_with(mock_flumine)
+
+    @mock.patch("flumine.strategy.strategy.logger")
+    def test_deprecated_calls(self, mock_logger: mock.Mock):
+        """
+        Tests backwards compatibility with the old call signatures
+        of add() and start() methods of BaseStreategy. This test may
+        be removed in the future together with the deprecation warning.
+        """
+        mock_clients = mock.Mock()
+        mock_flumine = mock.Mock()
+        old_base_strategy = strategy.BaseStrategy({})
+        old_base_strategy.add = lambda: None  # Mimic old call signature
+        old_base_strategy.start = lambda: None  # Mimic old call signature
+        mock_strategy = mock.Mock(wraps=old_base_strategy)
+        # Old add() implementation
+        self.strategies(mock_strategy, mock_clients, mock_flumine)
+        mock_logger.warning.assert_called()  # User warned
+        mock_strategy.add.assert_called_with()  # Called with the old signature
+        # Old start() implementation
+        mock_logger.reset_mock()
+        self.strategies.start(mock_flumine)
+        mock_logger.warning.assert_called()  # User warned
+        mock_strategy.start.assert_called_with()  # Called with the old signature
 
     def test_finish(self):
         mock_flumine = mock.Mock()
@@ -129,10 +154,12 @@ class BaseStrategyTest(unittest.TestCase):
         )
 
     def test_add(self):
-        self.strategy.add()
+        mock_flumine = mock.Mock()
+        self.strategy.add(mock_flumine)
 
     def test_start(self):
-        self.strategy.start()
+        mock_flumine = mock.Mock()
+        self.strategy.start(mock_flumine)
 
     def test_check_market_no_subscribed(self):
         mock_market = mock.Mock()
