@@ -163,9 +163,11 @@ class Streams:
         **listener_kwargs
     ) -> HistoricalStream:
         for stream in self:
-            # Get the expected event group of a stream considering its event id and group mapping 
+            # Get the expected event group of a stream considering its event id and group mapping
             event_group = (
-                event_groups.get(stream.event_id, stream.event_id) if event_processing else None
+                event_groups.get(stream.event_id, stream.event_id)
+                if event_processing
+                else None
             )
             if (
                 stream.market_filter == market
