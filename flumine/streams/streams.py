@@ -27,6 +27,7 @@ class Streams:
             market_types = strategy.market_filter.get("market_types")
             country_codes = strategy.market_filter.get("country_codes")
             event_processing = strategy.market_filter.get("event_processing", False)
+            event_groups = strategy.market_filter.get("event_groups", {})
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets and events:
@@ -61,7 +62,11 @@ class Streams:
                         )
                     else:
                         stream = self.add_historical_stream(
-                            strategy, market, event_processing, **listener_kwargs
+                            strategy,
+                            market,
+                            event_processing,
+                            event_groups,
+                            **listener_kwargs,
                         )
                         strategy.streams.append(stream)
                         strategy.historic_stream_ids.append(stream.stream_id)
@@ -154,12 +159,14 @@ class Streams:
         strategy: BaseStrategy,
         market: str,
         event_processing: bool,
+        event_groups: dict,
         **listener_kwargs
     ) -> HistoricalStream:
         for stream in self:
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
+                and stream.event_group == event_groups.get(stream.event_id)
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
@@ -168,6 +175,7 @@ class Streams:
             event_id = get_file_md(market, "eventId")
             if event_processing and event_id is None:
                 logger.warning("EventId not found for market %s" % market)
+            event_group = event_groups.get(event_id, event_id)  # Event ID by default
             logger.info(
                 "Creating new {0} ({1}) for strategy {2}".format(
                     HistoricalStream.__name__, stream_id, strategy
@@ -176,6 +184,7 @@ class Streams:
                     "strategy": strategy,
                     "stream_id": stream_id,
                     "market_filter": market,
+                    "event_group": event_group,
                     "event_id": event_id,
                     "event_processing": event_processing,
                 },
@@ -189,6 +198,7 @@ class Streams:
                 conflate_ms=strategy.conflate_ms,
                 output_queue=False,
                 event_processing=event_processing,
+                event_group=event_group,
                 event_id=event_id,
                 **listener_kwargs,
             )
