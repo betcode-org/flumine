@@ -41,14 +41,13 @@ class FlumineSimulation(BaseFlumine):
                 Event data to be muxed/processed chronologically as per
                 live rather than single which is per market in isolation.
                 """
-                event_streams = defaultdict(list)  # event_group: [<Stream>, ..]
+                event_group_streams = defaultdict(list)  # event_group: [<Stream>, ..]
                 for stream in self.streams:
-                    event_group = (
-                        stream.event_group if stream.event_processing else None
-                    )
-                    event_streams[event_group].append(stream)
+                    # stream.event_group is None if stream is added without
+                    # event_processing=True
+                    event_group_streams[stream.event_group].append(stream)
 
-                for event_group, streams in event_streams.items():
+                for event_group, streams in event_group_streams.items():
                     if event_group and len(streams) > 1:
                         logger.info(
                             "Starting historical event group '{0}'".format(event_group),

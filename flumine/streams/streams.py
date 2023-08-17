@@ -163,11 +163,14 @@ class Streams:
         **listener_kwargs
     ) -> HistoricalStream:
         for stream in self:
+            # Get the expected event group of a stream considering its event id and group mapping 
+            event_group = (
+                event_groups.get(stream.event_id, stream.event_id) if event_processing else None
+            )
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
-                and stream.event_group
-                == event_groups.get(stream.event_id, stream.event_id)
+                and stream.event_group == event_group
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
@@ -176,7 +179,9 @@ class Streams:
             event_id = get_file_md(market, "eventId")
             if event_processing and event_id is None:
                 logger.warning("EventId not found for market %s" % market)
-            event_group = event_groups.get(event_id, event_id)  # Event ID by default
+            event_group = (
+                event_groups.get(event_id, event_id) if event_processing else None
+            )  # Event ID by default, None if event_processing is False
             logger.info(
                 "Creating new {0} ({1}) for strategy {2}".format(
                     HistoricalStream.__name__, stream_id, strategy
