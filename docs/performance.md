@@ -40,19 +40,9 @@ logger.setLevel(logging.CRITICAL)
 
 ### File location
 
+Flumine uses [`smart_open`](https://github.com/RaRe-Technologies/smart_open) to open historical files, so you can read files directly from s3 (`s3://http://s3.amazonaws.com/example/1.1234567`).
+
 This might sound obvious but having the market files stored locally on your machine will allow much quicker processing. A common pattern is to use s3 to store all market files but a local cache for common markets processed.
-
-`smart_open` is a commonly used package for processing gz/s3 files:
-
-```python
-with patch("builtins.open", smart_open.open):
-    framework.add_strategy(strategy)
-    framework.run()
-```
-
-!!! tip
-    Note that `add_strategy` needs to be in the patch as well.
-
 
 ### Betfair Historical Data
 

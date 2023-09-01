@@ -1,5 +1,6 @@
 import logging
 import datetime
+import smart_open
 from typing import Optional
 from betfairlightweight.streaming import StreamListener, HistoricalGeneratorStream
 from betfairlightweight.streaming.stream import MarketStream, RaceStream, CricketStream
@@ -205,7 +206,7 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
         self.listener.register_stream(self.unique_id, self.operation)
         listener_on_data = self.listener.on_data  # cache functions
         stream_snap = self.listener.stream.snap
-        with open(self.file_path, "r") as f:
+        with smart_open.open(self.file_path, "r") as f:
             for update in f:
                 if listener_on_data(update):
                     yield stream_snap()
