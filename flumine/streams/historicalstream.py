@@ -184,7 +184,7 @@ class HistoricListener(StreamListener):
         else:
             raise ListenerError("Unable to process '{0}' stream".format(operation))
 
-    def on_data(self, raw_data: str) -> Optional[bool]:
+    def on_data(self, raw_data: bytes) -> Optional[bool]:
         try:
             data = json.loads(raw_data)
         except ValueError:
@@ -205,7 +205,7 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
         self.listener.register_stream(self.unique_id, self.operation)
         listener_on_data = self.listener.on_data  # cache functions
         stream_snap = self.listener.stream.snap
-        with open(self.file_path, "r") as f:
+        with open(self.file_path, "rb") as f:
             for update in f:
                 if listener_on_data(update):
                     yield stream_snap()

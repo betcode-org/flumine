@@ -63,7 +63,7 @@ def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
     # get value from raw streaming file marketDefinition
     if isinstance(file_dir, tuple):
         file_dir = file_dir[0]
-    with open(file_dir, "r") as f:
+    with open(file_dir, "rb") as f:
         first_line = f.readline()
         update = json.loads(first_line)
     if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:
