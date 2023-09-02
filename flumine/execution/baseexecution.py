@@ -128,7 +128,9 @@ class BaseExecution:
         self, order: BaseOrder, instruction_report, package_type: OrderPackageType
     ):
         logger.info(
-            "Order %s: %s" % (package_type.value, instruction_report.status),
+            "Order %s: %s",
+            package_type.value,
+            instruction_report.status,
             extra={
                 "bet_id": order.bet_id,
                 "order_id": order.id,

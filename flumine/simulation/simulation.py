@@ -49,7 +49,8 @@ class FlumineSimulation(BaseFlumine):
                 for event_id, streams in event_streams.items():
                     if event_id and len(streams) > 1:
                         logger.info(
-                            "Starting historical event '{0}'".format(event_id),
+                            "Starting historical event '%s'",
+                            event_id,
                             extra={
                                 "event_id": event_id,
                                 "markets": [s.market_filter for s in streams],
@@ -82,13 +83,12 @@ class FlumineSimulation(BaseFlumine):
                             # add back
                             cycles.append([publish_time_epoch, market_book, stream_gen])
                         self.handler_queue.clear()
-                        logger.info("Completed historical event '{0}'".format(event_id))
+                        logger.info("Completed historical event '%s'", event_id)
                     else:
                         for stream in streams:
                             logger.info(
-                                "Starting historical market '{0}'".format(
-                                    stream.market_filter
-                                ),
+                                "Starting historical market '%s'",
+                                stream.market_filter,
                                 extra={"market": stream.market_filter},
                             )
                             self.simulated_datetime.reset_real_datetime()
@@ -99,9 +99,7 @@ class FlumineSimulation(BaseFlumine):
                                 )
                             self.handler_queue.clear()
                             logger.info(
-                                "Completed historical market '{0}'".format(
-                                    stream.market_filter
-                                )
+                                "Completed historical market '%s'", stream.market_filter
                             )
                 self._process_end_flumine()
                 logger.info("Simulation complete")

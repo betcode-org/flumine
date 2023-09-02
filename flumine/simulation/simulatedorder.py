@@ -208,9 +208,7 @@ class SimulatedOrder:
                     self._piq = avail["size"]
                     break
 
-            logger.debug(
-                "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
-            )
+            logger.debug("Simulated order %s PIQ: %s", self.order.id, self._piq)
             return self._create_place_response(bet_id)
         else:
             # validate BSP available, not reconciled and market not inplay
@@ -421,9 +419,9 @@ class SimulatedOrder:
             self.order.execution_complete()
         else:
             logger.warning(
-                "SP not available for order {0} on runner {1}".format(
-                    self.order.id, runner.selection_id
-                )
+                "SP not available for order %s on runner %s",
+                self.order.id,
+                runner.selection_id,
             )
 
     def _process_traded(self, publish_time: int, traded: dict) -> None:
@@ -433,9 +431,10 @@ class SimulatedOrder:
         for traded_price, traded_size in traded.items():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(
-                    "Simulated order {0} traded: {1} - {2}".format(
-                        self.order.id, traded_price, traded_size
-                    )
+                    "Simulated order %s traded: %s - %s",
+                    self.order.id,
+                    traded_price,
+                    traded_size,
                 )
             if side == "BACK" and traded_price >= price:
                 matched = self._calculate_process_traded(publish_time, traded_size)
@@ -464,10 +463,7 @@ class SimulatedOrder:
             return _matched
         else:
             self._piq -= _traded_size
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(
-                    "Simulated order {0} PIQ: {1}".format(self.order.id, self._piq)
-                )
+            logger.debug("Simulated order %s PIQ: %s", self.order.id, self._piq)
             return traded_size
 
     def _process_available(self, publish_time: int, runner: RunnerBook) -> None:
@@ -515,7 +511,7 @@ class SimulatedOrder:
         return self.order.side
 
     def _update_matched(self, data: List) -> None:
-        logger.debug("Simulated order {0} matched: {1}".format(self.order.id, data))
+        logger.debug("Simulated order %s matched: %s", self.order.id, data)
         self.matched.append(data)
         self.size_matched, self.average_price_matched = wap(self.matched)
 

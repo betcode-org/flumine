@@ -17,7 +17,8 @@ class SportsDataStream(BaseStream):
     def run(self) -> None:
         time.sleep(2)  # 2s delay to wait for market streams to start
         logger.info(
-            "Starting SportsDataStream {0}".format(self.stream_id),
+            "Starting SportsDataStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
                 "sports_data_filter": self.sports_data_filter,
@@ -25,9 +26,7 @@ class SportsDataStream(BaseStream):
             },
         )
         if not self._output_thread.is_alive():
-            logger.info(
-                "Starting output_thread (SportsDataStream {0})".format(self.stream_id)
-            )
+            logger.info("Starting output_thread (SportsDataStream %s)", self.stream_id)
             self._output_thread.start()
 
         self._stream = self.betting_client.streaming.create_stream(
@@ -42,16 +41,14 @@ class SportsDataStream(BaseStream):
                 raise ValueError("Unknown sports data filter")
             self._stream.start()
         except BetfairError:
-            logger.error(
-                "SportsDataStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.error("SportsDataStream %s run error", self.stream_id, exc_info=True)
             raise
         except Exception:
             logger.critical(
-                "SportsDataStream {0} run error".format(self.stream_id), exc_info=True
+                "SportsDataStream %s run error", self.stream_id, exc_info=True
             )
             raise
-        logger.info("Stopped SportsDataStream {0}".format(self.stream_id))
+        logger.info("Stopped SportsDataStream %s", self.stream_id)
 
     def handle_output(self) -> None:
         """Handles output from stream."""
@@ -67,6 +64,4 @@ class SportsDataStream(BaseStream):
             if sports_data:
                 self.flumine.handler_queue.put(SportsDataEvent(sports_data))
 
-        logger.info(
-            "Stopped output_thread (SportsDataStream {0})".format(self.stream_id)
-        )
+        logger.info("Stopped output_thread (SportsDataStream %s)", self.stream_id)

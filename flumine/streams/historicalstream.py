@@ -43,8 +43,10 @@ class FlumineMarketStream(MarketStream):
                     logger.warning(
                         "[%s: %s]: Missing marketDefinition on market %s resulting "
                         "in potential missing data in the MarketBook (make sure "
-                        "EX_MARKET_DEF is requested)"
-                        % (self, self.unique_id, market_id)
+                        "EX_MARKET_DEF is requested)",
+                        self,
+                        self.unique_id,
+                        market_id,
                     )
                 market_book_cache = MarketBookCache(
                     market_id,
@@ -55,8 +57,11 @@ class FlumineMarketStream(MarketStream):
                 )
                 self._caches[market_id] = market_book_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             # listener_kwargs filtering
@@ -116,8 +121,11 @@ class FlumineRaceStream(RaceStream):
                 race_cache.start_time = create_time(publish_time, race_id)
                 self._caches[market_id] = race_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             # filter after start time
@@ -151,8 +159,11 @@ class FlumineCricketStream(CricketStream):
                 )
                 self._caches[market_id] = cricket_match_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             cricket_match_cache.update_cache(cricket_change, publish_time)
