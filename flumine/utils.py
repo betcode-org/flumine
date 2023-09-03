@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Optional, Tuple, Callable, Union
 from decimal import Decimal, ROUND_HALF_UP
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
+from betfairlightweight.resources.streamingresources import MarketDefinition
+
 
 from . import config
 from .exceptions import FlumineException
@@ -59,7 +61,7 @@ def file_line_count(file_path: str) -> int:
     return i + 1
 
 
-def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
+def get_file_md(file_dir: Union[str, tuple]) -> Optional[MarketDefinition]:
     # get value from raw streaming file marketDefinition
     if isinstance(file_dir, tuple):
         file_dir = file_dir[0]
@@ -69,7 +71,7 @@ def get_file_md(file_dir: Union[str, tuple], value: str) -> Optional[str]:
     if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:
         return None
     md = update["mc"][0].get("marketDefinition", {})
-    return md.get(value)
+    return MarketDefinition(**md)
 
 
 def chunks(l: list, n: int) -> list:
