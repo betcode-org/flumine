@@ -245,12 +245,11 @@ class SimulatedMiddleware(Middleware):
 
     @staticmethod
     def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:
-        try:
-            runner_analytics = market_analytics[(runner.selection_id, runner.handicap)]
-        except KeyError:
-            runner_analytics = market_analytics[
-                (runner.selection_id, runner.handicap)
-            ] = RunnerAnalytics(runner)
+        key = (runner.selection_id, runner.handicap)
+        if key in market_analytics:
+            runner_analytics = market_analytics[key]
+        else:
+            runner_analytics = market_analytics[key] = RunnerAnalytics(runner)
         runner_analytics(runner)
 
 
