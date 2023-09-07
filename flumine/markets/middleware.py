@@ -201,47 +201,19 @@ class SimulatedMiddleware(Middleware):
                         k: (v.runner, v.traded.copy())
                         for k, v in market_analytics.items()
                     }
-                    live_orders_sorted = self._sort_orders(live_orders)
-                    for order in live_orders_sorted:
+                    for order in live_orders:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
                         order.simulated(market.market_book, runner_traded)
         else:  # isolation per instance
-            live_orders = list(market.blotter.live_orders)
+            live_orders = market.blotter.live_orders
             if live_orders:
                 _lookup = {
                     k: (v.runner, v.traded.copy()) for k, v in market_analytics.items()
                 }
-                live_orders_sorted = self._sort_orders(live_orders)
-                for order in live_orders_sorted:
+                for order in live_orders:
                     if order.status in LIVE_STATUS and order.simulated:
                         runner_traded = _lookup[(order.selection_id, order.handicap)]
                         order.simulated(market.market_book, runner_traded)
-
-    @staticmethod
-    def _sort_orders(orders: list) -> list:
-        # order by betId (default), side (Lay,Back) and then price
-        lay_orders = sorted(
-            [
-                o
-                for o in orders
-                if o.side == "LAY"
-                and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
-            ],
-            key=lambda x: -x.order_type.price,
-        )
-        back_orders = sorted(
-            [
-                o
-                for o in orders
-                if o.side == "BACK"
-                and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
-            ],
-            key=lambda x: x.order_type.price,
-        )
-        moc = [
-            o for o in orders if o.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
-        ]
-        return lay_orders + back_orders + moc
 
     @staticmethod
     def _process_runner(market_analytics: dict, runner: RunnerBook) -> None:

@@ -255,9 +255,11 @@ class Blotter:
         self._orders[customer_order_ref] = order
         self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
+        self._live_orders = _sort_orders(self._live_orders)
         strategy = order.trade.strategy
         self._trades[order.trade.id].append(order)
         self._strategy_orders[strategy].append(order)
+        self._strategy_orders[strategy] = _sort_orders(self._strategy_orders[strategy])
         self._strategy_selection_orders[
             (strategy, order.selection_id, order.handicap)
         ].append(order)
@@ -273,3 +275,28 @@ class Blotter:
 
     def __len__(self) -> int:
         return len(self._orders)
+
+def _sort_orders(orders: list) -> list:
+    # order by betId (default), side (Lay,Back) and then price
+    lay_orders = sorted(
+        [
+            o
+            for o in orders
+            if o.side == "LAY"
+            and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
+        ],
+        key=lambda x: -x.order_type.price,
+    )
+    back_orders = sorted(
+        [
+            o
+            for o in orders
+            if o.side == "BACK"
+            and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
+        ],
+        key=lambda x: x.order_type.price,
+    )
+    moc = [
+        o for o in orders if o.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
+    ]
+    return lay_orders + back_orders + moc
