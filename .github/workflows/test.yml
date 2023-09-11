@@ -44,6 +44,31 @@ jobs:
         coverage run -m unittest discover
         coverage report
 
+  test-speed:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Check setup.py
+      run: |
+        python setup.py check
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-speed.txt
+        pip install -r requirements-test.txt
+
+    - name: Unittest
+      run: |
+        python -m unittest discover -s tests
+
   deploy:
     needs: test
     runs-on: ubuntu-latest

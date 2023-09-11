@@ -8,14 +8,16 @@ Release History
 
 **Improvements**
 
--
+- #675 provide flumine to add and start methods (@mzaja)
+- Lazily evaluate log message parameters (@petedmarsh)
 
 **Bug Fixes**
 
--
+- #677 Remove duplicated method call (@mzaja)
 
 **Libraries**
 
+- Add [speed] (@petedmarsh)
 - Remove py3.7
 - betfairlightweight upgraded to 2.19.0b0
 
