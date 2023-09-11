@@ -744,7 +744,6 @@ class TestHistoricalStream(unittest.TestCase):
         )
         self.assertIsNone(self.stream._listener.max_latency)
         self.assertFalse(self.stream._listener.lightweight)
-        self.assertFalse(self.stream._listener.debug)
         self.assertFalse(self.stream._listener.update_clk)
         self.assertEqual(generator, mock_generator().get_generator())
 
