@@ -70,7 +70,7 @@ jobs:
         python -m unittest discover -s tests
 
   deploy:
-    needs: test
+    needs: [test, test-speed]
     runs-on: ubuntu-latest
     environment:
       name: deploy
