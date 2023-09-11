@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self):
+    def start(self, flumine):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
 
