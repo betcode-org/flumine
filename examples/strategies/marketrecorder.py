@@ -44,7 +44,7 @@ class MarketRecorder(BaseStrategy):
         self._queue = queue.Queue()
 
     def add(self, flumine) -> None:
-        logger.info("Adding strategy %s with id %s" % (self.name, self.recorder_id))
+        logger.info("Adding strategy %s with id %s", self.name, self.recorder_id)
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
@@ -94,8 +94,10 @@ class MarketRecorder(BaseStrategy):
         # check that file actually exists
         if not os.path.isfile(file_dir):
             logger.error(
-                "File: %s does not exist in /%s/%s/"
-                % (self.local_dir, market_id, self.recorder_id)
+                "File: %s does not exist in /%s/%s/",
+                self.local_dir,
+                market_id,
+                self.recorder_id,
             )
             return
 
@@ -117,7 +119,7 @@ class MarketRecorder(BaseStrategy):
             # check file still exists (potential race condition)
             if not os.path.isfile(file_dir):
                 logger.warning(
-                    "File: %s does not exist in %s" % (market.market_id, file_dir)
+                    "File: %s does not exist in %s", market.market_id, file_dir
                 )
                 continue
             # compress file
@@ -173,8 +175,7 @@ class MarketRecorder(BaseStrategy):
                 if seconds_since > self._market_expiration:
                     if self._remove_gz_file:
                         logger.info(
-                            "Removing: %s, age: %ss"
-                            % (gz_path, round(seconds_since, 2))
+                            "Removing: %s, age: %ss", gz_path, round(seconds_since, 2)
                         )
                         os.remove(gz_path)
                     txt_path = os.path.join(directory, file.split(".gz")[0])
@@ -183,8 +184,9 @@ class MarketRecorder(BaseStrategy):
                         seconds_since = time.time() - file_stats.st_mtime
                         if seconds_since > self._market_expiration:
                             logger.info(
-                                "Removing: %s, age: %ss"
-                                % (txt_path, round(seconds_since, 2))
+                                "Removing: %s, age: %ss",
+                                txt_path,
+                                round(seconds_since, 2),
                             )
                             os.remove(txt_path)
 

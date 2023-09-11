@@ -237,12 +237,18 @@ def call_strategy_error_handling(
         return func(market, market_book)
     except FlumineException as e:
         logger.error(
-            "FlumineException %s in %s (%s)" % (e, func.__name__, market.market_id),
+            "FlumineException %s in %s (%s)",
+            e,
+            func.__name__,
+            market.market_id,
             exc_info=True,
         )
     except Exception as e:
         logger.critical(
-            "Unknown error %s in %s (%s)" % (e, func.__name__, market.market_id),
+            "Unknown error %s in %s (%s)",
+            e,
+            func.__name__,
+            market.market_id,
             exc_info=True,
         )
         if config.raise_errors:
@@ -255,12 +261,18 @@ def call_middleware_error_handling(middleware, market) -> None:
         middleware(market)
     except FlumineException as e:
         logger.error(
-            "FlumineException %s in %s (%s)" % (e, middleware, market.market_id),
+            "FlumineException %s in %s (%s)",
+            e,
+            middleware,
+            market.market_id,
             exc_info=True,
         )
     except Exception as e:
         logger.critical(
-            "Unknown error %s in %s (%s)" % (e, middleware, market.market_id),
+            "Unknown error %s in %s (%s)",
+            e,
+            middleware,
+            market.market_id,
             exc_info=True,
         )
         if config.raise_errors:
@@ -272,12 +284,18 @@ def call_process_orders_error_handling(strategy, market, strategy_orders: list) 
         strategy.process_orders(market, strategy_orders)
     except FlumineException as e:
         logger.error(
-            "FlumineException %s in %s (%s)" % (e, strategy, market.market_id),
+            "FlumineException %s in %s (%s)",
+            e,
+            strategy,
+            market.market_id,
             exc_info=True,
         )
     except Exception as e:
         logger.critical(
-            "Unknown error %s in %s (%s)" % (e, strategy, market.market_id),
+            "Unknown error %s in %s (%s)",
+            e,
+            strategy,
+            market.market_id,
             exc_info=True,
         )
         if config.raise_errors:
@@ -289,12 +307,16 @@ def call_process_raw_data(strategy, clk: str, publish_time: int, datum: dict) ->
         strategy.process_raw_data(clk, publish_time, datum)
     except FlumineException as e:
         logger.error(
-            "FlumineException %s in %s" % (e, strategy),
+            "FlumineException %s in %s",
+            e,
+            strategy,
             exc_info=True,
         )
     except Exception as e:
         logger.critical(
-            "Unknown error %s in %s" % (e, strategy),
+            "Unknown error %s in %s",
+            e,
+            strategy,
             exc_info=True,
         )
         if config.raise_errors:

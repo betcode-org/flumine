@@ -116,11 +116,11 @@ class BetfairClient(BaseClient):
                 ]
             except KeyError:
                 logger.warning(
-                    "min_bet_size KeyError: %s" % self.account_details.currency_code
+                    "min_bet_size KeyError: %s", self.account_details.currency_code
                 )
                 return MIN_BET_SIZE
             except Exception as e:
-                logger.error("min_bet_size error: {0}".format(e), exc_info=True)
+                logger.error("min_bet_size error: %s", e, exc_info=True)
                 return MIN_BET_SIZE
         else:
             return MIN_BET_SIZE
@@ -138,7 +138,7 @@ class BetfairClient(BaseClient):
                 )
                 return MIN_BET_PAYOUT
             except Exception as e:
-                logger.error("min_bet_payout error: {0}".format(e), exc_info=True)
+                logger.error("min_bet_payout error: %s", e, exc_info=True)
                 return MIN_BET_PAYOUT
         else:
             return MIN_BET_PAYOUT
@@ -152,12 +152,11 @@ class BetfairClient(BaseClient):
                 ]
             except KeyError:
                 logger.warning(
-                    "min_bsp_liability KeyError: %s"
-                    % self.account_details.currency_code
+                    "min_bsp_liability KeyError: %s", self.account_details.currency_code
                 )
                 return MIN_BSP_LIABILITY
             except Exception as e:
-                logger.error("min_bsp_liability error: {0}".format(e), exc_info=True)
+                logger.error("min_bsp_liability error: %s", e, exc_info=True)
                 return MIN_BSP_LIABILITY
         else:
             return MIN_BSP_LIABILITY

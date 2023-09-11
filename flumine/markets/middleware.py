@@ -61,9 +61,10 @@ class SimulatedMiddleware(Middleware):
                 )
                 if _removal not in self._runner_removals:
                     logger.warning(
-                        "Runner {0} ({2}) removed from market {3}".format(
-                            *_removal, market.market_id
-                        )
+                        "Runner %s (%s) removed from market %s",
+                        runner.selection_id,
+                        runner.adjustment_factor,
+                        market.market_id,
                     )
                     self._runner_removals.append(_removal)
                     runner_removals.append(_removal)
@@ -105,7 +106,8 @@ class SimulatedMiddleware(Middleware):
                     else:
                         order.simulated.size_voided = order.order_type.liability
                     logger.warning(
-                        "Order voided on non runner {0}".format(order.selection_id),
+                        "Order voided on non runner %s",
+                        order.selection_id,
                         extra=order.info,
                     )
                 else:
@@ -135,9 +137,8 @@ class SimulatedMiddleware(Middleware):
                                     2,
                                 )
                             logger.warning(
-                                "WIN MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
-                                    order.selection_id
-                                ),
+                                "WIN MARKET_ON_CLOSE Order adjusted due to non runner %s",
+                                order.selection_id,
                                 extra=order.info,
                             )
                         elif market.market_type in {"PLACE", "OTHER_PLACE"}:
@@ -151,9 +152,8 @@ class SimulatedMiddleware(Middleware):
                                     2,
                                 )
                             logger.warning(
-                                "PLACE MARKET_ON_CLOSE Order adjusted due to non runner {0}".format(
-                                    order.selection_id
-                                ),
+                                "PLACE MARKET_ON_CLOSE Order adjusted due to non runner %s",
+                                order.selection_id,
                                 extra=order.info,
                             )
                     elif (
@@ -169,9 +169,8 @@ class SimulatedMiddleware(Middleware):
                             order.simulated.matched
                         )
                         logger.warning(
-                            "Order adjusted due to non runner {0}".format(
-                                order.selection_id
-                            ),
+                            "Order adjusted due to non runner %s",
+                            order.selection_id,
                             extra=order.info,
                         )
 

@@ -104,7 +104,8 @@ def create_order_from_current(
     strategy = strategies.hashes.get(strategy_name_hash)
     if strategy is None:
         logger.warning(
-            "Strategy not available to create order {0}".format(order_id),
+            "Strategy not available to create order %s",
+            order_id,
             extra={
                 "bet_id": current_order.bet_id,
                 "market_id": current_order.market_id,
