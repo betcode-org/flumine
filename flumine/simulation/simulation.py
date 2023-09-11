@@ -101,8 +101,7 @@ class FlumineSimulation(BaseFlumine):
                             logger.info(
                                 "Completed historical market '%s'", stream.market_filter
                             )
-                self._process_end_flumine()
-                logger.info("Simulation complete")
+        logger.info("Simulation complete")  # Call this after self.__exit__
 
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         # todo DRY!

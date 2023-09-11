@@ -43,7 +43,7 @@ class MarketRecorder(BaseStrategy):
         self._loaded_markets = []  # list of marketIds
         self._queue = queue.Queue()
 
-    def add(self) -> None:
+    def add(self, flumine) -> None:
         logger.info("Adding strategy %s with id %s", self.name, self.recorder_id)
         # check local dir
         if not os.path.isdir(self.local_dir):
@@ -53,7 +53,7 @@ class MarketRecorder(BaseStrategy):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         # start load processor thread
         threading.Thread(
             name="{0}_load_processor".format(self.name),
@@ -218,8 +218,8 @@ class S3MarketRecorder(MarketRecorder):
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
 
-    def add(self) -> None:
-        super().add()
+    def add(self, flumine) -> None:
+        super().add(flumine)
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
