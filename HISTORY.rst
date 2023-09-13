@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-2.5.0b0 (2023-09-11)
+2.5.0b0 (2023-09-??)
 +++++++++++++++++++
 
 **Improvements**
@@ -13,6 +13,7 @@ Release History
 - Change utils.get_file_md to return a MarketDefinition (@petedmarsh)
 - Open historical data files in binary mode (it's faster) (@petedmarsh)
 - Use raw json for creating order requests (faster)
+- uuid4 is faster
 
 **Bug Fixes**
 

@@ -39,7 +39,7 @@ class BaseOrderPackage(BaseEvent):
         market_version: int = None,
     ):
         super(BaseOrderPackage, self).__init__(None)
-        self.id = uuid.uuid1()
+        self.id = uuid.uuid4()
         self.client = client
         self.market_id = market_id
         self._orders = orders
