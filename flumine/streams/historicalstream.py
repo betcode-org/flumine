@@ -213,13 +213,19 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
     """Super fast historical stream"""
 
     def _read_loop(self) -> dict:
-        self.listener.register_stream(self.unique_id, self.operation)
+        unique_id = self.unique_id
+        self.listener.register_stream(unique_id, self.operation)
         listener_on_data = self.listener.on_data  # cache functions
-        stream_snap = self.listener.stream.snap
-        with open(self.file_path, "rb") as f:
-            for update in f:
+        caches = self.listener.stream._caches
+        with open(self.file_path, "r") as f:
+            file = f.readlines()  # read entire file into memory (faster)
+            for update in file:
                 if listener_on_data(update):
-                    yield stream_snap()
+                    yield [
+                        cache.create_resource(unique_id, snap=True)
+                        for cache in caches.values()
+                        if cache.active
+                    ]
 
 
 class HistoricalStream(BaseStream):

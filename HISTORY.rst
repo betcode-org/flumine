@@ -11,7 +11,7 @@ Release History
 - #675 provide flumine to add and start methods (@mzaja)
 - Lazily evaluate log message parameters (@petedmarsh)
 - Change utils.get_file_md to return a MarketDefinition (@petedmarsh)
-- Open historical data files in binary mode (it's faster) (@petedmarsh)
+- Refactor _read_loop to open entire file in ram + remove function calls
 - Use raw json for creating order requests (faster)
 - uuid4 is faster
 
