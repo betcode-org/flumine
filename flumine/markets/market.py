@@ -62,6 +62,13 @@ class Market:
             extra=self.info,
         )
 
+    def belongs_to_strategy(self, strategy) -> bool:
+        """
+        Returns True if the market belongs to the given strategy, else False.
+        """
+        # self.market_book is always defined since Market object is initialised with it
+        return self.market_book.streaming_unique_id in strategy.stream_ids
+
     def transaction(self, async_place_orders: bool = None, client=None) -> Transaction:
         if async_place_orders is None:
             async_place_orders = config.async_place_orders
