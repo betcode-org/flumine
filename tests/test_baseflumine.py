@@ -265,6 +265,11 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_market_catalogues(self, mock_log_control, mock_events):
         mock_market = mock.Mock()
+        # First strategy is subscribed to the market, second one is not
+        mock_market.belongs_to_strategy.side_effect = (True, False)
+        mock_strategy_1 = mock.Mock()
+        mock_strategy_2 = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy_1, mock_strategy_2]
         mock_market.market_catalogue = None
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
@@ -277,6 +282,10 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
         mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
         self.assertFalse(mock_market.update_market_catalogue)
+        mock_strategy_1.process_market_catalogue.assert_called_once_with(
+            mock_market, mock_market_catalogue
+        )
+        mock_strategy_2.process_market_catalogue.assert_not_called()
 
     @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
     @mock.patch("flumine.baseflumine.process_current_orders")

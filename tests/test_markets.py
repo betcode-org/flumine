@@ -162,6 +162,13 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.closed)
         self.assertIsNotNone(self.market.date_time_closed)
 
+    def test_belongs_to_strategy(self):
+        mock_strategy = mock.Mock(stream_ids=[1, 2])
+        self.market.market_book.streaming_unique_id = 1
+        self.assertTrue(self.market.belongs_to_strategy(mock_strategy))
+        self.market.market_book.streaming_unique_id = 5
+        self.assertFalse(self.market.belongs_to_strategy(mock_strategy))
+
     @mock.patch("flumine.markets.market.Transaction")
     def test_transaction(self, mock_transaction):
         transaction = self.market.transaction()

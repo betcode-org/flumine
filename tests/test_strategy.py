@@ -108,33 +108,29 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
 
     @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
         "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=False
     )
-    def test_check_market_fail(self, mock_check_market_book, mock_market_stream_ids):
+    def test_check_market_fail(self, mock_check_market_book):
+        """
+        Market check fails because BaseStrategy.check_market_book returns False.
+        """
         mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
+        mock_market.belongs_to_strategy.return_value = True
+        mock_market_book = mock.Mock()
         self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
         mock_check_market_book.assert_called_with(mock_market, mock_market_book)
-        mock_market_stream_ids.assert_called_with()
+        mock_market.belongs_to_strategy.assert_called_with(self.strategy)
 
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
     @mock.patch(
         "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=True
     )
-    def test_check_market_pass(self, mock_check_market_book, mock_market_stream_ids):
+    def test_check_market_pass(self, mock_check_market_book):
         mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
+        mock_market.belongs_to_strategy.return_value = True
+        mock_market_book = mock.Mock()
         self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
         mock_check_market_book.assert_called_with(mock_market, mock_market_book)
+        mock_market.belongs_to_strategy.assert_called_with(self.strategy)
 
     def test_process_new_market(self):
         self.strategy.process_new_market(None, None)
@@ -144,6 +140,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_process_market_book(self):
         self.strategy.process_market_book(None, None)
+
+    def test_process_market_catalogue(self):
+        self.strategy.process_market_catalogue(None, None)
 
     def test_check_sports_no_subscribed(self):
         mock_market = mock.Mock()
