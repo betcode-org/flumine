@@ -85,7 +85,7 @@ class BaseStrategy:
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
-        self.historic_stream_ids = []
+        self._stream_ids = set()  # Much faster "in" lookup than a list
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
@@ -224,12 +224,13 @@ class BaseStrategy:
             ] = runner_context = RunnerContext(selection_id)
             return runner_context
 
+    def add_stream(self, stream: BaseStream):
+        self.streams.append(stream)
+        self._stream_ids.add(stream.stream_id)
+
     @property
-    def stream_ids(self) -> list:
-        if self.historic_stream_ids:
-            return self.historic_stream_ids
-        else:
-            return [stream.stream_id for stream in self.streams]
+    def stream_ids(self) -> set:
+        return self._stream_ids
 
     @property
     def info(self) -> dict:
@@ -239,7 +240,9 @@ class BaseStrategy:
             "market_data_filter": self.market_data_filter,
             "streaming_timeout": self.streaming_timeout,
             "conflate_ms": self.conflate_ms,
-            "stream_ids": self.stream_ids,
+            "stream_ids": [
+                s.stream_id for s in self.streams
+            ],  # Preserves order of addition
             "max_selection_exposure": self.max_selection_exposure,
             "max_order_exposure": self.max_order_exposure,
             "max_live_trade_count": self.max_live_trade_count,

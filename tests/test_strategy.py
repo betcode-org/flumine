@@ -77,7 +77,7 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.max_trade_count, 3)
         self.assertEqual(self.strategy.max_live_trade_count, 4)
         self.assertEqual(self.strategy.streams, [])
-        self.assertEqual(self.strategy.historic_stream_ids, [])
+        self.assertEqual(self.strategy._stream_ids, set())
         self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
         self.assertFalse(self.strategy.multi_order_trades)
         self.assertEqual(strategy.STRATEGY_NAME_HASH_LENGTH, 13)
@@ -234,12 +234,14 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.get_runner_context("2", 789, 0)
         self.assertEqual(len(self.strategy._invested), 2)
 
-    def test_stream_ids(self):
-        mock_stream = mock.Mock(stream_id=321)
-        self.strategy.streams = [mock_stream]
-        self.assertEqual(self.strategy.stream_ids, [321])
-        self.strategy.historic_stream_ids = [123]
-        self.assertEqual(self.strategy.stream_ids, [123])
+    def test_add_stream(self):
+        mock_stream_1 = mock.Mock(stream_id=123)
+        mock_stream_2 = mock.Mock(stream_id=456)
+        self.strategy.add_stream(mock_stream_1)
+        self.strategy.add_stream(mock_stream_2)
+        self.assertIn(123, self.strategy.stream_ids)
+        self.assertIn(456, self.strategy.stream_ids)
+        self.assertEqual(self.strategy.streams, [mock_stream_1, mock_stream_2])
 
     def test_info(self):
         self.assertEqual(
