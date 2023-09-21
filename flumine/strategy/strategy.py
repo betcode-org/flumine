@@ -98,14 +98,6 @@ class BaseStrategy:
         # e.g. subscribe to extra streams
         return
 
-    def check_market(self, market: Market, market_book: MarketBook) -> bool:
-        if not market.belongs_to_strategy(self):
-            return False  # strategy not subscribed to market stream
-        elif self.check_market_book(market, market_book):
-            return True
-        else:
-            return False
-
     def process_new_market(self, market: Market, market_book: MarketBook) -> None:
         # called when a market is newly added to the framework
         return

@@ -141,16 +141,17 @@ class FlumineSimulation(BaseFlumine):
                 self._process_simulated_orders(market)
 
             for strategy in self.strategies:
-                if market_is_new:
-                    utils.call_strategy_error_handling(
-                        strategy.process_new_market, market, market_book
-                    )
-                if utils.call_strategy_error_handling(
-                    strategy.check_market, market, market_book
-                ):
-                    utils.call_strategy_error_handling(
-                        strategy.process_market_book, market, market_book
-                    )
+                if market.belongs_to_strategy(strategy):
+                    if market_is_new:
+                        utils.call_strategy_error_handling(
+                            strategy.process_new_market, market, market_book
+                        )
+                    if utils.call_strategy_error_handling(
+                        strategy.check_market_book, market, market_book
+                    ):
+                        utils.call_strategy_error_handling(
+                            strategy.process_market_book, market, market_book
+                        )
 
     def process_order_package(self, order_package) -> None:
         # place in pending list (wait for latency+delay)

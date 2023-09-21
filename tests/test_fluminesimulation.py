@@ -94,12 +94,12 @@ class FlumineSimulationTest(unittest.TestCase):
         mock__process_simulated_orders.assert_called_with(mock_market)
 
     def test__process_market_books_new_market(self):
-        mock_strategy = mock.Mock()
+        mock_strategy = mock.Mock(stream_ids=[1])
         self.flumine.add_strategy(mock_strategy)
-        mock_market_book = mock.Mock(market_id="1.23")
-        mock_market_book.runners = []
-        mock_event = mock.Mock()
-        mock_event.event = [mock_market_book]
+        mock_market_book = mock.Mock(
+            market_id="1.23", streaming_unique_id=1, runners=[]
+        )
+        mock_event = mock.Mock(event=[mock_market_book])
         for call_count in range(1, 5):
             # process_new_market must be called only once, the first time
             with self.subTest(call_count=call_count):
@@ -112,6 +112,46 @@ class FlumineSimulationTest(unittest.TestCase):
         self.assertIs(market_book, mock_market_book)
         self.assertIsInstance(market, Market)
         self.assertIs(market.market_book, mock_market_book)
+
+    def test__process_market_stream_not_subscribed(self):
+        """
+        Market book should only be called with objects from the streams
+        it is subscribed to.
+        """
+        mock_strategy = mock.Mock(stream_ids=[1, 2])
+        self.flumine.add_strategy(mock_strategy)
+        mock_market_book = mock.Mock(
+            market_id="1.123", streaming_unique_id=5, runners=[]
+        )
+        mock_event = mock.Mock(event=[mock_market_book])
+        self.flumine._process_market_books(mock_event)
+        mock_strategy.process_new_market.assert_not_called()
+        mock_strategy.check_market_book.assert_not_called()
+        mock_strategy.process_market_book.assert_not_called()
+
+    def test__process_market_books_check_market_books(self):
+        """
+        Tests base_flumine._process_market_books() with different return values
+        of strategy.check_market_book().
+        """
+        mock_strategy = mock.Mock(stream_ids=[1])
+        check_pattern = (False, True, True, False, True)
+        mock_strategy.check_market_book.side_effect = check_pattern
+        self.flumine.add_strategy(mock_strategy)
+        mock_market_book = mock.Mock(
+            market_id="1.123", streaming_unique_id=1, runners=[]
+        )
+        mock_event = mock.Mock(event=[mock_market_book])
+        process_call_count = 0
+        for check_call_count, check_market_book_retval in enumerate(check_pattern, 1):
+            self.flumine._process_market_books(mock_event)
+            process_call_count += check_market_book_retval  # True == 1, False == 0
+            self.assertEqual(
+                mock_strategy.check_market_book.call_count, check_call_count
+            )
+            self.assertEqual(
+                mock_strategy.process_market_book.call_count, process_call_count
+            )
 
     def test_process_order_package(self):
         mock_order_package = mock.Mock()

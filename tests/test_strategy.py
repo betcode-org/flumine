@@ -102,36 +102,6 @@ class BaseStrategyTest(unittest.TestCase):
     def test_start(self):
         self.strategy.start()
 
-    def test_check_market_no_subscribed(self):
-        mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
-        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=False
-    )
-    def test_check_market_fail(self, mock_check_market_book):
-        """
-        Market check fails because BaseStrategy.check_market_book returns False.
-        """
-        mock_market = mock.Mock()
-        mock_market.belongs_to_strategy.return_value = True
-        mock_market_book = mock.Mock()
-        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
-        mock_market.belongs_to_strategy.assert_called_with(self.strategy)
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=True
-    )
-    def test_check_market_pass(self, mock_check_market_book):
-        mock_market = mock.Mock()
-        mock_market.belongs_to_strategy.return_value = True
-        mock_market_book = mock.Mock()
-        self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
-        mock_market.belongs_to_strategy.assert_called_with(self.strategy)
-
     def test_process_new_market(self):
         self.strategy.process_new_market(None, None)
 
