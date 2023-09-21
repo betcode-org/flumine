@@ -4,7 +4,7 @@ from typing import Optional
 from collections import defaultdict
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
-from .. import config
+from .. import config, BaseStrategy
 from .blotter import Blotter
 from ..execution.transaction import Transaction
 
@@ -74,6 +74,13 @@ class Market:
             async_place_orders=async_place_orders,
             client=client,
         )
+
+    def belongs_to_strategy(self, strategy: BaseStrategy) -> bool:
+        """
+        Returns True if the market belongs to the given strategy, else False.
+        """
+        # self.market_book is always defined since Market object is initialised with it
+        return self.market_book.streaming_unique_id in strategy.stream_ids
 
     # order
     def place_order(

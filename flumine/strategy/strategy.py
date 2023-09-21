@@ -1,7 +1,7 @@
 import logging
 from typing import Type, Iterator, Union, List
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, Race, CricketMatch
+from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
@@ -99,7 +99,7 @@ class BaseStrategy:
         return
 
     def check_market(self, market: Market, market_book: MarketBook) -> bool:
-        if market_book.streaming_unique_id not in self.stream_ids:
+        if not market.belongs_to_strategy(self):
             return False  # strategy not subscribed to market stream
         elif self.check_market_book(market, market_book):
             return True
@@ -108,6 +108,12 @@ class BaseStrategy:
 
     def process_new_market(self, market: Market, market_book: MarketBook) -> None:
         # called when a market is newly added to the framework
+        return
+
+    def process_market_catalogue(
+        self, market: Market, market_catalogue: MarketCatalogue
+    ) -> None:
+        # Called when a market catalogue is added or updated
         return
 
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:

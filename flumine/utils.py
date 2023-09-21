@@ -8,7 +8,13 @@ import functools
 from pathlib import Path
 from typing import Optional, Tuple, Callable, Union
 from decimal import Decimal, ROUND_HALF_UP
-from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
+from betfairlightweight.resources import (
+    MarketBook,
+    MarketCatalogue,
+    RunnerBook,
+    Race,
+    CricketMatch,
+)
 
 from . import config
 from .exceptions import FlumineException
@@ -231,10 +237,12 @@ def wap(matched: list) -> Tuple[float, float]:
 
 
 def call_strategy_error_handling(
-    func: Callable, market, market_book: MarketBook
+    func: Callable,
+    market,
+    update: Union[MarketBook, MarketCatalogue, Race, CricketMatch],
 ) -> Optional[bool]:
     try:
-        return func(market, market_book)
+        return func(market, update)
     except FlumineException as e:
         logger.error(
             "FlumineException %s in %s (%s)" % (e, func.__name__, market.market_id),

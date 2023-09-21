@@ -255,6 +255,12 @@ class BaseFlumine:
                     )
                 market.update_market_catalogue = False
 
+                for strategy in self.strategies:
+                    if market.belongs_to_strategy(strategy):
+                        utils.call_strategy_error_handling(
+                            strategy.process_market_catalogue, market, market_catalogue
+                        )
+
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
         if event.event:
