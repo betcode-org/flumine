@@ -68,7 +68,8 @@ class Streams:
                             event_groups,
                             **listener_kwargs,
                         )
-                        strategy.add_stream(stream)
+                        strategy.streams.append(stream)
+                        strategy.historic_stream_ids.append(stream.stream_id)
             elif events:
                 raise NotImplementedError()
         else:
@@ -103,7 +104,7 @@ class Streams:
                             strategy.stream_class, stream.stream_id, strategy
                         )
                     )
-                    strategy.add_stream(stream)
+                    strategy.streams.append(stream)
                     break
             else:  # nope? lets create a new one
                 stream_id = self._increment_stream_id()
@@ -121,7 +122,7 @@ class Streams:
                     conflate_ms=strategy.conflate_ms,
                 )
                 self._streams.append(stream)
-                strategy.add_stream(stream)
+                strategy.streams.append(stream)
         # sports data
         for subscription in strategy.sports_data_filter:
             for stream in self:  # check if sports data stream already exists
@@ -135,7 +136,7 @@ class Streams:
                             strategy.stream_class, stream.stream_id, strategy
                         )
                     )
-                    strategy.add_stream(stream)
+                    strategy.streams.append(stream)
                     break
             else:  # nope? lets create a new one
                 stream_id = self._increment_stream_id()
@@ -151,7 +152,7 @@ class Streams:
                     streaming_timeout=strategy.streaming_timeout,
                 )
                 self._streams.append(stream)
-                strategy.add_stream(stream)
+                strategy.streams.append(stream)
 
     def add_historical_stream(
         self,

@@ -38,6 +38,8 @@ class StreamsTest(unittest.TestCase):
     def test_call_simulated_markets(self, mock_add_historical_stream, mock_get_file_md):
         self.mock_flumine.SIMULATED = True
         mock_strategy = mock.Mock(
+            streams=[],
+            historic_stream_ids=[],
             market_filter={
                 "markets": ["dubs of the mad skint and british"],
                 "listener_kwargs": {"canary_yellow": True},
@@ -52,7 +54,8 @@ class StreamsTest(unittest.TestCase):
             {},
             canary_yellow=True,
         )
-        mock_strategy.add_stream.assert_called()
+        self.assertEqual(len(mock_strategy.streams), 1)
+        self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
         mock_get_file_md.assert_has_calls(
             [
                 call("dubs of the mad skint and british", "marketType"),
