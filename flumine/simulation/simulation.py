@@ -50,11 +50,9 @@ class FlumineSimulation(BaseFlumine):
                 for event_group, streams in event_group_streams.items():
                     if event_group and len(streams) > 1:
                         logger.info(
-                            "Starting historical event group '{0}'".format(event_group),
-                            extra={
-                                "event_group": event_group,
-                                "markets": [s.market_filter for s in streams],
-                            },
+                            "Starting historical event group '%s'",
+                            event_group,
+                            extra={"markets": [s.market_filter for s in streams]},
                         )
                         self.simulated_datetime.reset_real_datetime()
                         # create cycles
@@ -84,14 +82,13 @@ class FlumineSimulation(BaseFlumine):
                             cycles.append([publish_time_epoch, market_book, stream_gen])
                         self.handler_queue.clear()
                         logger.info(
-                            "Completed historical event group '{0}'".format(event_group)
+                            "Completed historical event group '%s'", event_group
                         )
                     else:
                         for stream in streams:
                             logger.info(
-                                "Starting historical market '{0}'".format(
-                                    stream.market_filter
-                                ),
+                                "Starting historical market '%s'",
+                                stream.market_filter,
                                 extra={"market": stream.market_filter},
                             )
                             self.simulated_datetime.reset_real_datetime()
@@ -102,12 +99,9 @@ class FlumineSimulation(BaseFlumine):
                                 )
                             self.handler_queue.clear()
                             logger.info(
-                                "Completed historical market '{0}'".format(
-                                    stream.market_filter
-                                )
+                                "Completed historical market '%s'", stream.market_filter
                             )
-                self._process_end_flumine()
-                logger.info("Simulation complete")
+        logger.info("Simulation complete")  # Call this after self.__exit__
 
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         # todo DRY!

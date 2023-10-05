@@ -7,7 +7,7 @@ from flumine.strategy.runnercontext import RunnerContext
 
 class RunnerContextTest(unittest.TestCase):
     def setUp(self):
-        self.id_ = str(uuid.uuid1())
+        self.id_ = str(uuid.uuid4())
         self.context = RunnerContext(12345)
 
     def test_init(self):

@@ -38,7 +38,8 @@ class BackgroundWorker(threading.Thread):
 
     def run(self) -> None:
         logger.info(
-            "BackgroundWorker {0} starting".format(self.name),
+            "BackgroundWorker %s starting",
+            self.name,
             extra={
                 "worker_name": self.name,
                 "function": self.function,
@@ -53,7 +54,8 @@ class BackgroundWorker(threading.Thread):
         self._running = True
         while self._running:
             logger.debug(
-                "BackgroundWorker {0} executing".format(self.name),
+                "BackgroundWorker %s executing",
+                self.name,
                 extra={
                     "worker_name": self.name,
                     "function": self.function,
@@ -66,7 +68,9 @@ class BackgroundWorker(threading.Thread):
                 )
             except Exception as e:
                 logger.error(
-                    "Error in BackgroundWorker {0}: {1}".format(self.name, e),
+                    "Error in BackgroundWorker %s: %s",
+                    self.name,
+                    e,
                     extra={
                         "worker_name": self.name,
                         "function": self.function,
@@ -80,7 +84,8 @@ class BackgroundWorker(threading.Thread):
 
     def shutdown(self, timeout: int = 4) -> None:
         logger.info(
-            "BackgroundWorker {0} shutting down".format(self.name),
+            "BackgroundWorker %s shutting down",
+            self.name,
             extra={
                 "worker_name": self.name,
                 "function": self.function,
@@ -210,9 +215,10 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
             return False
 
         logger.info(
-            "{0}: {1} cleared orders found, more available: {2}".format(
-                market_id, len(cleared_orders.orders), cleared_orders.more_available
-            )
+            "%s: %s cleared orders found, more available: %s",
+            market_id,
+            len(cleared_orders.orders),
+            cleared_orders.more_available,
         )
         cleared_orders.market_id = market_id
         flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders))

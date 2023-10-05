@@ -29,3 +29,6 @@ nosetests.xml
 
 # IDE metafile ignores
 .idea
+
+# IDE
+.vscode

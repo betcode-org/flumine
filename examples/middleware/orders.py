@@ -26,9 +26,8 @@ class OrdersMiddleware(Middleware):
             )
             for current_order in resp.orders:
                 logger.info(
-                    "OrdersMiddleware: Processing order {0}".format(
-                        current_order.bet_id
-                    ),
+                    "OrdersMiddleware: Processing order %s",
+                    current_order.bet_id,
                     extra={
                         "bet_id": current_order.bet_id,
                         "market_id": current_order.market_id,
@@ -51,9 +50,8 @@ class OrdersMiddleware(Middleware):
         strategy = self.flumine.strategies.hashes.get(strategy_name_hash)
         if strategy is None:
             logger.warning(
-                "OrdersMiddleware: Strategy not available to create order {0}".format(
-                    order_id
-                ),
+                "OrdersMiddleware: Strategy not available to create order %s",
+                order_id,
                 extra={
                     "bet_id": current_order.bet_id,
                     "market_id": current_order.market_id,

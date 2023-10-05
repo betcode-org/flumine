@@ -94,31 +94,31 @@ class BaseFlumine:
         self.add_client_control(client, MaxTransactionCount)
 
     def add_strategy(self, strategy: BaseStrategy) -> None:
-        logger.info("Adding strategy {0}".format(strategy))
+        logger.info("Adding strategy %s", strategy)
         self.streams(strategy)  # create required streams
-        self.strategies(strategy, self.clients)  # store in strategies
+        self.strategies(strategy, self.clients, self)  # store in strategies
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
-        logger.info("Adding worker {0}".format(worker.name))
+        logger.info("Adding worker %s", worker.name)
         self._workers.append(worker)
 
     def add_client_control(
         self, client: BaseClient, client_control: Type[BaseControl], **kwargs
     ) -> None:
-        logger.info("Adding client control {0}".format(client_control.NAME))
+        logger.info("Adding client control %s", client_control.NAME)
         client.trading_controls.append(client_control(self, client, **kwargs))
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
-        logger.info("Adding trading control {0}".format(trading_control.NAME))
+        logger.info("Adding trading control %s", trading_control.NAME)
         self.trading_controls.append(trading_control(self, **kwargs))
 
     def add_market_middleware(self, middleware: Middleware) -> None:
-        logger.info("Adding market middleware {0}".format(middleware))
+        logger.info("Adding market middleware %s", middleware)
         self._market_middleware.append(middleware)
 
     def add_logging_control(self, logging_control: LoggingControl) -> None:
-        logger.info("Adding logging control {0}".format(logging_control.NAME))
+        logger.info("Adding logging control %s", logging_control.NAME)
         self._logging_controls.append(logging_control)
 
     def log_control(self, event: events.BaseEvent) -> None:
@@ -199,7 +199,7 @@ class BaseFlumine:
         order_package.client.execution.handler(order_package)
 
     def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
-        logger.info("Adding: {0} to markets".format(market_id))
+        logger.info("Adding: %s to markets", market_id)
         market = Market(self, market_id, market_book)
         self.markets.add_market(market_id, market)
         for middleware in self._market_middleware:
@@ -207,7 +207,7 @@ class BaseFlumine:
         return market
 
     def _remove_market(self, market: Market, clear: bool = True) -> None:
-        logger.info("Removing market {0}".format(market.market_id), extra=self.info)
+        logger.info("Removing market %s", market.market_id, extra=self.info)
         for middleware in self._market_middleware:
             middleware.remove_market(market)
         for strategy in self.strategies:
@@ -244,13 +244,15 @@ class BaseFlumine:
                     market.market_catalogue = market_catalogue
                     self.log_control(events.MarketEvent(market))
                     logger.info(
-                        "Created marketCatalogue for {0}".format(market.market_id),
+                        "Created marketCatalogue for %s",
+                        market.market_id,
                         extra=market.info,
                     )
                 else:
                     market.market_catalogue = market_catalogue
                     logger.info(
-                        "Updated marketCatalogue for {0}".format(market.market_id),
+                        "Updated marketCatalogue for %s",
+                        market.market_id,
                         extra=market.info,
                     )
                 market.update_market_catalogue = False
@@ -275,16 +277,16 @@ class BaseFlumine:
             event.callback(self, event)
         except FlumineException as e:
             logger.error(
-                "FlumineException error {0} in _process_custom_event {1}".format(
-                    e, event.callback
-                ),
+                "FlumineException error %s in _process_custom_event %s",
+                e,
+                event.callback,
                 exc_info=True,
             )
         except Exception as e:
             logger.exception(
-                "Unknown error {0} in _process_custom_event {1}".format(
-                    e, event.callback
-                ),
+                "Unknown error %s in _process_custom_event %s",
+                e,
+                event.callback,
                 exc_info=True,
             )
             if config.raise_errors:
@@ -303,7 +305,8 @@ class BaseFlumine:
         market = self.markets.markets.get(market_id)
         if market is None:
             logger.warning(
-                "Market %s not present when closing" % market_id,
+                "Market %s not present when closing",
+                market_id,
                 extra={"market_id": market_id, **self.info},
             )
             return
@@ -424,7 +427,7 @@ class BaseFlumine:
         # process config (logging)
         self.log_control(events.ConfigEvent(config))
         # start strategies
-        self.strategies.start()
+        self.strategies.start(self)
         # start streams
         self.streams.start()
 

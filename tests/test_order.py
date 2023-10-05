@@ -469,18 +469,22 @@ class BetfairOrderTest(unittest.TestCase):
     def test_create_cancel_instruction(self):
         self.order.update_data = {"size_reduction": 0.02}
         self.assertEqual(
-            self.order.create_cancel_instruction(), {"sizeReduction": 0.02}
+            self.order.create_cancel_instruction(),
+            {"betId": None, "sizeReduction": 0.02},
         )
 
     def test_create_update_instruction(self):
         self.mock_order_type.persistence_type = "PERSIST"
         self.assertEqual(
-            self.order.create_update_instruction(), {"newPersistenceType": "PERSIST"}
+            self.order.create_update_instruction(),
+            {"betId": None, "newPersistenceType": "PERSIST"},
         )
 
     def test_create_replace_instruction(self):
         self.order.update_data = {"new_price": 2.02}
-        self.assertEqual(self.order.create_replace_instruction(), {"newPrice": 2.02})
+        self.assertEqual(
+            self.order.create_replace_instruction(), {"betId": None, "newPrice": 2.02}
+        )
 
     def test_average_price_matched(self):
         self.assertEqual(self.order.average_price_matched, 0)

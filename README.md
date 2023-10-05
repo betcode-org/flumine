@@ -24,7 +24,7 @@ Support for market, order and custom streaming data.
 
 [join betcode slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-h0ato238-PPbfU_T7Ji0ORjz0ESIJkg)
 
-Tested on Python 3.7, 3.8, 3.9, 3.10 and 3.11.
+Tested on Python 3.8, 3.9, 3.10 and 3.11.
 
 ## installation
 
@@ -32,7 +32,7 @@ Tested on Python 3.7, 3.8, 3.9, 3.10 and 3.11.
 $ pip install flumine
 ```
 
-flumine requires Python 3.7+
+flumine requires Python 3.8+
 
 ## setup
 
@@ -75,13 +75,13 @@ class ExampleStrategy(BaseStrategy):
         for runner in market_book.runners:
             if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
                 trade = Trade(
-                    market_id=market_book.market_id, 
+                    market_id=market_book.market_id,
                     selection_id=runner.selection_id,
                     handicap=runner.handicap,
                     strategy=self
                 )
                 order = trade.create_order(
-                    side="LAY", 
+                    side="LAY",
                     order_type=LimitOrder(price=1.01, size=2.00)
                 )
                 market.place_order(order)
@@ -133,3 +133,4 @@ flumine relies on these libraries:
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging
 * `requests` - HTTP support
+* `smart-open` - Efficient streaming of very large files from/to storages such as S3, including (de)compression

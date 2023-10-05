@@ -28,7 +28,7 @@ class PriceRecorder(BaseStrategy):
         self.filename = self.context.get("filename", "output.txt")
         self.file_directory = os.path.join(self.local_dir, self.filename)
 
-    def add(self) -> None:
+    def add(self, flumine) -> None:
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
