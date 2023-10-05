@@ -295,8 +295,7 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.HistoricalStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream(
-        self, mock_increment, mock_historical_stream_class):
+    def test_add_historical_stream(self, mock_increment, mock_historical_stream_class):
         test_args = [
             # event_processing, event_id, event_group, event_groups
             # Basic case, no event processing
@@ -380,7 +379,6 @@ class StreamsTest(unittest.TestCase):
                 )
                 self.assertEqual(stream, mock_stream)
                 self.assertEqual(len(self.streams), 1)
-
 
     @mock.patch("flumine.streams.streams.HistoricalStream")
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
