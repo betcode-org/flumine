@@ -64,7 +64,7 @@ class Streams:
                             strategy, market, event_processing, **listener_kwargs
                         )
                         strategy.streams.append(stream)
-                        strategy.historic_stream_ids.append(stream.stream_id)
+                        strategy.historic_stream_ids.add(stream.stream_id)
             elif events:
                 raise NotImplementedError()
         else:
