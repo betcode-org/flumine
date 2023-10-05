@@ -3,7 +3,7 @@
 Release History
 ---------------
 
-2.5.0b0 (2023-09-??)
+2.5.0 (2023-10-05)
 +++++++++++++++++++
 
 **Improvements**
@@ -23,7 +23,7 @@ Release History
 
 - Add [speed] (@petedmarsh)
 - Remove py3.7
-- betfairlightweight upgraded to 2.19.0b0
+- betfairlightweight upgraded to 2.19.0
 
 2.4.2 (2023-08-03)
 +++++++++++++++++++
