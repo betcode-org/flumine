@@ -75,13 +75,13 @@ class ExampleStrategy(BaseStrategy):
         for runner in market_book.runners:
             if runner.status == "ACTIVE" and runner.last_price_traded < 1.5:
                 trade = Trade(
-                    market_id=market_book.market_id, 
+                    market_id=market_book.market_id,
                     selection_id=runner.selection_id,
                     handicap=runner.handicap,
                     strategy=self
                 )
                 order = trade.create_order(
-                    side="LAY", 
+                    side="LAY",
                     order_type=LimitOrder(price=1.01, size=2.00)
                 )
                 market.place_order(order)
@@ -133,3 +133,4 @@ flumine relies on these libraries:
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging
 * `requests` - HTTP support
+* `smart-open` - Efficient streaming of very large files from/to storages such as S3, including (de)compression
