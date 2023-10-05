@@ -15,7 +15,8 @@ class MarketStream(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting MarketStream {0}".format(self.stream_id),
+            "Starting MarketStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
                 "market_filter": self.market_filter,
@@ -25,9 +26,7 @@ class MarketStream(BaseStream):
             },
         )
         if not self._output_thread.is_alive():
-            logger.info(
-                "Starting output_thread (MarketStream {0})".format(self.stream_id)
-            )
+            logger.info("Starting output_thread (MarketStream %s)", self.stream_id)
             self._output_thread.start()
 
         self._stream = self.betting_client.streaming.create_stream(
@@ -43,16 +42,12 @@ class MarketStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error(
-                "MarketStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.error("MarketStream %s run error", self.stream_id, exc_info=True)
             raise
         except Exception:
-            logger.critical(
-                "MarketStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.critical("MarketStream %s run error", self.stream_id, exc_info=True)
             raise
-        logger.info("Stopped MarketStream {0}".format(self.stream_id))
+        logger.info("Stopped MarketStream %s", self.stream_id)
 
     def handle_output(self) -> None:
         """Handles output from stream."""
@@ -68,4 +63,4 @@ class MarketStream(BaseStream):
             if market_books:
                 self.flumine.handler_queue.put(MarketBookEvent(market_books))
 
-        logger.info("Stopped output_thread (MarketStream {0})".format(self.stream_id))
+        logger.info("Stopped output_thread (MarketStream %s)", self.stream_id)

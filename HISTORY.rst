@@ -3,6 +3,31 @@
 Release History
 ---------------
 
+2.5.0 (2023-10-05)
++++++++++++++++++++
+
+**Improvements**
+
+- #675 provide flumine to add and start methods (@mzaja)
+- Lazily evaluate log message parameters (@petedmarsh)
+- Change utils.get_file_md to return a MarketDefinition (@petedmarsh)
+- Refactor _read_loop to open entire file in ram + remove function calls
+- Use raw json for creating order requests (faster)
+- uuid4 is faster
+- #688 Use smart-open for opening historical files (@petedmarsh)
+
+**Bug Fixes**
+
+- #677 Remove duplicated method call (@mzaja)
+- #679 validation reused trades (@mzaja)
+- #681 Adds handling of FOK orders status getting stuck (@lunswor)
+
+**Libraries**
+
+- Add [speed] (@petedmarsh)
+- Remove py3.7
+- betfairlightweight upgraded to 2.19.0
+
 2.4.2 (2023-08-03)
 +++++++++++++++++++
 

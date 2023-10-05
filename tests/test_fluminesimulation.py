@@ -44,7 +44,7 @@ class FlumineSimulationTest(unittest.TestCase):
         self.flumine.streams._streams = [mock_stream]
         self.flumine.run()
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
-        mock__process_end_flumine.assert_called_with()
+        mock__process_end_flumine.assert_called_once_with()
 
     @mock.patch("flumine.simulation.simulation.FlumineSimulation._process_end_flumine")
     @mock.patch("flumine.simulation.simulation.events")
@@ -68,7 +68,7 @@ class FlumineSimulationTest(unittest.TestCase):
         self.flumine.streams._streams = [mock_stream_one, mock_stream_two]
         self.flumine.run()
         mock__process_market_books.assert_called_with(mock_events.MarketBookEvent())
-        mock__process_end_flumine.assert_called_with()
+        mock__process_end_flumine.assert_called_once_with()
 
     @mock.patch(
         "flumine.simulation.simulation.FlumineSimulation._process_simulated_orders"

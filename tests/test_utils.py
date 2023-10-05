@@ -27,12 +27,12 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_file_event_id(self):
         self.assertEqual(
-            utils.get_file_md("tests/resources/PRO-1.170258213", "eventId"), "29761984"
+            utils.get_file_md("tests/resources/PRO-1.170258213").event_id, "29761984"
         )
 
     def test_get_file_event_id_tuple(self):
         self.assertEqual(
-            utils.get_file_md(("tests/resources/PRO-1.170258213", "test"), "eventId"),
+            utils.get_file_md(("tests/resources/PRO-1.170258213", "test")).event_id,
             "29761984",
         )
 

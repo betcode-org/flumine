@@ -56,15 +56,19 @@ class FlumineMarketStream(FlumineStream):
                     # removes closed market from cache
                     del self._caches[market_id]
                     logger.info(
-                        "[MarketStream: %s] %s removed, %s markets in cache"
-                        % (self.unique_id, market_id, len(self._caches))
+                        "[MarketStream: %s] %s removed, %s markets in cache",
+                        self.unique_id,
+                        market_id,
+                        len(self._caches),
                     )
             elif market_id not in self._caches:
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
-                    "[MarketStream: %s] %s added, %s markets in cache"
-                    % (self.unique_id, market_id, len(self._caches))
+                    "[MarketStream: %s] %s added, %s markets in cache",
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
             self._updates_processed += 1
 
@@ -82,8 +86,10 @@ class FlumineOrderStream(FlumineStream):
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
-                    "[OrderStream: %s] %s added, %s markets in cache"
-                    % (self.unique_id, market_id, len(self._caches))
+                    "[OrderStream: %s] %s added, %s markets in cache",
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
             self._updates_processed += 1
 
@@ -101,8 +107,10 @@ class FlumineRaceStream(FlumineStream):
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
-                    "[RaceStream: %s] %s added, %s markets in cache"
-                    % (self.unique_id, market_id, len(self._caches))
+                    "[RaceStream: %s] %s added, %s markets in cache",
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
             self._updates_processed += 1
 
@@ -120,8 +128,10 @@ class FlumineCricketStream(FlumineStream):
                 # adds empty object to cache to track live market count
                 self._caches[market_id] = object()
                 logger.info(
-                    "[CricketStream: %s] %s added, %s markets in cache"
-                    % (self.unique_id, market_id, len(self._caches))
+                    "[CricketStream: %s] %s added, %s markets in cache",
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
             self._updates_processed += 1
 
@@ -139,7 +149,8 @@ class DataStream(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting DataStream {0}".format(self.stream_id),
+            "Starting DataStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
                 "market_filter": self.market_filter,
@@ -160,23 +171,20 @@ class DataStream(BaseStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error(
-                "DataStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.error("DataStream %s run error", self.stream_id, exc_info=True)
             raise
         except Exception:
-            logger.critical(
-                "DataStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.critical("DataStream %s run error", self.stream_id, exc_info=True)
             raise
-        logger.info("Stopped DataStream {0}".format(self.stream_id))
+        logger.info("Stopped DataStream %s", self.stream_id)
 
 
 class OrderDataStream(DataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting OrderDataStream {0}".format(self.stream_id),
+            "Starting OrderDataStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
                 "customer_strategy_refs": config.customer_strategy_ref,
@@ -200,23 +208,22 @@ class OrderDataStream(DataStream):
             )
             self._stream.start()
         except BetfairError:
-            logger.error(
-                "OrderDataStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.error("OrderDataStream %s run error", self.stream_id, exc_info=True)
             raise
         except Exception:
             logger.critical(
-                "OrderDataStream {0} run error".format(self.stream_id), exc_info=True
+                "OrderDataStream %s run error", self.stream_id, exc_info=True
             )
             raise
-        logger.info("Stopped OrderDataStream {0}".format(self.stream_id))
+        logger.info("Stopped OrderDataStream %s", self.stream_id)
 
 
 class RaceDataStream(DataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting RaceDataStream {0}".format(self.stream_id),
+            "Starting RaceDataStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
             },
@@ -228,23 +235,22 @@ class RaceDataStream(DataStream):
             self.stream_id = self._stream.subscribe_to_races()
             self._stream.start()
         except BetfairError:
-            logger.error(
-                "RaceDataStream {0} run error".format(self.stream_id), exc_info=True
-            )
+            logger.error("RaceDataStream %s run error", self.stream_id, exc_info=True)
             raise
         except Exception:
             logger.critical(
-                "RaceDataStream {0} run error".format(self.stream_id), exc_info=True
+                "RaceDataStream %s run error", self.stream_id, exc_info=True
             )
             raise
-        logger.info("Stopped RaceDataStream {0}".format(self.stream_id))
+        logger.info("Stopped RaceDataStream %s", self.stream_id)
 
 
 class CricketDataStream(DataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting CricketDataStream {0}".format(self.stream_id),
+            "Starting CricketDataStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
             },
@@ -257,12 +263,12 @@ class CricketDataStream(DataStream):
             self._stream.start()
         except BetfairError:
             logger.error(
-                "CricketDataStream {0} run error".format(self.stream_id), exc_info=True
+                "CricketDataStream %s run error", self.stream_id, exc_info=True
             )
             raise
         except Exception:
             logger.critical(
-                "CricketDataStream {0} run error".format(self.stream_id), exc_info=True
+                "CricketDataStream %s run error", self.stream_id, exc_info=True
             )
             raise
-        logger.info("Stopped CricketDataStream {0}".format(self.stream_id))
+        logger.info("Stopped CricketDataStream %s", self.stream_id)

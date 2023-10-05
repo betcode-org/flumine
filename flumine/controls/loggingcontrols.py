@@ -34,7 +34,9 @@ class LoggingControl(Thread):
                     self.process_event(event)
                 except Exception as e:
                     logger.critical(
-                        "{0} exception raised in {1}".format(e, self.NAME),
+                        "%s exception raised in %s",
+                        e,
+                        self.NAME,
                         exc_info=True,
                         extra={"event": event},
                     )
@@ -78,7 +80,7 @@ class LoggingControl(Thread):
             self.logging_queue.put(None)
 
         else:
-            logger.error("Unwanted item in logging control: {0}".format(event))
+            logger.error("Unwanted item in logging control: %s", event)
 
     def _process_config(self, event: events.ConfigEvent) -> None:
         """
