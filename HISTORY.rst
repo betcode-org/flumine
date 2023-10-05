@@ -14,11 +14,13 @@ Release History
 - Refactor _read_loop to open entire file in ram + remove function calls
 - Use raw json for creating order requests (faster)
 - uuid4 is faster
-- #688 Use smart-open for opening historical files
+- #688 Use smart-open for opening historical files (@petedmarsh)
 
 **Bug Fixes**
 
 - #677 Remove duplicated method call (@mzaja)
+- #679 validation reused trades (@mzaja)
+- #681 Adds handling of FOK orders status getting stuck (@lunswor)
 
 **Libraries**
 
