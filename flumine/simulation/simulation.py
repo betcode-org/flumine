@@ -141,7 +141,7 @@ class FlumineSimulation(BaseFlumine):
                 self._process_simulated_orders(market)
 
             for strategy in self.strategies:
-                if market.belongs_to_strategy(strategy):
+                if market_book.streaming_unique_id in strategy.stream_ids:
                     if market_is_new:
                         utils.call_strategy_error_handling(
                             strategy.process_new_market, market, market_book

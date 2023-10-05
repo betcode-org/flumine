@@ -306,28 +306,53 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_market_catalogues(self, mock_log_control, mock_events):
-        mock_market = mock.Mock()
-        # First strategy is subscribed to the market, second one is not
-        mock_market.belongs_to_strategy.side_effect = (True, False)
-        mock_strategy_1 = mock.Mock()
-        mock_strategy_2 = mock.Mock()
-        self.base_flumine.strategies = [mock_strategy_1, mock_strategy_2]
-        mock_market.market_catalogue = None
-        mock_markets = mock.Mock()
-        mock_markets.markets = {"1.23": mock_market}
-        self.base_flumine.markets = mock_markets
-        mock_market_catalogue = mock.Mock()
-        mock_market_catalogue.market_id = "1.23"
-        mock_event = mock.Mock()
-        mock_event.event = [mock_market_catalogue]
+        mock_filter_1 = mock.Mock(val=1)
+        mock_filter_2 = mock.Mock(val=2)
+        mock_filter_3 = mock.Mock(val=1)
+
+        # Matches by stream id
+        mock_strategy_1 = mock.Mock(stream_ids=[1, 2], market_filter=mock_filter_1)
+        # Does not match
+        mock_strategy_2 = mock.Mock(stream_ids=[3, 4], market_filter=mock_filter_2)
+        # Matches by market filter
+        mock_strategy_3 = mock.Mock(stream_ids=[5, 6], market_filter=mock_filter_3)
+
+        mock_market = mock.Mock(market_catalogue=None)
+        mock_market.market_book.streaming_unique_id = 1
+        mock_market.matches_streaming_market_filter = mock.Mock(
+            wraps=lambda mf: mf.val == 1
+        )
+
+        self.base_flumine.strategies = [
+            mock_strategy_1,
+            mock_strategy_2,
+            mock_strategy_3,
+        ]
+        self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
+
+        mock_market_catalogue = mock.Mock(market_id="1.23")
+        mock_event = mock.Mock(event=[mock_market_catalogue])
         self.base_flumine._process_market_catalogues(mock_event)
+
         self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
-        mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
         self.assertFalse(mock_market.update_market_catalogue)
+
+        mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
+
+        # Expensive method should not get called if stream id matches the strategy
+        self.assertEqual(
+            len(mock_market.matches_streaming_market_filter.call_args_list), 2
+        )
+        mock_market.matches_streaming_market_filter.assert_any_call(mock_filter_2)
+        mock_market.matches_streaming_market_filter.assert_any_call(mock_filter_3)
+
         mock_strategy_1.process_market_catalogue.assert_called_once_with(
             mock_market, mock_market_catalogue
         )
         mock_strategy_2.process_market_catalogue.assert_not_called()
+        mock_strategy_3.process_market_catalogue.assert_called_once_with(
+            mock_market, mock_market_catalogue
+        )
 
     @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
     @mock.patch("flumine.baseflumine.process_current_orders")
