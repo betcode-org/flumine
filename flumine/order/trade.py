@@ -29,10 +29,10 @@ class Trade:
         handicap: float,
         strategy: BaseStrategy,
         notes: collections.OrderedDict = None,  # trade notes (e.g. triggers/market state)
-        place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
-        reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
+        place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
+        reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
     ):
-        self.id = str(uuid.uuid1())
+        self.id = str(uuid.uuid4())
         self.market_id = market_id
         self.selection_id = selection_id
         self.handicap = handicap

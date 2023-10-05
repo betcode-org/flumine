@@ -6,7 +6,6 @@ import string
 import collections
 from enum import Enum
 from typing import Union, Optional
-from betfairlightweight import filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
@@ -66,7 +65,7 @@ class BaseOrder:
         context: dict = None,
         notes: collections.OrderedDict = None,  # order notes (e.g. triggers/market state)
     ):
-        self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
+        self.id = str(uuid.uuid4().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
         self.side = side
         self.order_type = order_type
@@ -381,47 +380,47 @@ class BetfairOrder(BaseOrder):
     # instructions
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            return filters.place_instruction(
-                customer_order_ref=self.customer_order_ref,
-                selection_id=self.selection_id,
-                side=self.side,
-                order_type=self.order_type.ORDER_TYPE.name,
-                limit_order=self.order_type.place_instruction(),
-                handicap=self.handicap,
-            )
+            return {
+                "customerOrderRef": self.customer_order_ref,
+                "selectionId": self.selection_id,
+                "side": self.side,
+                "orderType": "LIMIT",
+                "limitOrder": self.order_type.place_instruction(),
+                "handicap": self.handicap,
+            }
         elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-            return filters.place_instruction(
-                customer_order_ref=self.customer_order_ref,
-                selection_id=self.selection_id,
-                side=self.side,
-                order_type=self.order_type.ORDER_TYPE.name,
-                limit_on_close_order=self.order_type.place_instruction(),
-                handicap=self.handicap,
-            )
+            return {
+                "customerOrderRef": self.customer_order_ref,
+                "selectionId": self.selection_id,
+                "side": self.side,
+                "orderType": "LIMIT_ON_CLOSE",
+                "limitOnCloseOrder": self.order_type.place_instruction(),
+                "handicap": self.handicap,
+            }
         elif self.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-            return filters.place_instruction(
-                customer_order_ref=self.customer_order_ref,
-                selection_id=self.selection_id,
-                side=self.side,
-                order_type=self.order_type.ORDER_TYPE.name,
-                market_on_close_order=self.order_type.place_instruction(),
-                handicap=self.handicap,
-            )
+            return {
+                "customerOrderRef": self.customer_order_ref,
+                "selectionId": self.selection_id,
+                "side": self.side,
+                "orderType": "MARKET_ON_CLOSE",
+                "marketOnCloseOrder": self.order_type.place_instruction(),
+                "handicap": self.handicap,
+            }
 
     def create_cancel_instruction(self) -> dict:
-        return filters.cancel_instruction(
-            bet_id=self.bet_id, size_reduction=self.update_data.get("size_reduction")
-        )
+        return {
+            "betId": self.bet_id,
+            "sizeReduction": self.update_data.get("size_reduction"),
+        }
 
     def create_update_instruction(self) -> dict:
-        return filters.update_instruction(
-            bet_id=self.bet_id, new_persistence_type=self.order_type.persistence_type
-        )
+        return {
+            "betId": self.bet_id,
+            "newPersistenceType": self.order_type.persistence_type,
+        }
 
     def create_replace_instruction(self) -> dict:
-        return filters.replace_instruction(
-            bet_id=self.bet_id, new_price=self.update_data["new_price"]
-        )
+        return {"betId": self.bet_id, "newPrice": self.update_data["new_price"]}
 
     # currentOrder
     @property

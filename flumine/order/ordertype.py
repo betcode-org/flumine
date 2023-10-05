@@ -1,10 +1,5 @@
 from enum import Enum
 from betfairlightweight.resources.bettingresources import LineRangeInfo
-from betfairlightweight.filters import (
-    limit_order,
-    limit_on_close_order,
-    market_on_close_order,
-)
 
 from ..clients.clients import ExchangeType
 
@@ -54,15 +49,15 @@ class LimitOrder(BaseOrderType):
         self.line_range_info = line_range_info
 
     def place_instruction(self) -> dict:
-        return limit_order(
-            size=self.size,
-            price=self.price,
-            persistence_type=self.persistence_type,
-            time_in_force=self.time_in_force,
-            min_fill_size=self.min_fill_size,
-            bet_target_type=self.bet_target_type,
-            bet_target_size=self.bet_target_size,
-        )
+        return {
+            "size": self.size,
+            "price": self.price,
+            "persistenceType": self.persistence_type,
+            "timeInForce": self.time_in_force,
+            "minFillSize": self.min_fill_size,
+            "betTargetType": self.bet_target_type,
+            "betTargetSize": self.bet_target_size,
+        }
 
     @property
     def info(self):
@@ -91,7 +86,10 @@ class LimitOnCloseOrder(BaseOrderType):
         self.price_ladder_definition = price_ladder_definition
 
     def place_instruction(self) -> dict:
-        return limit_on_close_order(liability=self.liability, price=self.price)
+        return {
+            "liability": self.liability,
+            "price": self.price,
+        }
 
     @property
     def info(self):
@@ -111,7 +109,9 @@ class MarketOnCloseOrder(BaseOrderType):
         self.liability = liability
 
     def place_instruction(self) -> dict:
-        return market_on_close_order(liability=self.liability)
+        return {
+            "liability": self.liability,
+        }
 
     @property
     def info(self):

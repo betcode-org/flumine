@@ -12,6 +12,22 @@ class IntegrationTest(unittest.TestCase):
         # change config to raise errors
         config.raise_errors = True
 
+    def test_simulation_gzipped(self):
+        class Ex(BaseStrategy):
+            def check_market_book(self, market, market_book):
+                return True
+
+            def process_market_book(self, market, market_book):
+                return
+
+        client = clients.SimulatedClient()
+        framework = FlumineSimulation(client=client)
+        strategy = Ex(
+            market_filter={"markets": ["tests/resources/BASIC-1.132153978.gz"]}
+        )
+        framework.add_strategy(strategy)
+        framework.run()
+
     def test_simulation_basic(self):
         class Ex(BaseStrategy):
             def check_market_book(self, market, market_book):

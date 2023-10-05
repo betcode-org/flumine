@@ -17,7 +17,8 @@ class CurrentOrders:
 class SimulatedOrderStream(BaseStream):
     def run(self) -> None:
         logger.info(
-            "Starting SimulatedOrderStream {0}".format(self.stream_id),
+            "Starting SimulatedOrderStream %s",
+            self.stream_id,
             extra={
                 "stream_id": self.stream_id,
                 "streaming_timeout": self.streaming_timeout,
@@ -32,7 +33,7 @@ class SimulatedOrderStream(BaseStream):
                         CurrentOrdersEvent([CurrentOrders(current_orders, self.client)])
                     )
             time.sleep(self.streaming_timeout)
-        logger.info("Stopped SimulatedOrderStream {0}".format(self.stream_id))
+        logger.info("Stopped SimulatedOrderStream %s", self.stream_id)
 
     def _get_current_orders(self) -> list:
         current_orders = []

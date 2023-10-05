@@ -43,8 +43,8 @@ class MarketRecorder(BaseStrategy):
         self._loaded_markets = []  # list of marketIds
         self._queue = queue.Queue()
 
-    def add(self) -> None:
-        logger.info("Adding strategy %s with id %s" % (self.name, self.recorder_id))
+    def add(self, flumine) -> None:
+        logger.info("Adding strategy %s with id %s", self.name, self.recorder_id)
         # check local dir
         if not os.path.isdir(self.local_dir):
             raise OSError("File dir %s does not exist" % self.local_dir)
@@ -53,7 +53,7 @@ class MarketRecorder(BaseStrategy):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         # start load processor thread
         threading.Thread(
             name="{0}_load_processor".format(self.name),
@@ -94,8 +94,10 @@ class MarketRecorder(BaseStrategy):
         # check that file actually exists
         if not os.path.isfile(file_dir):
             logger.error(
-                "File: %s does not exist in /%s/%s/"
-                % (self.local_dir, market_id, self.recorder_id)
+                "File: %s does not exist in /%s/%s/",
+                self.local_dir,
+                market_id,
+                self.recorder_id,
             )
             return
 
@@ -117,7 +119,7 @@ class MarketRecorder(BaseStrategy):
             # check file still exists (potential race condition)
             if not os.path.isfile(file_dir):
                 logger.warning(
-                    "File: %s does not exist in %s" % (market.market_id, file_dir)
+                    "File: %s does not exist in %s", market.market_id, file_dir
                 )
                 continue
             # compress file
@@ -173,8 +175,7 @@ class MarketRecorder(BaseStrategy):
                 if seconds_since > self._market_expiration:
                     if self._remove_gz_file:
                         logger.info(
-                            "Removing: %s, age: %ss"
-                            % (gz_path, round(seconds_since, 2))
+                            "Removing: %s, age: %ss", gz_path, round(seconds_since, 2)
                         )
                         os.remove(gz_path)
                     txt_path = os.path.join(directory, file.split(".gz")[0])
@@ -183,8 +184,9 @@ class MarketRecorder(BaseStrategy):
                         seconds_since = time.time() - file_stats.st_mtime
                         if seconds_since > self._market_expiration:
                             logger.info(
-                                "Removing: %s, age: %ss"
-                                % (txt_path, round(seconds_since, 2))
+                                "Removing: %s, age: %ss",
+                                txt_path,
+                                round(seconds_since, 2),
                             )
                             os.remove(txt_path)
 
@@ -216,8 +218,8 @@ class S3MarketRecorder(MarketRecorder):
         transfer_config = TransferConfig(use_threads=False)
         self.transfer = S3Transfer(self.s3, config=transfer_config)
 
-    def add(self) -> None:
-        super().add()
+    def add(self, flumine) -> None:
+        super().add(flumine)
         self.s3.head_bucket(Bucket=self._bucket)  # validate bucket/access
 
     def _load(self, market, compress_file_dir: str, market_definition: dict) -> None:
