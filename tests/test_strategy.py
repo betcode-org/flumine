@@ -316,6 +316,27 @@ class BaseStrategyTest(unittest.TestCase):
         self.strategy.get_runner_context("2", 789, 0)
         self.assertEqual(len(self.strategy._invested), 2)
 
+    def test_market_cached(self):
+        # This is not a good test as it relies too much on implementation details.
+        # There is an integration test as well to cover a more realistic use-case.
+        mock_stream = mock.Mock()
+        mock_stream._listener.stream._caches = {"1.234": None}
+        self.strategy.streams = [mock_stream]
+        self.assertTrue(self.strategy.market_cached("1.234"))
+        self.assertFalse(self.strategy.market_cached("1.789"))
+
+    def test_market_cached_stream_not_registered(self):
+        """
+        Tests that strategy.market_cached() does not throw an error when called
+        on a stream which had not been registered yet
+        (betfairlightweight.BaseListener.register_stream not called).
+        """
+        mock_stream = mock.Mock()
+        mock_stream._listener.stream = None
+        self.strategy.streams = [mock_stream]
+        self.assertFalse(self.strategy.market_cached("1.234"))
+        self.assertFalse(self.strategy.market_cached("1.789"))
+
     def test_stream_ids(self):
         mock_stream = mock.Mock(stream_id=321)
         self.strategy.streams = [mock_stream]

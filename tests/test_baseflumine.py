@@ -308,22 +308,18 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_market_catalogues(self, mock_log_control, mock_events):
-        mock_filter_1 = mock.Mock(val=1)
-        mock_filter_2 = mock.Mock(val=2)
-        mock_filter_3 = mock.Mock(val=1)
-
         # Matches by stream id
-        mock_strategy_1 = mock.Mock(stream_ids=[1, 2], market_filter=mock_filter_1)
+        mock_strategy_1 = mock.Mock(stream_ids=[1, 2])
+        mock_strategy_1.market_cached.return_value = True
         # Does not match
-        mock_strategy_2 = mock.Mock(stream_ids=[3, 4], market_filter=mock_filter_2)
-        # Matches by market filter
-        mock_strategy_3 = mock.Mock(stream_ids=[5, 6], market_filter=mock_filter_3)
+        mock_strategy_2 = mock.Mock(stream_ids=[3, 4])
+        mock_strategy_2.market_cached.return_value = False
+        # Matches by market id being cached
+        mock_strategy_3 = mock.Mock(stream_ids=[5, 6])
+        mock_strategy_3.market_cached.return_value = True
 
-        mock_market = mock.Mock(market_catalogue=None)
+        mock_market = mock.Mock(market_catalogue=None, market_id="1.23")
         mock_market.market_book.streaming_unique_id = 1
-        mock_market.matches_streaming_market_filter = mock.Mock(
-            wraps=lambda mf: mf.val == 1
-        )
 
         self.base_flumine.strategies = [
             mock_strategy_1,
@@ -342,11 +338,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
 
         # Expensive method should not get called if stream id matches the strategy
-        self.assertEqual(
-            len(mock_market.matches_streaming_market_filter.call_args_list), 2
-        )
-        mock_market.matches_streaming_market_filter.assert_any_call(mock_filter_2)
-        mock_market.matches_streaming_market_filter.assert_any_call(mock_filter_3)
+        mock_strategy_1.market_cached.assert_not_called()
+        mock_strategy_2.market_cached.assert_called_once_with("1.23")
+        mock_strategy_3.market_cached.assert_called_once_with("1.23")
 
         mock_strategy_1.process_market_catalogue.assert_called_once_with(
             mock_market, mock_market_catalogue

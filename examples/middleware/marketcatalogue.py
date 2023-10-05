@@ -6,14 +6,17 @@ from flumine.events.events import MarketCatalogueEvent
 from flumine.markets.middleware import Middleware
 
 
-MARKET_CATALOGUE_PATH = ""  # update to correct path
-
-
-# Will read and parse the market_catalogue file and add to the market object when simulating
-# Usage framework.add_market_middleware(MarketCatalogueMiddleware())
 class MarketCatalogueMiddleware(Middleware):
+    """
+    Will read and parse the market_catalogue file and add to the market object when simulating.
+    Usage: framework.add_market_middleware(MarketCatalogueMiddleware(market_catalogue_dir))
+    """
+
+    def __init__(self, market_catalogue_dir: str):
+        self.market_catalogue_dir = Path(market_catalogue_dir)
+
     def add_market(self, market) -> None:
-        catalogue_file_path = Path(MARKET_CATALOGUE_PATH) / market.market_id
+        catalogue_file_path = self.market_catalogue_dir / (market.market_id + ".json")
         if catalogue_file_path.exists():
             market.flumine._process_market_catalogues(
                 MarketCatalogueEvent(

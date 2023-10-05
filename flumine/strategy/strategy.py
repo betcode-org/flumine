@@ -230,6 +230,18 @@ class BaseStrategy:
             ] = runner_context = RunnerContext(selection_id)
             return runner_context
 
+    def market_cached(self, market_id: str) -> bool:
+        """Checks if market_id is present in any of the strategy's stream caches."""
+        # This is a slower but more comprehensive test to find out whether a market is
+        # associated with a strategy than checking "if streaming_unique_id in self.stream_ids".
+        for stream in self.streams:
+            try:
+                if market_id in stream._listener.stream._caches:
+                    return True
+            except AttributeError:
+                continue
+        return False
+
     @property
     def stream_ids(self) -> list:
         if self.historic_stream_ids:

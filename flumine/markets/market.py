@@ -65,49 +65,6 @@ class Market:
             extra=self.info,
         )
 
-    def matches_streaming_market_filter(self, market_filter: dict) -> bool:
-        """
-        Returns True if this market matches the provided streaming market filter.
-        In other words, if the market filter would end up subscribing to this market.
-
-        For a simulation market filter in the form of {"markets": [<file 1>, <file 2>, ...]},
-        file names should comprise of a market id followed by optional extensions, like so:
-        <market_id>[.<extensions>] e.g. "1.12345678", "1.12345678.json" or "1.12345678.tar.gz".
-        """
-        market_files = market_filter.get("markets")
-        if market_files:  # Simulation
-            return any(
-                self.market_id.endswith(p.suffixes[0])
-                for p in map(Path, market_files)
-                if p.suffix
-            )
-        else:  # Live
-            market_metadata = {  # Expected filter values for this market
-                "marketIds": self.market_id,
-                "bspMarket": self.market_book.market_definition.bsp_market,
-                "bettingTypes": self.market_book.market_definition.betting_type,
-                "eventTypeIds": self.event_type_id,
-                "eventIds": self.event_id,
-                "turnInPlayEnabled": self.market_book.market_definition.turn_in_play_enabled,
-                "marketTypes": self.market_type,
-                "venues": self.venue,
-                "countryCodes": self.country_code,
-                "raceTypes": self.race_type,
-            }
-            try:
-                for field_name, filter_value in market_filter.items():
-                    if isinstance(filter_value, bool):
-                        if market_metadata[field_name] is not filter_value:
-                            return False
-                    elif isinstance(filter_value, list):
-                        if market_metadata[field_name] not in filter_value:
-                            return False
-                    else:
-                        return False  # Invalid streaming market filter value
-            except KeyError:
-                return False  # Market filter contains an unsupported field
-            return True  # All checks passed
-
     def transaction(self, async_place_orders: bool = None, client=None) -> Transaction:
         if async_place_orders is None:
             async_place_orders = config.async_place_orders

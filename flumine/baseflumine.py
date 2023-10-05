@@ -261,7 +261,7 @@ class BaseFlumine:
                 for strategy in self.strategies:
                     if (
                         market.market_book.streaming_unique_id in strategy.stream_ids
-                    ) or market.matches_streaming_market_filter(strategy.market_filter):
+                    ) or strategy.market_cached(market.market_id):
                         utils.call_strategy_error_handling(
                             strategy.process_market_catalogue, market, market_catalogue
                         )
