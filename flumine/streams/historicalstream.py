@@ -44,8 +44,10 @@ class FlumineMarketStream(MarketStream):
                     logger.warning(
                         "[%s: %s]: Missing marketDefinition on market %s resulting "
                         "in potential missing data in the MarketBook (make sure "
-                        "EX_MARKET_DEF is requested)"
-                        % (self, self.unique_id, market_id)
+                        "EX_MARKET_DEF is requested)",
+                        self,
+                        self.unique_id,
+                        market_id,
                     )
                 market_book_cache = MarketBookCache(
                     market_id,
@@ -56,8 +58,11 @@ class FlumineMarketStream(MarketStream):
                 )
                 self._caches[market_id] = market_book_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             # listener_kwargs filtering
@@ -117,8 +122,11 @@ class FlumineRaceStream(RaceStream):
                 race_cache.start_time = create_time(publish_time, race_id)
                 self._caches[market_id] = race_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             # filter after start time
@@ -152,8 +160,11 @@ class FlumineCricketStream(CricketStream):
                 )
                 self._caches[market_id] = cricket_match_cache
                 logger.info(
-                    "[%s: %s]: %s added, %s markets in cache"
-                    % (self, self.unique_id, market_id, len(self._caches))
+                    "[%s: %s]: %s added, %s markets in cache",
+                    self,
+                    self.unique_id,
+                    market_id,
+                    len(self._caches),
                 )
 
             cricket_match_cache.update_cache(cricket_change, publish_time)
@@ -185,7 +196,7 @@ class HistoricListener(StreamListener):
         else:
             raise ListenerError("Unable to process '{0}' stream".format(operation))
 
-    def on_data(self, raw_data: str) -> Optional[bool]:
+    def on_data(self, raw_data: bytes) -> Optional[bool]:
         try:
             data = json.loads(raw_data)
         except ValueError:
@@ -203,13 +214,19 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
     """Super fast historical stream"""
 
     def _read_loop(self) -> dict:
-        self.listener.register_stream(self.unique_id, self.operation)
+        unique_id = self.unique_id
+        self.listener.register_stream(unique_id, self.operation)
         listener_on_data = self.listener.on_data  # cache functions
-        stream_snap = self.listener.stream.snap
+        caches = self.listener.stream._caches
         with smart_open.open(self.file_path, "r") as f:
-            for update in f:
+            file = f.readlines()  # read entire file into memory (faster)
+            for update in file:
                 if listener_on_data(update):
-                    yield stream_snap()
+                    yield [
+                        cache.create_resource(unique_id, snap=True)
+                        for cache in caches.values()
+                        if cache.active
+                    ]
 
 
 class HistoricalStream(BaseStream):

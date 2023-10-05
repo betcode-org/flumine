@@ -34,8 +34,8 @@ def callback(flumine, event):
     for market in flumine.markets:
         if market.event_id == str(score.event_id):
             logger.debug(
-                "Updated market {0} with event {1} scores data".format(
-                    market.market_id, market.event_id
-                )
+                "Updated market %s with event %s scores data",
+                market.market_id,
+                market.event_id,
             )
             market.context["score"] = score
