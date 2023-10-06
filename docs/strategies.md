@@ -27,6 +27,7 @@ The following functions can be overridden dependent on the strategy:
 - `add()` Function called when strategy is added to framework
 - `start()` Function called when framework starts
 - `process_new_market()` Process Market when it gets added to the framework for the first time
+- `process_market_catalogue()` Process updates to the market catalogue.
 - `check_market_book()` Function called with marketBook, `process_market_book` is only executed if this returns True
 - `process_market_book()` Processes market book updates, called on every update that is received
 - `process_raw_data()` As per `process_market_book` but handles raw data

@@ -1,7 +1,7 @@
 import logging
 from typing import Type, Iterator, Union, List
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, Race, CricketMatch
+from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
@@ -85,7 +85,7 @@ class BaseStrategy:
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
-        self.historic_stream_ids = []
+        self.historic_stream_ids = set()
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
@@ -98,16 +98,14 @@ class BaseStrategy:
         # e.g. subscribe to extra streams
         return
 
-    def check_market(self, market: Market, market_book: MarketBook) -> bool:
-        if market_book.streaming_unique_id not in self.stream_ids:
-            return False  # strategy not subscribed to market stream
-        elif self.check_market_book(market, market_book):
-            return True
-        else:
-            return False
-
     def process_new_market(self, market: Market, market_book: MarketBook) -> None:
         # called when a market is newly added to the framework
+        return
+
+    def process_market_catalogue(
+        self, market: Market, market_catalogue: MarketCatalogue
+    ) -> None:
+        # Called when a market catalogue is added or updated
         return
 
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
@@ -232,8 +230,20 @@ class BaseStrategy:
             ] = runner_context = RunnerContext(selection_id)
             return runner_context
 
+    def market_cached(self, market_id: str) -> bool:
+        """Checks if market_id is present in any of the strategy's stream caches."""
+        # This is a slower but more comprehensive test to find out whether a market is
+        # associated with a strategy than checking "if streaming_unique_id in self.stream_ids".
+        for stream in self.streams:
+            try:
+                if market_id in stream._listener.stream._caches:
+                    return True
+            except AttributeError:
+                continue
+        return False
+
     @property
-    def stream_ids(self) -> list:
+    def stream_ids(self) -> Union[list, set]:
         if self.historic_stream_ids:
             return self.historic_stream_ids
         else:
@@ -247,7 +257,7 @@ class BaseStrategy:
             "market_data_filter": self.market_data_filter,
             "streaming_timeout": self.streaming_timeout,
             "conflate_ms": self.conflate_ms,
-            "stream_ids": self.stream_ids,
+            "stream_ids": list(self.stream_ids),
             "max_selection_exposure": self.max_selection_exposure,
             "max_order_exposure": self.max_order_exposure,
             "max_live_trade_count": self.max_live_trade_count,
