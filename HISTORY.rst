@@ -15,6 +15,11 @@ Release History
 
 - #706 Fix FOK simulation error, update tests to cover the bug (@mzaja)
 
+**Libraries**
+
+- black upgraded to 23.9.1
+- tenacity upgraded to <8.2.4
+
 2.5.0 (2023-10-05)
 +++++++++++++++++++
 
