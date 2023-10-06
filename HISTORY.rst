@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.5.1 (2023-10-06)
++++++++++++++++++++
+
+**Improvements**
+
+- #703 Store historical stream ids in a set for faster lookup (@mzaja)
+- #699 process market catalogue (@mzaja)
+
+**Bug Fixes**
+
+- #706 Fix FOK simulation error, update tests to cover the bug (@mzaja)
+
 2.5.0 (2023-10-05)
 +++++++++++++++++++
 
