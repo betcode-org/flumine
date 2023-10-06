@@ -2,6 +2,7 @@ import datetime
 import logging
 from typing import Optional
 from collections import defaultdict
+from pathlib import Path
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .. import config

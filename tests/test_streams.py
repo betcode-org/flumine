@@ -42,7 +42,7 @@ class StreamsTest(unittest.TestCase):
 
         mock_strategy = mock.Mock(
             streams=[],
-            historic_stream_ids=[],
+            historic_stream_ids=set(),
             market_filter={
                 "markets": ["dubs of the mad skint and british"],
                 "listener_kwargs": {"canary_yellow": True},
