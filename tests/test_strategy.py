@@ -161,40 +161,6 @@ class BaseStrategyTest(unittest.TestCase):
         mock_flumine = mock.Mock()
         self.strategy.start(mock_flumine)
 
-    def test_check_market_no_subscribed(self):
-        mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
-        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=False
-    )
-    def test_check_market_fail(self, mock_check_market_book, mock_market_stream_ids):
-        mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
-        self.assertFalse(self.strategy.check_market(mock_market, mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
-        mock_market_stream_ids.assert_called_with()
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_market_book", return_value=True
-    )
-    def test_check_market_pass(self, mock_check_market_book, mock_market_stream_ids):
-        mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
-        self.assertTrue(self.strategy.check_market(mock_market, mock_market_book))
-        mock_check_market_book.assert_called_with(mock_market, mock_market_book)
-
     def test_process_new_market(self):
         self.strategy.process_new_market(None, None)
 
@@ -203,6 +169,9 @@ class BaseStrategyTest(unittest.TestCase):
 
     def test_process_market_book(self):
         self.strategy.process_market_book(None, None)
+
+    def test_process_market_catalogue(self):
+        self.strategy.process_market_catalogue(None, None)
 
     def test_check_sports_no_subscribed(self):
         mock_market = mock.Mock()
@@ -346,6 +315,27 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(self.strategy.get_runner_context("2", 456, 0), mock_context)
         self.strategy.get_runner_context("2", 789, 0)
         self.assertEqual(len(self.strategy._invested), 2)
+
+    def test_market_cached(self):
+        # This is not a good test as it relies too much on implementation details.
+        # There is an integration test as well to cover a more realistic use-case.
+        mock_stream = mock.Mock()
+        mock_stream._listener.stream._caches = {"1.234": None}
+        self.strategy.streams = [mock_stream]
+        self.assertTrue(self.strategy.market_cached("1.234"))
+        self.assertFalse(self.strategy.market_cached("1.789"))
+
+    def test_market_cached_stream_not_registered(self):
+        """
+        Tests that strategy.market_cached() does not throw an error when called
+        on a stream which had not been registered yet
+        (betfairlightweight.BaseListener.register_stream not called).
+        """
+        mock_stream = mock.Mock()
+        mock_stream._listener.stream = None
+        self.strategy.streams = [mock_stream]
+        self.assertFalse(self.strategy.market_cached("1.234"))
+        self.assertFalse(self.strategy.market_cached("1.789"))
 
     def test_stream_ids(self):
         mock_stream = mock.Mock(stream_id=321)

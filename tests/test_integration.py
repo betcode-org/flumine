@@ -5,12 +5,58 @@ from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder, LimitOnCloseOrder
 from flumine.utils import get_price, get_nearest_price
+from examples.middleware.marketcatalogue import MarketCatalogueMiddleware
 
 
 class IntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
         # change config to raise errors
         config.raise_errors = True
+
+    def test_market_catalogues(self):
+        """Tests handling and processing of market catalogues."""
+
+        class UseCatalogues(BaseStrategy):
+            def add(self):
+                self.catalogues_processed = []
+                # stream._listener.stream is None when initialised but not registered.
+                # The call below tests that such a case is handled and an exception is not thrown.
+                self.market_cached("123")
+
+            def process_market_catalogue(self, market, market_catalogue):
+                self.catalogues_processed.append(market.market_id)
+
+        client = clients.SimulatedClient()
+        framework = FlumineSimulation(client=client)
+        framework.add_market_middleware(
+            MarketCatalogueMiddleware("tests/resources/catalogues")
+        )
+        # Strategies overlap on one market but have different market filters overall.
+        # This is deliberate so that streams do not get shared.
+        strategy_1 = UseCatalogues(
+            name="Single market",
+            market_filter={
+                "markets": ["tests/resources/1.197931750"],
+                "event_processing": True,
+            },
+        )
+        strategy_2 = UseCatalogues(
+            name="Double market",
+            market_filter={
+                "markets": [
+                    "tests/resources/1.197931750",
+                    "tests/resources/1.197931751",
+                ],
+                "event_processing": True,
+            },
+        )
+        framework.add_strategy(strategy_1)
+        framework.add_strategy(strategy_2)
+        framework.run()
+        self.assertEqual(strategy_1.catalogues_processed, ["1.197931750"])
+        self.assertEqual(
+            strategy_2.catalogues_processed, ["1.197931750", "1.197931751"]
+        )
 
     def test_simulation_gzipped(self):
         class Ex(BaseStrategy):

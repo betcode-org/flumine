@@ -164,16 +164,17 @@ class BaseFlumine:
                 utils.call_middleware_error_handling(middleware, market)
 
             for strategy in self.strategies:
-                if market_is_new:
-                    utils.call_strategy_error_handling(
-                        strategy.process_new_market, market, market_book
-                    )
-                if utils.call_strategy_error_handling(
-                    strategy.check_market, market, market_book
-                ):
-                    utils.call_strategy_error_handling(
-                        strategy.process_market_book, market, market_book
-                    )
+                if market_book.streaming_unique_id in strategy.stream_ids:
+                    if market_is_new:
+                        utils.call_strategy_error_handling(
+                            strategy.process_new_market, market, market_book
+                        )
+                    if utils.call_strategy_error_handling(
+                        strategy.check_market_book, market, market_book
+                    ):
+                        utils.call_strategy_error_handling(
+                            strategy.process_market_book, market, market_book
+                        )
 
     def _process_sports_data(self, event: events.SportsDataEvent) -> None:
         for sports_data in event.event:
@@ -256,6 +257,14 @@ class BaseFlumine:
                         extra=market.info,
                     )
                 market.update_market_catalogue = False
+
+                for strategy in self.strategies:
+                    if (
+                        market.market_book.streaming_unique_id in strategy.stream_ids
+                    ) or strategy.market_cached(market.market_id):
+                        utils.call_strategy_error_handling(
+                            strategy.process_market_catalogue, market, market_catalogue
+                        )
 
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state

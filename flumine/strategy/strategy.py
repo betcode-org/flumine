@@ -1,7 +1,7 @@
 import logging
 from typing import Type, Iterator, Union, List
 from betfairlightweight import filters
-from betfairlightweight.resources import MarketBook, Race, CricketMatch
+from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
@@ -98,16 +98,14 @@ class BaseStrategy:
         # e.g. subscribe to extra streams
         return
 
-    def check_market(self, market: Market, market_book: MarketBook) -> bool:
-        if market_book.streaming_unique_id not in self.stream_ids:
-            return False  # strategy not subscribed to market stream
-        elif self.check_market_book(market, market_book):
-            return True
-        else:
-            return False
-
     def process_new_market(self, market: Market, market_book: MarketBook) -> None:
         # called when a market is newly added to the framework
+        return
+
+    def process_market_catalogue(
+        self, market: Market, market_catalogue: MarketCatalogue
+    ) -> None:
+        # Called when a market catalogue is added or updated
         return
 
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
@@ -231,6 +229,18 @@ class BaseStrategy:
                 (market_id, selection_id, handicap)
             ] = runner_context = RunnerContext(selection_id)
             return runner_context
+
+    def market_cached(self, market_id: str) -> bool:
+        """Checks if market_id is present in any of the strategy's stream caches."""
+        # This is a slower but more comprehensive test to find out whether a market is
+        # associated with a strategy than checking "if streaming_unique_id in self.stream_ids".
+        for stream in self.streams:
+            try:
+                if market_id in stream._listener.stream._caches:
+                    return True
+            except AttributeError:
+                continue
+        return False
 
     @property
     def stream_ids(self) -> Union[list, set]:
