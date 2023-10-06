@@ -1,8 +1,15 @@
 import unittest
 from unittest import mock
+from typing import Union
 
 from flumine.simulation import simulatedorder
-from flumine.order.ordertype import OrderTypes
+from flumine.order.ordertype import (
+    LimitOrder,
+    LimitOnCloseOrder,
+    MarketOnCloseOrder,
+    OrderTypes,
+)
+from flumine.order.order import BetfairOrder
 
 EXECUTION_COMPLETE = "EXECUTION_COMPLETE"
 
@@ -26,6 +33,44 @@ class SimulatedOrderTest(unittest.TestCase):
             client=mock_client,
         )
         self.simulated = simulatedorder.SimulatedOrder(self.mock_order)
+
+    def mock_betfair_place_instruction(
+        self,
+        side: str,
+        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        handicap: float = 0,
+    ) -> dict:
+        """
+        Creates a realistic BefairOrder place instruction and updates the mocks accordingly.
+        """
+        self.mock_order.side = side
+        return BetfairOrder(
+            mock.Mock(), side, order_type, handicap
+        ).create_place_instruction()
+
+    def mock_betfair_place_instruction_fill_or_kill(
+        self,
+        side: str = "BACK",
+        price: float = 12,
+        size: float = 2.00,
+        min_fill_size: float = None,
+    ) -> dict:
+        """
+        Creates a realistic BefairOrder fill or kill place instruction.
+        Updates the mocks accordingly. Default side, price and size are
+        the same as for the default mock order.
+        """
+        self.mock_order.order_type.price = price
+        self.mock_order.order_type.size = size
+        return self.mock_betfair_place_instruction(
+            side,
+            LimitOrder(
+                price=price,
+                size=size,
+                time_in_force="FILL_OR_KILL",
+                min_fill_size=min_fill_size,
+            ),
+        )
 
     def test_init(self):
         self.assertEqual(self.simulated.order, self.mock_order)
@@ -173,7 +218,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill()
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -195,7 +240,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 11, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill()
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -209,7 +254,6 @@ class SimulatedOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_no_price(self, mock__get_runner):
-        self.mock_order.order_type.price = 1.01
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
@@ -217,7 +261,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = []
         mock_runner.ex.available_to_lay = []
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(price=1.01)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -240,7 +284,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(min_fill_size=1)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -263,9 +307,9 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {
-            "limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}
-        }
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(
+            min_fill_size=1.01
+        )
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -282,7 +326,6 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
-        self.mock_order.order_type.size = 4
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [
             {"price": 13, "size": 1},
@@ -291,7 +334,7 @@ class SimulatedOrderTest(unittest.TestCase):
         ]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(size=4)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -390,13 +433,12 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_place_limit_lay_fill_or_kill_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY")
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -413,13 +455,12 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_place_limit_lay_fill_or_kill_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 1}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY")
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -432,16 +473,16 @@ class SimulatedOrderTest(unittest.TestCase):
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_no_price(self, mock__get_runner):
-        self.mock_order.order_type.price = 1000
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = []
         mock_runner.ex.available_to_lay = []
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(
+            "LAY", price=1000
+        )
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -456,13 +497,14 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_place_limit_lay_fill_or_kill_min_fill_size_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(
+            "LAY", min_fill_size=1
+        )
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -479,15 +521,14 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_place_limit_lay_fill_or_kill_min_fill_size_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
         mock__get_runner.return_value = mock_runner
-        instruction = {
-            "limitOrder": {"timeInForce": "FILL_OR_KILL", "minFillSize": 1.01}
-        }
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(
+            "LAY", min_fill_size=1.01
+        )
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -502,9 +543,7 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_place_limit_lay_fill_or_kill_vwap(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
-        self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
-        self.mock_order.order_type.size = 4
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
         mock_runner.ex.available_to_lay = [
@@ -513,7 +552,7 @@ class SimulatedOrderTest(unittest.TestCase):
             {"price": 13, "size": 1},
         ]
         mock__get_runner.return_value = mock_runner
-        instruction = {"limitOrder": {"timeInForce": "FILL_OR_KILL"}}
+        instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY", size=4)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
