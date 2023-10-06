@@ -85,7 +85,7 @@ class BaseStrategy:
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
         self.streams = []  # list of streams strategy is subscribed
-        self.historic_stream_ids = []
+        self.historic_stream_ids = set()
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
@@ -233,7 +233,7 @@ class BaseStrategy:
             return runner_context
 
     @property
-    def stream_ids(self) -> list:
+    def stream_ids(self) -> Union[list, set]:
         if self.historic_stream_ids:
             return self.historic_stream_ids
         else:
@@ -247,7 +247,7 @@ class BaseStrategy:
             "market_data_filter": self.market_data_filter,
             "streaming_timeout": self.streaming_timeout,
             "conflate_ms": self.conflate_ms,
-            "stream_ids": self.stream_ids,
+            "stream_ids": list(self.stream_ids),
             "max_selection_exposure": self.max_selection_exposure,
             "max_order_exposure": self.max_order_exposure,
             "max_live_trade_count": self.max_live_trade_count,
