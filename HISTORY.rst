@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.5.2 (2023-10-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Add black pre-commit hook (@mzaja)
+
+**Bug Fixes**
+
+- Handle missing MarketBook when recording sports data
+
 2.5.1 (2023-10-06)
 +++++++++++++++++++
 
