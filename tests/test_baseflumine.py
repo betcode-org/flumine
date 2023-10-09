@@ -350,6 +350,41 @@ class BaseFlumineTest(unittest.TestCase):
             mock_market, mock_market_catalogue
         )
 
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test__process_market_catalogues_missing_book(
+        self, mock_log_control, mock_events
+    ):
+        # Matches by stream id
+        mock_strategy_1 = mock.Mock(stream_ids=[1, 2])
+        mock_strategy_1.market_cached.return_value = True
+        # Does not match
+        mock_strategy_2 = mock.Mock(stream_ids=[3, 4])
+        mock_strategy_2.market_cached.return_value = False
+        # Matches by market id being cached
+        mock_strategy_3 = mock.Mock(stream_ids=[5, 6])
+        mock_strategy_3.market_cached.return_value = True
+
+        mock_market = mock.Mock(
+            market_catalogue=None, market_id="1.23", market_book=None
+        )
+
+        self.base_flumine.strategies = [
+            mock_strategy_1,
+            mock_strategy_2,
+            mock_strategy_3,
+        ]
+        self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
+
+        mock_market_catalogue = mock.Mock(market_id="1.23")
+        mock_event = mock.Mock(event=[mock_market_catalogue])
+        self.base_flumine._process_market_catalogues(mock_event)
+
+        self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
+        self.assertFalse(mock_market.update_market_catalogue)
+
+        mock_log_control.assert_called_with(mock_events.MarketEvent(mock_market))
+
     @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
     @mock.patch("flumine.baseflumine.process_current_orders")
     def test__process_current_orders(
