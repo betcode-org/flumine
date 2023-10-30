@@ -425,6 +425,8 @@ class BetfairOrder(BaseOrder):
     # currentOrder
     @property
     def average_price_matched(self) -> float:
+        if self._simulated:
+            return self.simulated.average_price_matched
         try:
             return self.current_order.average_price_matched or 0.0
         except AttributeError:
@@ -432,6 +434,8 @@ class BetfairOrder(BaseOrder):
 
     @property
     def size_matched(self) -> float:
+        if self._simulated:
+            return self.simulated.size_matched
         try:
             return self.current_order.size_matched or 0.0
         except AttributeError:
@@ -439,6 +443,8 @@ class BetfairOrder(BaseOrder):
 
     @property
     def size_remaining(self):
+        if self._simulated:
+            return self.simulated.size_remaining
         try:
             return self.current_order.size_remaining or 0.0
         except AttributeError:
@@ -455,6 +461,8 @@ class BetfairOrder(BaseOrder):
 
     @property
     def size_cancelled(self) -> float:
+        if self._simulated:
+            return self.simulated.size_cancelled
         try:
             return self.current_order.size_cancelled or 0.0
         except AttributeError:
@@ -462,6 +470,8 @@ class BetfairOrder(BaseOrder):
 
     @property
     def size_lapsed(self) -> float:
+        if self._simulated:
+            return self.simulated.size_lapsed
         try:
             return self.current_order.size_lapsed or 0.0
         except AttributeError:
@@ -469,6 +479,8 @@ class BetfairOrder(BaseOrder):
 
     @property
     def size_voided(self) -> float:
+        if self._simulated:
+            return self.simulated.size_voided
         try:
             return self.current_order.size_voided or 0.0
         except AttributeError:

@@ -494,11 +494,23 @@ class BetfairOrderTest(unittest.TestCase):
             self.order.average_price_matched, mock_current_order.average_price_matched
         )
 
+    def test_average_price_matched_simulated(self):
+        self.order._simulated = True
+        self.assertEqual(self.order.average_price_matched, 0)
+        self.order.simulated.average_price_matched = 12.1
+        self.assertEqual(self.order.average_price_matched, 12.1)
+
     def test_size_matched(self):
         self.assertEqual(self.order.size_matched, 0)
         mock_current_order = mock.Mock(size_matched=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_matched, mock_current_order.size_matched)
+
+    def test_size_matched_simulated(self):
+        self.order._simulated = True
+        self.assertEqual(self.order.size_matched, 0)
+        self.order.simulated.size_matched = 10.1
+        self.assertEqual(self.order.size_matched, 10.1)
 
     def test_size_remaining(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -509,6 +521,13 @@ class BetfairOrderTest(unittest.TestCase):
         mock_current_order = mock.Mock(size_remaining=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, mock_current_order.size_remaining)
+
+    def test_size_remaining_simulated(self):
+        self.order._simulated = True
+        self.order.simulated = mock.Mock(size_remaining=0)
+        self.assertEqual(self.order.size_remaining, 0)
+        self.order.simulated.size_remaining = 10.1
+        self.assertEqual(self.order.size_remaining, 10.1)
 
     def test_size_remaining_missing(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -537,17 +556,35 @@ class BetfairOrderTest(unittest.TestCase):
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_cancelled, mock_current_order.size_cancelled)
 
+    def test_size_cancelled_simulated(self):
+        self.order._simulated = True
+        self.assertEqual(self.order.size_cancelled, 0)
+        self.order.simulated.size_cancelled = 10.1
+        self.assertEqual(self.order.size_cancelled, 10.1)
+
     def test_size_lapsed(self):
         self.assertEqual(self.order.size_lapsed, 0)
         mock_current_order = mock.Mock(size_lapsed=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_lapsed, mock_current_order.size_lapsed)
 
+    def test_size_lapsed_simulated(self):
+        self.order._simulated = True
+        self.assertEqual(self.order.size_lapsed, 0)
+        self.order.simulated.size_lapsed = 10.1
+        self.assertEqual(self.order.size_lapsed, 10.1)
+
     def test_size_voided(self):
         self.assertEqual(self.order.size_voided, 0)
         mock_current_order = mock.Mock(size_voided=10)
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_voided, mock_current_order.size_voided)
+
+    def test_size_voided_simulated(self):
+        self.order._simulated = True
+        self.assertEqual(self.order.size_voided, 0)
+        self.order.simulated.size_voided = 10.1
+        self.assertEqual(self.order.size_voided, 10.1)
 
     def test_info(self):
         self.order.status_log = [OrderStatus.PENDING, OrderStatus.EXECUTION_COMPLETE]
