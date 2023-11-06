@@ -1,4 +1,4 @@
-betfairlightweight==2.19.0
+betfairlightweight==2.19.1
 tenacity>=7.0.0,<8.2.4
 python-json-logger==2.0.7
 requests
