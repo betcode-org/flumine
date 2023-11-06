@@ -8,7 +8,7 @@ from .utils import (
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
 )
-from ..utils import get_price, get_size, wap
+from ..utils import get_price, get_size, wap, get_sp
 from ..order.ordertype import OrderTypes
 from .. import config
 
@@ -377,7 +377,7 @@ class SimulatedOrder:
 
     def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
-        actual_sp = runner.sp.actual_sp
+        actual_sp = get_sp(runner)
         if actual_sp:
             self._bsp_reconciled = True
             _order_type = self.order.order_type

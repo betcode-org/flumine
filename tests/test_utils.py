@@ -109,6 +109,8 @@ class UtilsTest(unittest.TestCase):
         mock_runner = mock.Mock()
         mock_runner.sp.actual_sp = "NaN"
         self.assertIsNone(utils.get_sp(mock_runner))
+        mock_runner.sp.actual_sp = "Infinity"
+        self.assertIsNone(utils.get_sp(mock_runner))
         mock_runner.sp.actual_sp = 12.2345
         self.assertEqual(utils.get_sp(mock_runner), 12.2345)
 
