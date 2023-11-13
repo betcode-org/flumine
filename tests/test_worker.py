@@ -246,6 +246,10 @@ class WorkersTest(unittest.TestCase):
     @mock.patch("flumine.worker.events")
     def test__get_cleared_orders(self, mock_events, mock_config):
         mock_flumine = mock.Mock()
+        mock_market = mock.Mock(blotter=[])
+        mock_flumine.markets.markets = {
+            "1.23": mock_market,
+        }
         mock_betting_client = mock.Mock()
         mock_cleared_orders = mock.Mock()
         mock_cleared_orders.orders = []
@@ -301,6 +305,35 @@ class WorkersTest(unittest.TestCase):
             from_record=0,
             customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test__get_cleared_orders_not_settled(self, mock_events, mock_config):
+        mock_flumine = mock.Mock()
+        mock_order = mock.Mock(size_matched=24.60)
+        mock_market = mock.Mock(blotter=[mock_order])
+        mock_flumine.markets.markets = {
+            "1.23": mock_market,
+        }
+        mock_betting_client = mock.Mock()
+        mock_cleared_orders = mock.Mock()
+        mock_cleared_orders.orders = []
+        mock_cleared_orders.more_available = False
+        mock_betting_client.betting.list_cleared_orders.return_value = (
+            mock_cleared_orders
+        )
+
+        self.assertFalse(
+            worker._get_cleared_orders(mock_flumine, mock_betting_client, "1.23")
+        )
+        mock_betting_client.betting.list_cleared_orders.assert_called_with(
+            bet_status="SETTLED",
+            market_ids=["1.23"],
+            from_record=0,
+            customer_strategy_refs=[mock_config.customer_strategy_ref],
+        )
+        mock_flumine.log_control.assert_not_called()
+        mock_flumine.handler_queue.put.assert_not_called()
 
     @mock.patch("flumine.worker.config")
     @mock.patch("flumine.worker.events")

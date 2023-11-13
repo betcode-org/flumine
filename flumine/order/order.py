@@ -65,7 +65,7 @@ class BaseOrder:
         context: dict = None,
         notes: collections.OrderedDict = None,  # order notes (e.g. triggers/market state)
     ):
-        self.id = str(uuid.uuid4().time)  # 18 char str used as unique customerOrderRef
+        self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
         self.side = side
         self.order_type = order_type

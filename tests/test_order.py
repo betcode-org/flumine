@@ -79,6 +79,14 @@ class BaseOrderTest(unittest.TestCase):
             ],
         )
 
+    def test_id(self):
+        x = []
+        for i in range(256):
+            o = BaseOrder(self.mock_trade, "BACK", self.mock_order_type)
+            if len(o.id) != 18:
+                x.append(o.id)
+        self.assertEqual(len(x), 0)
+
     @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")
     def test__update_status(self, mock_info, mock__is_complete):
