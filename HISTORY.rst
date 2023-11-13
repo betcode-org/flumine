@@ -9,6 +9,12 @@ Release History
 **Bug Fixes**
 
 - #721 fix invalid customer ref
+- Holds off clearing orders until betfair have settled (@lunswor)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.19.1[speed]
+- black upgraded to 23.11.0
 
 2.5.3 (2023-11-06)
 +++++++++++++++++++
