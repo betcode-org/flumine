@@ -3,6 +3,23 @@
 Release History
 ---------------
 
+2.5.3 (2023-11-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Slack link expires
+- More docs
+
+**Bug Fixes**
+
+- #716 simulation NaN sp
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.19.1
+- black upgraded to 23.10.1
+
 2.5.2 (2023-10-09)
 +++++++++++++++++++
 

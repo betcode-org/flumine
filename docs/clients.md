@@ -60,6 +60,16 @@ with market.transaction(client=client) as t:
     t.place_order(order)
 ```
 
-## Future Development
+## Settings
 
-- BetConnect client [#566](https://github.com/liampauling/flumine/issues/566)
+- `transaction_limit` (per hour transaction limit)
+- `interactive_login` (betfair interactive login)
+- `username` (defaults to guid)
+- `order_stream` (disable order stream)
+- `best_price_execution` (only configurable when simulating)
+- `username` (defaults to guid)
+- `min_bet_validation` (remove min bet validation)
+- `paper_trade` (simulation engine used)
+- `market_recording_mode` (no order stream / workers)
+- `simulated_full_match` (simulate orders matching 100% on execution)
+- `execution_cls` (configure class used for executing orders)
