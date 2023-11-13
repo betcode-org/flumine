@@ -220,11 +220,18 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
             len(cleared_orders.orders),
             cleared_orders.more_available,
         )
+
+        from_record += len(cleared_orders.orders)
+        if from_record == 0:
+            market = flumine.markets.markets[market_id]
+            flumine_size_matched = sum([order.size_matched for order in market.blotter])
+            if flumine_size_matched > 0:
+                return False
+
         cleared_orders.market_id = market_id
         flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders))
         flumine.log_control(events.ClearedOrdersEvent(cleared_orders))
 
-        from_record += len(cleared_orders.orders)
         if not cleared_orders.more_available:
             break
     return True
