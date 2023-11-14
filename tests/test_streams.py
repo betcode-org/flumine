@@ -1,13 +1,19 @@
+import itertools
 import unittest
 import datetime
 from unittest import mock
 from unittest.mock import call
 
+from flumine import BaseStrategy
 from flumine.streams import streams, datastream, historicalstream
 from flumine.streams.basestream import BaseStream
+from flumine.streams.datastream import DataStream, OrderDataStream
+from flumine.streams.marketstream import MarketStream
+from flumine.streams.orderstream import OrderStream
 from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.streams import orderstream
 from flumine.exceptions import ListenerError
+from flumine.streams.streams import Streams
 
 
 class StreamsTest(unittest.TestCase):
@@ -460,6 +466,39 @@ class StreamsTest(unittest.TestCase):
 
     def test_len(self):
         self.assertEqual(len(self.streams), 0)
+
+    def test_types_can_share_streams(self):
+        for type1, type2 in itertools.product((MarketStream, DataStream), (MarketStream, DataStream)):
+            self.assertTrue(Streams._types_can_share_streams(mock.MagicMock(spec=type1), type2))
+
+        for type1, type2 in itertools.product((OrderStream, OrderDataStream), (OrderStream, OrderDataStream)):
+            self.assertTrue(Streams._types_can_share_streams(mock.MagicMock(spec=type1), type2))
+
+    def test_add_two_types_that_can_share_streams(self):
+        def _make_strategy(stream_class, market_filter, market_data_filter, streaming_timeout, conflate_ms):
+            strategy = mock.MagicMock(spec=BaseStrategy)
+            strategy.stream_class = stream_class
+            strategy.market_filter = market_filter
+            strategy.market_data_filter = market_data_filter
+            strategy.streaming_timeout = streaming_timeout
+            strategy.conflate_ms = conflate_ms
+            strategy.streams = []
+            strategy.sports_data_filter = []
+            return strategy
+
+        strategy1 = _make_strategy(MarketStream, None, ['A'], 10, 100)
+        strategy2 = _make_strategy(DataStream, None, ['A'], 10, 100)  # same as 1
+        strategy3 = _make_strategy(OrderStream, None, ['A'], 10, 100)
+        strategy4 = _make_strategy(OrderDataStream, None, ['A'], 10, 100)  # same as 3
+        strategy5 = _make_strategy(MarketStream, None, ['B'], 100, 100)
+
+        self.streams.add_stream(strategy1)
+        self.streams.add_stream(strategy2)
+        self.streams.add_stream(strategy3)
+        self.streams.add_stream(strategy4)
+        self.streams.add_stream(strategy5)
+
+        self.assertEqual(3, len(self.streams._streams))
 
 
 class TestBaseStream(unittest.TestCase):

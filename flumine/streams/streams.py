@@ -1,11 +1,12 @@
 import time
 import logging
-from typing import Optional, Union, Iterator
+from typing import Optional, Union, Iterator, Type
 
+from .basestream import BaseStream
 from ..strategy.strategy import BaseStrategy
 from .marketstream import MarketStream
 from .sportsdatastream import SportsDataStream
-from .datastream import DataStream
+from .datastream import DataStream, OrderDataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
@@ -84,6 +85,16 @@ class Streams:
 
     """ market data """
 
+    @staticmethod
+    def _types_can_share_streams(stream: BaseStream, other: Type[BaseStream]) -> bool:
+        """Return whether two streams can be proxies for each other."""
+        if isinstance(stream, other):
+            return True
+        for type1, type2 in ((MarketStream, DataStream), (OrderStream, OrderDataStream)):
+            if (isinstance(stream, type1) and other is type2) or (isinstance(stream, type2) and other is type1):
+                return True
+        return False
+
     def add_stream(self, strategy: BaseStrategy) -> None:
         # markets
         if isinstance(strategy.market_filter, dict) or strategy.market_filter is None:
@@ -93,7 +104,7 @@ class Streams:
         for market_filter in market_filters:
             for stream in self:  # check if market stream already exists
                 if (
-                    isinstance(stream, strategy.stream_class)
+                    self._types_can_share_streams(stream, strategy.stream_class)
                     and stream.market_filter == market_filter
                     and stream.market_data_filter == strategy.market_data_filter
                     and stream.streaming_timeout == strategy.streaming_timeout
