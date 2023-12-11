@@ -173,40 +173,6 @@ class BaseStrategyTest(unittest.TestCase):
     def test_process_market_catalogue(self):
         self.strategy.process_market_catalogue(None, None)
 
-    def test_check_sports_no_subscribed(self):
-        mock_market = mock.Mock()
-        mock_sports_data = mock.Mock(streaming_unique_id=12)
-        self.assertFalse(self.strategy.check_sports(mock_market, mock_sports_data))
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_sports_data", return_value=False
-    )
-    def test_check_sports_fail(self, mock_check_sports_data, mock_market_stream_ids):
-        mock_market = mock.Mock()
-        mock_sports_data = mock.Mock(streaming_unique_id=12)
-        self.assertFalse(self.strategy.check_sports(mock_market, mock_sports_data))
-        mock_check_sports_data.assert_called_with(mock_market, mock_sports_data)
-        mock_market_stream_ids.assert_called_with()
-
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.stream_ids",
-        return_value=[12],
-        new_callable=mock.PropertyMock,
-    )
-    @mock.patch(
-        "flumine.strategy.strategy.BaseStrategy.check_sports_data", return_value=True
-    )
-    def test_check_sports_pass(self, mock_check_sports_data, mock_market_stream_ids):
-        mock_market = mock.Mock()
-        mock_market_book = mock.Mock(streaming_unique_id=12)
-        self.assertTrue(self.strategy.check_sports(mock_market, mock_market_book))
-        mock_check_sports_data.assert_called_with(mock_market, mock_market_book)
-
     def test_check_sports_data(self):
         self.assertFalse(self.strategy.check_sports_data(None, None))
 

@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.5.5 (2023-12-11)
++++++++++++++++++++
+
+**Improvements**
+
+- #725 Remove redundant event logging
+- Refactor _process_sports_data to use eventId
+
 2.5.4 (2023-11-13)
 +++++++++++++++++++
 

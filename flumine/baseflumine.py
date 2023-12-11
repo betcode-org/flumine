@@ -178,22 +178,20 @@ class BaseFlumine:
 
     def _process_sports_data(self, event: events.SportsDataEvent) -> None:
         for sports_data in event.event:
-            # get marketId
-            market_id = sports_data.market_id
-            # get market
-            market = self.markets.markets.get(market_id)
-            if market is None:
-                logger.error(
-                    "Market not present for sports data", extra={"market_id": market_id}
-                )
-                continue
-            for strategy in self.strategies:
-                if utils.call_strategy_error_handling(
-                    strategy.check_sports, market, sports_data
-                ):
-                    utils.call_strategy_error_handling(
-                        strategy.process_sports_data, market, sports_data
-                    )
+            # get eventId
+            event_id = sports_data.event_id
+            # get markets
+            markets = self.markets.events[event_id]
+            # loop markets
+            for market in markets:
+                for strategy in self.strategies:
+                    if sports_data.streaming_unique_id in strategy.stream_ids:
+                        if utils.call_strategy_error_handling(
+                            strategy.check_sports_data, market, sports_data
+                        ):
+                            utils.call_strategy_error_handling(
+                                strategy.process_sports_data, market, sports_data
+                            )
 
     def process_order_package(self, order_package) -> None:
         """Execute through client."""

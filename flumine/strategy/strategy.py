@@ -116,16 +116,6 @@ class BaseStrategy:
         # process marketBook; place/cancel/replace orders
         return
 
-    def check_sports(
-        self, market: Market, sports_data: Union[Race, CricketMatch]
-    ) -> bool:
-        if sports_data.streaming_unique_id not in self.stream_ids:
-            return False  # strategy not subscribed to sports stream
-        elif self.check_sports_data(market, sports_data):
-            return True
-        else:
-            return False
-
     def check_sports_data(
         self, market: Market, sports_data: Union[Race, CricketMatch]
     ) -> bool:
