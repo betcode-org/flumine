@@ -202,22 +202,31 @@ class BaseFlumineTest(unittest.TestCase):
     def test__process_sports_data(self, mock_call_strategy_error_handling):
         mock_market = mock.Mock()
         self.base_flumine.markets._markets = {"1.1": mock_market}
+        self.base_flumine.markets.events[1234].append(mock_market)
         mock_strategy_one = mock.Mock(stream_ids=[123])
         mock_strategy_two = mock.Mock(stream_ids=[])
         self.base_flumine.strategies = [
             mock_strategy_one,
             mock_strategy_two,
         ]
-        mock_sports_data = mock.Mock(streaming_unique_id=123, market_id="1.1")
+        mock_sports_data = mock.Mock(
+            streaming_unique_id=123, market_id="1.1", event_id=1234
+        )
         mock_event = mock.Mock(event=[mock_sports_data])
         self.base_flumine._process_sports_data(mock_event)
         mock_call_strategy_error_handling.assert_has_calls(
             [
                 mock.call(
+                    mock_strategy_one.check_sports_data,
+                    mock_market,
+                    mock_sports_data,
+                ),
+                mock.call().__bool__(),
+                mock.call(
                     mock_strategy_one.process_sports_data,
                     mock_market,
                     mock_sports_data,
-                )
+                ),
             ]
         )
 
@@ -464,7 +473,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
-        mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
+        mock_market.blotter.process_closed_market.assert_called_with(
+            mock_market, mock_market_book
+        )
         mock_strategy.process_closed_market.assert_called_with(
             mock_market, mock_market_book
         )
