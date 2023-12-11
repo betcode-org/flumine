@@ -311,6 +311,35 @@ class BlotterTest(unittest.TestCase):
             },
         )
 
+    def test_get_exposures_line_range(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=0.0,
+            order_type=LimitOrder(
+                price=5.6, size=2.0, price_ladder_definition="LINE_RANGE"
+            ),
+        )
+        self.blotter["12345"] = mock_order
+        self.assertEqual(
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 2.0,
+                "worst_possible_profit_on_lose": -2.0,
+                "worst_possible_profit_on_win": 2.0,
+                "worst_potential_unmatched_profit_if_lose": 0.0,
+                "worst_potential_unmatched_profit_if_win": 0.0,
+            },
+        )
+
     def test_get_exposures_with_exclusion(self):
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
@@ -471,6 +500,39 @@ class BlotterTest(unittest.TestCase):
                 "matched_profit_if_win": 9.2,
                 "worst_possible_profit_on_lose": -4.0,
                 "worst_possible_profit_on_win": 9.2,
+                "worst_potential_unmatched_profit_if_lose": -2.0,
+                "worst_potential_unmatched_profit_if_win": 0,
+            },
+        )
+
+    def test_get_exposures_from_unmatched_back_line_range(self):
+        mock_strategy = mock.Mock()
+        mock_trade = mock.Mock(strategy=mock_strategy)
+        mock_order = mock.Mock(
+            trade=mock_trade,
+            lookup=(self.blotter.market_id, 123, 0),
+            selection_id=123,
+            handicap=0,
+            side="BACK",
+            average_price_matched=5.6,
+            size_matched=2.0,
+            size_remaining=2.0,
+            order_type=LimitOrder(
+                price=6, size=4.0, price_ladder_definition="LINE_RANGE"
+            ),
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
+        )
+        self.blotter["12345"] = mock_order
+        # On the win side, we have 2.0 * (5.6-1.0) = 9.2
+        # On the lose side, we have -2.0-2.0=-4.0
+        self.assertEqual(
+            self.blotter.get_exposures(mock_strategy, mock_order.lookup),
+            {
+                "matched_profit_if_lose": -2.0,
+                "matched_profit_if_win": 2.0,
+                "worst_possible_profit_on_lose": -4.0,
+                "worst_possible_profit_on_win": 2.0,
                 "worst_potential_unmatched_profit_if_lose": -2.0,
                 "worst_potential_unmatched_profit_if_win": 0,
             },

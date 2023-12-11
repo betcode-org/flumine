@@ -1302,6 +1302,31 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 4.0)
 
+    def test_profit_line_range_back(self):
+        self.simulated.size_matched = 2.00
+        self.mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.mock_order.average_price_matched = 120.5
+        self.mock_order.line_range_result = None
+        self.assertEqual(self.simulated.profit, 0)
+        self.mock_order.line_range_result = 120
+        self.assertEqual(self.simulated.profit, 2.0)
+        self.mock_order.line_range_result = 121
+        self.assertEqual(self.simulated.profit, -2.0)
+
+    def test_profit_line_range_lay(self):
+        self.simulated.size_matched = 2.00
+        self.mock_order.side = "LAY"
+        self.mock_order.order_type.ORDER_TYPE =  OrderTypes.LIMIT
+        self.mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.mock_order.average_price_matched = 120.5
+        self.mock_order.line_range_result = None
+        self.assertEqual(self.simulated.profit, 0)
+        self.mock_order.line_range_result = 121
+        self.assertEqual(self.simulated.profit, 2.0)
+        self.mock_order.line_range_result = 120
+        self.assertEqual(self.simulated.profit, -2.0)
+
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",
         new_callable=mock.PropertyMock,

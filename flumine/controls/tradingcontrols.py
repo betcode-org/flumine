@@ -212,13 +212,21 @@ class StrategyExposure(BaseControl):
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                size = order.order_type.size or order.order_type.bet_target_size
-                if order.side == "BACK":
-                    order_exposure = size
+                if order.order_type.price_ladder_definition in ["CLASSIC", "FINEST"]:
+                    size = order.order_type.size or order.order_type.bet_target_size
+                    if order.side == "BACK":
+                        order_exposure = size
+                    else:
+                        order_exposure = (order.order_type.price - 1) * size
+                elif order.order_type.price_ladder_definition == "LINE_RANGE":
+                    # All bets are struck at 2.0
+                    order_exposure = (
+                        order.order_type.size or order.order_type.bet_target_size
+                    )
                 else:
-                    order_exposure = (order.order_type.price - 1) * size
+                    return self._on_error(order, "Unknown priceLadderDefinition")
             elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-                order_exposure = order.order_type.liability  # todo correct?
+                order_exposure = order.order_type.liability
             elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
                 order_exposure = order.order_type.liability
             else:

@@ -563,28 +563,49 @@ class SimulatedOrder:
             else:
                 return 0.0
         else:
-            if self.order.runner_status == "WINNER":
-                profit = (self.size_matched / number_of_dead_heat_winners) * (
-                    self.average_price_matched - 1
-                )
-                if number_of_dead_heat_winners == 2:
-                    profit = profit - (self.size_matched / number_of_dead_heat_winners)
-                elif number_of_dead_heat_winners > 2:
-                    profit = profit - (
-                        self.size_matched
-                        * (number_of_dead_heat_winners - 1)
-                        / number_of_dead_heat_winners
+            if (
+                self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
+                and self.order.order_type.price_ladder_definition == "LINE_RANGE"
+            ):
+                line_range_result = self.order.line_range_result
+                if line_range_result is None:
+                    logger.warning(
+                        "line_range_result not available in Order to calculate profit"
                     )
-                if self.side == "LAY":
-                    profit = -profit
-                return round(profit, 2)
-            elif self.order.runner_status == "LOSER":
-                if self.side == "BACK":
-                    return -self.size_matched
+                    return 0.0
+                price = self.order.average_price_matched
+                if (self.side == "BACK" and price > line_range_result) or (
+                    self.side == "LAY" and price < line_range_result
+                ):
+                    profit = self.size_matched * (2.0 - 1)
+                    return round(profit, 2)
                 else:
-                    return self.size_matched
+                    return -self.size_matched
             else:
-                return 0.0
+                if self.order.runner_status == "WINNER":
+                    profit = (self.size_matched / number_of_dead_heat_winners) * (
+                        self.average_price_matched - 1
+                    )
+                    if number_of_dead_heat_winners == 2:
+                        profit = profit - (
+                            self.size_matched / number_of_dead_heat_winners
+                        )
+                    elif number_of_dead_heat_winners > 2:
+                        profit = profit - (
+                            self.size_matched
+                            * (number_of_dead_heat_winners - 1)
+                            / number_of_dead_heat_winners
+                        )
+                    if self.side == "LAY":
+                        profit = -profit
+                    return round(profit, 2)
+                elif self.order.runner_status == "LOSER":
+                    if self.side == "BACK":
+                        return -self.size_matched
+                    else:
+                        return self.size_matched
+                else:
+                    return 0.0
 
     @property
     def status(self) -> str:

@@ -41,6 +41,7 @@ class BaseOrderTest(unittest.TestCase):
         )
         self.assertIsNone(self.order.client)
         self.assertIsNone(self.order.runner_status)
+        self.assertIsNone(self.order.line_range_result)
         self.assertIsNone(self.order.market_type)
         self.assertEqual(self.order.each_way_divisor, 1)
         self.assertIsNone(self.order.status)
@@ -596,6 +597,7 @@ class BetfairOrderTest(unittest.TestCase):
                     "elapsed_seconds_executable": None,
                 },
                 "runner_status": self.order.runner_status,
+                "line_range_result": self.order.line_range_result,
                 "market_notes": None,
                 "notes": "",
                 "client": None,
