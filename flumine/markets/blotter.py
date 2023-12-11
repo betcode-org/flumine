@@ -148,7 +148,7 @@ class Blotter:
                             order.line_range_result = line_range_result
                         else:
                             logger.warning(
-                                "setting order.line_range_result based on runner.last_price_traded, "
+                                f"setting order.line_range_result based on runner.last_price_traded ({runner.last_price_traded}), "
                                 "for accurate results update the market.context['line_range_result']"
                             )
                             order.line_range_result = runner.last_price_traded

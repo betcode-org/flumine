@@ -569,9 +569,6 @@ class SimulatedOrder:
             ):
                 line_range_result = self.order.line_range_result
                 if line_range_result is None:
-                    logger.warning(
-                        "line_range_result not available in Order to calculate profit"
-                    )
                     return 0.0
                 price = self.order.average_price_matched
                 if (self.side == "BACK" and price > line_range_result) or (
