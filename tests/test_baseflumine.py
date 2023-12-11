@@ -473,7 +473,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
         mock_market.close_market.assert_called_with()
-        mock_market.blotter.process_closed_market.assert_called_with(mock_market_book)
+        mock_market.blotter.process_closed_market.assert_called_with(
+            mock_market, mock_market_book
+        )
         mock_strategy.process_closed_market.assert_called_with(
             mock_market, mock_market_book
         )

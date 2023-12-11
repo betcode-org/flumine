@@ -228,12 +228,13 @@ class BlotterTest(unittest.TestCase):
         self.assertTrue(self.blotter.has_live_orders)
 
     def test_process_closed_market(self):
+        mock_market = mock.Mock()
         mock_market_book = mock.Mock(number_of_winners=1)
         mock_runner = mock.Mock(selection_id=123, handicap=0.0)
         mock_market_book.runners = [mock_runner]
         mock_order = mock.Mock(selection_id=123, handicap=0.0)
         self.blotter._orders = {"12345": mock_order}
-        self.blotter.process_closed_market(mock_market_book)
+        self.blotter.process_closed_market(mock_market, mock_market_book)
         self.assertEqual(mock_order.runner_status, mock_runner.status)
         self.assertEqual(
             mock_order.market_type, mock_market_book.market_definition.market_type
@@ -242,6 +243,30 @@ class BlotterTest(unittest.TestCase):
             mock_order.each_way_divisor,
             mock_market_book.market_definition.each_way_divisor,
         )
+
+    def test_process_closed_market_line_range(self):
+        mock_market = mock.Mock(context={"line_range_result": 119})
+        mock_market_book = mock.Mock(number_of_winners=1)
+        mock_runner = mock.Mock(selection_id=123, handicap=0.0)
+        mock_market_book.runners = [mock_runner]
+        mock_order = mock.Mock(selection_id=123, handicap=0.0)
+        mock_order.order_type.ORDER_TYPE = LimitOrder.ORDER_TYPE
+        mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.blotter._orders = {"12345": mock_order}
+        self.blotter.process_closed_market(mock_market, mock_market_book)
+        self.assertEqual(mock_order.line_range_result, 119)
+
+    def test_process_closed_market_line_range_no_data(self):
+        mock_market = mock.Mock(context={})
+        mock_market_book = mock.Mock(number_of_winners=1)
+        mock_runner = mock.Mock(selection_id=123, handicap=0.0, last_price_traded=123)
+        mock_market_book.runners = [mock_runner]
+        mock_order = mock.Mock(selection_id=123, handicap=0.0)
+        mock_order.order_type.ORDER_TYPE = LimitOrder.ORDER_TYPE
+        mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.blotter._orders = {"12345": mock_order}
+        self.blotter.process_closed_market(mock_market, mock_market_book)
+        self.assertEqual(mock_order.line_range_result, 123)
 
     def test_process_cleared_orders(self):
         mock_cleared_orders = mock.Mock()

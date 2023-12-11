@@ -122,7 +122,7 @@ class Blotter:
     def has_live_orders(self) -> bool:
         return bool(self._live_orders)
 
-    def process_closed_market(self, market_book) -> None:
+    def process_closed_market(self, market, market_book) -> None:
         number_of_winners = len(
             [runner for runner in market_book.runners if runner.status == "WINNER"]
         )
@@ -139,6 +139,19 @@ class Blotter:
                     )
                     if number_of_winners > market_book.number_of_winners:
                         order.number_of_dead_heat_winners = number_of_winners
+                    if (
+                        order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT
+                        and order.order_type.price_ladder_definition == "LINE_RANGE"
+                    ):
+                        line_range_result = market.context.get("line_range_result")
+                        if line_range_result:
+                            order.line_range_result = line_range_result
+                        else:
+                            logger.warning(
+                                "setting order.line_range_result based on runner.last_price_traded, "
+                                "for accurate results update the market.context['line_range_result']"
+                            )
+                            order.line_range_result = runner.last_price_traded
 
     def process_cleared_orders(self, cleared_orders) -> list:
         for cleared_order in cleared_orders.orders:
