@@ -1317,7 +1317,7 @@ class SimulatedOrderTest(unittest.TestCase):
     def test_profit_line_range_lay(self):
         self.simulated.size_matched = 2.00
         self.mock_order.side = "LAY"
-        self.mock_order.order_type.ORDER_TYPE =  OrderTypes.LIMIT
+        self.mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         self.mock_order.order_type.price_ladder_definition = "LINE_RANGE"
         self.mock_order.average_price_matched = 120.5
         self.mock_order.line_range_result = None
