@@ -146,12 +146,10 @@ class Blotter:
                         line_range_result = market.context.get("line_range_result")
                         if line_range_result:
                             order.line_range_result = line_range_result
-                        else:
+                        elif order.simulated:
                             logger.warning(
-                                f"setting order.line_range_result based on runner.last_price_traded ({runner.last_price_traded}), "
-                                "for accurate results update the market.context['line_range_result']"
+                                "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
                             )
-                            order.line_range_result = runner.last_price_traded
 
     def process_cleared_orders(self, cleared_orders) -> list:
         for cleared_order in cleared_orders.orders:

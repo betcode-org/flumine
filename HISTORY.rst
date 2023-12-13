@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.5.6 (2023-12-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove LINE_RANGE LTP default
+
 2.5.5 (2023-12-11)
 +++++++++++++++++++
 
