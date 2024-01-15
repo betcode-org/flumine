@@ -170,6 +170,12 @@ class TradeTest(unittest.TestCase):
                 mock_client, mock_current_order, "12345"
             )
 
+    def test_elapsed_seconds(self):
+        mock_order_one = mock.Mock(elapsed_seconds=123)
+        mock_order_two = mock.Mock(elapsed_seconds=12)
+        self.trade.orders = [mock_order_one, mock_order_two]
+        self.assertGreaterEqual(self.trade.elapsed_seconds, 123)
+
     def test_notes_str(self):
         self.trade.notes = collections.OrderedDict({"1": 1, 2: "2", 3: 3, 4: "four"})
         self.assertEqual(self.trade.notes_str, "1,2,3,four")
