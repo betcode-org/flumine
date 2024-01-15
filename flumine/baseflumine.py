@@ -178,10 +178,21 @@ class BaseFlumine:
 
     def _process_sports_data(self, event: events.SportsDataEvent) -> None:
         for sports_data in event.event:
-            # get eventId
-            event_id = sports_data.event_id
-            # get markets
-            markets = self.markets.events[event_id]
+            if hasattr(sports_data, "event_id"):
+                # get eventId
+                event_id = sports_data.event_id
+                # get markets
+                markets = self.markets.events[event_id]
+            else:
+                market_id = sports_data.market_id
+                market = self.markets.markets.get(market_id)
+                if market is None:
+                    logger.error(
+                        "Market not present for sports data",
+                        extra={"market_id": market_id},
+                    )
+                    continue
+                markets = [market]
             # loop markets
             for market in markets:
                 for strategy in self.strategies:

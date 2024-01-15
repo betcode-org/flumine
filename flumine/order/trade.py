@@ -3,7 +3,7 @@ import logging
 import datetime
 import collections
 from enum import Enum
-from typing import Union, Type
+from typing import Union, Type, Optional
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
@@ -167,6 +167,11 @@ class Trade:
         )
         self.orders.append(order)
         return order
+
+    @property
+    def elapsed_seconds(self) -> Optional[float]:
+        for order in self.orders:
+            return order.elapsed_seconds  # return first order
 
     @property
     def notes_str(self) -> str:

@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.5.7 (2024-01-15)
++++++++++++++++++++
+
+**Improvements**
+
+- Add trade elapsed seconds
+
+**Bug Fixes**
+
+- #732 fix process_sports_data for Race events
+
 2.5.6 (2023-12-13)
 +++++++++++++++++++
 
