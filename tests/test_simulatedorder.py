@@ -964,17 +964,17 @@ class SimulatedOrderTest(unittest.TestCase):
             [[1234567, 11, 1], [1234567, 12, 1], [1234567, 13, 1]],
         )
 
-    def test__process_sp(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=12.2)
+    def test__process_sp(self, mock_get_sp):
         mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = 12.20
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [[1234571, 12.2, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_lay(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=12.2)
+    def test__process_sp_lay(self, mock_get_sp):
         mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = 12.20
         self.simulated.order.side = "LAY"
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [[1234571, 12.2, 1.96]])
@@ -982,10 +982,10 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_lay_liability(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=12.2)
+    def test__process_sp_lay_liability(self, mock_get_sp):
         self.simulated.size_matched = 1.90
         mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = 12.20
         self.simulated.order.side = "LAY"
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [])
@@ -993,16 +993,16 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_none(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=None)
+    def test__process_sp_none(self, mock_get_sp):
         mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = None
         self.simulated._process_sp(1234571, mock_runner)
         self.assertEqual(self.simulated.matched, [])
         self.assertFalse(self.simulated._bsp_reconciled)
 
-    def test__process_sp_processed_semi(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=12.2)
+    def test__process_sp_processed_semi(self, mock_get_sp):
         mock_runner = mock.Mock()
-        mock_runner.sp.actual_sp = 12.20
         self.simulated.matched = [[1234571, 10.0, 1]]
         self.simulated.size_matched = 1
         self.simulated.average_price_matched = 10.0
@@ -1013,70 +1013,70 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_limit_on_close_back(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=69)
+    def test__process_sp_limit_on_close_back(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234573, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234573, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_limit_on_close_back_no_match(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=8)
+    def test__process_sp_limit_on_close_back_no_match(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(price=10.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 8
         self.simulated._process_sp(1234574, mock_runner_book)
         self.assertEqual(self.simulated.matched, [])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_limit_on_close_lay(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=69)
+    def test__process_sp_limit_on_close_lay(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(price=100.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         self.simulated.order.side = "LAY"
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234575, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234575, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_limit_on_close_lay_no_match(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=69)
+    def test__process_sp_limit_on_close_lay_no_match(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(price=60.0, liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         self.simulated.order.side = "LAY"
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234576, mock_runner_book)
         self.assertEqual(self.simulated.matched, [])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_market_on_close_back(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=69)
+    def test__process_sp_market_on_close_back(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234577, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234577, 69, 2.00]])
         self.assertTrue(self.simulated._bsp_reconciled)
         self.simulated.order.execution_complete.assert_called()
 
-    def test__process_sp_market_on_close_lay(self):
+    @mock.patch("flumine.simulation.simulatedorder.get_sp", return_value=69)
+    def test__process_sp_market_on_close_lay(self, mock_get_sp):
         mock_limit_on_close_order = mock.Mock(liability=2.00)
         mock_limit_on_close_order.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
         self.simulated.order.order_type = mock_limit_on_close_order
         self.simulated.order.side = "LAY"
         mock_runner_book = mock.Mock()
-        mock_runner_book.sp.actual_sp = 69
         self.simulated._process_sp(1234578, mock_runner_book)
         self.assertEqual(self.simulated.matched, [[1234578, 69, 0.03]])
         self.assertTrue(self.simulated._bsp_reconciled)
@@ -1301,6 +1301,31 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.profit, -1.6)
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, 4.0)
+
+    def test_profit_line_range_back(self):
+        self.simulated.size_matched = 2.00
+        self.mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.mock_order.average_price_matched = 120.5
+        self.mock_order.line_range_result = None
+        self.assertEqual(self.simulated.profit, 0)
+        self.mock_order.line_range_result = 120
+        self.assertEqual(self.simulated.profit, 2.0)
+        self.mock_order.line_range_result = 121
+        self.assertEqual(self.simulated.profit, -2.0)
+
+    def test_profit_line_range_lay(self):
+        self.simulated.size_matched = 2.00
+        self.mock_order.side = "LAY"
+        self.mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        self.mock_order.average_price_matched = 120.5
+        self.mock_order.line_range_result = None
+        self.assertEqual(self.simulated.profit, 0)
+        self.mock_order.line_range_result = 121
+        self.assertEqual(self.simulated.profit, 2.0)
+        self.mock_order.line_range_result = 120
+        self.assertEqual(self.simulated.profit, -2.0)
 
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",

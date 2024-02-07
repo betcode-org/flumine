@@ -65,7 +65,7 @@ class BaseOrder:
         context: dict = None,
         notes: collections.OrderedDict = None,  # order notes (e.g. triggers/market state)
     ):
-        self.id = str(uuid.uuid4().time)  # 18 char str used as unique customerOrderRef
+        self.id = str(uuid.uuid1().time)  # 18 char str used as unique customerOrderRef
         self.trade = trade
         self.side = side
         self.order_type = order_type
@@ -75,6 +75,7 @@ class BaseOrder:
 
         self.client = None
         self.runner_status = None  # RunnerBook.status
+        self.line_range_result = None
         self.market_type = None
         self.each_way_divisor = 1
         self.number_of_dead_heat_winners = None
@@ -303,6 +304,7 @@ class BaseOrder:
                 "elapsed_seconds_executable": self.elapsed_seconds_executable,
             },
             "runner_status": self.runner_status,
+            "line_range_result": self.line_range_result,
             "status": self.status.value if self.status else None,
             "status_log": ", ".join([s.value for s in self.status_log]),
             "violation_msg": self.violation_msg,

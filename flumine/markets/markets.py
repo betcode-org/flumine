@@ -36,7 +36,7 @@ class Markets:
         del market
         logger.info(
             "Market removed",
-            extra={"market_id": market_id, "event_id": event_id, "events": self.events},
+            extra={"market_id": market_id, "event_id": event_id},
         )
 
     def get_order(self, market_id: str, order_id: str) -> Optional[BetfairOrder]:

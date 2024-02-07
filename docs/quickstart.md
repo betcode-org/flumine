@@ -235,7 +235,11 @@ When simulating you can filter markets to be processed by using the `market_type
 
 ```python
 strategy = ExampleStrategy(
-    market_filter={"markets": [..], "market_types": ["MATCH_ODDS"], "country_codes": ["GB"]}
+    market_filter={
+        "markets": [..], 
+        "market_types": ["MATCH_ODDS"], 
+        "country_codes": ["GB"]
+    }
 )
 ```
 
@@ -243,8 +247,8 @@ strategy = ExampleStrategy(
 
 Simulation uses the `SimulatedExecution` execution class and tries to accurately simulate matching with the following:
 
-- Place/Cancel/Replace latency delay added
-- BetDelay added based on market state
+- Estimated Place/Cancel/Replace latency delay added (can be changed in the config)
+- Betfair betDelay added based on market state
 - Queue positioning based on liquidity available
 - Order lapse on market version change
 - Order lapse and reduction on runner removal

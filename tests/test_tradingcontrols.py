@@ -578,6 +578,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.side = "BACK"
         mock_order.order_type.size = 12.0
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
@@ -592,6 +593,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.side = "BACK"
         mock_order.order_type.size = None
         mock_order.order_type.bet_target_size = 12.0
@@ -615,6 +617,7 @@ class TestStrategyExposure(unittest.TestCase):
         order1.trade.strategy.max_order_exposure = 10
         order1.trade.strategy.max_selection_exposure = 10
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order1.order_type.price_ladder_definition = "CLASSIC"
         order1.side = "BACK"
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
@@ -627,6 +630,7 @@ class TestStrategyExposure(unittest.TestCase):
         order2.trade.strategy.max_selection_exposure = 10
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order2.order_type.price_ladder_definition = "CLASSIC"
         order2.side = "BACK"
         order2.order_type.price = 3.0
         order2.order_type.size = 9.0
@@ -663,6 +667,7 @@ class TestStrategyExposure(unittest.TestCase):
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order1.order_type.price_ladder_definition = "CLASSIC"
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
 
@@ -679,6 +684,7 @@ class TestStrategyExposure(unittest.TestCase):
         )
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order2.order_type.price_ladder_definition = "CLASSIC"
         order2.order_type.price = 3.0
         order2.order_type.size = 9.0
 
@@ -692,11 +698,27 @@ class TestStrategyExposure(unittest.TestCase):
         )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_limit_line_range(self, mock_on_error):
+        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order.trade.strategy.max_order_exposure = 10
+        mock_order.trade.strategy.max_selection_exposure = 100
+        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "LINE_RANGE"
+        mock_order.side = "LAY"
+        mock_order.order_type.size = 12.0
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_called_with(
+            mock_order,
+            "Order exposure (12.0) is greater than strategy.max_order_exposure (10)",
+        )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
         mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.side = "BACK"
         mock_order.order_type.liability = 12
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
@@ -734,6 +756,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 10
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.order_type.size = 12.0
         mock_order.order_type.price = 1.01
         mock_market.blotter._live_orders = [mock_order]
@@ -763,6 +786,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.order_type.size = 9.0
         mock_order.order_type.price = 5.0
 
@@ -805,6 +829,7 @@ class TestStrategyExposure(unittest.TestCase):
         )
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.order_type.size = 9.0
         mock_order.order_type.price = 5.0
 
@@ -839,6 +864,7 @@ class TestStrategyExposure(unittest.TestCase):
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        order1.order_type.price_ladder_definition = "CLASSIC"
         order1.order_type.price = 2.0
         order1.order_type.size = 9.0
         order1.size_remaining = 9.0

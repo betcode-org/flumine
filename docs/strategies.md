@@ -44,5 +44,11 @@ runner_context = self.get_runner_context(
     market.market_id, runner.selection_id, runner.handicap
 )
 
+runner_context.invested
+runner_context.trade_count
 runner_context.live_trade_count
+runner_context.executable_orders
+runner_context.placed_elapsed_seconds
+runner_context.trades
+runner_context.live_trades
 ```

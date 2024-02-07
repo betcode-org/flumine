@@ -123,7 +123,7 @@ When True will simulate matches against available prices after initial execution
 
 Store server id or similar (e.g. AWS ec2 instanceId)
 
-#### customer_strategy_ref
+#### customer_strategy_ref / hostname
 
 Used as customerStrategyRefs so that only orders created by the running instance are returned.
 
@@ -166,3 +166,7 @@ Replace latency used for simulation / simulation execution
 #### order_sep 
 
 customer_order_ref separator
+
+#### execution_retry_attempts
+
+Cancel attempts when the OrderStream is not connected

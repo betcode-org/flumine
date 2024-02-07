@@ -122,7 +122,7 @@ class Blotter:
     def has_live_orders(self) -> bool:
         return bool(self._live_orders)
 
-    def process_closed_market(self, market_book) -> None:
+    def process_closed_market(self, market, market_book) -> None:
         number_of_winners = len(
             [runner for runner in market_book.runners if runner.status == "WINNER"]
         )
@@ -139,6 +139,17 @@ class Blotter:
                     )
                     if number_of_winners > market_book.number_of_winners:
                         order.number_of_dead_heat_winners = number_of_winners
+                    if (
+                        order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT
+                        and order.order_type.price_ladder_definition == "LINE_RANGE"
+                    ):
+                        line_range_result = market.context.get("line_range_result")
+                        if line_range_result:
+                            order.line_range_result = line_range_result
+                        elif order.simulated:
+                            logger.warning(
+                                "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
+                            )
 
     def process_cleared_orders(self, cleared_orders) -> list:
         for cleared_order in cleared_orders.orders:
@@ -197,13 +208,20 @@ class Blotter:
                 _size_matched = order.size_matched  # cache
                 _order_side = order.side
                 if _size_matched:
-                    if _order_side == "BACK":
-                        mb.append((order.average_price_matched, _size_matched))
+                    if order.order_type.price_ladder_definition == "LINE_RANGE":
+                        average_price_matched = 2.0
                     else:
-                        ml.append((order.average_price_matched, _size_matched))
+                        average_price_matched = order.average_price_matched
+                    if _order_side == "BACK":
+                        mb.append((average_price_matched, _size_matched))
+                    else:
+                        ml.append((average_price_matched, _size_matched))
                 if not order.complete:
                     _size_remaining = order.size_remaining  # cache
-                    order_type_price = order.order_type.price
+                    if order.order_type.price_ladder_definition == "LINE_RANGE":
+                        order_type_price = 2.0
+                    else:
+                        order_type_price = order.order_type.price
                     if order_type_price and _size_remaining:
                         if _order_side == "BACK":
                             ub.append((order_type_price, _size_remaining))

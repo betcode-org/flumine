@@ -178,22 +178,31 @@ class BaseFlumine:
 
     def _process_sports_data(self, event: events.SportsDataEvent) -> None:
         for sports_data in event.event:
-            # get marketId
-            market_id = sports_data.market_id
-            # get market
-            market = self.markets.markets.get(market_id)
-            if market is None:
-                logger.error(
-                    "Market not present for sports data", extra={"market_id": market_id}
-                )
-                continue
-            for strategy in self.strategies:
-                if utils.call_strategy_error_handling(
-                    strategy.check_sports, market, sports_data
-                ):
-                    utils.call_strategy_error_handling(
-                        strategy.process_sports_data, market, sports_data
+            if hasattr(sports_data, "event_id"):
+                # get eventId
+                event_id = sports_data.event_id
+                # get markets
+                markets = self.markets.events[event_id]
+            else:
+                market_id = sports_data.market_id
+                market = self.markets.markets.get(market_id)
+                if market is None:
+                    logger.error(
+                        "Market not present for sports data",
+                        extra={"market_id": market_id},
                     )
+                    continue
+                markets = [market]
+            # loop markets
+            for market in markets:
+                for strategy in self.strategies:
+                    if sports_data.streaming_unique_id in strategy.stream_ids:
+                        if utils.call_strategy_error_handling(
+                            strategy.check_sports_data, market, sports_data
+                        ):
+                            utils.call_strategy_error_handling(
+                                strategy.process_sports_data, market, sports_data
+                            )
 
     def process_order_package(self, order_package) -> None:
         """Execute through client."""
@@ -260,7 +269,9 @@ class BaseFlumine:
 
                 for strategy in self.strategies:
                     if (
-                        market.market_book.streaming_unique_id in strategy.stream_ids
+                        market.market_book
+                        and market.market_book.streaming_unique_id
+                        in strategy.stream_ids
                     ) or strategy.market_cached(market.market_id):
                         utils.call_strategy_error_handling(
                             strategy.process_market_catalogue, market, market_catalogue
@@ -324,7 +335,7 @@ class BaseFlumine:
             market.close_market()
         if recorder is False:
             market(market_book)
-            market.blotter.process_closed_market(event.event)
+            market.blotter.process_closed_market(market, event.event)
 
         for strategy in self.strategies:
             if stream_id in strategy.stream_ids:

@@ -41,6 +41,7 @@ class BaseOrderTest(unittest.TestCase):
         )
         self.assertIsNone(self.order.client)
         self.assertIsNone(self.order.runner_status)
+        self.assertIsNone(self.order.line_range_result)
         self.assertIsNone(self.order.market_type)
         self.assertEqual(self.order.each_way_divisor, 1)
         self.assertIsNone(self.order.status)
@@ -78,6 +79,14 @@ class BaseOrderTest(unittest.TestCase):
                 OrderStatus.VIOLATION,
             ],
         )
+
+    def test_id(self):
+        x = []
+        for i in range(256):
+            o = BaseOrder(self.mock_trade, "BACK", self.mock_order_type)
+            if len(o.id) != 18:
+                x.append(o.id)
+        self.assertEqual(len(x), 0)
 
     @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")
@@ -588,6 +597,7 @@ class BetfairOrderTest(unittest.TestCase):
                     "elapsed_seconds_executable": None,
                 },
                 "runner_status": self.order.runner_status,
+                "line_range_result": self.order.line_range_result,
                 "market_notes": None,
                 "notes": "",
                 "client": None,

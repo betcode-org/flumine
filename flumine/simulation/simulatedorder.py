@@ -8,7 +8,7 @@ from .utils import (
     SimulatedCancelResponse,
     SimulatedUpdateResponse,
 )
-from ..utils import get_price, get_size, wap
+from ..utils import get_price, get_size, wap, get_sp
 from ..order.ordertype import OrderTypes
 from .. import config
 
@@ -377,7 +377,7 @@ class SimulatedOrder:
 
     def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
-        actual_sp = runner.sp.actual_sp
+        actual_sp = get_sp(runner)
         if actual_sp:
             self._bsp_reconciled = True
             _order_type = self.order.order_type
@@ -563,28 +563,46 @@ class SimulatedOrder:
             else:
                 return 0.0
         else:
-            if self.order.runner_status == "WINNER":
-                profit = (self.size_matched / number_of_dead_heat_winners) * (
-                    self.average_price_matched - 1
-                )
-                if number_of_dead_heat_winners == 2:
-                    profit = profit - (self.size_matched / number_of_dead_heat_winners)
-                elif number_of_dead_heat_winners > 2:
-                    profit = profit - (
-                        self.size_matched
-                        * (number_of_dead_heat_winners - 1)
-                        / number_of_dead_heat_winners
-                    )
-                if self.side == "LAY":
-                    profit = -profit
-                return round(profit, 2)
-            elif self.order.runner_status == "LOSER":
-                if self.side == "BACK":
-                    return -self.size_matched
+            if (
+                self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT
+                and self.order.order_type.price_ladder_definition == "LINE_RANGE"
+            ):
+                line_range_result = self.order.line_range_result
+                if line_range_result is None:
+                    return 0.0
+                price = self.order.average_price_matched
+                if (self.side == "BACK" and price > line_range_result) or (
+                    self.side == "LAY" and price < line_range_result
+                ):
+                    profit = self.size_matched * (2.0 - 1)
+                    return round(profit, 2)
                 else:
-                    return self.size_matched
+                    return -self.size_matched
             else:
-                return 0.0
+                if self.order.runner_status == "WINNER":
+                    profit = (self.size_matched / number_of_dead_heat_winners) * (
+                        self.average_price_matched - 1
+                    )
+                    if number_of_dead_heat_winners == 2:
+                        profit = profit - (
+                            self.size_matched / number_of_dead_heat_winners
+                        )
+                    elif number_of_dead_heat_winners > 2:
+                        profit = profit - (
+                            self.size_matched
+                            * (number_of_dead_heat_winners - 1)
+                            / number_of_dead_heat_winners
+                        )
+                    if self.side == "LAY":
+                        profit = -profit
+                    return round(profit, 2)
+                elif self.order.runner_status == "LOSER":
+                    if self.side == "BACK":
+                        return -self.size_matched
+                    else:
+                        return self.size_matched
+                else:
+                    return 0.0
 
     @property
     def status(self) -> str:

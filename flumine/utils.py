@@ -172,6 +172,8 @@ def get_sp(runner: RunnerBook) -> Optional[float]:
         return
     elif runner.sp.actual_sp == "NaN":
         return
+    elif runner.sp.actual_sp == "Infinity":
+        return
     else:
         return runner.sp.actual_sp
 

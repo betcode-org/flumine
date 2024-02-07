@@ -3,6 +3,77 @@
 Release History
 ---------------
 
+2.5.7 (2024-01-15)
++++++++++++++++++++
+
+**Improvements**
+
+- Add trade elapsed seconds
+
+**Bug Fixes**
+
+- #732 fix process_sports_data for Race events
+
+2.5.6 (2023-12-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove LINE_RANGE LTP default
+
+2.5.5 (2023-12-11)
++++++++++++++++++++
+
+**Improvements**
+
+- #725 Remove redundant event logging
+- Refactor _process_sports_data to use eventId
+
+**Bug Fixes**
+
+- Correctly handle LINE_RANGE markets within trading controls / blotter / profit / order
+
+2.5.4 (2023-11-13)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #721 fix invalid customer ref
+- Holds off clearing orders until betfair have settled (@lunswor)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.19.1[speed]
+- black upgraded to 23.11.0
+
+2.5.3 (2023-11-06)
++++++++++++++++++++
+
+**Improvements**
+
+- Slack link expires
+- More docs
+
+**Bug Fixes**
+
+- #716 simulation NaN sp
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.19.1
+- black upgraded to 23.10.1
+
+2.5.2 (2023-10-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Add black pre-commit hook (@mzaja)
+
+**Bug Fixes**
+
+- Handle missing MarketBook when recording sports data
+
 2.5.1 (2023-10-06)
 +++++++++++++++++++
 
