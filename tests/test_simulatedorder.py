@@ -228,7 +228,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 0)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
@@ -248,7 +248,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -269,7 +269,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -294,7 +294,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 1)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -317,7 +317,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -349,7 +349,7 @@ class SimulatedOrderTest(unittest.TestCase):
                 [mock_market_book.publish_time_epoch, 11, 1],
             ],
         )
-        self.assertEqual(self.simulated.size_lapsed, 0)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -447,7 +447,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 0)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -467,7 +467,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -489,7 +489,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -513,7 +513,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 1)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -535,7 +535,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -566,7 +566,7 @@ class SimulatedOrderTest(unittest.TestCase):
                 [mock_market_book.publish_time_epoch, 13, 1],
             ],
         )
-        self.assertEqual(self.simulated.size_lapsed, 0)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -888,7 +888,7 @@ class SimulatedOrderTest(unittest.TestCase):
             5,
         )
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 5)
+        self.assertEqual(self.simulated.size_cancelled, 5)
         self.simulated.matched = []
         self.simulated._process_price_matched_vwap(
             1234567,
@@ -946,7 +946,7 @@ class SimulatedOrderTest(unittest.TestCase):
             5,
         )
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 5)
+        self.assertEqual(self.simulated.size_cancelled, 5)
         self.simulated.matched = []
         self.simulated._process_price_matched_vwap(
             1234567,
