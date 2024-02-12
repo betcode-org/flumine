@@ -215,7 +215,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 2}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
         instruction = self.mock_betfair_place_instruction_fill_or_kill()
@@ -224,11 +224,11 @@ class SimulatedOrderTest(unittest.TestCase):
         )
         self.assertEqual(self.simulated.market_version, mock_market_book.version)
         self.assertEqual(resp.average_price_matched, 12)
-        self.assertEqual(resp.size_matched, 1)
+        self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
-            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
@@ -237,7 +237,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
-        mock_runner.ex.available_to_back = [{"price": 11, "size": 1}]
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
         instruction = self.mock_betfair_place_instruction_fill_or_kill()
@@ -248,7 +248,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -269,7 +269,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -294,7 +294,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 1)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -317,7 +317,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -334,7 +334,7 @@ class SimulatedOrderTest(unittest.TestCase):
         ]
         mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
         mock__get_runner.return_value = mock_runner
-        instruction = self.mock_betfair_place_instruction_fill_or_kill(size=4)
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(size=3)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -349,7 +349,7 @@ class SimulatedOrderTest(unittest.TestCase):
                 [mock_market_book.publish_time_epoch, 11, 1],
             ],
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -436,18 +436,18 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 2}]
         mock__get_runner.return_value = mock_runner
         instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY")
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
         self.assertEqual(resp.average_price_matched, 12)
-        self.assertEqual(resp.size_matched, 1)
+        self.assertEqual(resp.size_matched, 2)
         self.assertEqual(
-            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
+            self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -458,7 +458,7 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
-        mock_runner.ex.available_to_lay = [{"price": 13, "size": 1}]
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 1}]
         mock__get_runner.return_value = mock_runner
         instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY")
         resp = self.simulated.place(
@@ -467,7 +467,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -489,7 +489,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -513,7 +513,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 1]]
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 1)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -535,7 +535,7 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.average_price_matched, 0)
         self.assertEqual(resp.size_matched, 0)
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 2)
+        self.assertEqual(self.simulated.size_cancelled, 2)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -552,7 +552,7 @@ class SimulatedOrderTest(unittest.TestCase):
             {"price": 13, "size": 1},
         ]
         mock__get_runner.return_value = mock_runner
-        instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY", size=4)
+        instruction = self.mock_betfair_place_instruction_fill_or_kill("LAY", size=3)
         resp = self.simulated.place(
             mock_order_package, mock_market_book, instruction, 1
         )
@@ -566,7 +566,7 @@ class SimulatedOrderTest(unittest.TestCase):
                 [mock_market_book.publish_time_epoch, 13, 1],
             ],
         )
-        self.assertEqual(self.simulated.size_lapsed, 1)
+        self.assertEqual(self.simulated.size_cancelled, 0)
         self.assertEqual(self.simulated.size_remaining, 0)
         self.assertEqual(self.simulated.status, EXECUTION_COMPLETE)
 
@@ -888,7 +888,7 @@ class SimulatedOrderTest(unittest.TestCase):
             5,
         )
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 5)
+        self.assertEqual(self.simulated.size_cancelled, 5)
         self.simulated.matched = []
         self.simulated._process_price_matched_vwap(
             1234567,
@@ -946,7 +946,7 @@ class SimulatedOrderTest(unittest.TestCase):
             5,
         )
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_lapsed, 5)
+        self.assertEqual(self.simulated.size_cancelled, 5)
         self.simulated.matched = []
         self.simulated._process_price_matched_vwap(
             1234567,
