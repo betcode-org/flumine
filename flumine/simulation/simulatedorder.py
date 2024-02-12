@@ -101,7 +101,7 @@ class SimulatedOrder:
             size = self.order.order_type.size
             if "limitOrder" in instruction:
                 time_in_force = instruction["limitOrder"].get("timeInForce")
-                min_fill_size = instruction["limitOrder"].get("minFillSize") or 0
+                min_fill_size = instruction["limitOrder"].get("minFillSize") or size
             else:
                 time_in_force = None
                 min_fill_size = None
@@ -124,7 +124,7 @@ class SimulatedOrder:
                 elif time_in_force == "FILL_OR_KILL":
                     available_size = get_size(runner.ex.available_to_back, 0) or 0
                     if price > available_to_back:
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                     elif price == available_to_back:
                         if available_size >= min_fill_size:
@@ -134,7 +134,7 @@ class SimulatedOrder:
                                 size,
                                 runner.ex.available_to_back,
                             )
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                     else:
                         self._process_price_matched_vwap(
@@ -144,7 +144,7 @@ class SimulatedOrder:
                             runner.ex.available_to_back,
                             min_fill_size=min_fill_size,
                         )
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                 elif available_to_back >= price:
                     self._process_price_matched(
@@ -170,7 +170,7 @@ class SimulatedOrder:
                 elif time_in_force == "FILL_OR_KILL":
                     available_size = get_size(runner.ex.available_to_lay, 0) or 0
                     if price < available_to_lay:
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                     elif price == available_to_lay:
                         if available_size >= min_fill_size:
@@ -180,7 +180,7 @@ class SimulatedOrder:
                                 size,
                                 runner.ex.available_to_lay,
                             )
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                     else:
                         self._process_price_matched_vwap(
@@ -190,7 +190,7 @@ class SimulatedOrder:
                             runner.ex.available_to_lay,
                             min_fill_size=min_fill_size,
                         )
-                        self.size_lapsed += self.size_remaining
+                        self.size_cancelled += self.size_remaining
                         return self._create_place_response(bet_id)
                 elif available_to_lay <= price:
                     self._process_price_matched(
@@ -373,7 +373,7 @@ class SimulatedOrder:
         if self.size_matched < min_fill_size:
             self.matched = []
             self.size_matched, self.average_price_matched = wap(self.matched)
-            self.size_lapsed += self.size_remaining
+            self.size_cancelled += self.size_remaining
 
     def _process_sp(self, publish_time: int, runner: RunnerBook) -> None:
         # calculate matched on BSP reconciliation
