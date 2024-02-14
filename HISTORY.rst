@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.5.9 (2024-02-14)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Correctly handle US races starting early when simulating TPD
+
 2.5.8 (2024-02-12)
 +++++++++++++++++++
 
