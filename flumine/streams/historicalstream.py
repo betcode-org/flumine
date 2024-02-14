@@ -134,7 +134,8 @@ class FlumineRaceStream(RaceStream):
                 race_cache.start_time
                 - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
             ).total_seconds()
-            if diff <= 0:
+            # handle US races starting early by checking running_time
+            if diff <= 0 or ("rpc" in update and update["rpc"]["rt"]):
                 race_cache.update_cache(update, publish_time)
                 self._updates_processed += 1
                 active = True

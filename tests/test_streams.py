@@ -927,6 +927,21 @@ class TestFlumineRaceStream(unittest.TestCase):
         self.assertEqual(self.stream._updates_processed, 0)
         mock_create_time.assert_called_with(1234, "13.10")
 
+    @mock.patch(
+        "flumine.streams.historicalstream.create_time",
+        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+    )
+    def test__process_early_start(self, mock_create_time):
+        self.assertTrue(
+            self.stream._process(
+                [{"mid": "1.23", "id": "13.10", "rpc": {"rt": 2.64}}],
+                1,
+            )
+        )
+        self.assertEqual(len(self.stream._caches), 1)
+        self.assertEqual(self.stream._updates_processed, 1)
+        mock_create_time.assert_called_with(1, "13.10")
+
 
 class TestFlumineCricketStream(unittest.TestCase):
     def setUp(self) -> None:
