@@ -35,6 +35,13 @@ class BetfairExecution(BaseExecution):
                         else:
                             order.executable()  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
+                        if (
+                            order.current_order.bet_id is None
+                        ):  # Must check this one, not order.bet_id
+                            # If the bet id has not been assigned to the failed order, order stream update
+                            # will never be sent for process.py to pick up. Therefore, the order must be
+                            # invalidated here and now.
+                            order.current_order.size_remaining = 0.0
                         order.execution_complete()
                     elif instruction_report.status == "TIMEOUT":
                         # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus

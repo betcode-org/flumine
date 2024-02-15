@@ -362,6 +362,29 @@ class BetfairExecutionTest(unittest.TestCase):
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)
 
+    @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")
+    def test_execute_place_failure_no_bet_id_assigned(self, mock__execution_helper):
+        """
+        Orders whose placement fails and which do not get assigned a bet id do not
+        receive an update through the order stream. Thus, size_remaining must be
+        set to zero while processing the order placement response.
+        """
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(current_order=mock.Mock(bet_id=None))
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_report = mock.Mock()
+        mock_instruction_report = mock.Mock()
+        mock_instruction_report.status = "FAILURE"
+        mock_report.place_instruction_reports = [mock_instruction_report]
+        mock__execution_helper.return_value = mock_report
+        self.execution.execute_place(mock_order_package, mock_session)
+        self.assertEqual(mock_order.current_order.size_remaining, 0)
+
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution.place")
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution._execution_helper")

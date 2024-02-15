@@ -223,10 +223,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.error_code, "INVALID_MIN_FILL_SIZE")
         self.assertEqual(self.simulated.matched, [])
-        # Rejecting a bet placement for this reason does not assign it a bet id and
-        # no status update is returned via the order stream. Therefore, size_remaining
-        # is never updated by Flumine in the live market.
-        self.assertEqual(self.simulated.size_remaining, 1)
+        self.assertEqual(self.simulated.size_cancelled, 1)
+        self.assertEqual(self.simulated.size_remaining, 0)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_matched(self, mock__get_runner):

@@ -112,6 +112,11 @@ class SimulatedOrder:
             # Validate that min_fill_size <= size for fill or kill orders
             is_fill_or_kill_order = time_in_force == "FILL_OR_KILL"
             if is_fill_or_kill_order and min_fill_size > size:
+                # self.size_remaining is a property and cannot be set directly, so this
+                # needs to be done via one of the other attributes. This creates a small
+                # discrepancy between live and simulated orders because size_cancelled == 0
+                # for a live order which failed to place.
+                self.size_cancelled += self.size_remaining
                 return self._create_place_response(
                     None,
                     status="FAILURE",
