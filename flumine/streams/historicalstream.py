@@ -120,6 +120,7 @@ class FlumineRaceStream(RaceStream):
                     market_id, publish_time, race_id, self._lightweight
                 )
                 race_cache.start_time = create_time(publish_time, race_id)
+                race_cache.inplay = False
                 self._caches[market_id] = race_cache
                 logger.info(
                     "[%s: %s]: %s added, %s markets in cache",
@@ -129,16 +130,29 @@ class FlumineRaceStream(RaceStream):
                     len(self._caches),
                 )
 
-            # filter after start time
-            diff = (
-                race_cache.start_time
-                - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
-            ).total_seconds()
-            # handle US races starting early by checking running_time
-            if diff <= 0 or ("rpc" in update and update["rpc"]["rt"]):
+            if race_cache.inplay:
                 race_cache.update_cache(update, publish_time)
                 self._updates_processed += 1
                 active = True
+            else:
+                # filter after start time
+                diff = (
+                    race_cache.start_time
+                    - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+                ).total_seconds()
+                # handle US races starting early by checking the update
+                if diff <= 0 or (
+                    "rpc" in update
+                    and (
+                        update["rpc"]["rt"]
+                        or update["rpc"]["spd"]
+                        or update["rpc"]["ord"]
+                    )
+                ):
+                    race_cache.inplay = True
+                    race_cache.update_cache(update, publish_time)
+                    self._updates_processed += 1
+                    active = True
         return active
 
 
