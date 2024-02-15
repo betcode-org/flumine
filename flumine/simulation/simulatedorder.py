@@ -80,11 +80,11 @@ class SimulatedOrder:
             order_package.market_version
             and order_package.market_version["version"] != self.market_version
         ):
-            self.size_voided += self.size_remaining
+            self.size_lapsed += self.size_remaining
             return self._create_place_response(
                 None,
                 status="FAILURE",
-                error_code="ERROR_IN_ORDER",
+                error_code="BET_TAKEN_OR_LAPSED",
             )
 
         runner = self._get_runner(market_book)
@@ -109,6 +109,14 @@ class SimulatedOrder:
                 raise NotImplementedError(
                     "Simulated betTargetSize placement not implemented"
                 )
+            # Validate that min_fill_size <= size for fill or kill orders
+            is_fill_or_kill_order = time_in_force == "FILL_OR_KILL"
+            if is_fill_or_kill_order and min_fill_size > size:
+                return self._create_place_response(
+                    None,
+                    status="FAILURE",
+                    error_code="INVALID_MIN_FILL_SIZE",
+                )
             if self.order.side == "BACK":
                 available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
                 if (
@@ -121,7 +129,7 @@ class SimulatedOrder:
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
-                elif time_in_force == "FILL_OR_KILL":
+                elif is_fill_or_kill_order:
                     available_size = get_size(runner.ex.available_to_back, 0) or 0
                     if price > available_to_back:
                         self.size_cancelled += self.size_remaining
@@ -167,7 +175,7 @@ class SimulatedOrder:
                         status="FAILURE",
                         error_code="BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE",
                     )
-                elif time_in_force == "FILL_OR_KILL":
+                elif is_fill_or_kill_order:
                     available_size = get_size(runner.ex.available_to_lay, 0) or 0
                     if price < available_to_lay:
                         self.size_cancelled += self.size_remaining
