@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.5.10 (2024-02-15)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Take II on handling US early races
+
 2.5.9 (2024-02-14)
 +++++++++++++++++++
 

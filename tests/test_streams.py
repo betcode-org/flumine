@@ -910,6 +910,7 @@ class TestFlumineRaceStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
+        self.assertTrue(self.stream._caches["1.23"].inplay)
         mock_create_time.assert_called_with(11111111111111, "13.10")
 
     @mock.patch(
@@ -925,6 +926,7 @@ class TestFlumineRaceStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 0)
+        self.assertFalse(self.stream._caches["1.23"].inplay)
         mock_create_time.assert_called_with(1234, "13.10")
 
     @mock.patch(
@@ -940,6 +942,7 @@ class TestFlumineRaceStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
+        self.assertTrue(self.stream._caches["1.23"].inplay)
         mock_create_time.assert_called_with(1, "13.10")
 
 
