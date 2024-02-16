@@ -478,6 +478,15 @@ class SimulatedSportsDataMiddlewareTest(unittest.TestCase):
         )
 
     @mock.patch(
+        "flumine.markets.middleware.call_strategy_error_handling", return_value=True
+    )
+    def test_call_none(self, mock_call_strategy_error_handling):
+        self.middleware._next = None
+        mock_market = mock.Mock(market_id="1.1")
+        self.middleware(mock_market)
+        mock_call_strategy_error_handling.assert_not_called()
+
+    @mock.patch(
         "flumine.markets.middleware.SimulatedSportsDataMiddleware._create_generator"
     )
     def test_add_market(self, mock__create_generator):
