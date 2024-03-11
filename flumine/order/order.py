@@ -298,9 +298,11 @@ class BaseOrder:
                 "average_price_matched": self.average_price_matched,
             },
             "responses": {
-                "date_time_placed": str(self.responses.date_time_placed)
-                if self.responses.date_time_placed
-                else None,
+                "date_time_placed": (
+                    str(self.responses.date_time_placed)
+                    if self.responses.date_time_placed
+                    else None
+                ),
                 "elapsed_seconds_executable": self.elapsed_seconds_executable,
             },
             "runner_status": self.runner_status,

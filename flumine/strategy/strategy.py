@@ -24,7 +24,6 @@ DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
 
 
 class BaseStrategy:
-
     """
     Strategy object to process MarketBook data
     from streams, order placement and handling
@@ -215,9 +214,9 @@ class BaseStrategy:
         try:
             return self._invested[(market_id, selection_id, handicap)]
         except KeyError:
-            self._invested[
-                (market_id, selection_id, handicap)
-            ] = runner_context = RunnerContext(selection_id)
+            self._invested[(market_id, selection_id, handicap)] = runner_context = (
+                RunnerContext(selection_id)
+            )
             return runner_context
 
     def market_cached(self, market_id: str) -> bool:

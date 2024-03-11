@@ -23,7 +23,7 @@ class BackgroundWorker(threading.Thread):
         start_delay: int = 0,
         context: dict = None,
         name: str = None,
-        **kwargs
+        **kwargs,
     ):
         name = name or function.__name__
         threading.Thread.__init__(self, daemon=True, name=name, **kwargs)

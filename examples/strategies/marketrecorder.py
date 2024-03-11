@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class MarketRecorder(BaseStrategy):
-
     """
     Simple raw streaming market recorder, context:
 
@@ -230,9 +229,11 @@ class S3MarketRecorder(MarketRecorder):
                 bucket=self._bucket,
                 key=self._make_prices_file_s3_key(compress_file_dir, market_definition),
                 extra_args={
-                    "Metadata": self._create_metadata(market_definition)
-                    if market_definition
-                    else {}
+                    "Metadata": (
+                        self._create_metadata(market_definition)
+                        if market_definition
+                        else {}
+                    )
                 },
             )
             logger.info("%s successfully loaded to s3" % compress_file_dir)

@@ -164,7 +164,7 @@ class Streams:
         market: str,
         market_definition: Optional[MarketDefinition],
         event_processing: bool,
-        **listener_kwargs
+        **listener_kwargs,
     ) -> HistoricalStream:
         for stream in self:
             if (
