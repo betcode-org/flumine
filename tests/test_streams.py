@@ -615,11 +615,13 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(str(stream), "FlumineStream")
         self.assertEqual(repr(stream), "<FlumineStream [0]>")
 
-    def test_flumine_stream_on_process(self):
+    @mock.patch("flumine.streams.datastream.RawDataEvent")
+    def test_flumine_stream_on_process(self, raw_data_event):
         mock_listener = mock.Mock()
         stream = datastream.FlumineStream(mock_listener, 0)
         stream.on_process([1, 2, 3])
-        mock_listener.output_queue.put.called_with(datastream.RawDataEvent([1, 2, 3]))
+        raw_data_event.assert_called_with([1, 2, 3])
+        mock_listener.output_queue.put.assert_called_with(raw_data_event.return_value)
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream(self, mock_on_process):
