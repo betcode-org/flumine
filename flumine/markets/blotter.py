@@ -24,7 +24,6 @@ ORDER_TYPES_SP = (OrderTypes.LIMIT_ON_CLOSE, OrderTypes.MARKET_ON_CLOSE)
 
 
 class Blotter:
-
     """
     Simple and fast class to hold all orders for
     a particular market.

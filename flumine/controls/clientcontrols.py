@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class MaxTransactionCount(BaseControl):
-
     """
     Counts and limits orders based on max
     transaction count as per:

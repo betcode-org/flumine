@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class OrderValidation(BaseControl):
-
     """
     Validates order price and size is valid for
     exchange.
@@ -186,7 +185,6 @@ class ExecutionValidation(BaseControl):
 
 
 class StrategyExposure(BaseControl):
-
     """
     Validates:
         - `strategy.validate_order` function

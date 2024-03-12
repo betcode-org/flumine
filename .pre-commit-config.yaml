@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: 24.2.0
     hooks:
       - id: black
         # It is recommended to specify the latest version of Python
