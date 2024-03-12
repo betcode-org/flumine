@@ -306,6 +306,8 @@ class SimulatedSportsDataMiddleware(Middleware):
     def __call__(self, market) -> None:
         pt = market.market_book.publish_time_epoch
         while True:
+            if self._next is None:
+                break
             for update in self._next:
                 if update.market_id != market.market_id:
                     continue
@@ -332,7 +334,13 @@ class SimulatedSportsDataMiddleware(Middleware):
         # create sports data generator
         file_path = os.path.join(self.directory, market.market_id)
         self._gen = self._create_generator(file_path, self.operation, 123)()
-        self._next = next(self._gen)
+        try:
+            self._next = next(self._gen)
+        except StopIteration:
+            logger.error(
+                f"File {market.market_id} cannot be processed (data is not valid)"
+            )
+            self._next = None
 
     def remove_market(self, market) -> None:
         # clear gens
