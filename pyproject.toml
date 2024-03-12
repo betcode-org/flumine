@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "betfairlightweight==2.20.0",
+    "betfairlightweight==2.20.1",
     "tenacity>=7.0.0,<8.2.4",
     "python-json-logger==2.0.7",
     "requests",
@@ -32,7 +32,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 speed = [
-    "betfairlightweight[speed]==2.20.0"
+    "betfairlightweight[speed]==2.20.1"
 ]
 test = [
     "black==24.2.0",
@@ -53,3 +53,11 @@ Changelog = "https://github.com/betcode-org/flumine/blob/master/HISTORY.rst"
 
 [tool.hatch.version]
 path = "flumine/__version__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/flumine",
+    "/HISTORY.rst",
+    "/README.md",
+    "/tests",
+]

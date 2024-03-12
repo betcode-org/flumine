@@ -3,6 +3,23 @@
 Release History
 ---------------
 
+2.6.0 (2024-03-11)
++++++++++++++++++++
+
+**Improvements**
+
+- toml file added / repo cleanup
+
+**Bug Fixes**
+
+- Correctly handle sports data files that contain no valid data
+
+**Libraries**
+
+- python 3.12 added
+- betfairlightweight upgraded to 2.20.1
+- black upgraded to 24.2.0
+
 2.5.10 (2024-02-15)
 +++++++++++++++++++
 
