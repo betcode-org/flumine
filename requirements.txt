@@ -6,7 +6,7 @@ betconnect==0.1.7
 smart-open>=6,<7
 
 # Tests & Linting
-black==24.2.0
+black==24.3.0
 coverage
 pre-commit
 
