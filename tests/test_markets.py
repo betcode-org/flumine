@@ -231,7 +231,9 @@ class MarketTest(unittest.TestCase):
         m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
         m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
         m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
-        m_six = mock.Mock(market_type=2, event_id=13, market_start_datetime=13) # different event
+        m_six = mock.Mock(
+            market_type=2, event_id=13, market_start_datetime=13
+        )  # different event
         self.market.flumine.markets.events[m_one.event_id].append(m_one)
         self.market.flumine.markets.events[m_two.event_id].append(m_two)
         self.market.flumine.markets.events[m_three.event_id].append(m_three)
@@ -247,12 +249,24 @@ class MarketTest(unittest.TestCase):
         self.market.flumine.markets.events = defaultdict(list)
         self.assertEqual(self.market.event, {})
 
-        m_one = mock.Mock(market_type=1, event_id=12, event_type_id="1", market_start_datetime=12)
-        m_two = mock.Mock(market_type=2, event_id=12, event_type_id="1", market_start_datetime=12)
-        m_three = mock.Mock(market_type=3, event_id=123, event_type_id="1", market_start_datetime=12)
-        m_four = mock.Mock(market_type=2, event_id=12, event_type_id="1", market_start_datetime=13)
-        m_five = mock.Mock(market_type=1, event_id=13, event_type_id="1", market_start_datetime=13)
-        m_six = mock.Mock(market_type=2, event_id=13, event_type_id="3", market_start_datetime=13)
+        m_one = mock.Mock(
+            market_type=1, event_id=12, event_type_id="1", market_start_datetime=12
+        )
+        m_two = mock.Mock(
+            market_type=2, event_id=12, event_type_id="1", market_start_datetime=12
+        )
+        m_three = mock.Mock(
+            market_type=3, event_id=123, event_type_id="1", market_start_datetime=12
+        )
+        m_four = mock.Mock(
+            market_type=2, event_id=12, event_type_id="1", market_start_datetime=13
+        )
+        m_five = mock.Mock(
+            market_type=1, event_id=13, event_type_id="1", market_start_datetime=13
+        )
+        m_six = mock.Mock(
+            market_type=2, event_id=13, event_type_id="3", market_start_datetime=13
+        )
         self.market.flumine.markets.events[m_one.event_id].append(m_one)
         self.market.flumine.markets.events[m_two.event_id].append(m_two)
         self.market.flumine.markets.events[m_three.event_id].append(m_three)
@@ -265,7 +279,9 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue.event_type.id = "3"
         self.market.market_book.market_definition.market_time = 12
         self.market.flumine.markets.events = defaultdict(list)
-        m_six = mock.Mock(market_type=2, event_id=13, event_type_id="3", market_start_datetime=13)
+        m_six = mock.Mock(
+            market_type=2, event_id=13, event_type_id="3", market_start_datetime=13
+        )
         self.market.flumine.markets.events[m_six.event_id].append(m_six)
         self.assertEqual(self.market.event, {2: [m_six]})
 
