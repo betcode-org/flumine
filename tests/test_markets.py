@@ -269,6 +269,12 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.market_type, mock_market_catalogue.description.market_type
         )
+        self.market.market_catalogue.description = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.market_type, mock_market_book.market_definition.market_type
+        )
 
     def test_market_type_mb(self):
         self.market.market_catalogue = None
@@ -382,6 +388,12 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = mock_market_catalogue
         self.assertEqual(
             self.market.race_type, mock_market_catalogue.description.race_type
+        )
+        self.market.market_catalogue.description = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.race_type, mock_market_book.market_definition.race_type
         )
 
     def test_race_type_mb(self):
