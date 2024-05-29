@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+2.6.1 (2024-03-26)
++++++++++++++++++++
+
+**Improvements**
+
+- docs
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.20.2
+- betconnect upgraded to 0.2.1
+- black upgraded to 24.4.2
+- smart-open upgraded to <8
+- tenacity upgraded to <8.3.1
+
 2.6.0 (2024-03-11)
 +++++++++++++++++++
 

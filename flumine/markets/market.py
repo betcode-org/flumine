@@ -116,7 +116,7 @@ class Market:
         for market in self.flumine.markets.events[self.event_id]:
             if (
                 market_start_datetime == market.market_start_datetime
-                or event_type_id == "1"
+                or event_type_id in ["1", "3"]  # soccer, golf
             ):
                 event[market.market_type].append(market)
         return event
@@ -137,7 +137,7 @@ class Market:
 
     @property
     def market_type(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.description:
             return self.market_catalogue.description.market_type
         elif self.market_book:
             return self.market_book.market_definition.market_type
@@ -189,7 +189,7 @@ class Market:
 
     @property
     def race_type(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.description:
             return self.market_catalogue.description.race_type
         elif self.market_book:
             return self.market_book.market_definition.race_type
