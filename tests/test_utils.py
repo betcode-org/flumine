@@ -378,6 +378,4 @@ class UtilsTest(unittest.TestCase):
 
     @mock.patch("betfairlightweight.compat.json.loads", return_value={"mc": [{}]})
     def test_get_file_md_missing_market_definition(self, mock_loads):
-        self.assertIsNone(
-            utils.get_file_md("tests/resources/PRO-1.170258213")
-        )
+        self.assertIsNone(utils.get_file_md("tests/resources/PRO-1.170258213"))
