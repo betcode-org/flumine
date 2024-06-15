@@ -375,3 +375,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(
             utils.create_time(123, "12345.1310"), datetime.datetime(1970, 1, 1, 13, 10)
         )
+
+    @mock.patch("betfairlightweight.compat.json.loads", return_value={"mc": [{}]})
+    def test_get_file_md_missing_market_definition(self, mock_loads):
+        self.assertIsNone(utils.get_file_md("tests/resources/PRO-1.170258213"))
