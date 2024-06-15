@@ -75,9 +75,9 @@ def get_file_md(file_dir: Union[str, tuple]) -> Optional[MarketDefinition]:
     with smart_open.open(file_dir, "r") as f:
         first_line = f.readline()
         update = json.loads(first_line)
-    if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:
+    if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"] or "marketDefinition" not in update["mc"][0]:
         return None
-    md = update["mc"][0].get("marketDefinition", {})
+    md = update["mc"][0]["marketDefinition"]
     return MarketDefinition(**md)
 
 
