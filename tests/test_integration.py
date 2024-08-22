@@ -17,7 +17,7 @@ class IntegrationTest(unittest.TestCase):
         """Tests handling and processing of market catalogues."""
 
         class UseCatalogues(BaseStrategy):
-            def add(self):
+            def add(self, flumine):
                 self.catalogues_processed = []
                 # stream._listener.stream is None when initialised but not registered.
                 # The call below tests that such a case is handled and an exception is not thrown.

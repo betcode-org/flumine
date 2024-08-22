@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.6.2 (2024-08-22)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove add/start depreciations
+
+**Bug Fixes**
+
+- Fix utils.get_file_md (@mberk)
+- Erroneous application of dead-heat rules to profit calculations (@petercoles)
+
+**Libraries**
+
+- black upgraded to 24.8.0
+
 2.6.1 (2024-03-26)
 +++++++++++++++++++
 
