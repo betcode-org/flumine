@@ -272,27 +272,11 @@ class Strategies:
             logger.warning("Strategy of same name '%s' already added", strategy)
         strategy.clients = clients
         self._strategies.append(strategy)
-        try:
-            strategy.add(flumine)
-        except TypeError:  # Wrong call signature
-            logger.warning(
-                "Deprecation warning: Call signature of BaseStrategy.add(self) "
-                "has changed to BaseStrategy.add(self, flumine). Please update "
-                f"{strategy.__class__.__name__} to match the new call signature."
-            )
-            strategy.add()
+        strategy.add(flumine)
 
     def start(self, flumine) -> None:
         for s in self:
-            try:
-                s.start(flumine)
-            except TypeError:  # Wrong call signature
-                logger.warning(
-                    "Deprecation warning: Call signature of BaseStrategy.start(self) "
-                    "has changed to BaseStrategy.start(self, flumine). Please update "
-                    f"{s.__class__.__name__} to match the new call signature."
-                )
-                s.start()
+            s.start(flumine)
 
     def finish(self, flumine) -> None:
         for s in self:
