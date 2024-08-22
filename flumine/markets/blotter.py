@@ -136,7 +136,9 @@ class Blotter:
                     order.each_way_divisor = (
                         market_book.market_definition.each_way_divisor
                     )
-                    if number_of_winners > market_book.number_of_winners:
+                    if market_book.number_of_winners == 0:
+                        order.number_of_dead_heat_winners = 1
+                    elif number_of_winners > market_book.number_of_winners:
                         order.number_of_dead_heat_winners = number_of_winners
                     if (
                         order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT

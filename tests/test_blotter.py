@@ -244,6 +244,17 @@ class BlotterTest(unittest.TestCase):
             mock_market_book.market_definition.each_way_divisor,
         )
 
+    def test_process_closed_market_variable_number_of_winners(self):
+        mock_market = mock.Mock()
+        mock_market_book = mock.Mock(number_of_winners=0)
+        mock_runner1 = mock.Mock(selection_id=123, handicap=0.0, status="WINNER")
+        mock_runner2 = mock.Mock(selection_id=234, handicap=0.0, status="WINNER")
+        mock_market_book.runners = [mock_runner1, mock_runner2]
+        mock_order = mock.Mock(selection_id=123, handicap=0.0)
+        self.blotter._orders = {"12345": mock_order}
+        self.blotter.process_closed_market(mock_market, mock_market_book)
+        self.assertEqual(mock_order.number_of_dead_heat_winners, 1)
+
     def test_process_closed_market_line_range(self):
         mock_market = mock.Mock(context={"line_range_result": 119})
         mock_market_book = mock.Mock(number_of_winners=1)
