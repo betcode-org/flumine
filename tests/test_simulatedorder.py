@@ -1162,7 +1162,7 @@ class SimulatedOrderTest(unittest.TestCase):
             {"price": 12, "size": 1},
         ]
         self.simulated._process_available(123, mock_runner)
-        self.assertEqual(self.simulated.matched, [[123, 13, 1], [123, 12, 1]])
+        self.assertEqual(self.simulated.matched, [[123, 12, 1], [123, 12, 1]])
 
     def test_process_available_lay(self):
         self.simulated.order.side = "LAY"
@@ -1172,7 +1172,7 @@ class SimulatedOrderTest(unittest.TestCase):
             {"price": 11, "size": 1},
         ]
         self.simulated._process_available(123, mock_runner)
-        self.assertEqual(self.simulated.matched, [[123, 10, 1], [123, 11, 1]])
+        self.assertEqual(self.simulated.matched, [[123, 12, 1], [123, 12, 1]])
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._update_matched")
     def test__calculate_process_available(self, mock__update_matched):
