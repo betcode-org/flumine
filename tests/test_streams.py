@@ -893,6 +893,86 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
+    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    def test__process_max_inplay_seconds(self, mock_cache):
+        # Set listener attributes
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = None
+        self.stream._listener.max_inplay_seconds = 10  # seconds
+
+        # Get the mock instance
+        mock_cache_instance = mock_cache.return_value
+        # Initialize _definition_in_play to False
+        mock_cache_instance._definition_in_play = False
+
+        # Define side effect for update_cache
+        def update_cache_side_effect(market_book, publish_time, active=True):
+            if "marketDefinition" in market_book:
+                market_definition = market_book["marketDefinition"]
+                mock_cache_instance._definition_in_play = market_definition.get(
+                    "inPlay", False
+                )
+
+        # Assign the side effect
+        mock_cache_instance.update_cache.side_effect = update_cache_side_effect
+
+        # Initial update: market not in-play
+        update_pre_inplay = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": False, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_pre_inplay, 1000)
+        self.assertTrue(active)
+        self.assertNotIn("1.23", self.stream.inplay_publish_times)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_pre_inplay[0], 1000, active=True
+        )
+
+        # Market goes in-play at publish_time=2000 ms
+        update_inplay_start = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_start, 2000)
+        self.assertTrue(active)
+        self.assertIn("1.23", self.stream.inplay_publish_times)
+        self.assertEqual(self.stream.inplay_publish_times["1.23"], 2000)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_start[0], 2000, active=True
+        )
+
+        # Update within max_inplay_seconds (9 seconds after in-play)
+        update_inplay_within_limit = [
+            {
+                "id": "1.23",
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_within_limit, 11000)
+        self.assertTrue(active)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_within_limit[0], 11000, active=True
+        )
+
+        # Update after max_inplay_seconds (10.001 seconds after in-play)
+        update_inplay_exceeded_limit = [
+            {
+                "id": "1.23",
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_exceeded_limit, 12001)
+        self.assertFalse(active)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_exceeded_limit[0], 12001, active=False
+        )
+
 
 class TestFlumineRaceStream(unittest.TestCase):
     def setUp(self) -> None:
