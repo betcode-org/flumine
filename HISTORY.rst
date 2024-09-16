@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.6.3 (2024-09-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Add max_inplay_seconds to HistoricListener (@mberk)
+
+**Bug Fixes**
+
+- #766 use order price when calculating matched price with available volumes
+
 2.6.2 (2024-08-22)
 +++++++++++++++++++
 
