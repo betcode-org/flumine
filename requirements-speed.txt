@@ -1,1 +1,1 @@
-betfairlightweight[speed]==2.20.2
+betfairlightweight[speed]==2.20.3
