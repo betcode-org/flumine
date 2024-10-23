@@ -32,7 +32,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 speed = [
-    "betfairlightweight[speed]==2.20.3"
+    "betfairlightweight[speed]==2.20.4"
 ]
 test = [
     "black==24.8.0",
