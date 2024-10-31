@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.6.6 (2024-10-31)
++++++++++++++++++++
+
+**Improvements**
+
+- FlumineStream update to record `time_updated` on each process
+
 2.6.5 (2024-10-23)
 +++++++++++++++++++
 

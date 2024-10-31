@@ -3,6 +3,7 @@ from typing import Optional
 from tenacity import retry
 from betfairlightweight import StreamListener, filters, BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
+from betfairlightweight.utils import utcnow
 
 from .basestream import BaseStream
 from ..events.events import RawDataEvent
@@ -34,6 +35,14 @@ class FlumineStream(BFBaseStream):
     def on_process(self, caches: list, publish_time: Optional[int] = None) -> None:
         output = RawDataEvent(caches)
         self.output_queue.put(output)
+
+    def _update_clk(self, data: dict) -> None:
+        (initial_clk, clk) = (data.get("initialClk"), data.get("clk"))
+        if initial_clk:
+            self._initial_clk = initial_clk
+        if clk:
+            self._clk = clk
+        # remove time_updated
 
     def __str__(self):
         return "FlumineStream"
@@ -72,6 +81,7 @@ class FlumineMarketStream(FlumineStream):
                 )
             self._updates_processed += 1
 
+        self.time_updated = utcnow()
         self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
@@ -93,6 +103,7 @@ class FlumineOrderStream(FlumineStream):
                 )
             self._updates_processed += 1
 
+        self.time_updated = utcnow()
         self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
@@ -114,6 +125,7 @@ class FlumineRaceStream(FlumineStream):
                 )
             self._updates_processed += 1
 
+        self.time_updated = utcnow()
         self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
@@ -135,6 +147,7 @@ class FlumineCricketStream(FlumineStream):
                 )
             self._updates_processed += 1
 
+        self.time_updated = utcnow()
         self.on_process([self.unique_id, self._clk, publish_time, data])
         return False
 
