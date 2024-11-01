@@ -265,7 +265,7 @@ class Streams:
             stream.stop()
 
     def _increment_stream_id(self) -> int:
-        self._stream_id += int(1e3)
+        self._stream_id += int(1e4)
         return self._stream_id
 
     def __iter__(self) -> Iterator[Union[MarketStream, DataStream, HistoricalStream]]:
