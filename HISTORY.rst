@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.6.7 (2024-11-01)
++++++++++++++++++++
+
+**Improvements**
+
+- Revert `time_updated` changes
+- docs fixed
+
 2.6.6 (2024-10-31)
 +++++++++++++++++++
 
