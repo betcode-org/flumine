@@ -452,7 +452,7 @@ class StreamsTest(unittest.TestCase):
         mock_stream.stop.assert_called_with()
 
     def test__increment_stream_id(self):
-        self.assertEqual(self.streams._increment_stream_id(), 1000)
+        self.assertEqual(self.streams._increment_stream_id(), 10000)
 
     def test_iter(self):
         for i in self.streams:

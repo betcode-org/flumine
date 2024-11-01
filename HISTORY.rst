@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.6.8 (2024-11-01)
++++++++++++++++++++
+
+**Improvements**
+
+- Bump stream id to 10000 to prevent conflicts on multiple restarts
+
 2.6.7 (2024-11-01)
 +++++++++++++++++++
 
