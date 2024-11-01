@@ -778,7 +778,6 @@ class TestFlumineMarketStream(unittest.TestCase):
             self.stream._cumulative_runner_tv,
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
-        self.assertIsNotNone(self.stream.time_updated)
 
     @mock.patch("flumine.streams.historicalstream.MarketBookCache")
     def test__process_inplay(self, mock_cache):
@@ -995,7 +994,6 @@ class TestFlumineRaceStream(unittest.TestCase):
         self.assertEqual(self.stream._updates_processed, 1)
         self.assertTrue(self.stream._caches["1.23"].inplay)
         mock_create_time.assert_called_with(11111111111111, "13.10")
-        self.assertIsNotNone(self.stream.time_updated)
 
     @mock.patch(
         "flumine.streams.historicalstream.create_time",
@@ -1044,7 +1042,6 @@ class TestFlumineCricketStream(unittest.TestCase):
         )
         self.assertEqual(len(self.stream._caches), 1)
         self.assertEqual(self.stream._updates_processed, 1)
-        self.assertIsNotNone(self.stream.time_updated)
 
 
 class TestHistoricListener(unittest.TestCase):

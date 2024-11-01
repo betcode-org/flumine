@@ -68,7 +68,7 @@ from betfairlightweight.resources import MarketBook
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         print("starting strategy 'ExampleStrategy'")
 
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
