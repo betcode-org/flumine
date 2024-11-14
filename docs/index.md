@@ -18,17 +18,9 @@ flūmine
 </p>
 </div>
 
-Betfair trading framework with a focus on:
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
-- simplicity
-- modular
-- pythonic
-- rock-solid
-- safe
-
-Support for market, order and custom streaming data.
-
-[join slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-25yz6dt1y-LHya5VzHLOzN3RZEQrSnrA)
+[join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
 Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 
@@ -102,20 +94,18 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
-strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
+# Add your strategy to the framework
+framework.add_strategy(
+    ExampleStrategy(
+        market_filter=streaming_market_filter(
+            event_type_ids=["7"],
+            country_codes=["GB"],
+            market_types=["WIN"],
+        )
     )
 )
 
-framework.add_strategy(strategy)
-```
-
-Run framework:
-
-```python
+# Start the trading framework
 framework.run()
 ```
 
