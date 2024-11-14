@@ -10,6 +10,10 @@
 
 flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
+[docs](https://betcode-org.github.io/flumine/)
+
+[join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
+
 ## overview
 
 - Event-based Execution: Real-time execution of trading strategies based on incoming market events
@@ -22,10 +26,6 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Exchanges: Betfair, Betdaq (dev) and Betconnect
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
-
-[docs](https://betcode-org.github.io/flumine/)
-
-[join betcode slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
 Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 
@@ -46,7 +46,7 @@ from flumine import Flumine, BaseStrategy
 from betfairlightweight.filters import streaming_market_filter
 
 # Define your strategy here
-class MyStrategy(BaseStrategy):
+class ExampleStrategy(BaseStrategy):
     def check_market_book(self, market, market_book) -> bool:
         # process_market_book only executed if this returns True
         return True
@@ -60,7 +60,7 @@ framework = Flumine()
 
 # Add your strategy to the framework
 framework.add_strategy(
-    MyStrategy(
+    ExampleStrategy(
         market_filter=streaming_market_filter(
             event_type_ids=["7"],
             country_codes=["GB"],
@@ -85,7 +85,7 @@ from betfairlightweight.resources import MarketBook
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self) -> None:
+    def start(self, flumine) -> None:
         print("starting strategy 'ExampleStrategy'")
 
     def check_market_book(self, market: Market, market_book: MarketBook) -> bool:
@@ -120,22 +120,24 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
-strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
+# Initialize the framework
+framework = Flumine()
+
+# Add your strategy to the framework
+framework.add_strategy(
+    ExampleStrategy(
+        market_filter=streaming_market_filter(
+            event_type_ids=["7"],
+            country_codes=["GB"],
+            market_types=["WIN"],
+        )
     )
 )
 
-framework.add_strategy(strategy)
-```
-
-Run framework:
-
-```python
+# Start the trading framework
 framework.run()
 ```
+
 
 ## features
 
