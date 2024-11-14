@@ -22,7 +22,7 @@ Support for market, order and custom streaming data.
 
 [docs](https://betcode-org.github.io/flumine/)
 
-[join betcode slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-25yz6dt1y-LHya5VzHLOzN3RZEQrSnrA)
+[join betcode slack group](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
 Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 
