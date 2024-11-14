@@ -8,17 +8,20 @@
 
 ![Build Status](https://github.com/betcode-org/flumine/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine) [![Downloads](https://pepy.tech/badge/flumine)](https://pepy.tech/project/flumine)
 
-Betting trading framework with a focus on:
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
-- simplicity
-- modular
-- pythonic
-- rock-solid
-- safe
+## overview
+
+- Event-based Execution: Real-time execution of trading strategies based on incoming market events
+- Custom Strategy Implementation: Easily define and implement trading strategies
+- Risk Management: Integrated risk management tools to monitor and limit exposure
+- Modular Design: Easily extendable and customizable components
+- Simulation: Simulate strategies/execution using historical data
+- Paper Trading: Test strategies in a simulated environment before going live
+- Data: Support for market, order and custom streaming data
+- Exchanges: Betfair, Betdaq (dev) and Betconnect
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
-
-Support for market, order and custom streaming data.
 
 [docs](https://betcode-org.github.io/flumine/)
 
@@ -39,18 +42,38 @@ flumine requires Python 3.8+
 Get started...
 
 ```python
-import betfairlightweight
-from flumine import Flumine, clients
+from flumine import Flumine, BaseStrategy
+from betfairlightweight.filters import streaming_market_filter
 
-trading = betfairlightweight.APIClient("username")
-client = clients.BetfairClient(trading)
+# Define your strategy here
+class MyStrategy(BaseStrategy):
+    def check_market_book(self, market, market_book) -> bool:
+        # process_market_book only executed if this returns True
+        return True
 
-framework = Flumine(
-    client=client,
+    def process_market_book(self, market, market_book):
+        # Your strategy logic
+        pass
+
+# Initialize the framework
+framework = Flumine()
+
+# Add your strategy to the framework
+framework.add_strategy(
+    MyStrategy(
+        market_filter=streaming_market_filter(
+            event_type_ids=["7"],
+            country_codes=["GB"],
+            market_types=["WIN"],
+        )
+    )
 )
+
+# Start the trading framework
+framework.run()
 ```
 
-Example strategy:
+Example strategy with logic and order execution:
 
 ```python
 from flumine import BaseStrategy
@@ -114,7 +137,7 @@ Run framework:
 framework.run()
 ```
 
-## Features
+## features
 
 - Streaming
 - Multiple strategies
@@ -125,7 +148,7 @@ framework.run()
 - Event simulation (multi market)
 - Middleware and background workers to enable Scores / RaceCard / InPlayService
 
-## Dependencies
+## dependencies
 
 flumine relies on these libraries:
 
