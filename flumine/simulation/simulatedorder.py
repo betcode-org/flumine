@@ -2,6 +2,7 @@ import logging
 import datetime
 from typing import List, Optional
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
+from docutils.nodes import status
 
 from .utils import (
     SimulatedPlaceResponse,
@@ -109,8 +110,22 @@ class SimulatedOrder:
                 raise NotImplementedError(
                     "Simulated betTargetSize placement not implemented"
                 )
+            # calc current delay
+            current_bet_delay = order_package.elapsed_seconds
+            bet_delay_complete = False
+            if current_bet_delay > order_package.simulated_latency_plus_delay:
+                bet_delay_complete = True
+
+            # todo is this going to be a market level setting?
+            # if order_package.client.passive_bet_delay and bet_delay_complete is False:
+            #     return False
+
             if self.order.side == "BACK":
                 available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
+                if bet_delay_complete is False and price <= available_to_back:
+                    # order would be 'aggressive'
+                    return SimulatedPlaceResponse(status="DELAY")
+
                 if (
                     not order_package.client.best_price_execution
                     and available_to_back > price
@@ -157,6 +172,10 @@ class SimulatedOrder:
                 available = runner.ex.available_to_lay
             else:
                 available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
+                if bet_delay_complete is False and price >= available_to_lay:
+                    # order would be 'aggressive'
+                    return SimulatedPlaceResponse(status="DELAY")
+
                 if (
                     not order_package.client.best_price_execution
                     and available_to_lay < price

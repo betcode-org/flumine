@@ -43,7 +43,8 @@ class OrderPackageTest(unittest.TestCase):
         self.assertTrue(self.order_package._retry)
         self.assertEqual(self.order_package._max_retries, 3)
         self.assertEqual(self.order_package._retry_count, 0)
-        self.assertIsNone(self.order_package.simulated_delay)
+        self.assertIsNone(self.order_package.simulated_latency)
+        self.assertIsNone(self.order_package.simulated_latency_plus_delay)
 
     def test_retry(self):
         self.assertTrue(self.order_package.retry())
@@ -70,22 +71,37 @@ class OrderPackageTest(unittest.TestCase):
         self.order_package.reset_orders(True)
         mock_order.execution_complete.assert_called()
 
-    def test_calc_simulated_delay(self):
+    def test_calc_simulated_latency(self):
         config.place_latency = 0.1
         config.cancel_latency = 0.2
         config.update_latency = 0.3
         config.replace_latency = 0.4
-
-        self.assertIsNone(self.order_package.calc_simulated_delay())
+        self.assertIsNone(self.order_package.calc_simulated_latency())
         self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
-        self.assertEqual(self.order_package.calc_simulated_delay(), 1.1)
+        self.assertEqual(self.order_package.calc_simulated_latency(), 0.1)
         self.order_package.package_type = OrderPackageType.CANCEL
-        self.assertEqual(self.order_package.calc_simulated_delay(), 0.2)
+        self.assertEqual(self.order_package.calc_simulated_latency(), 0.2)
         self.order_package.package_type = OrderPackageType.UPDATE
-        self.assertEqual(self.order_package.calc_simulated_delay(), 0.3)
+        self.assertEqual(self.order_package.calc_simulated_latency(), 0.3)
         self.order_package.package_type = OrderPackageType.REPLACE
-        self.assertEqual(self.order_package.calc_simulated_delay(), 1.4)
+        self.assertEqual(self.order_package.calc_simulated_latency(), 0.4)
+
+    def test_calc_simulated_latency_delay(self):
+        config.place_latency = 0.1
+        config.cancel_latency = 0.2
+        config.update_latency = 0.3
+        config.replace_latency = 0.4
+        self.assertIsNone(self.order_package.calc_simulated_latency_delay())
+        self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
+        self.order_package.package_type = OrderPackageType.PLACE
+        self.assertEqual(self.order_package.calc_simulated_latency_delay(), 1.1)
+        self.order_package.package_type = OrderPackageType.CANCEL
+        self.assertEqual(self.order_package.calc_simulated_latency_delay(), 0.2)
+        self.order_package.package_type = OrderPackageType.UPDATE
+        self.assertEqual(self.order_package.calc_simulated_latency_delay(), 0.3)
+        self.order_package.package_type = OrderPackageType.REPLACE
+        self.assertEqual(self.order_package.calc_simulated_latency_delay(), 1.4)
 
     def test_place_instructions(self):
         with self.assertRaises(NotImplementedError):
@@ -115,6 +131,16 @@ class OrderPackageTest(unittest.TestCase):
             mock.Mock(status=OrderStatus.VIOLATION),
         ]
         self.assertEqual(len(self.order_package.orders), 2)
+
+    def test_orders_pending(self):
+        self.assertEqual(self.order_package.orders, [self.mock_order])
+        self.order_package._orders = [
+            mock.Mock(status=OrderStatus.PENDING),
+            mock.Mock(status=OrderStatus.PENDING),
+            mock.Mock(status=OrderStatus.VIOLATION),
+            mock.Mock(status=OrderStatus.REPLACING),
+        ]
+        self.assertEqual(len(self.order_package.orders_pending), 3)
 
     def test_retry_count(self):
         self.order_package._retry_count = 1

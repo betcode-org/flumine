@@ -182,7 +182,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
@@ -195,6 +200,46 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(
             self.simulated.matched, [[mock_market_book.publish_time_epoch, 12, 2]]
         )
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_back_delay_aggressive(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=1.1,
+        )
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+        self.assertEqual(self.simulated.market_version, mock_market_book.version)
+        self.assertEqual(resp.status, "DELAY")
+        self.assertEqual(self.simulated.matched, [])
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_back_delay_passive(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+        self.assertEqual(self.simulated.market_version, mock_market_book.version)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+        self.assertEqual(self.simulated.matched, [])
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_target_size(self, mock__get_runner):
@@ -212,7 +257,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 2}]
@@ -234,7 +284,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
@@ -255,7 +310,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_no_price(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = []
@@ -278,7 +338,12 @@ class SimulatedOrderTest(unittest.TestCase):
         self, mock__get_runner
     ):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
@@ -301,7 +366,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_min_fill_size_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 12, "size": 1}]
@@ -324,7 +394,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_vwap(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [
@@ -380,7 +455,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_unmatched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 10, "size": 120}]
@@ -400,7 +480,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_bpe(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 15, "size": 120}]
@@ -415,7 +500,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
@@ -430,9 +520,54 @@ class SimulatedOrderTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_lay_delay_aggressive(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=1.1,
+        )
+        self.simulated.order.side = "LAY"
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+        self.assertEqual(resp.status, "DELAY")
+        self.assertEqual(self.simulated.matched, [])
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_lay_delay_passive(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
+        self.simulated.order.side = "LAY"
+        mock_market_book = mock.Mock(status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+        self.assertEqual(self.simulated.matched, [])
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
@@ -454,7 +589,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
@@ -474,7 +614,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_no_price(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = []
@@ -496,7 +641,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_min_fill_size_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
@@ -520,7 +670,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_min_fill_size_lapsed(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
@@ -542,7 +697,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_fill_or_kill_vwap(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
         mock_runner.ex.available_to_back = [{"price": 11, "size": 120}]
@@ -573,7 +733,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_unmatched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()
@@ -594,7 +759,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_lay_bpe(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.15,
+            simulated_latency_plus_delay=0.1,
+        )
         self.simulated.order.side = "LAY"
         mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock()

@@ -35,12 +35,17 @@ class SimulatedExecution(BaseExecution):
         if order_package.client.paper_trade:
             time.sleep(order_package.bet_delay + config.place_latency)
         market = self.flumine.markets.markets[order_package.market_id]
-        for order, instruction in zip(order_package, order_package.place_instructions):
+        for order, instruction in zip(
+            order_package.orders_pending, order_package.place_instructions
+        ):
             with order.trade:
                 self._bet_id += 1
                 simulated_response = order.simulated.place(
                     order_package, market.market_book, instruction, self._bet_id
                 )
+                if simulated_response.status == "DELAY":  # PENDING delay
+                    self._bet_id -= 1
+                    continue
                 self._order_logger(
                     order, simulated_response, order_package.package_type
                 )
@@ -48,9 +53,8 @@ class SimulatedExecution(BaseExecution):
                     order.executable()
                 elif simulated_response.status == "FAILURE":
                     order.execution_complete()
-
-        # update transaction counts
-        order_package.client.add_transaction(len(order_package))
+                # update transaction counts
+                order_package.client.add_transaction(1)
 
     def execute_cancel(
         self, order_package, http_session: Optional[requests.Session]
