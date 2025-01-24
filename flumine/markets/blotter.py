@@ -61,7 +61,7 @@ class Blotter:
         strategy,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         """Returns all orders related to a strategy."""
         orders = self._strategy_orders[strategy]
         if order_status:
@@ -77,7 +77,7 @@ class Blotter:
         handicap: float = 0,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         """Returns all orders related to a strategy selection."""
         orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
         if order_status:
@@ -91,7 +91,7 @@ class Blotter:
         client,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         orders = self._client_orders[client]
         if order_status:
             orders = [o for o in orders if o.status in order_status]
@@ -105,7 +105,7 @@ class Blotter:
         strategy,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         orders = self._client_strategy_orders[(client, strategy)]
         if order_status:
             orders = [o for o in orders if o.status in order_status]
@@ -114,7 +114,7 @@ class Blotter:
         return orders
 
     @property
-    def live_orders(self) -> Iterable:
+    def live_orders(self) -> Iterable[BaseOrder]:
         return iter(list(self._live_orders))
 
     @property
@@ -152,7 +152,7 @@ class Blotter:
                                 "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
                             )
 
-    def process_cleared_orders(self, cleared_orders) -> list:
+    def process_cleared_orders(self, cleared_orders) -> list[BaseOrder]:
         for cleared_order in cleared_orders.orders:
             order_id = cleared_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             if order_id in self:
