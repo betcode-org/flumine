@@ -5,12 +5,13 @@ import datetime
 import string
 import collections
 from enum import Enum
-from typing import Union, Optional
+from typing import Any, Optional, Union
 
 import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
+from ..order.trade import Trade
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
@@ -59,7 +60,7 @@ class BaseOrder:
 
     def __init__(
         self,
-        trade,
+        trade: Trade,
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
@@ -284,7 +285,7 @@ class BaseOrder:
         return ",".join(str(x) for x in self.notes.values())
 
     @property
-    def info(self) -> dict:
+    def info(self) -> dict[str, Any]:
         return {
             "market_id": self.market_id,
             "selection_id": self.selection_id,
@@ -421,19 +422,19 @@ class BetfairOrder(BaseOrder):
                 "handicap": self.handicap,
             }
 
-    def create_cancel_instruction(self) -> dict:
+    def create_cancel_instruction(self) -> dict[str, Any]:
         return {
             "betId": self.bet_id,
             "sizeReduction": self.update_data.get("size_reduction"),
         }
 
-    def create_update_instruction(self) -> dict:
+    def create_update_instruction(self) -> dict[str, Any]:
         return {
             "betId": self.bet_id,
             "newPersistenceType": self.order_type.persistence_type,
         }
 
-    def create_replace_instruction(self) -> dict:
+    def create_replace_instruction(self) -> dict[str, Any]:
         return {"betId": self.bet_id, "newPrice": self.update_data["new_price"]}
 
     # currentOrder
