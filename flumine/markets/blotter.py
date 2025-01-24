@@ -2,6 +2,9 @@ import logging
 from typing import Iterable, Optional, List
 from collections import defaultdict
 
+from betfairlightweight.resources.bettingresources import MarketBook
+
+from ..markets.market import Market
 from ..order.ordertype import OrderTypes
 from ..utils import (
     calculate_unmatched_exposure,
@@ -122,7 +125,7 @@ class Blotter:
     def has_live_orders(self) -> bool:
         return bool(self._live_orders)
 
-    def process_closed_market(self, market, market_book) -> None:
+    def process_closed_market(self, market: Market, market_book: MarketBook) -> None:
         number_of_winners = len(
             [runner for runner in market_book.runners if runner.status == "WINNER"]
         )
@@ -163,7 +166,7 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, market_book) -> float:
+    def market_exposure(self, strategy: BaseStrategy, market_book: MarketBook) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
         """
@@ -182,7 +185,7 @@ class Blotter:
         worst_differences = sorted(differences)[: market_book.number_of_winners]
         return sum(worst_possible_profits_on_loses) + sum(worst_differences)
 
-    def selection_exposure(self, strategy, lookup: tuple) -> float:
+    def selection_exposure(self, strategy: BaseStrategy, lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case loss arising
         from the selection either winning or losing. Can be positive or zero.
             positive = potential loss
@@ -195,7 +198,9 @@ class Blotter:
         )
         return max(exposure, 0.0)
 
-    def get_exposures(self, strategy, lookup: tuple, exclusion=None) -> dict:
+    def get_exposures(
+        self, strategy: BaseStrategy, lookup: tuple, exclusion=None
+    ) -> dict:
         """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
@@ -259,7 +264,7 @@ class Blotter:
 
     """ getters / setters """
 
-    def complete_order(self, order) -> None:
+    def complete_order(self, order: BaseOrder) -> None:
         self._live_orders.remove(order)
 
     def has_order(self, customer_order_ref: str) -> bool:
@@ -270,7 +275,7 @@ class Blotter:
 
     __contains__ = has_order
 
-    def __setitem__(self, customer_order_ref: str, order) -> None:
+    def __setitem__(self, customer_order_ref: str, order: BaseOrder) -> None:
         self.active = True
         self._orders[customer_order_ref] = order
         self._bet_id_lookup[order.bet_id] = order
