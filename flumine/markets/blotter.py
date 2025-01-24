@@ -9,6 +9,7 @@ from ..utils import (
     STRATEGY_NAME_HASH_LENGTH,
 )
 from ..order.order import BaseOrder, OrderStatus
+from ..strategy.strategy import BaseStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class Blotter:
 
     def strategy_orders(
         self,
-        strategy,
+        strategy: BaseStrategy,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
     ) -> list[BaseOrder]:
@@ -72,7 +73,7 @@ class Blotter:
 
     def strategy_selection_orders(
         self,
-        strategy,
+        strategy: BaseStrategy,
         selection_id: int,
         handicap: float = 0,
         order_status: Optional[List[OrderStatus]] = None,
@@ -102,7 +103,7 @@ class Blotter:
     def client_strategy_orders(
         self,
         client,
-        strategy,
+        strategy: BaseStrategy,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
     ) -> list[BaseOrder]:
