@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from betfairlightweight.resources.bettingresources import MarketBook
 
+from ..clients.baseclient import BaseClient
 from ..markets.market import Market
 from ..order.ordertype import OrderTypes
 from ..utils import (
@@ -92,7 +93,7 @@ class Blotter:
 
     def client_orders(
         self,
-        client,
+        client: BaseClient,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
     ) -> list[BaseOrder]:
@@ -105,7 +106,7 @@ class Blotter:
 
     def client_strategy_orders(
         self,
-        client,
+        client: BaseClient,
         strategy: BaseStrategy,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
