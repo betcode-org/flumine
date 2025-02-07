@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.6.10 (2025-02-07)
++++++++++++++++++++
+
+**Improvements**
+
+- Process closed market when filter is empty
+
 2.6.9 (2024-01-10)
 +++++++++++++++++++
 

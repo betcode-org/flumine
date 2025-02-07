@@ -338,7 +338,7 @@ class BaseFlumine:
             market.blotter.process_closed_market(market, event.event)
 
         for strategy in self.strategies:
-            if stream_id in strategy.stream_ids:
+            if stream_id in strategy.stream_ids or strategy.market_filter == {}:
                 strategy.process_closed_market(market, event.event)
 
         if recorder is False and self.clients.simulated:
