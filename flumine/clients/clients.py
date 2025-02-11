@@ -54,6 +54,11 @@ class Clients:
             if client.EXCHANGE == ExchangeType.BETFAIR:
                 return client
 
+    def get_betdaq_default(self):
+        for client in self._clients:
+            if client.EXCHANGE == ExchangeType.BETDAQ:
+                return client
+
     def login(self) -> None:
         for client in self._clients:
             client.login()

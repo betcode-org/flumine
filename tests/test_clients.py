@@ -5,7 +5,13 @@ from betfairlightweight.exceptions import BetfairError
 from betconnect.exceptions import BetConnectException
 
 from flumine.clients.clients import ExchangeType, Clients
-from flumine.clients import BaseClient, BetfairClient, SimulatedClient, BetConnectClient
+from flumine.clients import (
+    BaseClient,
+    BetfairClient,
+    SimulatedClient,
+    BetConnectClient,
+    BetdaqClient,
+)
 from flumine.clients import betfairclient
 from flumine import exceptions
 
@@ -61,6 +67,13 @@ class ClientsTest(unittest.TestCase):
         self.clients._clients.append(mock_client_one)
         self.clients._clients.append(mock_client_two)
         self.assertEqual(self.clients.get_betfair_default(), mock_client_two)
+
+    def test_get_betdaq_default(self):
+        mock_client_one = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        mock_client_two = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        self.clients._clients.append(mock_client_one)
+        self.clients._clients.append(mock_client_two)
+        self.assertEqual(self.clients.get_betdaq_default(), mock_client_two)
 
     def test_get_client(self):
         self.clients._exchange_clients[ExchangeType.SIMULATED]["joejames"] = 12
@@ -479,3 +492,35 @@ class BetConnectClientTest(unittest.TestCase):
         )
         self.assertIsNone(self.betconnect_client._get_account_funds())
         self.mock_betting_client.account.get_balance.assert_called_with()
+
+
+class BetdaqClientTest(unittest.TestCase):
+    def setUp(self):
+        self.mock_betting_client = mock.Mock()
+        del self.mock_betting_client.lightweight
+        self.betdaq_client = BetdaqClient(self.mock_betting_client)
+
+    def test_login(self):
+        self.betdaq_client.login()
+
+    def test_keep_alive(self):
+        self.betdaq_client.keep_alive()
+
+    def test_logout(self):
+        self.betdaq_client.logout()
+
+    def test_update_account_details(self):
+        self.betdaq_client.update_account_details()
+        self.assertEqual(
+            self.betdaq_client.account_funds,
+            self.mock_betting_client.account.get_account_balances.return_value,
+        )
+
+    def test_min_bet_size(self):
+        self.assertEqual(self.betdaq_client.min_bet_size(), 1)
+
+    def test_min_bet_payout(self):
+        self.assertIsNone(self.betdaq_client.min_bet_payout())
+
+    def test_min_bsp_liability(self):
+        self.assertIsNone(self.betdaq_client.min_bsp_liability())
