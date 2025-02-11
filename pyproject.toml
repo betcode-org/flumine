@@ -27,11 +27,8 @@ dependencies = [
     "requests",
     "betconnect==0.2.2",
     "smart-open>=6,<8",
+    "betdaq@git://https://github.com/liampauling/betdaq.git",
 ]
-
-# git dependencies
-[tool.hatch.dependencies]
-betdaq = { git = "https://github.com/liampauling/betdaq.git" }
 
 dynamic = ["version"]
 
@@ -66,3 +63,6 @@ include = [
     "/README.md",
     "/tests",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
