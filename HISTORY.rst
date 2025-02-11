@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.7.0 (2025-02-11)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ client integration
+
 2.6.10 (2025-02-07)
 +++++++++++++++++++
 

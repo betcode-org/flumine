@@ -10,6 +10,7 @@ class ExchangeType(Enum):
     BETFAIR = "Betfair"
     SIMULATED = "Simulated"
     BETCONNECT = "BetConnect"
+    BETDAQ = "BETDAQ"
 
 
 class Clients:

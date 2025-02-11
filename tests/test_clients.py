@@ -15,7 +15,7 @@ class ClientsTest(unittest.TestCase):
         self.clients = Clients()
 
     def test_exchange_type(self):
-        self.assertEqual(len(ExchangeType), 3)
+        self.assertEqual(len(ExchangeType), 4)
         assert ExchangeType
 
     def test_init(self):
@@ -109,6 +109,7 @@ class ClientsTest(unittest.TestCase):
                 ExchangeType.BETFAIR.value: {"james": mock_client.info},
                 ExchangeType.SIMULATED.value: {},
                 ExchangeType.BETCONNECT.value: {},
+                ExchangeType.BETDAQ.value: {},
             },
         )
 

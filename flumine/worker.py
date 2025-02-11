@@ -109,6 +109,8 @@ def keep_alive(context: dict, flumine) -> None:
             resp = client.keep_alive()
             if resp:
                 continue
+        elif client.EXCHANGE == ExchangeType.BETDAQ:
+            continue
         # keep-alive failed lets try a login
         client.login()
 
