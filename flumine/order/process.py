@@ -166,16 +166,22 @@ def process_betdaq_current_orders(
                 },
             )
             continue
+        # process order status
+        process_betdaq_current_order(order, current_order)
+        # complete order if required
+        # todo?
 
-        # update
-        order.update_current_order(current_order)
-        # todo pick up NoReceipt orders
-        # update status
-        if order.bet_id and order.status == OrderStatus.PENDING:
-            if order.current_order["status"] == "Unmatched":
-                order.executable()
-            elif order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
-                order.execution_complete()
-        elif order.status == OrderStatus.EXECUTABLE:
-            if order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
-                order.execution_complete()
+
+def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
+    # update
+    order.update_current_order(current_order)
+    # todo pick up NoReceipt orders
+    # update status
+    if order.bet_id and order.status == OrderStatus.PENDING:
+        if order.current_order["status"] == "Unmatched":
+            order.executable()
+        elif order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+            order.execution_complete()
+    elif order.status == OrderStatus.EXECUTABLE:
+        if order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+            order.execution_complete()

@@ -2,6 +2,7 @@ import time
 import threading
 import logging
 from typing import Callable, Optional
+from betdaq import BetdaqError
 from betfairlightweight import BetfairError, filters, exceptions
 
 from . import config
@@ -268,3 +269,26 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         return True
     else:
         return False
+
+
+def betdaq_settled_orders(context: dict, flumine) -> None:
+    for client in flumine.clients:
+        if client.EXCHANGE == ExchangeType.BETDAQ:
+            try:
+                current_orders = client.betting_client.betting.get_orders_diff(0)
+            except (BetdaqError, Exception) as e:
+                logger.error("betdaq_settled_orders run error", exc_info=True)
+                continue
+
+            cleared_orders = [
+                o
+                for o in current_orders
+                if o["status"] in ["Settled", "Cancelled", "Void"]
+            ]
+            if cleared_orders:
+                # todo flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders, exchange=ExchangeType.BETDAQ))
+                flumine.log_control(
+                    events.ClearedOrdersEvent(
+                        cleared_orders, exchange=ExchangeType.BETDAQ
+                    )
+                )

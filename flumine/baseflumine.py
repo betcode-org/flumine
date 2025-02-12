@@ -291,16 +291,13 @@ class BaseFlumine:
                     self._add_market,
                 )
             elif event.exchange == ExchangeType.BETDAQ:
-                try:
-                    process_betdaq_current_orders(
-                        self.markets,
-                        self.strategies,
-                        event,
-                        self.log_control,
-                        self._add_market,
-                    )
-                except Exception as e:
-                    print(e)
+                process_betdaq_current_orders(
+                    self.markets,
+                    self.strategies,
+                    event,
+                    self.log_control,
+                    self._add_market,
+                )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:
