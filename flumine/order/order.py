@@ -521,9 +521,7 @@ class BetdaqOrder(BaseOrder):
     # instructions
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            return self.order_type.place_instruction(
-                self._polarity, self.customer_order_ref
-            )
+            return self.order_type.place_instruction(self._polarity, int(self.id))
 
     @property
     def _polarity(self):
