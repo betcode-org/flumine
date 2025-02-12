@@ -60,7 +60,7 @@ class BaseFlumine:
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
         self.betfair_execution = BetfairExecution(self)
-        self.betdaq_execution = BetdaqExecution(self)
+        self.betdaq_execution = BetdaqExecution(self, 1)
 
         # add client
         if client:
