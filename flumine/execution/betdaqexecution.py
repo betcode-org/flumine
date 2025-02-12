@@ -22,7 +22,6 @@ class BetdaqExecution(BaseExecution):
                 order_list=order_package.place_instructions
             )
         except BetdaqError as e:
-            print(e)
             logger.error(
                 "Execution error",
                 extra={
@@ -52,22 +51,6 @@ class BetdaqExecution(BaseExecution):
                 "order_package": order_package.info,
             },
         )
-        """
-        [{
-            'order_id': 10691172400, 
-            'side': 'back', 
-            'size_remaining': 1.0, 
-            'matched_price': 0.0, 
-            'matched_size': 0.0, 
-            'matched_lay_size': 0.0, 
-            'sent_time': None, 
-            'status': <OrderStatus.Unmatched: 1>, 
-            'runner_sequence_number': 59401, 
-            'runner_id': 267034210, 
-            'customer_reference': 139586488194474680, 
-            'return_code': None
-        }]
-        """
         if response:
             for order, instruction_report in zip(order_package, response):
                 with order.trade:

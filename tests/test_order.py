@@ -665,6 +665,9 @@ class BetdaqOrderTest(unittest.TestCase):
         mock_current_order = {"remaining_size": 34}
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, 34)
+        mock_current_order = {"size_remaining": 43}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 43)
 
     def test_size_cancelled(self):
         self.assertEqual(self.order.size_cancelled, 0)
@@ -677,6 +680,10 @@ class BetdaqOrderTest(unittest.TestCase):
 
     def test_current_order(self):
         self.assertEqual(self.order.current_order, {})
+        self.order.responses.place_response = {"tee": "way"}
+        self.assertEqual(self.order.current_order, {"tee": "way"})
+        self.order.responses.current_order = {"D": "RIZZ"}
+        self.assertEqual(self.order.current_order, {"D": "RIZZ"})
 
 
 class IsValidCustomerOrderRefTestCase(unittest.TestCase):

@@ -547,6 +547,8 @@ class BetdaqOrder(BaseOrder):
 
     @property
     def size_remaining(self):
+        if "size_remaining" in self.current_order:
+            return self.current_order.get("size_remaining", 0)
         try:
             return self.current_order.get("remaining_size", 0)
         except AttributeError:
@@ -568,10 +570,7 @@ class BetdaqOrder(BaseOrder):
     def current_order(self) -> Union[CurrentOrder, SimulatedOrder, dict]:
         if self.responses.current_order:
             return self.responses.current_order
-        return {}  # todo
-        if self._simulated:
-            return self.simulated
-        elif self.responses.current_order:
-            return self.responses.current_order
         elif self.responses.place_response:
             return self.responses.place_response
+        else:
+            return {}

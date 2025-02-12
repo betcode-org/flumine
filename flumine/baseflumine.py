@@ -9,14 +9,14 @@ from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
-from .clients import Clients, BaseClient
+from .clients import Clients, BaseClient, ExchangeType
 from .markets.markets import Markets
 from .markets.market import Market
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
 from .execution.betdaqexecution import BetdaqExecution
-from .order.process import process_current_orders
+from .order.process import process_current_orders, process_betdaq_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
 from .controls.tradingcontrols import (
     OrderValidation,
@@ -282,9 +282,25 @@ class BaseFlumine:
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
         if event.event:
-            process_current_orders(
-                self.markets, self.strategies, event, self.log_control, self._add_market
-            )
+            if event.exchange == ExchangeType.BETFAIR:
+                process_current_orders(
+                    self.markets,
+                    self.strategies,
+                    event,
+                    self.log_control,
+                    self._add_market,
+                )
+            elif event.exchange == ExchangeType.BETDAQ:
+                try:
+                    process_betdaq_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
+                except Exception as e:
+                    print(e)
         for market in self.markets:
             if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:

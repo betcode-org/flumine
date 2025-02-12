@@ -141,3 +141,41 @@ def create_order_from_current(
         },
     )
     return order
+
+
+def process_betdaq_current_orders(
+    markets: Markets, strategies: Strategies, event, log_control, add_market
+) -> None:
+    for current_order in event.event:
+        order_id = current_order["order_id"]
+        ref = current_order["customer_reference"]
+        # check every market for the order
+        for market in markets:
+            try:
+                order = market.blotter[str(ref)]
+            except KeyError:
+                continue
+            if order:
+                break
+        else:
+            logger.warning(
+                f"Betdaq Order {order_id} not present in blotter",
+                extra={
+                    "order_id": order_id,
+                    "current_order": current_order,
+                },
+            )
+            continue
+
+        # update
+        order.update_current_order(current_order)
+        # todo pick up NoReceipt orders
+        # update status
+        if order.bet_id and order.status == OrderStatus.PENDING:
+            if order.current_order["status"] == "Unmatched":
+                order.executable()
+            elif order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+                order.execution_complete()
+        elif order.status == OrderStatus.EXECUTABLE:
+            if order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+                order.execution_complete()
