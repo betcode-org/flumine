@@ -491,3 +491,89 @@ class BetfairOrder(BaseOrder):
             return False
         else:
             return c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS
+
+
+class BetdaqOrder(BaseOrder):
+    EXCHANGE = ExchangeType.BETDAQ
+
+    # updates
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
+        self.publish_time = publish_time
+        self.market_version = market_version
+        self.async_ = async_
+        self.placing()
+
+    # def cancel(self, size_reduction: float = None) -> None:
+    #     if self.bet_id is None:
+    #         raise OrderUpdateError("Order does not currently have a betId")
+    #     elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+    #         if size_reduction and self.size_remaining - size_reduction < 0:
+    #             raise OrderUpdateError("Size reduction too large")
+    #         if self.status != OrderStatus.EXECUTABLE:
+    #             raise OrderUpdateError("Current status: %s" % self.status)
+    #         self.update_data["size_reduction"] = size_reduction
+    #         self.cancelling()
+    #     else:
+    #         raise OrderUpdateError(
+    #             "Only LIMIT orders can be cancelled or partially cancelled once placed"
+    #         )
+
+    # instructions
+    def create_place_instruction(self) -> dict:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            return self.order_type.place_instruction(
+                self._polarity, self.customer_order_ref
+            )
+
+    @property
+    def _polarity(self):
+        if self.side == "BACK":
+            return 1
+        else:
+            return 2
+
+    # currentOrder
+    @property
+    def average_price_matched(self) -> float:
+        try:
+            return self.current_order.get("matched_price", 0)
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_matched(self) -> float:
+        try:
+            return self.current_order.get("matched_size", 0)
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_remaining(self):
+        try:
+            return self.current_order.get("remaining_size", 0)
+        except AttributeError:
+            return self.order_type.size
+
+    @property
+    def size_cancelled(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_lapsed(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_voided(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def current_order(self) -> Union[CurrentOrder, SimulatedOrder, dict]:
+        if self.responses.current_order:
+            return self.responses.current_order
+        return {}  # todo
+        if self._simulated:
+            return self.simulated
+        elif self.responses.current_order:
+            return self.responses.current_order
+        elif self.responses.place_response:
+            return self.responses.place_response

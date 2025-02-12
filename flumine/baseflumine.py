@@ -15,6 +15,7 @@ from .markets.market import Market
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
+from .execution.betdaqexecution import BetdaqExecution
 from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
 from .controls.tradingcontrols import (
@@ -59,6 +60,7 @@ class BaseFlumine:
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
         self.betfair_execution = BetfairExecution(self)
+        self.betdaq_execution = BetdaqExecution(self)
 
         # add client
         if client:
@@ -464,6 +466,7 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
+        self.betdaq_execution.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:

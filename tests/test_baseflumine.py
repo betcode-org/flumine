@@ -682,6 +682,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._logging_controls = [control]
         self.base_flumine.simulated_execution = mock.Mock()
         self.base_flumine.betfair_execution = mock.Mock()
+        self.base_flumine.betdaq_execution = mock.Mock()
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
@@ -692,5 +693,6 @@ class BaseFlumineTest(unittest.TestCase):
         self.mock_client.logout.assert_called_with()
         self.base_flumine.simulated_execution.shutdown.assert_called_with()
         self.base_flumine.betfair_execution.shutdown.assert_called_with()
+        self.base_flumine.betdaq_execution.shutdown.assert_called_with()
         control.start.assert_called_with()
         mock_log_control.assert_called_with(mock_events.TerminationEvent(None))

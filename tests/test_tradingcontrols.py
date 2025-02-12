@@ -574,7 +574,9 @@ class TestStrategyExposure(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order = mock.Mock(
+            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -589,7 +591,9 @@ class TestStrategyExposure(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_target(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order = mock.Mock(
+            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -664,6 +668,7 @@ class TestStrategyExposure(unittest.TestCase):
             size_matched=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
+            EXCHANGE=ExchangeType.BETFAIR,
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -681,6 +686,7 @@ class TestStrategyExposure(unittest.TestCase):
             size_matched=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
+            EXCHANGE=ExchangeType.BETFAIR,
         )
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -699,7 +705,9 @@ class TestStrategyExposure(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_line_range(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order = mock.Mock(
+            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -714,7 +722,9 @@ class TestStrategyExposure(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
-        mock_order = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
+        mock_order = mock.Mock(
+            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
@@ -733,7 +743,9 @@ class TestStrategyExposure(unittest.TestCase):
         mock_market.blotter.selection_exposure.return_value = 10.0
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3))
+        mock_order = mock.Mock(
+            market_id="1.234", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
         mock_order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
@@ -752,7 +764,12 @@ class TestStrategyExposure(unittest.TestCase):
             "worst_possible_profit_on_win": -12.0
         }
         self.mock_flumine.markets.markets = {"1.234": mock_market}
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order = mock.Mock(
+            market_id="1.234",
+            lookup=(1, 2, 3),
+            side="LAY",
+            EXCHANGE=ExchangeType.BETFAIR,
+        )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 10
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -783,7 +800,12 @@ class TestStrategyExposure(unittest.TestCase):
         mock_trade = mock.Mock()
         mock_trade.strategy = mock_strategy
 
-        mock_order = mock.Mock(market_id="1.234", lookup=(1, 2, 3), side="LAY")
+        mock_order = mock.Mock(
+            market_id="1.234",
+            lookup=(1, 2, 3),
+            side="LAY",
+            EXCHANGE=ExchangeType.BETFAIR,
+        )
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.order_type.price_ladder_definition = "CLASSIC"
@@ -861,6 +883,7 @@ class TestStrategyExposure(unittest.TestCase):
             handicap=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
+            EXCHANGE=ExchangeType.BETFAIR,
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT

@@ -188,6 +188,9 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.EXCHANGE = ExchangeType.BETFAIR
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
+        self.base_client.EXCHANGE = ExchangeType.BETDAQ
+        self.base_client.add_execution(mock_flumine)
+        self.assertEqual(self.base_client.execution, mock_flumine.betdaq_execution)
 
     def test_add_execution_cls(self):
         mock_flumine = mock.Mock()
