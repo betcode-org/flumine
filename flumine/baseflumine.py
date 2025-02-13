@@ -391,17 +391,39 @@ class BaseFlumine:
             self._remove_market(market, clear=False)
 
     def _process_cleared_orders(self, event):
-        market_id = event.event.market_id
-        market = self.markets.markets.get(market_id)
-        if market is None:
-            logger.warning(
-                "Market %s not present when clearing" % market_id,
-                extra={"market_id": market_id, **self.info},
-            )
-            return
+        if event.exchange == ExchangeType.BETFAIR:
+            market_id = event.event.market_id
+            market = self.markets.markets.get(market_id)
+            if market is None:
+                logger.warning(
+                    "Market %s not present when clearing" % market_id,
+                    extra={"market_id": market_id, **self.info},
+                )
+                return
 
-        meta_orders = market.blotter.process_cleared_orders(event.event)
-        self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
+            meta_orders = market.blotter.process_cleared_orders(event.event)
+        elif event.exchange == ExchangeType.BETDAQ:
+            market_id = "betdaq"
+            meta_orders = []
+            for cleared_order in event.event:
+                ref = cleared_order["customer_reference"]
+                # check every market for the order
+                for market in self.markets:
+                    try:
+                        order = market.blotter[str(ref)]
+                    except KeyError:
+                        continue
+                    if order:
+                        order.cleared_order = cleared_order
+                        meta_orders.append(order)
+                        break
+                else:
+                    continue
+        else:
+            logger.warning("Unknown exchange in '_process_cleared_orders'")
+            return
+        if meta_orders:
+            self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
         logger.info(
             "Market cleared",
             extra={

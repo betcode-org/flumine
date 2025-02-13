@@ -71,7 +71,7 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         mock_order.execution_complete.assert_called()
         self.assertEqual(mock_order.bet_id, 1234)
         mock_order.responses.placed.assert_called_with()
-        mock_order_event.assert_called_with(mock_order)
+        mock_order_event.assert_called_with(mock_order, exchange=mock_order.EXCHANGE)
         mock_log_control.assert_called_with(mock_order_event())
 
     def test_create_order_from_current(self):

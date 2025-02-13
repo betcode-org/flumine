@@ -164,7 +164,7 @@ def poll_account_balance(context: dict, flumine) -> None:
         client.update_account_details()
         logger.info("Client update account details", extra=client.info)
         if client.account_funds:
-            flumine.log_control(events.BalanceEvent(client))
+            flumine.log_control(events.BalanceEvent(client, exchange=client.EXCHANGE))
 
 
 def poll_market_closure(context: dict, flumine) -> None:
@@ -272,6 +272,7 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
 
 
 def betdaq_settled_orders(context: dict, flumine) -> None:
+    # todo store sequence number
     for client in flumine.clients:
         if client.EXCHANGE == ExchangeType.BETDAQ:
             try:
@@ -286,7 +287,11 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                 if o["status"] in ["Settled", "Cancelled", "Void"]
             ]
             if cleared_orders:
-                # todo flumine.handler_queue.put(events.ClearedOrdersEvent(cleared_orders, exchange=ExchangeType.BETDAQ))
+                flumine.handler_queue.put(
+                    events.ClearedOrdersEvent(
+                        cleared_orders, exchange=ExchangeType.BETDAQ
+                    )
+                )
                 flumine.log_control(
                     events.ClearedOrdersEvent(
                         cleared_orders, exchange=ExchangeType.BETDAQ

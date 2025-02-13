@@ -105,7 +105,7 @@ class BetdaqExecution(BaseExecution):
             order.responses.placed(instruction_report, dt=dt)
             if instruction_report["order_id"]:
                 order.bet_id = instruction_report["order_id"]
-                self.flumine.log_control(OrderEvent(order))
+                self.flumine.log_control(OrderEvent(order, exchange=order.EXCHANGE))
         elif package_type == OrderPackageType.CANCEL:
             order.responses.cancelled(instruction_report)
         elif package_type == OrderPackageType.UPDATE:
@@ -113,4 +113,4 @@ class BetdaqExecution(BaseExecution):
         elif package_type == OrderPackageType.REPLACE:
             order.responses.placed(instruction_report)
             order.bet_id = instruction_report["order_id"]
-            self.flumine.log_control(OrderEvent(order))
+            self.flumine.log_control(OrderEvent(order, exchange=order.EXCHANGE))

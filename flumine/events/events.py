@@ -38,7 +38,7 @@ class BaseEvent:
 
     __slots__ = ["_time_created", "event", "exchange", "callback"]
 
-    def __init__(self, event, exchange=ExchangeType.BETFAIR):
+    def __init__(self, event, exchange: ExchangeType = ExchangeType.BETFAIR):
         self._time_created = datetime.datetime.utcnow()
         self.event = event
         self.exchange = exchange

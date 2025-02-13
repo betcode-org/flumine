@@ -197,7 +197,9 @@ class WorkersTest(unittest.TestCase):
         mock_flumine = mock.Mock(clients=[mock_client])
         worker.poll_account_balance(mock_context, mock_flumine)
         mock_client.update_account_details.assert_called_with()
-        mock_events.BalanceEvent.assert_called_with(mock_client)
+        mock_events.BalanceEvent.assert_called_with(
+            mock_client, exchange=mock_client.EXCHANGE
+        )
         mock_flumine.log_control.assert_called_with(mock_events.BalanceEvent())
 
     @mock.patch("flumine.worker._get_cleared_market")
