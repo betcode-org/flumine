@@ -418,18 +418,24 @@ class WorkersTest(unittest.TestCase):
     def test_betdaq_settled_orders(self, mock_events, mock_config):
         mock_client = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
         mock_client.betting_client.betting.get_orders_diff.return_value = [
-            {"status": "Settled"},
-            {"status": "Cancelled"},
-            {"status": "Void"},
-            {"status": "Unmatched"},
+            {"status": "Settled", "sequence_number": 1},
+            {"status": "Cancelled", "sequence_number": 2},
+            {"status": "Void", "sequence_number": 3},
+            {"status": "Unmatched", "sequence_number": 4},
         ]
         mock_flumine = mock.Mock(clients=[mock_client])
-        worker.betdaq_settled_orders({}, mock_flumine)
+        context = {}
+        worker.betdaq_settled_orders(context, mock_flumine)
         mock_client.betting_client.betting.get_orders_diff.assert_called_with(0)
         mock_events.ClearedOrdersEvent.assert_called_with(
-            [{"status": "Settled"}, {"status": "Cancelled"}, {"status": "Void"}],
+            [
+                {"status": "Settled", "sequence_number": 1},
+                {"status": "Cancelled", "sequence_number": 2},
+                {"status": "Void", "sequence_number": 3},
+            ],
             exchange=ExchangeType.BETDAQ,
         )
         mock_flumine.log_control.assert_called_with(
             mock_events.ClearedOrdersEvent.return_value
         )
+        self.assertEqual(context, {mock_client: 4})

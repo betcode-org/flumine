@@ -272,11 +272,13 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
 
 
 def betdaq_settled_orders(context: dict, flumine) -> None:
-    # todo store sequence number
     for client in flumine.clients:
         if client.EXCHANGE == ExchangeType.BETDAQ:
+            sequence_number = context.get(client, 0)
             try:
-                current_orders = client.betting_client.betting.get_orders_diff(0)
+                current_orders = client.betting_client.betting.get_orders_diff(
+                    sequence_number
+                )
             except (BetdaqError, Exception) as e:
                 logger.error("betdaq_settled_orders run error", exc_info=True)
                 continue
@@ -297,3 +299,8 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                         cleared_orders, exchange=ExchangeType.BETDAQ
                     )
                 )
+
+            # update SequenceNumber
+            for order in current_orders:
+                sequence_number = max(order["sequence_number"], sequence_number)
+            context[client] = sequence_number
