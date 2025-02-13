@@ -14,6 +14,7 @@ from flumine.execution.baseexecution import (
     BaseExecution,
     OrderPackageType,
 )
+from flumine.execution.betdaqexecution import BetdaqExecution
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
 
@@ -1339,3 +1340,69 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.client.paper_trade = True
         self.execution.execute_replace(mock_order_package, None)
         mock_time.sleep.assert_called_with(config.replace_latency + 1)
+
+
+class BetdaqExecutionTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.execution = BetdaqExecution(self.mock_flumine)
+
+    def test_init(self):
+        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BETDAQ)
+
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
+    def test_execute_place_success(self, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_instruction_report = [{"return_code": None, "customer_reference": 123}]
+        mock_order_package.client.betting_client.betting.place_orders.return_value = (
+            mock_instruction_report
+        )
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report[0], OrderPackageType.PLACE
+        )
+        mock_order.executable.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
+    def test_execute_place_error(self, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_instruction_report = [{"return_code": 123, "customer_reference": 123}]
+        mock_order_package.client.betting_client.betting.place_orders.return_value = (
+            mock_instruction_report
+        )
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_instruction_report[0], OrderPackageType.PLACE
+        )
+        mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+
+    @mock.patch("flumine.execution.betdaqexecution.OrderEvent")
+    def test__order_logger_place(self, mock_order_event):
+        mock_order = mock.Mock(async_=False)
+        mock_instruction_report = {"return_code": None, "order_id": 123}
+        self.execution._order_logger(
+            mock_order, mock_instruction_report, OrderPackageType.PLACE
+        )
+        self.assertEqual(mock_order.bet_id, 123)
+        mock_order.responses.placed.assert_called_with(mock_instruction_report, dt=True)
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))

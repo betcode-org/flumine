@@ -10,6 +10,7 @@ class ExchangeType(Enum):
     BETFAIR = "Betfair"
     SIMULATED = "Simulated"
     BETCONNECT = "BetConnect"
+    BETDAQ = "BETDAQ"
 
 
 class Clients:
@@ -51,6 +52,11 @@ class Clients:
     def get_betfair_default(self):
         for client in self._clients:
             if client.EXCHANGE == ExchangeType.BETFAIR:
+                return client
+
+    def get_betdaq_default(self):
+        for client in self._clients:
+            if client.EXCHANGE == ExchangeType.BETDAQ:
                 return client
 
     def login(self) -> None:

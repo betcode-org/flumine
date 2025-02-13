@@ -1,6 +1,7 @@
 import logging
 
 from .baseflumine import BaseFlumine
+from .clients import BetdaqClient
 from .events.events import EventType
 from . import worker
 
@@ -66,7 +67,9 @@ class Flumine(BaseFlumine):
 
     def _add_default_workers(self):
         client_timeouts = [
-            client.betting_client.session_timeout for client in self.clients
+            client.betting_client.session_timeout
+            for client in self.clients
+            if hasattr(client.betting_client, "session_timeout")
         ]
         ka_interval = min((min(client_timeouts) / 2), 1200)
         self.add_worker(
@@ -95,6 +98,15 @@ class Flumine(BaseFlumine):
                 worker.BackgroundWorker(
                     self,
                     function=worker.poll_market_closure,
+                    interval=60,
+                    start_delay=10,  # wait for login
+                )
+            )
+        if any(isinstance(client, BetdaqClient) for client in self.clients):
+            self.add_worker(
+                worker.BackgroundWorker(
+                    self,
+                    function=worker.betdaq_settled_orders,
                     interval=60,
                     start_delay=10,  # wait for login
                 )

@@ -1,3 +1,4 @@
+import betdaq
 from enum import Enum
 from betfairlightweight.resources.bettingresources import LineRangeInfo
 
@@ -118,4 +119,66 @@ class MarketOnCloseOrder(BaseOrderType):
         return {
             "order_type": self.ORDER_TYPE.value,
             "liability": self.liability,
+        }
+
+
+class BetdaqLimitOrder(BaseOrderType):
+    EXCHANGE = ExchangeType.BETDAQ
+    ORDER_TYPE = OrderTypes.LIMIT
+
+    def __init__(
+        self,
+        price,
+        size,
+        betdaq_runner_id,
+        runner_reset_count,
+        withdrawal_sequence_number,
+        kill_type=4,
+        fill_or_kill_threshold=0.0,
+        cancel_on_in_running=True,
+        cancel_if_selection_reset=True,
+        withdrawal_reprice_option=2,
+    ):
+        self.price = price
+        self.size = size
+        self.betdaq_runner_id = betdaq_runner_id
+        self.runner_reset_count = runner_reset_count
+        self.withdrawal_sequence_number = withdrawal_sequence_number
+        self.kill_type = kill_type
+        self.fill_or_kill_threshold = fill_or_kill_threshold
+        self.cancel_on_in_running = cancel_on_in_running
+        self.cancel_if_selection_reset = cancel_if_selection_reset
+        self.withdrawal_reprice_option = withdrawal_reprice_option
+        self.price_ladder_definition = None  # todo remove?
+
+    def place_instruction(self, polarity, ref=None) -> dict:
+        return betdaq.filters.create_order(
+            SelectionId=self.betdaq_runner_id,
+            Stake=self.size,
+            Price=self.price,
+            Polarity=polarity,
+            ExpectedSelectionResetCount=self.runner_reset_count,
+            ExpectedWithdrawalSequenceNumber=self.withdrawal_sequence_number,
+            KillType=self.kill_type,
+            FillOrKillThreshold=self.fill_or_kill_threshold,
+            CancelOnInRunning=self.cancel_on_in_running,
+            CancelIfSelectionReset=self.cancel_if_selection_reset,
+            WithdrawalRepriceOption=self.withdrawal_reprice_option,
+            PunterReferenceNumber=ref,
+        )
+
+    @property
+    def info(self):
+        return {
+            "order_type": self.ORDER_TYPE,
+            "price": self.price,
+            "size": self.size,
+            "betdaq_runner_id": self.betdaq_runner_id,
+            "runner_reset_count": self.runner_reset_count,
+            "withdrawal_sequence_number": self.withdrawal_sequence_number,
+            "kill_type": self.kill_type,
+            "fill_or_kill_threshold": self.fill_or_kill_threshold,
+            "cancel_on_in_running": self.cancel_on_in_running,
+            "cancel_if_selection_reset": self.cancel_if_selection_reset,
+            "withdrawal_reprice_option": self.withdrawal_reprice_option,
         }

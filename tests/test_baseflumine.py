@@ -441,9 +441,42 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
         mock_current_orders = mock.Mock(orders=[mock_order])
-        mock_event = mock.Mock(event=[mock_current_orders])
+        mock_event = mock.Mock(
+            event=[mock_current_orders], exchange=ExchangeType.BETFAIR
+        )
         self.base_flumine._process_current_orders(mock_event)
         mock_process_current_orders.assert_called_with(
+            self.base_flumine.markets,
+            self.base_flumine.strategies,
+            mock_event,
+            self.base_flumine.log_control,
+            self.base_flumine._add_market,
+        )
+        mock_market.blotter.strategy_orders.assert_called_with(mock_strategy)
+        mock_call_process_orders_error_handling.assert_called_with(
+            mock_strategy, mock_market, [mock_order]
+        )
+
+    @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
+    @mock.patch("flumine.baseflumine.process_betdaq_current_orders")
+    def test__process_betdaq_current_orders(
+        self,
+        mock_process_betdaq_current_orders,
+        mock_call_process_orders_error_handling,
+    ):
+        mock_order = mock.Mock(complete=True)
+        mock_market = mock.Mock(closed=False)
+        mock_market.blotter.active = True
+        mock_market.blotter.strategy_orders.return_value = [mock_order]
+        self.base_flumine.markets = [mock_market]
+        mock_strategy = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy]
+        mock_current_orders = mock.Mock(orders=[mock_order])
+        mock_event = mock.Mock(
+            event=[mock_current_orders], exchange=ExchangeType.BETDAQ
+        )
+        self.base_flumine._process_current_orders(mock_event)
+        mock_process_betdaq_current_orders.assert_called_with(
             self.base_flumine.markets,
             self.base_flumine.strategies,
             mock_event,
@@ -627,21 +660,27 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
-    def test__process_cleared_orders(self, mock_info, mock_log_control, mock_events):
+    def test__process_cleared_orders_betfair(
+        self, mock_info, mock_log_control, mock_events
+    ):
+        mock_order = mock.Mock()
         mock_market = mock.Mock()
-        mock_market.blotter.process_cleared_orders.return_value = []
+        mock_market.blotter.process_cleared_orders.return_value = [mock_order]
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
         self.base_flumine.markets = mock_markets
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(exchange=ExchangeType.BETFAIR)
         mock_event.event.market_id = "1.23"
         mock_event.event.orders = []
         self.base_flumine._process_cleared_orders(mock_event)
         mock_market.blotter.process_cleared_orders.assert_called_with(mock_event.event)
-        mock_log_control.assert_called_with(mock_events.ClearedOrdersMetaEvent())
+        mock_events.ClearedOrdersMetaEvent.assert_called_with([mock_order])
+        mock_log_control.assert_called_with(
+            mock_events.ClearedOrdersMetaEvent.return_value
+        )
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
-    def test__process_cleared_orders_no_market(self, mock_info):
+    def test__process_cleared_orders_betfair_no_market(self, mock_info):
         mock_market = mock.Mock()
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
@@ -651,6 +690,23 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event.event.orders = []
         self.base_flumine._process_cleared_orders(mock_event)
         mock_market.blotter.process_cleared_orders.assert_not_called()
+
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    @mock.patch("flumine.baseflumine.BaseFlumine.info")
+    def test__process_cleared_orders_betdaq(
+        self, mock_info, mock_log_control, mock_events
+    ):
+        mock_order = mock.Mock()
+        mock_market = mock.Mock(blotter={"123": mock_order})
+        self.base_flumine.markets = [mock_market]
+        mock_event = mock.Mock(exchange=ExchangeType.BETDAQ)
+        mock_event.event = [{"customer_reference": 123}]
+        self.base_flumine._process_cleared_orders(mock_event)
+        mock_events.ClearedOrdersMetaEvent.assert_called_with([mock_order])
+        mock_log_control.assert_called_with(
+            mock_events.ClearedOrdersMetaEvent.return_value
+        )
 
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test__process_cleared_markets(self, mock_log_control):
@@ -682,6 +738,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._logging_controls = [control]
         self.base_flumine.simulated_execution = mock.Mock()
         self.base_flumine.betfair_execution = mock.Mock()
+        self.base_flumine.betdaq_execution = mock.Mock()
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
@@ -692,5 +749,6 @@ class BaseFlumineTest(unittest.TestCase):
         self.mock_client.logout.assert_called_with()
         self.base_flumine.simulated_execution.shutdown.assert_called_with()
         self.base_flumine.betfair_execution.shutdown.assert_called_with()
+        self.base_flumine.betdaq_execution.shutdown.assert_called_with()
         control.start.assert_called_with()
         mock_log_control.assert_called_with(mock_events.TerminationEvent(None))

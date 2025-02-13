@@ -3,7 +3,7 @@ from unittest import mock
 
 from flumine import Flumine, worker
 from flumine.events import events
-from flumine.clients import ExchangeType
+from flumine.clients import ExchangeType, BetdaqClient
 
 
 class FlumineTest(unittest.TestCase):
@@ -120,6 +120,49 @@ class FlumineTest(unittest.TestCase):
                 mock.call(
                     self.flumine,
                     function=worker.poll_market_catalogue,
+                    interval=60,
+                    start_delay=10,
+                ),
+            ],
+        )
+
+    @mock.patch("flumine.worker.BackgroundWorker")
+    @mock.patch("flumine.Flumine.add_worker")
+    def test__add_default_workers_betdaq_client(self, mock_add_worker, mock_worker):
+        mock_client_one = mock.Mock(market_recording_mode=False)
+        mock_client_one.betting_client.session_timeout = 1200
+        mock_client_two = BetdaqClient()
+        # mock_client_two.betting_client.session_timeout = 600
+        self.flumine.clients = [
+            mock_client_one,
+            mock_client_two,
+        ]
+        self.flumine._add_default_workers()
+        self.assertEqual(
+            mock_worker.call_args_list,
+            [
+                mock.call(self.flumine, function=worker.keep_alive, interval=600),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_market_catalogue,
+                    interval=60,
+                    start_delay=10,
+                ),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_account_balance,
+                    interval=120,
+                    start_delay=10,
+                ),
+                mock.call(
+                    self.flumine,
+                    function=worker.poll_market_closure,
+                    interval=60,
+                    start_delay=10,
+                ),
+                mock.call(
+                    self.flumine,
+                    function=worker.betdaq_settled_orders,
                     interval=60,
                     start_delay=10,
                 ),

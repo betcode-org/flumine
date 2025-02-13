@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flumine.streams import streams, datastream, historicalstream
+from flumine.streams import streams, datastream, historicalstream, betdaqorderpolling
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.streams import orderstream
@@ -177,6 +177,13 @@ class StreamsTest(unittest.TestCase):
         mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_not_called()
+
+    @mock.patch("flumine.streams.streams.Streams.add_betdaq_order_polling")
+    def test_add_client_betdaq(self, mock_add_order_stream):
+        mock_client = mock.Mock(order_stream=True, paper_trade=False)
+        mock_client.EXCHANGE = streams.ExchangeType.BETDAQ
+        self.streams.add_client(mock_client)
+        mock_add_order_stream.assert_called_with(mock_client)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
@@ -423,6 +430,19 @@ class StreamsTest(unittest.TestCase):
             conflate_ms=conflate_ms,
             client=mock_client,
             custom=True,
+        )
+
+    @mock.patch("flumine.streams.streams.BetdaqOrderPolling")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_betdaq_order_polling(self, mock_increment, mock_order_polling_class):
+        mock_client = mock.Mock()
+        self.streams.add_betdaq_order_polling(mock_client)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        mock_order_polling_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            client=mock_client,
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
@@ -1143,6 +1163,29 @@ class TestSimulatedOrderStream(unittest.TestCase):
         mock_market.blotter.client_orders.return_value = [order_one]
         self.stream.flumine.markets = [mock_market, mock.Mock(closed=True)]
         self.assertEqual(self.stream._get_current_orders(), [order_one])
+
+
+class TestBetdaqOrderPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.BetdaqOrderPolling(self.mock_flumine, 123)
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertIsNone(self.stream.market_filter)
+        self.assertIsNone(self.stream.market_data_filter)
+        self.assertIsNone(self.stream.streaming_timeout)
+        self.assertIsNone(self.stream.conflate_ms)
+        self.assertIsNone(self.stream._stream)
+        self.assertEqual(betdaqorderpolling.START_DELAY, 2)
+        self.assertEqual(betdaqorderpolling.SNAP_DELTA, 5)
+
+    # def test_run(self):
+    #     pass
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
 
 
 class TestSportsDataStream(unittest.TestCase):
