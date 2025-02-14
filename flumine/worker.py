@@ -279,7 +279,7 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                 current_orders = client.betting_client.betting.get_orders_diff(
                     sequence_number
                 )
-            except (BetdaqError, Exception) as e:
+            except (BetdaqError, Exception):
                 logger.error("betdaq_settled_orders run error", exc_info=True)
                 continue
 
@@ -299,7 +299,6 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                         cleared_orders, exchange=ExchangeType.BETDAQ
                     )
                 )
-
             # update SequenceNumber
             for order in current_orders:
                 sequence_number = max(order["sequence_number"], sequence_number)

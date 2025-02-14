@@ -3,6 +3,7 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
+from flumine.clients import ExchangeType
 from flumine.streams import streams, datastream, historicalstream, betdaqorderpolling
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
@@ -443,6 +444,7 @@ class StreamsTest(unittest.TestCase):
             flumine=self.mock_flumine,
             stream_id=mock_increment(),
             client=mock_client,
+            streaming_timeout=1
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
@@ -1183,6 +1185,32 @@ class TestBetdaqOrderPolling(unittest.TestCase):
 
     # def test_run(self):
     #     pass
+
+    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders(self, mock_event):
+        current_orders = [{"sequence_number": 1}]
+        sequence_number = 0
+        self.stream.flumine.markets.live_orders = False
+        self.assertEqual(
+            self.stream._process_current_orders(current_orders, sequence_number), 1
+        )
+        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
+
+    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders_no_live(self, mock_event):
+        current_orders = []
+        sequence_number = 0
+        self.stream.flumine.markets.live_orders = True
+        self.assertEqual(
+            self.stream._process_current_orders(current_orders, sequence_number), 0
+        )
+        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
 
     def test_stream_running(self):
         self.assertTrue(self.stream.stream_running)

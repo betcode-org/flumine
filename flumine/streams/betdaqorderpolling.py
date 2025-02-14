@@ -1,5 +1,4 @@
 import time
-import queue
 import logging
 from betdaq import BetdaqError
 from tenacity import retry
@@ -7,7 +6,6 @@ from tenacity import retry
 from .basestream import BaseStream
 from ..clients import ExchangeType
 from ..events.events import CurrentOrdersEvent
-from .. import config
 
 logger = logging.getLogger(__name__)
 
@@ -27,29 +25,42 @@ class BetdaqOrderPolling(BaseStream):
                 "client_username": self.client.username,
             },
         )
-        sequence_number = 0
-        # todo bootstrap call first?
+        # bootstrap call first to get most recent sequence number and all current orders
+        bootstrap = self.betting_client.betting.get_orders()
+        current_orders = bootstrap["orders"]
+        sequence_number = bootstrap["maximum_sequence_number"]
+        sequence_number = self._process_current_orders(current_orders, sequence_number)
+
         while True:
             try:
                 current_orders = self.betting_client.betting.get_orders_diff(
                     SequenceNumber=sequence_number
                 )
-            except (BetdaqError, Exception) as e:
+            except (BetdaqError, Exception):
                 logger.error(
                     "BetdaqOrderPolling %s run error", self.stream_id, exc_info=True
                 )
+                time.sleep(SNAP_DELTA)
                 continue
+            sequence_number = self._process_current_orders(
+                current_orders, sequence_number
+            )
+            if self.flumine.markets.live_orders:
+                time.sleep(self.streaming_timeout)
+            else:
+                time.sleep(SNAP_DELTA)
 
-            if current_orders or self.flumine.markets.live_orders:
-                # update SequenceNumber
-                for order in current_orders:
-                    sequence_number = max(order["sequence_number"], sequence_number)
-
-                self.flumine.handler_queue.put(
-                    CurrentOrdersEvent(current_orders, exchange=ExchangeType.BETDAQ)
-                )
-
-            time.sleep(2)  # todo update / check for live betdaq orders?
+    def _process_current_orders(
+        self, current_orders: list, sequence_number: int
+    ) -> int:
+        if current_orders or self.flumine.markets.live_orders:
+            self.flumine.handler_queue.put(
+                CurrentOrdersEvent(current_orders, exchange=ExchangeType.BETDAQ)
+            )
+            # update SequenceNumber
+            for order in current_orders:
+                sequence_number = max(order["sequence_number"], sequence_number)
+        return sequence_number
 
     @property
     def stream_running(self) -> bool:

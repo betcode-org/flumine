@@ -169,7 +169,11 @@ def process_betdaq_current_orders(
         # process order status
         process_betdaq_current_order(order, current_order)
         # complete order if required
-        # todo?
+        if order.complete:
+            for market in markets:
+                if order in market.blotter.live_orders:
+                    market.blotter.complete_order(order)
+                    break
 
 
 def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
