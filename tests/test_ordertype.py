@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+from betdaq.enums import OrderKillType, WithdrawRepriceOption
+
 from flumine.order.ordertype import (
     ExchangeType,
     OrderTypes,
@@ -153,11 +155,16 @@ class BetdaqLimitOrderTest(unittest.TestCase):
         self.assertEqual(self.order_type.betdaq_runner_id, 123)
         self.assertEqual(self.order_type.runner_reset_count, 12)
         self.assertEqual(self.order_type.withdrawal_sequence_number, 34)
-        self.assertEqual(self.order_type.kill_type, 4)
+        self.assertEqual(
+            self.order_type.kill_type, OrderKillType.FillOrKillDontCancel.value
+        )
         self.assertEqual(self.order_type.fill_or_kill_threshold, 0.0)
         self.assertTrue(self.order_type.cancel_on_in_running)
         self.assertTrue(self.order_type.cancel_if_selection_reset)
-        self.assertEqual(self.order_type.withdrawal_reprice_option, 2)
+        self.assertEqual(
+            self.order_type.withdrawal_reprice_option,
+            WithdrawRepriceOption.Cancel.value,
+        )
 
     def test_place_instruction(self):
         self.assertEqual(
@@ -168,13 +175,13 @@ class BetdaqLimitOrderTest(unittest.TestCase):
                 "ExpectedSelectionResetCount": 12,
                 "ExpectedWithdrawalSequenceNumber": 34,
                 "FillOrKillThreshold": 0.0,
-                "KillType": 4,
+                "KillType": OrderKillType.FillOrKillDontCancel.value,
                 "Polarity": 1,
                 "Price": 1.01,
                 "PunterReferenceNumber": "test",
                 "SelectionId": 123,
                 "Stake": 2,
-                "WithdrawalRepriceOption": 2,
+                "WithdrawalRepriceOption": WithdrawRepriceOption.Cancel.value,
             },
         )
 
@@ -186,12 +193,12 @@ class BetdaqLimitOrderTest(unittest.TestCase):
                 "cancel_if_selection_reset": True,
                 "cancel_on_in_running": True,
                 "fill_or_kill_threshold": 0.0,
-                "kill_type": 4,
+                "kill_type": OrderKillType.FillOrKillDontCancel.value,
                 "order_type": OrderTypes.LIMIT,
                 "price": 1.01,
                 "runner_reset_count": 12,
                 "size": 2,
-                "withdrawal_reprice_option": 2,
+                "withdrawal_reprice_option": WithdrawRepriceOption.Cancel.value,
                 "withdrawal_sequence_number": 34,
             },
         )

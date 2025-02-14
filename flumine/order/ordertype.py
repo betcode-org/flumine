@@ -1,5 +1,6 @@
 import betdaq
 from enum import Enum
+from betdaq.enums import OrderKillType, WithdrawRepriceOption
 from betfairlightweight.resources.bettingresources import LineRangeInfo
 
 from ..clients.clients import ExchangeType
@@ -133,11 +134,11 @@ class BetdaqLimitOrder(BaseOrderType):
         betdaq_runner_id,
         runner_reset_count,
         withdrawal_sequence_number,
-        kill_type=4,
+        kill_type=OrderKillType.FillOrKillDontCancel.value,
         fill_or_kill_threshold=0.0,
         cancel_on_in_running=True,
         cancel_if_selection_reset=True,
-        withdrawal_reprice_option=2,
+        withdrawal_reprice_option=WithdrawRepriceOption.Cancel.value,
     ):
         self.price = price
         self.size = size
@@ -149,7 +150,7 @@ class BetdaqLimitOrder(BaseOrderType):
         self.cancel_on_in_running = cancel_on_in_running
         self.cancel_if_selection_reset = cancel_if_selection_reset
         self.withdrawal_reprice_option = withdrawal_reprice_option
-        self.price_ladder_definition = None  # todo remove?
+        self.price_ladder_definition = None
 
     def place_instruction(self, polarity, ref=None) -> dict:
         return betdaq.filters.create_order(
