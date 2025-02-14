@@ -7,7 +7,6 @@ import collections
 from enum import Enum
 from typing import Union, Optional
 from betfairlightweight.resources.bettingresources import CurrentOrder
-from docutils.nodes import status
 
 from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
