@@ -1,5 +1,6 @@
 import logging
 import requests
+from typing import Callable
 from betdaq import BetdaqError
 
 from ..clients import ExchangeType
@@ -12,45 +13,20 @@ logger = logging.getLogger(__name__)
 
 
 class BetdaqExecution(BaseExecution):
+    """
+    BETDAQ execution for place, cancel and update, default
+    single thread pool:
+
+    'A Punter can not issue more than one order API (PlaceSimgleOrder,
+    PlaceGroupOrder or ChangeOrder) at the same time'
+    """
+
     EXCHANGE = ExchangeType.BETDAQ
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        try:
-            response = order_package.client.betting_client.betting.place_orders(
-                order_list=order_package.place_instructions
-            )
-        except BetdaqError as e:
-            logger.error(
-                "Execution error",
-                extra={
-                    "trading_function": "place_orders",
-                    "response": e,
-                    "order_package": order_package.info,
-                },
-                exc_info=True,
-            )
-            return
-        except Exception as e:
-            logger.critical(
-                "Execution unknown error",
-                extra={
-                    "trading_function": "place_orders",
-                    "response": e,
-                    "order_package": order_package.info,
-                },
-                exc_info=True,
-            )
-            return
-        logger.info(
-            "execute_%s" % "place_orders",
-            extra={
-                "trading_function": "place_orders",
-                "response": response,
-                "order_package": order_package.info,
-            },
-        )
+        response = self._execution_helper(self.place, order_package)
         if response:
             for order, instruction_report in zip(order_package, response):
                 with order.trade:
@@ -81,11 +57,56 @@ class BetdaqExecution(BaseExecution):
                             },
                         )
                         order.execution_complete()
+            # todo update transaction counts
+
+    def place(self, order_package: BaseOrderPackage):
+        return order_package.client.betting_client.betting.place_orders(
+            order_list=order_package.place_instructions
+        )
 
     def execute_cancel(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
         print(456, order_package)
+
+    def _execution_helper(
+        self,
+        trading_function: Callable,
+        order_package: BaseOrderPackage,
+    ):
+        try:
+            response = trading_function(order_package)
+        except BetdaqError as e:
+            logger.error(
+                "Execution error",
+                extra={
+                    "trading_function": trading_function.__name__,
+                    "response": e,
+                    "order_package": order_package.info,
+                },
+                exc_info=True,
+            )
+            return
+        except Exception as e:
+            logger.critical(
+                "Execution unknown error",
+                extra={
+                    "trading_function": trading_function.__name__,
+                    "response": e,
+                    "order_package": order_package.info,
+                },
+                exc_info=True,
+            )
+            return
+        logger.info(
+            f"execute_{trading_function.__name__}",
+            extra={
+                "trading_function": trading_function.__name__,
+                "response": response,
+                "order_package": order_package.info,
+            },
+        )
+        return response
 
     def _order_logger(
         self, order: BaseOrder, instruction_report: dict, package_type: OrderPackageType
