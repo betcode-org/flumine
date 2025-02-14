@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 RETRY_WAIT = BaseStream.RETRY_WAIT
 START_DELAY = 2
-SNAP_DELTA = 5
+SNAP_DELTA = 2
 
 
 class BetdaqOrderPolling(BaseStream):

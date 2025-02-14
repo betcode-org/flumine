@@ -1181,7 +1181,7 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.assertIsNone(self.stream.conflate_ms)
         self.assertIsNone(self.stream._stream)
         self.assertEqual(betdaqorderpolling.START_DELAY, 2)
-        self.assertEqual(betdaqorderpolling.SNAP_DELTA, 5)
+        self.assertEqual(betdaqorderpolling.SNAP_DELTA, 2)
 
     # def test_run(self):
     #     pass

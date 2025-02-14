@@ -7,6 +7,7 @@ import collections
 from enum import Enum
 from typing import Union, Optional
 from betfairlightweight.resources.bettingresources import CurrentOrder
+from docutils.nodes import status
 
 from ..clients.clients import ExchangeType
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
@@ -503,25 +504,25 @@ class BetdaqOrder(BaseOrder):
         self.async_ = async_
         self.placing()
 
-    # def cancel(self, size_reduction: float = None) -> None:
-    #     if self.bet_id is None:
-    #         raise OrderUpdateError("Order does not currently have a betId")
-    #     elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-    #         if size_reduction and self.size_remaining - size_reduction < 0:
-    #             raise OrderUpdateError("Size reduction too large")
-    #         if self.status != OrderStatus.EXECUTABLE:
-    #             raise OrderUpdateError("Current status: %s" % self.status)
-    #         self.update_data["size_reduction"] = size_reduction
-    #         self.cancelling()
-    #     else:
-    #         raise OrderUpdateError(
-    #             "Only LIMIT orders can be cancelled or partially cancelled once placed"
-    #         )
+    def cancel(self, size_reduction: float = None) -> None:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
+            self.cancelling()
+        else:
+            raise OrderUpdateError(
+                "Only LIMIT orders can be cancelled or partially cancelled once placed"
+            )
 
     # instructions
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             return self.order_type.place_instruction(self._polarity, int(self.id))
+
+    def create_cancel_instruction(self) -> dict:
+        return self.bet_id
 
     @property
     def _polarity(self):
@@ -547,6 +548,8 @@ class BetdaqOrder(BaseOrder):
 
     @property
     def size_remaining(self):
+        if self.current_order.get("status") in ["Settled", "Cancelled", "Void"]:
+            return 0.0
         if "size_remaining" in self.current_order:
             return self.current_order.get("size_remaining", 0)
         try:

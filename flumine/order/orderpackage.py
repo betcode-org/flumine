@@ -194,22 +194,12 @@ class BetdaqOrderPackage(BaseOrderPackage):
     def update_instructions(self):
         return [order.create_update_instruction() for order in self]
 
-    @property
-    def replace_instructions(self):
-        return [
-            order.create_replace_instruction()
-            for order in self
-            if order.status != OrderStatus.EXECUTION_COMPLETE
-        ]
-
     @classmethod
     def order_limit(cls, package_type: OrderPackageType) -> int:
         # todo confirm all values
         if package_type == OrderPackageType.PLACE:
-            return 10
+            return 10  # different per call / punter?
         elif package_type == OrderPackageType.CANCEL:
-            return 10
+            return 10  # unlimited?
         elif package_type == OrderPackageType.UPDATE:
             return 50
-        elif package_type == OrderPackageType.REPLACE:
-            return 10

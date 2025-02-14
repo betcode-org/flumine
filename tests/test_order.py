@@ -642,6 +642,20 @@ class BetdaqOrderTest(unittest.TestCase):
             self.mock_order_type.place_instruction.return_value,
         )
 
+    @mock.patch("flumine.order.order.BetdaqOrder.cancelling")
+    def test_cancel(self, mock_cancelling):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.cancel()
+        mock_cancelling.assert_called_with()
+
+    def test_create_cancel_instruction(self):
+        self.assertEqual(
+            self.order.create_cancel_instruction(),
+            self.order.bet_id,
+        )
+
     def test__polarity(self):
         self.assertEqual(self.order._polarity, 1)
 
@@ -668,6 +682,9 @@ class BetdaqOrderTest(unittest.TestCase):
         mock_current_order = {"size_remaining": 43}
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, 43)
+        mock_current_order = {"status": "Cancelled"}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 0.0)
 
     def test_size_cancelled(self):
         self.assertEqual(self.order.size_cancelled, 0)

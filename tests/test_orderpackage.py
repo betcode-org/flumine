@@ -242,13 +242,11 @@ class BetdaqOrderPackageTest(unittest.TestCase):
         )
 
     def test_replace_instructions(self):
-        self.assertEqual(
-            self.order_package.replace_instructions,
-            [self.mock_order.create_replace_instruction()],
-        )
+        with self.assertRaises(NotImplementedError):
+            assert self.order_package.replace_instructions
 
     def test_order_limit(self):
         self.assertEqual(self.order_package.order_limit(OrderPackageType.PLACE), 10)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 10)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 50)
-        self.assertEqual(self.order_package.order_limit(OrderPackageType.REPLACE), 10)
+        self.assertIsNone(self.order_package.order_limit(OrderPackageType.REPLACE))

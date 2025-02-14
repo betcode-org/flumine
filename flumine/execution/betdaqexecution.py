@@ -67,7 +67,32 @@ class BetdaqExecution(BaseExecution):
     def execute_cancel(
         self, order_package: BaseOrderPackage, http_session: requests.Session
     ) -> None:
-        print(456, order_package)
+        response = self._execution_helper(self.cancel, order_package)
+        if response:
+            for order, instruction_report in zip(order_package, response):
+                with order.trade:
+                    self._order_logger(
+                        order, instruction_report, OrderPackageType.PLACE
+                    )
+                    if int(order.id) != instruction_report["customer_reference"]:
+                        logger.critical(
+                            "Order id / ref missmatch",
+                            extra={
+                                "order_id": int(order.id),
+                                "customer_reference": instruction_report[
+                                    "customer_reference"
+                                ],
+                                "response": instruction_report,
+                            },
+                        )
+                        continue
+
+                    order.execution_complete()
+
+    def cancel(self, order_package: BaseOrderPackage):
+        return order_package.client.betting_client.betting.cancel_orders(
+            order_ids=order_package.cancel_instructions
+        )
 
     def _execution_helper(
         self,
@@ -114,11 +139,11 @@ class BetdaqExecution(BaseExecution):
         logger.info(
             "Order %s: %s",
             package_type.value,
-            instruction_report["return_code"],
+            instruction_report.get("return_code"),
             extra={
                 "bet_id": order.bet_id,
                 "order_id": order.id,
-                "return_code": instruction_report["return_code"],
+                "return_code": instruction_report.get("return_code"),
             },
         )
         if package_type == OrderPackageType.PLACE:
