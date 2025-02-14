@@ -11,7 +11,7 @@ class TransactionTest(unittest.TestCase):
     def setUp(self) -> None:
         mock_blotter = {}
         self.mock_market = mock.Mock(blotter=mock_blotter)
-        self.mock_client = mock.Mock(trading_controls=[])
+        self.mock_client = mock.Mock(trading_controls=[], EXCHANGE=ExchangeType.BETFAIR)
         self.transaction = Transaction(self.mock_market, 1, False, self.mock_client)
 
     def test_init(self):
@@ -347,34 +347,37 @@ class TransactionTest(unittest.TestCase):
         mock_trading_control.assert_called_with(mock_order, mock_package_type)
         mock_client_control.assert_not_called()
 
-    @mock.patch("flumine.execution.transaction.BetdaqOrderPackage")
     @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
-    def test__create_order_package(
-        self, mock_betfair_order_package, mock_betdaq_order_package
-    ):
+    def test__create_order_package_betfair(self, mock_betfair_order_package):
         mock_betfair_order_package.order_limit.return_value = 2
-        mock_betdaq_order_package.order_limit.return_value = 2
         mock_order_one = mock.Mock(id=1, exchange="BETFAIR")
         mock_order_two = mock.Mock(id=2, exchange="BETFAIR")
         mock_order_three = mock.Mock(id=3, exchange="BETFAIR")
         mock_order_four = mock.Mock(id=4, exchange="BETFAIR")
         mock_order_five = mock.Mock(id=5, exchange="BETFAIR")
-        mock_order_six = mock.Mock(id=6, exchange="BETDAQ")
         packages = self.transaction._create_order_package(
             [
-                (ExchangeType.BETFAIR, mock_order_one, None),
-                (ExchangeType.BETFAIR, mock_order_two, None),
-                (ExchangeType.BETFAIR, mock_order_three, 123),
-                (ExchangeType.BETFAIR, mock_order_four, 123),
-                (ExchangeType.BETFAIR, mock_order_five, 123),
-                (ExchangeType.BETDAQ, mock_order_six, None),
+                (mock_order_one, None),
+                (mock_order_two, None),
+                (mock_order_three, 123),
+                (mock_order_four, 123),
+                (mock_order_five, 123),
             ],
             OrderPackageType.PLACE,
         )
-        self.assertEqual(len(packages), 4)
+        self.assertEqual(len(packages), 3)
         mock_betfair_order_package.assert_has_calls(
             [
                 call.order_limit(OrderPackageType.PLACE),
+                call(
+                    client=self.transaction._client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[mock_order_one, mock_order_two],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    market_version=None,
+                    async_=False,
+                ),
                 call(
                     client=self.transaction._client,
                     market_id=self.transaction.market.market_id,
@@ -393,6 +396,27 @@ class TransactionTest(unittest.TestCase):
                     market_version=123,
                     async_=False,
                 ),
+            ]
+        )
+
+    @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
+    def test__create_order_package_simulated(self, mock_betfair_order_package):
+        self.transaction._client.EXCHANGE = ExchangeType.SIMULATED
+        mock_betfair_order_package.order_limit.return_value = 2
+        mock_order_one = mock.Mock(id=1, exchange="SIMULATED")
+        mock_order_two = mock.Mock(id=2, exchange="SIMULATED")
+        mock_order_three = mock.Mock(id=3, exchange="SIMULATED")
+        packages = self.transaction._create_order_package(
+            [
+                (mock_order_one, None),
+                (mock_order_two, None),
+                (mock_order_three, None),
+            ],
+            OrderPackageType.PLACE,
+        )
+        self.assertEqual(len(packages), 2)
+        mock_betfair_order_package.assert_has_calls(
+            [
                 call.order_limit(OrderPackageType.PLACE),
                 call(
                     client=self.transaction._client,
@@ -403,15 +427,50 @@ class TransactionTest(unittest.TestCase):
                     market_version=None,
                     async_=False,
                 ),
+                call(
+                    client=self.transaction._client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[mock_order_three],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    market_version=None,
+                    async_=False,
+                ),
             ]
         )
+
+    @mock.patch("flumine.execution.transaction.BetdaqOrderPackage")
+    def test__create_order_package_betdaq(self, mock_betdaq_order_package):
+        self.transaction._client.EXCHANGE = ExchangeType.BETDAQ
+        mock_betdaq_order_package.order_limit.return_value = 2
+        mock_order_one = mock.Mock(id=1, exchange="BETDAQ")
+        mock_order_two = mock.Mock(id=2, exchange="BETDAQ")
+        mock_order_three = mock.Mock(id=3, exchange="BETDAQ")
+        packages = self.transaction._create_order_package(
+            [
+                (mock_order_one, None),
+                (mock_order_two, None),
+                (mock_order_three, None),
+            ],
+            OrderPackageType.PLACE,
+        )
+        self.assertEqual(len(packages), 2)
         mock_betdaq_order_package.assert_has_calls(
             [
                 call.order_limit(OrderPackageType.PLACE),
                 call(
                     client=self.transaction._client,
                     market_id=self.transaction.market.market_id,
-                    orders=[mock_order_six],
+                    orders=[mock_order_one, mock_order_two],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    market_version=None,
+                    async_=False,
+                ),
+                call(
+                    client=self.transaction._client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[mock_order_three],
                     package_type=OrderPackageType.PLACE,
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,

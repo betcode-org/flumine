@@ -210,6 +210,6 @@ class BetdaqOrderPackage(BaseOrderPackage):
         elif package_type == OrderPackageType.CANCEL:
             return 10
         elif package_type == OrderPackageType.UPDATE:
-            return 10
+            return 50
         elif package_type == OrderPackageType.REPLACE:
             return 10

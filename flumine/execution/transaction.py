@@ -1,5 +1,5 @@
 import logging
-from itertools import groupby
+from collections import defaultdict
 
 from ..clients import ExchangeType
 from ..order.orderpackage import (
@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 class Transaction:
     """
     Process place, cancel, update and replace requests.
+
+    Transaction per single client/exchange only.
 
     Default behaviour is to execute immediately however
     when it is used as a context manager requests can
@@ -41,10 +43,10 @@ class Transaction:
         self._id = id_  # unique per market only
         self._async_place_orders = async_place_orders
         self._pending_orders = False
-        self._pending_place = []  # list of (EXCHANGE, <Order>, market_version)
-        self._pending_cancel = []  # list of (EXCHANGE, <Order>, None)
-        self._pending_update = []  # list of (EXCHANGE, <Order>, None)
-        self._pending_replace = []  # list of (EXCHANGE, <Order>, market_version)
+        self._pending_place = []  # list of (<Order>, market_version)
+        self._pending_cancel = []  # list of (<Order>, None)
+        self._pending_update = []  # list of (<Order>, None)
+        self._pending_replace = []  # list of (<Order>, market_version)
 
     def place_order(
         self,
@@ -84,7 +86,7 @@ class Transaction:
         if execute:  # handles replaceOrder
             runner_context = order.trade.strategy.get_runner_context(*order.lookup)
             runner_context.place(order.trade.id)
-            self._pending_place.append((order.EXCHANGE, order, market_version))
+            self._pending_place.append((order, market_version))
             self._pending_orders = True
         return True
 
@@ -104,7 +106,7 @@ class Transaction:
             return False
         # cancel
         order.cancel(size_reduction)
-        self._pending_cancel.append((order.EXCHANGE, order, None))
+        self._pending_cancel.append((order, None))
         self._pending_orders = True
         return True
 
@@ -124,7 +126,7 @@ class Transaction:
             return False
         # update
         order.update(new_persistence_type)
-        self._pending_update.append((order.EXCHANGE, order, None))
+        self._pending_update.append((order, None))
         self._pending_orders = True
         return True
 
@@ -144,7 +146,7 @@ class Transaction:
             return False
         # replace
         order.replace(new_price)
-        self._pending_replace.append((order.EXCHANGE, order, market_version))
+        self._pending_replace.append((order, market_version))
         self._pending_orders = True
         return True
 
@@ -202,37 +204,34 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
+        if self._client.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            package = BetfairOrderPackage
+        elif self._client.EXCHANGE == ExchangeType.BETDAQ:
+            package = BetdaqOrderPackage
+        else:
+            raise OrderError(
+                f"Invalid exchange '{self._client.EXCHANGE}' provided to transaction"
+            )
+        # group orders by marketVersion
+        orders_grouped = defaultdict(list)
+        for o in orders:
+            orders_grouped[o[1]].append(o[0])
+        # create packages (chunked by limit)
+        limit = package.order_limit(package_type)
         packages = []
-        # group by exchange
-        orders.sort(key=lambda x: (x[0].name, float("inf") if x[2] is None else x[2]))
-        grouped_by_exchange = groupby(orders, key=lambda x: x[0].name)
-        for exchange, group in grouped_by_exchange:
-            if exchange == ExchangeType.BETFAIR.name:
-                package = BetfairOrderPackage
-            elif exchange == ExchangeType.BETDAQ.name:
-                package = BetdaqOrderPackage
-            else:
-                raise OrderError(
-                    f"Invalid exchange '{exchange}' provided to transaction"
-                )
-            # group by market version
-            group = sorted(group, key=lambda x: (x[2] is None, x[2]))
-            grouped_by_version = groupby(group, key=lambda x: x[2])
-            for market_version, version_group in grouped_by_version:
-                limit = package.order_limit(package_type)
-                for chunked_orders in chunks(list(version_group), limit):
-                    chunked_orders = [o[1] for o in chunked_orders]
-                    packages.append(
-                        package(
-                            client=self._client,
-                            market_id=self.market.market_id,
-                            orders=chunked_orders,
-                            package_type=package_type,
-                            bet_delay=self.market.market_book.bet_delay,
-                            market_version=market_version,
-                            async_=async_,
-                        )
+        for market_version, package_orders in orders_grouped.items():
+            for chunked_orders in chunks(package_orders, limit):
+                packages.append(
+                    package(
+                        client=self._client,
+                        market_id=self.market.market_id,
+                        orders=chunked_orders,
+                        package_type=package_type,
+                        bet_delay=self.market.market_book.bet_delay,
+                        market_version=market_version,
+                        async_=async_,
                     )
+                )
         orders.clear()
         return packages
 

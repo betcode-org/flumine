@@ -444,7 +444,7 @@ class StreamsTest(unittest.TestCase):
             flumine=self.mock_flumine,
             stream_id=mock_increment(),
             client=mock_client,
-            streaming_timeout=1
+            streaming_timeout=1,
         )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")

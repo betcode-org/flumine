@@ -250,5 +250,5 @@ class BetdaqOrderPackageTest(unittest.TestCase):
     def test_order_limit(self):
         self.assertEqual(self.order_package.order_limit(OrderPackageType.PLACE), 10)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 10)
-        self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 10)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 50)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.REPLACE), 10)
