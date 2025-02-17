@@ -234,6 +234,9 @@ class StrategyExposure(BaseControl):
         if package_type in (
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,
+        ) or (
+            order.EXCHANGE == ExchangeType.BETDAQ
+            and package_type == OrderPackageType.UPDATE
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -246,10 +249,11 @@ class StrategyExposure(BaseControl):
                     ]
                 ):
                     size = order.order_type.size or order.order_type.bet_target_size
+                    price = order.order_type.price
                     if order.side == "BACK":
                         order_exposure = size
                     else:
-                        order_exposure = (order.order_type.price - 1) * size
+                        order_exposure = (price - 1) * size
                 elif order.order_type.price_ladder_definition == "LINE_RANGE":
                     # All bets are struck at 2.0
                     order_exposure = (

@@ -538,7 +538,7 @@ class BetdaqOrder(BaseOrder):
                 raise OrderUpdateError("Current status: %s" % self.status)
             self.update_data["BetId"] = self.bet_id
             self.update_data["DeltaStake"] = size_delta
-            self.update_data["Price"] = new_price
+            self.update_data["Price"] = new_price or self.order_type.price
             self.update_data["ExpectedSelectionResetCount"] = (
                 expected_selection_reset_count
             )
