@@ -100,6 +100,7 @@ class BaseOrder:
 
         self.date_time_created = datetime.datetime.utcnow()
         self.date_time_execution_complete = None
+        self.date_time_status_update = datetime.datetime.utcnow()
 
         self.cleared_order = None
 
@@ -110,6 +111,7 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
+        self.date_time_status_update = datetime.datetime.utcnow()
         self.complete = self._is_complete()
         if logger.isEnabledFor(logging.INFO):
             logger.info("Order status update: %s" % self.status.value, extra=self.info)
@@ -252,6 +254,12 @@ class BaseOrder:
             return (
                 self.date_time_execution_complete - self.responses.date_time_placed
             ).total_seconds()
+
+    @property
+    def elapsed_seconds_status_update(self) -> float:
+        return (
+            datetime.datetime.utcnow() - self.date_time_status_update
+        ).total_seconds()
 
     @property
     def profit(self) -> float:

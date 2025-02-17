@@ -59,6 +59,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.market_version)
         self.assertIsNone(self.order.async_)
         self.assertIsNotNone(self.order.date_time_created)
+        self.assertIsNotNone(self.order.date_time_status_update)
         self.assertIsNone(self.order.date_time_execution_complete)
         self.assertFalse(self.order.simulated)
         self.assertFalse(self.order._simulated)
@@ -89,15 +90,20 @@ class BaseOrderTest(unittest.TestCase):
                 x.append(o.id)
         self.assertEqual(len(x), 0)
 
+    @mock.patch("flumine.order.order.datetime")
     @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")
-    def test__update_status(self, mock_info, mock__is_complete):
+    def test__update_status(self, mock_info, mock__is_complete, mock_datetime):
         self.mock_trade.complete = True
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
         self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
         self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
         self.mock_trade.complete_trade.assert_called()
         mock__is_complete.assert_called()
+        self.assertEqual(
+            self.order.date_time_status_update,
+            mock_datetime.datetime.utcnow.return_value,
+        )
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
@@ -263,6 +269,9 @@ class BaseOrderTest(unittest.TestCase):
         self.order.responses = mock_responses
         self.order.date_time_execution_complete = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.order.elapsed_seconds_executable, 0)
+
+    def test_elapsed_seconds_status_update(self):
+        self.assertGreaterEqual(self.order.elapsed_seconds_status_update, 0)
 
     def test_profit(self):
         self.order._simulated = True
