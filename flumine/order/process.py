@@ -177,6 +177,7 @@ def process_betdaq_current_orders(
 
 
 def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
+    old_sequence_number = order.current_order.get("sequence_number")
     # update
     order.update_current_order(current_order)
     # todo pick up NoReceipt orders
@@ -186,6 +187,12 @@ def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
             order.executable()
         elif order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
             order.execution_complete()
+    elif (
+        order.status == OrderStatus.UPDATING
+        and old_sequence_number != current_order.get("sequence_number")
+    ):
+        order.order_type.price = current_order["price"]
+        order.executable()
     elif order.status == OrderStatus.EXECUTABLE:
         if order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
             order.execution_complete()

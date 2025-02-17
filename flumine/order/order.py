@@ -6,6 +6,8 @@ import string
 import collections
 from enum import Enum
 from typing import Union, Optional
+
+import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
@@ -504,9 +506,13 @@ class BetdaqOrder(BaseOrder):
         self.placing()
 
     def cancel(self, size_reduction: float = None) -> None:
+        if size_reduction:
+            raise OrderUpdateError(
+                "BetdaqOrder does not allow size_reduction (use update())"
+            )
         if self.bet_id is None:
             raise OrderUpdateError("Order does not currently have a betId")
-        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
             if self.status != OrderStatus.EXECUTABLE:
                 raise OrderUpdateError("Current status: %s" % self.status)
             self.cancelling()
@@ -515,6 +521,37 @@ class BetdaqOrder(BaseOrder):
                 "Only LIMIT orders can be cancelled or partially cancelled once placed"
             )
 
+    def update(
+        self,
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+    ) -> None:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
+            self.update_data["BetId"] = self.bet_id
+            self.update_data["DeltaStake"] = size_delta
+            self.update_data["Price"] = new_price
+            self.update_data["ExpectedSelectionResetCount"] = (
+                expected_selection_reset_count
+            )
+            self.update_data["ExpectedWithdrawalSequenceNumber"] = (
+                expected_withdrawal_sequence_number
+            )
+            self.update_data["CancelOnInRunning"] = cancel_on_in_running
+            self.update_data["CancelIfSelectionReset"] = cancel_if_selection_reset
+            self.update_data["SetToBeSPIfUnmatched"] = set_to_be_sp_if_unmatched
+            self.updating()
+        else:
+            raise OrderUpdateError("Only LIMIT orders can be updated")
+
     # instructions
     def create_place_instruction(self) -> dict:
         if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -522,6 +559,9 @@ class BetdaqOrder(BaseOrder):
 
     def create_cancel_instruction(self) -> dict:
         return self.bet_id
+
+    def create_update_instruction(self) -> dict:
+        return betdaq.filters.update_order(**self.update_data)
 
     @property
     def _polarity(self):

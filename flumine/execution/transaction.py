@@ -111,7 +111,19 @@ class Transaction:
         return True
 
     def update_order(
-        self, order, new_persistence_type: str, force: bool = False
+        self,
+        order,
+        # BETFAIR
+        new_persistence_type: str = None,
+        # BETDAQ
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+        force: bool = False,
     ) -> bool:
         if order.client != self._client:
             raise OrderError(
@@ -125,7 +137,20 @@ class Transaction:
         ):
             return False
         # update
-        order.update(new_persistence_type)
+        if order.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            order.update(new_persistence_type)
+        elif order.EXCHANGE == ExchangeType.BETDAQ:
+            order.update(
+                size_delta,
+                new_price,
+                expected_selection_reset_count,
+                expected_withdrawal_sequence_number,
+                cancel_on_in_running,
+                cancel_if_selection_reset,
+                set_to_be_sp_if_unmatched,
+            )
+        else:
+            raise OrderError(f"update_order: Unknown exchange '{order.EXCHANGE}'")
         self._pending_update.append((order, None))
         self._pending_orders = True
         return True
@@ -133,6 +158,10 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
+        if order.EXCHANGE not in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            raise OrderError(
+                f"replace_order: Order EXCHANGE cannot be {order.EXCHANGE}"
+            )
         if order.client != self._client:
             raise OrderError(
                 "replace_order: Order client '{0}' does not match transaction client '{1}'".format(

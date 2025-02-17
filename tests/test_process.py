@@ -179,3 +179,20 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         process.process_betdaq_current_order(mock_order, mock_current_order)
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.execution_complete.assert_called()
+
+    def test_process_betdaq_current_order_update(self):
+        mock_order = mock.Mock(
+            status=OrderStatus.UPDATING, current_order={"sequence_number": 1}
+        )
+        mock_current_order = {"sequence_number": 2, "price": 999}
+        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.executable.assert_called()
+
+    def test_process_betdaq_current_order_update_race(self):
+        mock_order = mock.Mock(
+            status=OrderStatus.UPDATING, current_order={"sequence_number": 1}
+        )
+        mock_current_order = {"sequence_number": 1}
+        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_order.executable.assert_not_called()

@@ -180,7 +180,7 @@ class TransactionTest(unittest.TestCase):
         return_value=True,
     )
     def test_update_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertTrue(self.transaction.update_order(mock_order, "PERSIST"))
         mock_order.update.assert_called_with("PERSIST")
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
@@ -188,7 +188,7 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction._pending_orders)
 
     def test_update_order_incorrect_client(self):
-        mock_order = mock.Mock(client=123)
+        mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
         with self.assertRaises(OrderError):
             self.transaction.update_order(mock_order, "PERSIST")
 
@@ -197,18 +197,23 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_update_order_violation(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertFalse(self.transaction.update_order(mock_order, "test"))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
         self.transaction._pending_update = []
         self.assertFalse(self.transaction._pending_orders)
+
+    def test_update_order_unknown_exchange(self):
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=123)
+        with self.assertRaises(OrderError):
+            self.transaction.update_order(mock_order, "PERSIST", force=True)
 
     @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=False,
     )
     def test_force_update_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertTrue(
             self.transaction.update_order(mock_order, "PERSIST", force=True)
         )
@@ -221,8 +226,31 @@ class TransactionTest(unittest.TestCase):
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
+    def test_update_order_betdaq(self, mock__validate_controls):
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETDAQ)
+        self.assertTrue(
+            self.transaction.update_order(
+                mock_order,
+                size_delta=-1,
+                new_price=2,
+                expected_selection_reset_count=3,
+                expected_withdrawal_sequence_number=4,
+                cancel_on_in_running=False,
+                cancel_if_selection_reset=False,
+                set_to_be_sp_if_unmatched=True,
+            )
+        )
+        mock_order.update.assert_called_with(-1, 2, 3, 4, False, False, True)
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
+        self.transaction._pending_update = [(mock_order, None)]
+        self.assertTrue(self.transaction._pending_orders)
+
+    @mock.patch(
+        "flumine.execution.transaction.Transaction._validate_controls",
+        return_value=True,
+    )
     def test_replace_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertTrue(self.transaction.replace_order(mock_order, 1.01, 321))
         mock_order.replace.assert_called_with(1.01)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
@@ -230,7 +258,12 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction._pending_orders)
 
     def test_replace_order_incorrect_client(self):
-        mock_order = mock.Mock(client=123)
+        mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
+        with self.assertRaises(OrderError):
+            self.transaction.replace_order(mock_order, 1.01, 321)
+
+    def test_replace_order_incorrect_exchange(self):
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=123)
         with self.assertRaises(OrderError):
             self.transaction.replace_order(mock_order, 1.01, 321)
 
@@ -239,7 +272,7 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_replace_order_violation(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertFalse(self.transaction.replace_order(mock_order, 2.02))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
         self.transaction._pending_replace = []
@@ -250,7 +283,7 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_force_replace_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client)
+        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
         self.assertTrue(
             self.transaction.replace_order(mock_order, 1.01, 321, force=True)
         )

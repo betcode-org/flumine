@@ -650,10 +650,91 @@ class BetdaqOrderTest(unittest.TestCase):
         self.order.cancel()
         mock_cancelling.assert_called_with()
 
+    def test_cancel_size_reduction(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
+    def test_cancel_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
+    def test_cancel_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
     def test_create_cancel_instruction(self):
         self.assertEqual(
             self.order.create_cancel_instruction(),
             self.order.bet_id,
+        )
+
+    @mock.patch("flumine.order.order.BetdaqOrder.updating")
+    def test_update(self, mock_updating):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.update(
+            size_delta=-1,
+            new_price=2,
+            expected_selection_reset_count=3,
+            expected_withdrawal_sequence_number=4,
+            cancel_on_in_running=False,
+            cancel_if_selection_reset=False,
+            set_to_be_sp_if_unmatched=True,
+        )
+        mock_updating.assert_called_with()
+        self.assertEqual(
+            self.order.update_data,
+            {
+                "BetId": 1234,
+                "CancelIfSelectionReset": False,
+                "CancelOnInRunning": False,
+                "DeltaStake": -1,
+                "ExpectedSelectionResetCount": 3,
+                "ExpectedWithdrawalSequenceNumber": 4,
+                "Price": 2,
+                "SetToBeSPIfUnmatched": True,
+            },
+        )
+
+    def test_update_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    def test_update_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    def test_create_update_instruction(self):
+        self.order.update_data = {
+            "BetId": 123,
+            "DeltaStake": 12,
+            "Price": 34,
+            "ExpectedSelectionResetCount": None,
+            "ExpectedWithdrawalSequenceNumber": None,
+        }
+        self.assertEqual(
+            self.order.create_update_instruction(),
+            {
+                "BetId": 123,
+                "DeltaStake": 12,
+                "Price": 34,
+            },
         )
 
     def test__polarity(self):
