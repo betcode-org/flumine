@@ -28,28 +28,19 @@ class BetdaqExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.place, order_package)
         if response:
-            for order, instruction_report in zip(order_package, response):
+            order_lookup = {int(o.id): o for o in order_package}
+            for instruction_report in response:
+                # get order (can't rely on the order they are returned)
+                order = order_lookup.pop(instruction_report["customer_reference"])
                 with order.trade:
                     self._order_logger(
                         order, instruction_report, order_package.package_type
                     )
                     if not instruction_report["return_code"]:
-                        if int(order.id) != instruction_report["customer_reference"]:
-                            logger.critical(
-                                "Order id / ref missmatch",
-                                extra={
-                                    "order_id": int(order.id),
-                                    "customer_reference": instruction_report[
-                                        "customer_reference"
-                                    ],
-                                    "response": instruction_report,
-                                },
-                            )
-                            continue
                         order.executable()  # let process.py pick it up
                     else:
                         logger.critical(
-                            "Order error return code",
+                            "execute_place: Order error return code",
                             extra={
                                 "order_id": int(order.id),
                                 "return_code": instruction_report["return_code"],
@@ -57,10 +48,13 @@ class BetdaqExecution(BaseExecution):
                             },
                         )
                         order.execution_complete()
+            # todo missing order responses?
             # todo update transaction counts
         else:
-            # todo reset on error so that they can be picked back up
-            pass
+            # reset on error so that they can be picked back up
+            for order in order_package:
+                with order.trade:
+                    order.execution_complete()
 
     def place(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.place_orders(
@@ -72,25 +66,24 @@ class BetdaqExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.cancel, order_package)
         if response:
-            for order, instruction_report in zip(order_package, response):
+            order_lookup = {o.bet_id: o for o in order_package}
+            for instruction_report in response:
+                # get order (can't rely on the order they are returned)
+                order = order_lookup.pop(instruction_report["order_id"])
                 with order.trade:
                     self._order_logger(
                         order, instruction_report, order_package.package_type
                     )
-                    if order.bet_id != instruction_report["order_id"]:
-                        logger.critical(
-                            "Order bet id / id missmatch",
-                            extra={
-                                "bet_id": order.bet_id,
-                                "order_id": instruction_report["order_id"],
-                                "response": instruction_report,
-                            },
-                        )
-                        continue
                     order.execution_complete()
+            # reset any not returned so that they can be picked back up
+            for order in order_lookup.values():
+                with order.trade:
+                    order.executable()
         else:
-            # todo reset on error so that they can be picked back up
-            pass
+            # reset on error so that they can be picked back up
+            for order in order_package:
+                with order.trade:
+                    order.executable()
 
     def cancel(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.cancel_orders(
@@ -102,24 +95,17 @@ class BetdaqExecution(BaseExecution):
     ) -> None:
         response = self._execution_helper(self.update, order_package)
         if response:
-            for order, instruction_report in zip(order_package, response):
+            order_lookup = {o.bet_id: o for o in order_package}
+            for instruction_report in response:
+                # get order (can't rely on the order they are returned)
+                order = order_lookup.pop(instruction_report["order_id"])
                 with order.trade:
                     self._order_logger(
                         order, instruction_report, order_package.package_type
                     )
-                    if order.bet_id != instruction_report["order_id"]:
+                    if instruction_report.get("return_code"):
                         logger.critical(
-                            "Order bet id / id missmatch",
-                            extra={
-                                "bet_id": order.bet_id,
-                                "order_id": instruction_report["order_id"],
-                                "response": instruction_report,
-                            },
-                        )
-                        order.executable()
-                    elif instruction_report.get("return_code"):
-                        logger.critical(
-                            "Order error return code",
+                            "execute_update: Order error return code",
                             extra={
                                 "bet_id": order.bet_id,
                                 "return_code": instruction_report["return_code"],
@@ -131,8 +117,10 @@ class BetdaqExecution(BaseExecution):
                         # we don't update the order.status as we don't have a response yet
                         pass
         else:
-            # todo reset on error so that they can be picked back up
-            pass
+            # reset on error so that they can be picked back up
+            for order in order_package:
+                with order.trade:
+                    order.executable()
 
     def update(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.update_orders(

@@ -1378,30 +1378,37 @@ class BetdaqExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
-    def test_execute_place_incorrect_id(
+    def test_execute_place_missing_order(
         self, mock___execution_helper, mock__order_logger
     ):
         mock_session = mock.Mock()
         mock_order = mock.Mock(id="123")
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(id="456")
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
         mock_order_package = mock.MagicMock()
         mock_order_package.__len__.return_value = 1
-        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
         mock_order_package.info = {}
-        mock_instruction_report = [{"return_code": None, "customer_reference": 456}]
+        mock_instruction_report = [{"return_code": None, "customer_reference": 123}]
         mock___execution_helper.return_value = mock_instruction_report
 
         self.execution.execute_place(mock_order_package, mock_session)
         mock__order_logger.assert_called_with(
             mock_order, mock_instruction_report[0], mock_order_package.package_type
         )
-        mock_order.executable.assert_not_called()
+        mock_order.executable.assert_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock___execution_helper.assert_called_with(
             self.execution.place, mock_order_package
         )
+        mock_order_two.executable.assert_not_called()
+        mock_order_two.execution_complete.assert_not_called()
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
@@ -1422,6 +1429,31 @@ class BetdaqExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report[0], mock_order_package.package_type
         )
         mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.place, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
+    def test_execute_place_no_response(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_not_called()
+        mock_order.executable.assert_not_called()
+        mock_order.execution_complete.assert_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock___execution_helper.assert_called_with(
@@ -1465,30 +1497,67 @@ class BetdaqExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
-    def test_execute_cancel_incorrect_bet_id(
+    def test_execute_cancel_missing_response(
         self, mock___execution_helper, mock__order_logger
     ):
         mock_session = mock.Mock()
         mock_order = mock.Mock(bet_id=123)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
         mock_order_package = mock.MagicMock()
         mock_order_package.__len__.return_value = 1
-        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
         mock_order_package.info = {}
-        mock_instruction_report = [{"order_id": 456}]
+        mock_instruction_report = [{"order_id": 123}]
         mock___execution_helper.return_value = mock_instruction_report
 
         self.execution.execute_cancel(mock_order_package, mock_session)
         mock__order_logger.assert_called_with(
             mock_order, mock_instruction_report[0], mock_order_package.package_type
         )
-        mock_order.execution_complete.assert_not_called()
+        mock_order.execution_complete.assert_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock___execution_helper.assert_called_with(
             self.execution.cancel, mock_order_package
         )
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
+    def test_execute_cancel_response_error(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(bet_id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+        mock_order_two.trade.__enter__.assert_called_with()
+        mock_order_two.trade.__exit__.assert_called_with(None, None, None)
 
     def test_cancel(self):
         mock_order_package = mock.Mock()
@@ -1528,18 +1597,23 @@ class BetdaqExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
-    def test_execute_update_incorrect_bet_id(
+    def test_execute_update_missing_response(
         self, mock___execution_helper, mock__order_logger
     ):
         mock_session = mock.Mock()
         mock_order = mock.Mock(bet_id=123)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
         mock_order_package = mock.MagicMock()
         mock_order_package.__len__.return_value = 1
-        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
         mock_order_package.info = {}
-        mock_instruction_report = [{"order_id": 456, "return_code": 0}]
+        mock_instruction_report = [{"order_id": 123, "return_code": 0}]
         mock___execution_helper.return_value = mock_instruction_report
 
         self.execution.execute_update(mock_order_package, mock_session)
@@ -1547,12 +1621,14 @@ class BetdaqExecutionTest(unittest.TestCase):
             mock_order, mock_instruction_report[0], mock_order_package.package_type
         )
         mock_order.execution_complete.assert_not_called()
-        mock_order.executable.assert_called()
+        mock_order.executable.assert_not_called()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock___execution_helper.assert_called_with(
             self.execution.update, mock_order_package
         )
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_not_called()
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
@@ -1581,6 +1657,36 @@ class BetdaqExecutionTest(unittest.TestCase):
         mock___execution_helper.assert_called_with(
             self.execution.update, mock_order_package
         )
+
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
+    @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")
+    def test_execute_update_response_error(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(bet_id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_update(mock_order_package, mock_session)
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+        mock_order_two.trade.__enter__.assert_called_with()
+        mock_order_two.trade.__exit__.assert_called_with(None, None, None)
 
     def test_update(self):
         mock_order_package = mock.Mock()
