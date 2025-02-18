@@ -182,17 +182,20 @@ def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
     order.update_current_order(current_order)
     # todo pick up NoReceipt orders
     # update status
-    if order.bet_id and order.status == OrderStatus.PENDING:
-        if order.current_order["status"] == "Unmatched":
+    if order.status == OrderStatus.PENDING and order.bet_id:
+        if order.current_order["status"] in ["Unmatched", "Suspended"]:
             order.executable()
-        elif order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+        else:
             order.execution_complete()
     elif (
         order.status == OrderStatus.UPDATING
         and old_sequence_number != current_order.get("sequence_number")
     ):
         order.order_type.price = current_order["price"]
-        order.executable()
+        if order.current_order["status"] in ["Unmatched", "Suspended"]:
+            order.executable()
+        else:
+            order.execution_complete()
     elif order.status == OrderStatus.EXECUTABLE:
-        if order.current_order["status"] in ["Matched", "Cancelled", "Void"]:
+        if order.current_order["status"] in ["Matched", "Cancelled", "Settled", "Void"]:
             order.execution_complete()

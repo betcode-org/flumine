@@ -58,6 +58,9 @@ class BetdaqExecution(BaseExecution):
                         )
                         order.execution_complete()
             # todo update transaction counts
+        else:
+            # todo reset on error so that they can be picked back up
+            pass
 
     def place(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.place_orders(
@@ -85,6 +88,9 @@ class BetdaqExecution(BaseExecution):
                         )
                         continue
                     order.execution_complete()
+        else:
+            # todo reset on error so that they can be picked back up
+            pass
 
     def cancel(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.cancel_orders(
@@ -124,6 +130,9 @@ class BetdaqExecution(BaseExecution):
                     else:
                         # we don't update the order.status as we don't have a response yet
                         pass
+        else:
+            # todo reset on error so that they can be picked back up
+            pass
 
     def update(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.update_orders(

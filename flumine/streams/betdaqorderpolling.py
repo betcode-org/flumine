@@ -18,8 +18,7 @@ class BetdaqOrderPolling(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
-            "Starting BetdaqOrderPolling %s",
-            self.stream_id,
+            f"Starting BetdaqOrderPolling '{self.stream_id}'",
             extra={
                 "stream_id": self.stream_id,
                 "client_username": self.client.username,
@@ -31,7 +30,7 @@ class BetdaqOrderPolling(BaseStream):
         sequence_number = bootstrap["maximum_sequence_number"]
         sequence_number = self._process_current_orders(current_orders, sequence_number)
 
-        while True:
+        while self.is_alive():
             try:
                 current_orders = self.betting_client.betting.get_orders_diff(
                     SequenceNumber=sequence_number
@@ -49,6 +48,14 @@ class BetdaqOrderPolling(BaseStream):
                 time.sleep(self.streaming_timeout)
             else:
                 time.sleep(SNAP_DELTA)
+
+        logger.info(
+            f"Stopped BetdaqOrderPolling '{self.stream_id}'",
+            extra={
+                "stream_id": self.stream_id,
+                "client_username": self.client.username,
+            },
+        )
 
     def _process_current_orders(
         self, current_orders: list, sequence_number: int
