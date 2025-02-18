@@ -25,10 +25,13 @@ class BetdaqOrderPolling(BaseStream):
             },
         )
         # bootstrap call first to get most recent sequence number and all current orders
-        bootstrap = self.betting_client.betting.get_orders()
-        current_orders = bootstrap["orders"]
-        sequence_number = bootstrap["maximum_sequence_number"]
-        sequence_number = self._process_current_orders(current_orders, sequence_number)
+        order_count, sequence_number = 501, 0
+        while order_count > 500:  # continue to call until less than 500 orders returned
+            bootstrap = self.betting_client.betting.get_orders()
+            current_orders = bootstrap["orders"]
+            sequence_number = bootstrap["maximum_sequence_number"]
+            self._process_current_orders(current_orders, sequence_number)
+            order_count = len(current_orders)
 
         while self.is_alive():
             try:
