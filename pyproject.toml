@@ -27,7 +27,7 @@ dependencies = [
     "requests",
     "betconnect==0.2.2",
     "smart-open>=6,<8",
-    "betdaq@git+https://github.com/liampauling/betdaq.git",
+    "betdaq-retail==0.1.0",
 ]
 
 dynamic = ["version"]

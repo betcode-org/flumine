@@ -39,7 +39,7 @@ class BetdaqExecution(BaseExecution):
                     if not instruction_report["return_code"]:
                         order.executable()  # let process.py pick it up
                     else:
-                        logger.critical(
+                        logger.error(
                             "execute_place: Order error return code",
                             extra={
                                 "order_id": int(order.id),
@@ -104,7 +104,7 @@ class BetdaqExecution(BaseExecution):
                         order, instruction_report, order_package.package_type
                     )
                     if instruction_report.get("return_code"):
-                        logger.critical(
+                        logger.error(
                             "execute_update: Order error return code",
                             extra={
                                 "bet_id": order.bet_id,
