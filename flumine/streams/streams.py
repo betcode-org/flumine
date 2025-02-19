@@ -9,6 +9,7 @@ from .datastream import DataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
+from .betdaqorderpolling import BetdaqOrderPolling
 from ..clients import ExchangeType, BaseClient
 from ..utils import get_file_md
 from betfairlightweight.resources.streamingresources import MarketDefinition
@@ -81,6 +82,8 @@ class Streams:
                 self.add_simulated_order_stream(client)
             elif client.EXCHANGE == ExchangeType.BETFAIR:
                 self.add_order_stream(client)
+            elif client.EXCHANGE == ExchangeType.BETDAQ:
+                self.add_betdaq_order_polling(client)
 
     """ market data """
 
@@ -240,6 +243,21 @@ class Streams:
             streaming_timeout=streaming_timeout,
             client=client,
             custom=True,
+        )
+        self._streams.append(stream)
+        return stream
+
+    def add_betdaq_order_polling(
+        self,
+        client: BaseClient,
+        streaming_timeout: float = 0.50,
+    ) -> BetdaqOrderPolling:
+        stream_id = self._increment_stream_id()
+        stream = BetdaqOrderPolling(
+            flumine=self.flumine,
+            stream_id=stream_id,
+            client=client,
+            streaming_timeout=streaming_timeout,
         )
         self._streams.append(stream)
         return stream

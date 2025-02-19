@@ -1,7 +1,12 @@
 import logging
 from collections import defaultdict
 
-from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
+from ..clients import ExchangeType
+from ..order.orderpackage import (
+    OrderPackageType,
+    BetfairOrderPackage,
+    BetdaqOrderPackage,
+)
 from ..events import events
 from ..exceptions import ControlError, OrderError
 from ..utils import chunks, get_market_notes
@@ -12,6 +17,8 @@ logger = logging.getLogger(__name__)
 class Transaction:
     """
     Process place, cancel, update and replace requests.
+
+    Transaction per single client/exchange only.
 
     Default behaviour is to execute immediately however
     when it is used as a context manager requests can
@@ -104,7 +111,19 @@ class Transaction:
         return True
 
     def update_order(
-        self, order, new_persistence_type: str, force: bool = False
+        self,
+        order,
+        # BETFAIR
+        new_persistence_type: str = None,
+        # BETDAQ
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+        force: bool = False,
     ) -> bool:
         if order.client != self._client:
             raise OrderError(
@@ -118,7 +137,20 @@ class Transaction:
         ):
             return False
         # update
-        order.update(new_persistence_type)
+        if order.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            order.update(new_persistence_type)
+        elif order.EXCHANGE == ExchangeType.BETDAQ:
+            order.update(
+                size_delta,
+                new_price,
+                expected_selection_reset_count,
+                expected_withdrawal_sequence_number,
+                cancel_on_in_running,
+                cancel_if_selection_reset,
+                set_to_be_sp_if_unmatched,
+            )
+        else:
+            raise OrderError(f"update_order: Unknown exchange '{order.EXCHANGE}'")
         self._pending_update.append((order, None))
         self._pending_orders = True
         return True
@@ -126,6 +158,10 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
+        if order.EXCHANGE not in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            raise OrderError(
+                f"replace_order: Order EXCHANGE cannot be {order.EXCHANGE}"
+            )
         if order.client != self._client:
             raise OrderError(
                 "replace_order: Order client '{0}' does not match transaction client '{1}'".format(
@@ -197,17 +233,25 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
+        if self._client.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+            package = BetfairOrderPackage
+        elif self._client.EXCHANGE == ExchangeType.BETDAQ:
+            package = BetdaqOrderPackage
+        else:
+            raise OrderError(
+                f"Invalid exchange '{self._client.EXCHANGE}' provided to transaction"
+            )
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:
             orders_grouped[o[1]].append(o[0])
         # create packages (chunked by limit)
-        limit = BetfairOrderPackage.order_limit(package_type)
+        limit = package.order_limit(package_type)
         packages = []
         for market_version, package_orders in orders_grouped.items():
             for chunked_orders in chunks(package_orders, limit):
                 packages.append(
-                    BetfairOrderPackage(
+                    package(
                         client=self._client,
                         market_id=self.market.market_id,
                         orders=chunked_orders,

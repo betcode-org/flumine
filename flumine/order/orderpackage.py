@@ -177,3 +177,29 @@ class BetfairOrderPackage(BaseOrderPackage):
             return order_limits["updateOrders"]
         elif package_type == OrderPackageType.REPLACE:
             return order_limits["replaceOrders"]
+
+
+class BetdaqOrderPackage(BaseOrderPackage):
+    EXCHANGE = ExchangeType.BETDAQ
+
+    @property
+    def place_instructions(self):
+        return [order.create_place_instruction() for order in self]
+
+    @property
+    def cancel_instructions(self):
+        return [order.create_cancel_instruction() for order in self]
+
+    @property
+    def update_instructions(self):
+        return [order.create_update_instruction() for order in self]
+
+    @classmethod
+    def order_limit(cls, package_type: OrderPackageType) -> int:
+        # todo confirm all values
+        if package_type == OrderPackageType.PLACE:
+            return 10  # different per call / punter?
+        elif package_type == OrderPackageType.CANCEL:
+            return 10  # unlimited?
+        elif package_type == OrderPackageType.UPDATE:
+            return 50

@@ -83,7 +83,7 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     if order.async_ and order.bet_id is None and current_order.bet_id:
         order.responses.placed()
         order.bet_id = current_order.bet_id
-        log_control(OrderEvent(order))
+        log_control(OrderEvent(order, exchange=order.EXCHANGE))
     # update status
     if order.bet_id and order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":
@@ -141,3 +141,61 @@ def create_order_from_current(
         },
     )
     return order
+
+
+def process_betdaq_current_orders(
+    markets: Markets, strategies: Strategies, event, log_control, add_market
+) -> None:
+    for current_order in event.event:
+        order_id = current_order["order_id"]
+        ref = current_order["customer_reference"]
+        # check every market for the order
+        for market in markets:
+            try:
+                order = market.blotter[str(ref)]
+            except KeyError:
+                continue
+            if order:
+                break
+        else:
+            logger.warning(
+                f"Betdaq Order {order_id} not present in blotter",
+                extra={
+                    "order_id": order_id,
+                    "current_order": current_order,
+                },
+            )
+            continue
+        # process order status
+        process_betdaq_current_order(order, current_order)
+        # complete order if required
+        if order.complete:
+            for market in markets:
+                if order in market.blotter.live_orders:
+                    market.blotter.complete_order(order)
+                    break
+
+
+def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
+    old_sequence_number = order.current_order.get("sequence_number")
+    # update
+    order.update_current_order(current_order)
+    # todo pick up NoReceipt orders
+    # update status
+    if order.status == OrderStatus.PENDING and order.bet_id:
+        if order.current_order["status"] in ["Unmatched", "Suspended"]:
+            order.executable()
+        else:
+            order.execution_complete()
+    elif (
+        order.status == OrderStatus.UPDATING
+        and old_sequence_number != current_order.get("sequence_number")
+    ):
+        order.order_type.price = current_order["price"]
+        if order.current_order["status"] in ["Unmatched", "Suspended"]:
+            order.executable()
+        else:
+            order.execution_complete()
+    elif order.status == OrderStatus.EXECUTABLE:
+        if order.current_order["status"] in ["Matched", "Cancelled", "Settled", "Void"]:
+            order.execution_complete()

@@ -209,7 +209,9 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
         mock_transaction.assert_called_with(client=mock_order.client)
-        mock_transaction.update_order.assert_called_with(mock_order, "test", True)
+        mock_transaction.update_order.assert_called_with(
+            mock_order, "test", 0.0, None, None, None, None, None, None, True
+        )
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_replace_order(self, mock_transaction):

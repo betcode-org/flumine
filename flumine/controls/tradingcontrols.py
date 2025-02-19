@@ -21,10 +21,12 @@ class OrderValidation(BaseControl):
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if order.EXCHANGE == ExchangeType.BETFAIR:
             self._validate_betfair_order(order)
+        elif order.EXCHANGE == ExchangeType.BETDAQ:
+            self._validate_betdaq_order(order)
 
     def _validate_betfair_order(self, order):
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            self._validate_betfair_size(order)
+            self._validate_size(order)
             self._validate_betfair_price(order)
             self._validate_betfair_min_size(order, OrderTypes.LIMIT)
         elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
@@ -37,8 +39,19 @@ class OrderValidation(BaseControl):
         else:
             self._on_error(order, "Unknown orderType")
 
-    def _validate_betfair_size(self, order):
-        size = order.order_type.size or order.order_type.bet_target_size
+    def _validate_betdaq_order(self, order):
+        if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            self._validate_size(order)
+            self._validate_betdaq_price(order)
+            self._validate_betdaq_min_size(order, OrderTypes.LIMIT)
+        else:
+            self._on_error(order, "Unknown orderType")
+
+    def _validate_size(self, order):
+        if order.EXCHANGE == ExchangeType.BETFAIR:
+            size = order.order_type.size or order.order_type.bet_target_size
+        else:
+            size = order.order_type.size
         if size is None:
             self._on_error(order, "Order size is None")
         elif size <= 0:
@@ -110,6 +123,19 @@ class OrderValidation(BaseControl):
                     ),
                 )
 
+    def _validate_betdaq_price(self, order):
+        if order.order_type.price is None:
+            self._on_error(order, "Order price is None")
+        # check ladder
+        if utils.as_dec(order.order_type.price) not in utils.BETDAQ_PRICES:
+            self._on_error(order, "Order price is not valid for BETDAQ ladder")
+
+    def _validate_betdaq_min_size(self, order, order_type):
+        client = order.client
+        if client.min_bet_validation is False:
+            return  # some accounts do not have min bet restrictions
+        # todo wtf is this?
+
 
 class MarketValidation(BaseControl):
     """
@@ -121,6 +147,7 @@ class MarketValidation(BaseControl):
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if order.EXCHANGE == ExchangeType.BETFAIR:
             self._validate_betfair_market_status(order)
+        # todo BETDAQ
 
     def _validate_betfair_market_status(self, order):
         market = self.flumine.markets.markets.get(order.market_id)
@@ -207,15 +234,26 @@ class StrategyExposure(BaseControl):
         if package_type in (
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,
+        ) or (
+            order.EXCHANGE == ExchangeType.BETDAQ
+            and package_type == OrderPackageType.UPDATE
         ):
             strategy = order.trade.strategy
             if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                if order.order_type.price_ladder_definition in ["CLASSIC", "FINEST"]:
+                if (
+                    order.EXCHANGE == ExchangeType.BETDAQ
+                    or order.order_type.price_ladder_definition
+                    in [
+                        "CLASSIC",
+                        "FINEST",
+                    ]
+                ):
                     size = order.order_type.size or order.order_type.bet_target_size
+                    price = order.order_type.price
                     if order.side == "BACK":
                         order_exposure = size
                     else:
-                        order_exposure = (order.order_type.price - 1) * size
+                        order_exposure = (price - 1) * size
                 elif order.order_type.price_ladder_definition == "LINE_RANGE":
                     # All bets are struck at 2.0
                     order_exposure = (

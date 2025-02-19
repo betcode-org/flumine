@@ -97,10 +97,33 @@ class Market:
             return t.cancel_order(order, size_reduction, force)
 
     def update_order(
-        self, order, new_persistence_type: str, force: bool = False
+        self,
+        order,
+        # BETFAIR
+        new_persistence_type: str = None,
+        # BETDAQ
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+        force: bool = False,
     ) -> bool:
         with self.transaction(client=order.client) as t:
-            return t.update_order(order, new_persistence_type, force)
+            return t.update_order(
+                order,
+                new_persistence_type,
+                size_delta,
+                new_price,
+                expected_selection_reset_count,
+                expected_withdrawal_sequence_number,
+                cancel_on_in_running,
+                cancel_if_selection_reset,
+                set_to_be_sp_if_unmatched,
+                force,
+            )
 
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
