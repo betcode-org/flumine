@@ -129,6 +129,8 @@ framework.run()
 flumine relies on these libraries:
 
 * `betfairlightweight` - Betfair API support
+* `betdaq-retail` - BETDAQ API support
+* `betconnect` - BetConnect API support
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging
 * `requests` - HTTP support

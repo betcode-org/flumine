@@ -8,7 +8,7 @@ Release History
 
 **Improvements**
 
-- BETDAQ Retail client integration (execution only)
+- BETDAQ Retail client integration (account/execution/order only)
 
 **Libraries**
 
