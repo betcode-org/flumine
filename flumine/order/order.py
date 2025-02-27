@@ -5,18 +5,20 @@ import datetime
 import string
 import collections
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Optional, TYPE_CHECKING, Union
 
 import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
-from ..order.trade import Trade
 from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 from ..simulation.simulatedorder import SimulatedOrder
 from .. import config
+
+if TYPE_CHECKING:
+    from ..order.trade import Trade
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ class BaseOrder:
 
     def __init__(
         self,
-        trade: Trade,
+        trade: "Trade",
         side: str,
         order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
         handicap: float = 0,
