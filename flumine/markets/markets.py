@@ -52,11 +52,11 @@ class Markets:
         return blotter.get_order_bet_id(bet_id)
 
     @property
-    def markets(self) -> dict:
+    def markets(self) -> dict[str, Market]:
         return self._markets
 
     @property
-    def open_market_ids(self) -> list:
+    def open_market_ids(self) -> list[str]:
         return [m.market_id for m in self if m.status == "OPEN"]
 
     @property
