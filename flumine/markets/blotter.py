@@ -1,6 +1,7 @@
 import logging
 from typing import Iterable, Optional, List
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from ..order.ordertype import OrderTypes
 from ..utils import (
@@ -9,6 +10,12 @@ from ..utils import (
     STRATEGY_NAME_HASH_LENGTH,
 )
 from ..order.order import BaseOrder, OrderStatus
+
+if TYPE_CHECKING:
+    from betfairlightweight.resources.bettingresources import MarketBook
+    from ..clients.baseclient import BaseClient
+    from ..markets.market import Market
+    from ..strategy.strategy import BaseStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +65,10 @@ class Blotter:
 
     def strategy_orders(
         self,
-        strategy,
+        strategy: "BaseStrategy",
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         """Returns all orders related to a strategy."""
         orders = self._strategy_orders[strategy]
         if order_status:
@@ -72,12 +79,12 @@ class Blotter:
 
     def strategy_selection_orders(
         self,
-        strategy,
+        strategy: "BaseStrategy",
         selection_id: int,
         handicap: float = 0,
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         """Returns all orders related to a strategy selection."""
         orders = self._strategy_selection_orders[(strategy, selection_id, handicap)]
         if order_status:
@@ -88,10 +95,10 @@ class Blotter:
 
     def client_orders(
         self,
-        client,
+        client: "BaseClient",
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         orders = self._client_orders[client]
         if order_status:
             orders = [o for o in orders if o.status in order_status]
@@ -101,11 +108,11 @@ class Blotter:
 
     def client_strategy_orders(
         self,
-        client,
-        strategy,
+        client: "BaseClient",
+        strategy: "BaseStrategy",
         order_status: Optional[List[OrderStatus]] = None,
         matched_only: Optional[bool] = None,
-    ) -> list:
+    ) -> list[BaseOrder]:
         orders = self._client_strategy_orders[(client, strategy)]
         if order_status:
             orders = [o for o in orders if o.status in order_status]
@@ -114,14 +121,16 @@ class Blotter:
         return orders
 
     @property
-    def live_orders(self) -> Iterable:
+    def live_orders(self) -> Iterable[BaseOrder]:
         return iter(list(self._live_orders))
 
     @property
     def has_live_orders(self) -> bool:
         return bool(self._live_orders)
 
-    def process_closed_market(self, market, market_book) -> None:
+    def process_closed_market(
+        self, market: "Market", market_book: "MarketBook"
+    ) -> None:
         number_of_winners = len(
             [runner for runner in market_book.runners if runner.status == "WINNER"]
         )
@@ -152,7 +161,7 @@ class Blotter:
                                 "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
                             )
 
-    def process_cleared_orders(self, cleared_orders) -> list:
+    def process_cleared_orders(self, cleared_orders) -> list[BaseOrder]:
         for cleared_order in cleared_orders.orders:
             order_id = cleared_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             if order_id in self:
@@ -162,7 +171,9 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, market_book) -> float:
+    def market_exposure(
+        self, strategy: "BaseStrategy", market_book: "MarketBook"
+    ) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
         """
@@ -181,7 +192,7 @@ class Blotter:
         worst_differences = sorted(differences)[: market_book.number_of_winners]
         return sum(worst_possible_profits_on_loses) + sum(worst_differences)
 
-    def selection_exposure(self, strategy, lookup: tuple) -> float:
+    def selection_exposure(self, strategy: "BaseStrategy", lookup: tuple) -> float:
         """Returns strategy/selection exposure, which is the worse-case loss arising
         from the selection either winning or losing. Can be positive or zero.
             positive = potential loss
@@ -194,7 +205,9 @@ class Blotter:
         )
         return max(exposure, 0.0)
 
-    def get_exposures(self, strategy, lookup: tuple, exclusion=None) -> dict:
+    def get_exposures(
+        self, strategy: "BaseStrategy", lookup: tuple, exclusion=None
+    ) -> dict:
         """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
@@ -258,7 +271,7 @@ class Blotter:
 
     """ getters / setters """
 
-    def complete_order(self, order) -> None:
+    def complete_order(self, order: BaseOrder) -> None:
         self._live_orders.remove(order)
 
     def has_order(self, customer_order_ref: str) -> bool:
@@ -269,7 +282,7 @@ class Blotter:
 
     __contains__ = has_order
 
-    def __setitem__(self, customer_order_ref: str, order) -> None:
+    def __setitem__(self, customer_order_ref: str, order: BaseOrder) -> None:
         self.active = True
         self._orders[customer_order_ref] = order
         self._bet_id_lookup[order.bet_id] = order
