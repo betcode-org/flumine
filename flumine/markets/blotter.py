@@ -162,11 +162,16 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, market_book) -> float:
+    def market_exposure(self, strategy, market_book, new_order=None) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
+
+        Optionally include a potential new order to facilitate determining if said order would
+        exceed an exposure limit
         """
         orders = self.strategy_orders(strategy)
+        if new_order is not None:
+            orders.append(new_order)
         runners = set([order.lookup for order in orders])
         worst_possible_profits = [
             self.get_exposures(strategy, lookup) for lookup in runners

@@ -48,6 +48,7 @@ class BaseStrategy:
         context: dict = None,
         max_selection_exposure: float = 100,
         max_order_exposure: float = 10,
+        max_market_exposure: float = 500,
         max_trade_count: int = 1e6,
         max_live_trade_count: int = 1,
         multi_order_trades: bool = False,
@@ -63,6 +64,7 @@ class BaseStrategy:
         :param context: Dictionary holding additional user specific vars
         :param max_selection_exposure: Max exposure per selection
         :param max_order_exposure: Max exposure per order
+        :param max_market_exposure: Max exposure per market
         :param max_trade_count: max total number of trades per runner
         :param max_live_trade_count: max live (with executable orders) trades per runner
         :param multi_order_trades: allow multiple live orders per trade
@@ -77,6 +79,7 @@ class BaseStrategy:
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
+        self.max_market_exposure = max_market_exposure
         self.clients = None
         self.max_trade_count = max_trade_count
         self.max_live_trade_count = max_live_trade_count
