@@ -170,11 +170,20 @@ class Blotter:
         exceed an exposure limit
         """
         orders = self.strategy_orders(strategy)
-        if new_order is not None:
-            orders.append(new_order)
         runners = set([order.lookup for order in orders])
+        if new_order is not None:
+            runners.add(new_order.lookup)
         worst_possible_profits = [
-            self.get_exposures(strategy, lookup) for lookup in runners
+            self.get_exposures(
+                strategy,
+                lookup,
+                new_order=(
+                    new_order
+                    if new_order is not None and new_order.lookup == lookup
+                    else None
+                ),
+            )
+            for lookup in runners
         ]
         worst_possible_profits_on_loses = [
             wpp["worst_possible_profit_on_lose"] for wpp in worst_possible_profits
@@ -199,13 +208,17 @@ class Blotter:
         )
         return max(exposure, 0.0)
 
-    def get_exposures(self, strategy, lookup: tuple, exclusion=None) -> dict:
+    def get_exposures(
+        self, strategy, lookup: tuple, exclusion=None, new_order=None
+    ) -> dict:
         """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
-        for order in self.strategy_selection_orders(strategy, *lookup[1:]):
+        for order in self.strategy_selection_orders(strategy, *lookup[1:]) + (
+            [new_order] if new_order is not None else []
+        ):
             if order == exclusion:
                 continue
             if order.status in PENDING_STATUS:
