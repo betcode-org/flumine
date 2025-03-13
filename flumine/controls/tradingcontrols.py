@@ -312,7 +312,7 @@ class StrategyExposure(BaseControl):
                 )
 
             # per market
-            potential_exposure = market.blotter.market_exposure(
+            potential_exposure = -market.blotter.market_exposure(
                 strategy,
                 market.market_book,
                 order if package_type != OrderPackageType.REPLACE else None,
