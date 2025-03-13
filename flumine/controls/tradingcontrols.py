@@ -217,6 +217,7 @@ class StrategyExposure(BaseControl):
         - `strategy.validate_order` function
         - `strategy.max_order_exposure` is not violated if order is executed
         - `strategy.max_selection_exposure` is not violated if order is executed
+        - `strategy.max_market_exposure` is not violated if order is executed
 
     Exposure calculation includes pending,
     executable and execution complete orders.
