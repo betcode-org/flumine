@@ -4,6 +4,7 @@ from unittest import mock
 from flumine.markets.blotter import Blotter, PENDING_STATUS
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
+from flumine.order.trade import TradeStatus
 
 
 class BlotterTest(unittest.TestCase):
@@ -35,6 +36,23 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(selection_id=2, handicap=3, bet_id="123")
         self.blotter["456"] = mock_order
         self.assertEqual(self.blotter.get_order_bet_id("123"), mock_order)
+
+    def test_strategy_trades(self):
+        mock_trade_one = mock.Mock(status=TradeStatus.PENDING, strategy=1)
+        self.blotter._trades[mock_trade_one] = []
+        mock_trade_two = mock.Mock(status=TradeStatus.LIVE, strategy=1)
+        self.blotter._trades[mock_trade_two] = []
+        mock_trade_three = mock.Mock(status=TradeStatus.LIVE, strategy=2)
+        self.blotter._trades[mock_trade_three] = []
+        self.assertEqual(self.blotter.strategy_trades(0), [])
+        self.assertEqual(
+            self.blotter.strategy_trades(1),
+            [mock_trade_one, mock_trade_two],
+        )
+        self.assertEqual(
+            self.blotter.strategy_trades(1, trade_status=[TradeStatus.LIVE]),
+            [mock_trade_two],
+        )
 
     def test_strategy_orders(self):
         mock_order_one = mock.Mock(
@@ -785,9 +803,10 @@ class BlotterTest(unittest.TestCase):
         self.blotter.complete_order("test")
 
     def test_has_trade(self):
-        self.assertFalse(self.blotter.has_trade("123"))
-        self.blotter._trades["123"].append(1)
-        self.assertTrue(self.blotter.has_trade("123"))
+        mock_trade = mock.Mock()
+        self.assertFalse(self.blotter.has_trade(mock_trade))
+        self.blotter._trades[mock_trade].append(1)
+        self.assertTrue(self.blotter.has_trade(mock_trade))
 
     def test__contains(self):
         self.blotter._orders = {"123": "test"}
@@ -804,7 +823,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter._orders, {"123": mock_order})
         self.assertEqual(self.blotter._bet_id_lookup, {"456": mock_order})
         self.assertEqual(self.blotter._live_orders, [mock_order])
-        self.assertEqual(self.blotter._trades, {mock_order.trade.id: [mock_order]})
+        self.assertEqual(self.blotter._trades, {mock_order.trade: [mock_order]})
         self.assertEqual(
             self.blotter._strategy_orders, {mock_order.trade.strategy: [mock_order]}
         )
