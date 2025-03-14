@@ -68,7 +68,7 @@ class Transaction:
             market_version,
             self._async_place_orders,
         )
-        if self.market.blotter.has_trade(order.trade.id):
+        if self.market.blotter.has_trade(order.trade):
             new_trade = False
         else:
             new_trade = True

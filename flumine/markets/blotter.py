@@ -42,7 +42,7 @@ class Blotter:
         self.active = False
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
-        self._trades = defaultdict(list)  # {Trade.id: [Order,]}
+        self._trades = defaultdict(list)  # {Trade: [Order,]}
         self._bet_id_lookup = {}  # {Order.bet_id: Order, }
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
@@ -55,6 +55,17 @@ class Blotter:
             return self._bet_id_lookup[bet_id]
         except KeyError:
             return
+
+    def strategy_trades(
+        self,
+        strategy,
+        trade_status: Optional[List] = None,
+    ) -> list:
+        """Returns all trades related to a strategy."""
+        trades = [t for t in self._trades if t.strategy == strategy]
+        if trade_status:
+            return [t for t in trades if t.status in trade_status]
+        return trades
 
     def strategy_orders(
         self,
@@ -162,14 +173,31 @@ class Blotter:
 
     """ position """
 
-    def market_exposure(self, strategy, market_book) -> float:
+    def market_exposure(
+        self, strategy, market_book, exclusion=None, new_order=None
+    ) -> float:
         """Returns worst-case exposure for market, which is the maximum potential loss (negative),
         arising from the worst race outcome, or the minimum potential profit (positive).
+
+        Optionally include a potential new order to facilitate determining if said order would
+        exceed an exposure limit
         """
         orders = self.strategy_orders(strategy)
         runners = set([order.lookup for order in orders])
+        if new_order is not None:
+            runners.add(new_order.lookup)
         worst_possible_profits = [
-            self.get_exposures(strategy, lookup) for lookup in runners
+            self.get_exposures(
+                strategy,
+                lookup,
+                exclusion=exclusion,
+                new_order=(
+                    new_order
+                    if new_order is not None and new_order.lookup == lookup
+                    else None
+                ),
+            )
+            for lookup in runners
         ]
         worst_possible_profits_on_loses = [
             wpp["worst_possible_profit_on_lose"] for wpp in worst_possible_profits
@@ -194,13 +222,17 @@ class Blotter:
         )
         return max(exposure, 0.0)
 
-    def get_exposures(self, strategy, lookup: tuple, exclusion=None) -> dict:
+    def get_exposures(
+        self, strategy, lookup: tuple, exclusion=None, new_order=None
+    ) -> dict:
         """Returns strategy/selection exposures as a dict."""
         mb, ml = [], []  # matched bets, (price, size)
         ub, ul = [], []  # unmatched bets, (price, size)
         moc_win_liability = 0.0
         moc_lose_liability = 0.0
-        for order in self.strategy_selection_orders(strategy, *lookup[1:]):
+        for order in self.strategy_selection_orders(strategy, *lookup[1:]) + (
+            [new_order] if new_order is not None else []
+        ):
             if order == exclusion:
                 continue
             if order.status in PENDING_STATUS:
@@ -264,8 +296,8 @@ class Blotter:
     def has_order(self, customer_order_ref: str) -> bool:
         return customer_order_ref in self._orders
 
-    def has_trade(self, trade_id: str) -> bool:
-        return trade_id in self._trades
+    def has_trade(self, trade) -> bool:
+        return trade in self._trades
 
     __contains__ = has_order
 
@@ -275,7 +307,7 @@ class Blotter:
         self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
         strategy = order.trade.strategy
-        self._trades[order.trade.id].append(order)
+        self._trades[order.trade].append(order)
         self._strategy_orders[strategy].append(order)
         self._strategy_selection_orders[
             (strategy, order.selection_id, order.handicap)
