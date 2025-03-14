@@ -1052,9 +1052,10 @@ class TestStrategyExposure(unittest.TestCase):
         )
 
     def test_optional_max_exposures(self):
-        mock_market = mock.Mock(blotter=mock.Mock())
+        mock_market = mock.Mock()
+        # Test blotter is not accessed
+        del mock_market.blotter
         mock_order = mock.Mock(
-            order_type=mock.Mock(),
             lookup=(1, 2, 3),
             market_id="1.234",
             trade=mock.Mock(
@@ -1065,12 +1066,9 @@ class TestStrategyExposure(unittest.TestCase):
                 )
             ),
         )
+        # Test order type is not accessed
+        del mock_order.order_type
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
-        mock_order.order_type.assert_not_called()
-        mock_market.blotter.assert_not_called()
-
         self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
-        mock_order.order_type.assert_not_called()
-        mock_market.blotter.assert_not_called()
