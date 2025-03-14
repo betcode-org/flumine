@@ -57,9 +57,7 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.strategy.get_runner_context.assert_called_with(
             *mock_order.lookup
         )
-        self.transaction.market.blotter.has_trade.assert_called_with(
-            mock_order.trade.id
-        )
+        self.transaction.market.blotter.has_trade.assert_called_with(mock_order.trade)
         mock_order.update_client.assert_called_with(self.transaction._client)
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
@@ -86,9 +84,7 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_not_called()
         self.transaction._pending_place = []
         self.assertFalse(self.transaction._pending_orders)
-        self.transaction.market.blotter.has_trade.assert_called_with(
-            mock_order.trade.id
-        )
+        self.transaction.market.blotter.has_trade.assert_called_with(mock_order.trade)
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(

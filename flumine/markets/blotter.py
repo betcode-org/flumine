@@ -42,7 +42,7 @@ class Blotter:
         self.active = False
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
-        self._trades = defaultdict(list)  # {Trade.id: [Order,]}
+        self._trades = defaultdict(list)  # {Trade: [Order,]}
         self._bet_id_lookup = {}  # {Order.bet_id: Order, }
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
@@ -55,6 +55,17 @@ class Blotter:
             return self._bet_id_lookup[bet_id]
         except KeyError:
             return
+
+    def strategy_trades(
+        self,
+        strategy,
+        trade_status: Optional[List] = None,
+    ) -> list:
+        """Returns all trades related to a strategy."""
+        trades = [t for t in self._trades if t.strategy == strategy]
+        if trade_status:
+            return [t for t in trades if t.status in trade_status]
+        return trades
 
     def strategy_orders(
         self,
@@ -264,8 +275,8 @@ class Blotter:
     def has_order(self, customer_order_ref: str) -> bool:
         return customer_order_ref in self._orders
 
-    def has_trade(self, trade_id: str) -> bool:
-        return trade_id in self._trades
+    def has_trade(self, trade) -> bool:
+        return trade in self._trades
 
     __contains__ = has_order
 
@@ -275,7 +286,7 @@ class Blotter:
         self._bet_id_lookup[order.bet_id] = order
         self._live_orders.append(order)
         strategy = order.trade.strategy
-        self._trades[order.trade.id].append(order)
+        self._trades[order.trade].append(order)
         self._strategy_orders[strategy].append(order)
         self._strategy_selection_orders[
             (strategy, order.selection_id, order.handicap)
