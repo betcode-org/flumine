@@ -1033,11 +1033,17 @@ class TestStrategyExposure(unittest.TestCase):
             trade=mock.Mock(strategy=mock_strategy),
         )
 
+        # 1. Order does not exceed max market exposure
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
-        self.assertEqual(0, mock_on_error.call_count)
+        mock_on_error.assert_not_called()
 
         mock_strategy.max_market_exposure = 20
 
+        # 2. Order replaces an existing order so does not exceed max market exposure
+        self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
+        mock_on_error.assert_not_called()
+
+        # 3. Order exceeds max market exposure
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         self.assertEqual(1, mock_on_error.call_count)
         mock_on_error.assert_called_with(

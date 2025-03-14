@@ -313,9 +313,10 @@ class StrategyExposure(BaseControl):
 
             # per market
             potential_exposure = -market.blotter.market_exposure(
-                strategy,
-                market.market_book,
-                order if package_type != OrderPackageType.REPLACE else None,
+                strategy=strategy,
+                market_book=market.market_book,
+                exclusion=order if package_type == OrderPackageType.REPLACE else None,
+                new_order=order,
             )
             if potential_exposure > strategy.max_market_exposure:
                 return self._on_error(
