@@ -240,37 +240,45 @@ class StrategyExposure(BaseControl):
             and package_type == OrderPackageType.UPDATE
         ):
             strategy = order.trade.strategy
-            if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                if (
-                    order.EXCHANGE == ExchangeType.BETDAQ
-                    or order.order_type.price_ladder_definition
-                    in [
-                        "CLASSIC",
-                        "FINEST",
-                    ]
-                ):
-                    size = order.order_type.size or order.order_type.bet_target_size
-                    price = order.order_type.price
-                    if order.side == "BACK":
-                        order_exposure = size
+            market = self.flumine.markets.markets[order.market_id]
+            if (
+                strategy.max_order_exposure is not None
+                or strategy.max_selection_exposure is not None
+            ):
+                if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                    if (
+                        order.EXCHANGE == ExchangeType.BETDAQ
+                        or order.order_type.price_ladder_definition
+                        in [
+                            "CLASSIC",
+                            "FINEST",
+                        ]
+                    ):
+                        size = order.order_type.size or order.order_type.bet_target_size
+                        price = order.order_type.price
+                        if order.side == "BACK":
+                            order_exposure = size
+                        else:
+                            order_exposure = (price - 1) * size
+                    elif order.order_type.price_ladder_definition == "LINE_RANGE":
+                        # All bets are struck at 2.0
+                        order_exposure = (
+                            order.order_type.size or order.order_type.bet_target_size
+                        )
                     else:
-                        order_exposure = (price - 1) * size
-                elif order.order_type.price_ladder_definition == "LINE_RANGE":
-                    # All bets are struck at 2.0
-                    order_exposure = (
-                        order.order_type.size or order.order_type.bet_target_size
-                    )
+                        return self._on_error(order, "Unknown priceLadderDefinition")
+                elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
+                    order_exposure = order.order_type.liability
+                elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
+                    order_exposure = order.order_type.liability
                 else:
-                    return self._on_error(order, "Unknown priceLadderDefinition")
-            elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
-                order_exposure = order.order_type.liability
-            elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
-                order_exposure = order.order_type.liability
-            else:
-                return self._on_error(order, "Unknown order_type")
+                    return self._on_error(order, "Unknown order_type")
 
             # per order
-            if order_exposure > strategy.max_order_exposure:
+            if (
+                strategy.max_order_exposure is not None
+                and order_exposure > strategy.max_order_exposure
+            ):
                 return self._on_error(
                     order,
                     "Order exposure ({0}) is greater than strategy.max_order_exposure ({1})".format(
@@ -279,50 +287,53 @@ class StrategyExposure(BaseControl):
                 )
 
             # per selection
-            market = self.flumine.markets.markets[order.market_id]
-            if package_type == OrderPackageType.REPLACE:
-                exclusion = order
-            else:
-                exclusion = None
+            if strategy.max_selection_exposure is not None:
+                if package_type == OrderPackageType.REPLACE:
+                    exclusion = order
+                else:
+                    exclusion = None
 
-            current_exposures = market.blotter.get_exposures(
-                strategy, lookup=order.lookup, exclusion=exclusion
-            )
-            """
-            We use -min(...) in the below, as "worst_possible_profit_on_X" will be negative if the position is
-            at risk of loss, while exposure values are always atleast zero.
-            Exposure refers to the largest potential loss.
-            """
-            if order.side == "BACK":
-                current_selection_exposure = -current_exposures[
-                    "worst_possible_profit_on_lose"
-                ]
-            else:
-                current_selection_exposure = -current_exposures[
-                    "worst_possible_profit_on_win"
-                ]
-            potential_exposure = current_selection_exposure + order_exposure
-            if potential_exposure > strategy.max_selection_exposure:
-                return self._on_error(
-                    order,
-                    "Potential selection exposure ({0:.2f}) is greater than strategy.max_selection_exposure ({1})".format(
-                        potential_exposure,
-                        strategy.max_selection_exposure,
-                    ),
+                current_exposures = market.blotter.get_exposures(
+                    strategy, lookup=order.lookup, exclusion=exclusion
                 )
+                """
+                We use -min(...) in the below, as "worst_possible_profit_on_X" will be negative if the position is
+                at risk of loss, while exposure values are always atleast zero.
+                Exposure refers to the largest potential loss.
+                """
+                if order.side == "BACK":
+                    current_selection_exposure = -current_exposures[
+                        "worst_possible_profit_on_lose"
+                    ]
+                else:
+                    current_selection_exposure = -current_exposures[
+                        "worst_possible_profit_on_win"
+                    ]
+                potential_exposure = current_selection_exposure + order_exposure
+                if potential_exposure > strategy.max_selection_exposure:
+                    return self._on_error(
+                        order,
+                        "Potential selection exposure ({0:.2f}) is greater than strategy.max_selection_exposure ({1})".format(
+                            potential_exposure,
+                            strategy.max_selection_exposure,
+                        ),
+                    )
 
             # per market
-            potential_exposure = -market.blotter.market_exposure(
-                strategy=strategy,
-                market_book=market.market_book,
-                exclusion=order if package_type == OrderPackageType.REPLACE else None,
-                new_order=order,
-            )
-            if potential_exposure > strategy.max_market_exposure:
-                return self._on_error(
-                    order,
-                    "Potential market exposure ({0:.2f}) is greater than strategy.max_market_exposure ({1})".format(
-                        potential_exposure,
-                        strategy.max_market_exposure,
+            if strategy.max_market_exposure is not None:
+                potential_exposure = -market.blotter.market_exposure(
+                    strategy=strategy,
+                    market_book=market.market_book,
+                    exclusion=(
+                        order if package_type == OrderPackageType.REPLACE else None
                     ),
+                    new_order=order,
                 )
+                if potential_exposure > strategy.max_market_exposure:
+                    return self._on_error(
+                        order,
+                        "Potential market exposure ({0:.2f}) is greater than strategy.max_market_exposure ({1})".format(
+                            potential_exposure,
+                            strategy.max_market_exposure,
+                        ),
+                    )

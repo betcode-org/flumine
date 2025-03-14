@@ -656,7 +656,7 @@ class TestStrategyExposure(unittest.TestCase):
         order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy.max_order_exposure = 10
         order1.trade.strategy.max_selection_exposure = 10
-        order1.trade.strategy.max_market_exposure = 500
+        order1.trade.strategy.max_market_exposure = None
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order1.order_type.price_ladder_definition = "CLASSIC"
         order1.side = "BACK"
@@ -669,7 +669,7 @@ class TestStrategyExposure(unittest.TestCase):
         order2 = mock.Mock(lookup=(1, 2, 3))
         order2.trade.strategy.max_order_exposure = 10
         order2.trade.strategy.max_selection_exposure = 10
-        order2.trade.strategy.max_market_exposure = 500
+        order2.trade.strategy.max_market_exposure = None
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order2.order_type.price_ladder_definition = "CLASSIC"
@@ -874,7 +874,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_strategy = mock.Mock()
         mock_strategy.max_order_exposure = 100
         mock_strategy.max_selection_exposure = 10
-        mock_strategy.max_market_exposure = 500
+        mock_strategy.max_market_exposure = None
 
         mock_trade = mock.Mock()
         mock_trade.strategy = mock_strategy
@@ -915,7 +915,7 @@ class TestStrategyExposure(unittest.TestCase):
         strategy = mock.Mock()
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
-        strategy.max_market_exposure = 500
+        strategy.max_market_exposure = None
 
         order1 = mock.Mock(
             market_id="market_id",
@@ -973,8 +973,8 @@ class TestStrategyExposure(unittest.TestCase):
         self.mock_flumine.markets.markets = {"1.240721772": mock_market}
 
         mock_strategy = mock.Mock()
-        mock_strategy.max_order_exposure = 2
-        mock_strategy.max_selection_exposure = 20
+        mock_strategy.max_order_exposure = None
+        mock_strategy.max_selection_exposure = None
         mock_strategy.max_market_exposure = 30
 
         for customer_order_ref, (selection_id, price) in enumerate(

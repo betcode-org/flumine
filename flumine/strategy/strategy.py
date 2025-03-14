@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Iterator, Union, List
+from typing import Iterator, List, Optional, Type, Union
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
@@ -46,9 +46,9 @@ class BaseStrategy:
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
         context: dict = None,
-        max_selection_exposure: float = 100,
-        max_order_exposure: float = 10,
-        max_market_exposure: float = 500,
+        max_selection_exposure: Optional[float] = 100,
+        max_order_exposure: Optional[float] = 10,
+        max_market_exposure: Optional[float] = None,
         max_trade_count: int = 1e6,
         max_live_trade_count: int = 1,
         multi_order_trades: bool = False,
