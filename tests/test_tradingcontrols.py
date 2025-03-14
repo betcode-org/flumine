@@ -576,6 +576,9 @@ class TestExecutionValidation(unittest.TestCase):
 class TestStrategyExposure(unittest.TestCase):
     def setUp(self):
         self.market = mock.Mock()
+        self.market.market_book = mock.Mock(
+            number_of_active_runners=6, number_of_winners=1
+        )
         self.market.blotter = Blotter("market_id")
         self.mock_flumine = mock.Mock()
         self.mock_flumine.markets.markets = {"market_id": self.market}
@@ -653,6 +656,7 @@ class TestStrategyExposure(unittest.TestCase):
         order1 = mock.Mock(market_id="market_id", lookup=(1, 2, 3))
         order1.trade.strategy.max_order_exposure = 10
         order1.trade.strategy.max_selection_exposure = 10
+        order1.trade.strategy.max_market_exposure = None
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order1.order_type.price_ladder_definition = "CLASSIC"
         order1.side = "BACK"
@@ -665,6 +669,7 @@ class TestStrategyExposure(unittest.TestCase):
         order2 = mock.Mock(lookup=(1, 2, 3))
         order2.trade.strategy.max_order_exposure = 10
         order2.trade.strategy.max_selection_exposure = 10
+        order2.trade.strategy.max_market_exposure = None
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
         order2.order_type.price_ladder_definition = "CLASSIC"
@@ -859,6 +864,9 @@ class TestStrategyExposure(unittest.TestCase):
         to validate hedges the existing order, and reduces the total exposure.
         """
         mock_market = mock.Mock()
+        mock_market.market_book = mock.Mock(
+            number_of_active_runners=6, number_of_winners=1
+        )
         mock_market.blotter = Blotter(market_id="1.234")
 
         self.mock_flumine.markets.markets = {"1.234": mock_market}
@@ -866,6 +874,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_strategy = mock.Mock()
         mock_strategy.max_order_exposure = 100
         mock_strategy.max_selection_exposure = 10
+        mock_strategy.max_market_exposure = None
 
         mock_trade = mock.Mock()
         mock_trade.strategy = mock_strategy
@@ -887,6 +896,7 @@ class TestStrategyExposure(unittest.TestCase):
         mock_order.order_type.price_ladder_definition = "CLASSIC"
         mock_order.order_type.size = 9.0
         mock_order.order_type.price = 5.0
+        mock_order.size_matched = 0.0
 
         mock_market.blotter["existing_order"] = existing_matched_order
 
@@ -905,6 +915,7 @@ class TestStrategyExposure(unittest.TestCase):
         strategy = mock.Mock()
         strategy.max_order_exposure = 10
         strategy.max_selection_exposure = 10
+        strategy.max_market_exposure = None
 
         order1 = mock.Mock(
             market_id="market_id",
@@ -950,3 +961,114 @@ class TestStrategyExposure(unittest.TestCase):
             mock_order,
             "Order exposure (12.0) is greater than strategy.max_order_exposure (10)",
         )
+
+    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
+    def test_validate_max_market_exposure(self, mock_on_error):
+        mock_market = mock.Mock()
+        mock_market.market_book = mock.Mock(
+            number_of_active_runners=7, number_of_winners=1
+        )
+        mock_market.blotter = Blotter(market_id="1.240721772")
+
+        self.mock_flumine.markets.markets = {"1.240721772": mock_market}
+
+        mock_strategy = mock.Mock()
+        mock_strategy.max_order_exposure = None
+        mock_strategy.max_selection_exposure = None
+        mock_strategy.max_market_exposure = 30
+
+        for customer_order_ref, (selection_id, price) in enumerate(
+            (
+                (26456716, 11.5),
+                (42699494, 9.4),
+                (62698391, 14),
+                (42699494, 9.4),
+                (26456716, 11),
+                (42699494, 9.2),
+                (62698391, 13.5),
+                (62698391, 13),
+                (26456716, 10.5),
+                (26456716, 10.5),
+            )
+        ):
+            mock_market.blotter[customer_order_ref] = mock.Mock(
+                market_id="1.240721772",
+                lookup=("1.240721772", selection_id, 0),
+                selection_id=selection_id,
+                side="BACK",
+                average_price_matched=price,
+                size_matched=2,
+                handicap=0,
+                status=OrderStatus.EXECUTABLE,
+                complete=False,
+                EXCHANGE=ExchangeType.BETFAIR,
+                order_type=mock.Mock(
+                    ORDER_TYPE=OrderTypes.LIMIT,
+                    price_ladder_definition="CLASSIC",
+                    price=price,
+                    size=2,
+                ),
+                size_remaining=0,
+                trade=mock.Mock(strategy=mock_strategy),
+            )
+
+        mock_order = mock.Mock(
+            market_id="1.240721772",
+            lookup=("1.240721772", 42699494, 0),
+            selection_id=42699494,
+            side="BACK",
+            average_price_matched=0.0,
+            size_matched=0,
+            handicap=0,
+            status=OrderStatus.EXECUTABLE,
+            complete=False,
+            EXCHANGE=ExchangeType.BETFAIR,
+            order_type=mock.Mock(
+                ORDER_TYPE=OrderTypes.LIMIT,
+                price_ladder_definition="CLASSIC",
+                price=9.6,
+                size=2,
+            ),
+            size_remaining=2,
+            trade=mock.Mock(strategy=mock_strategy),
+        )
+
+        # 1. Order does not exceed max market exposure
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_on_error.assert_not_called()
+
+        mock_strategy.max_market_exposure = 20
+
+        # 2. Order replaces an existing order so does not exceed max market exposure
+        self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
+        mock_on_error.assert_not_called()
+
+        # 3. Order exceeds max market exposure
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        self.assertEqual(1, mock_on_error.call_count)
+        mock_on_error.assert_called_with(
+            mock_order,
+            "Potential market exposure (22.00) is greater than strategy.max_market_exposure (20)",
+        )
+
+    def test_optional_max_exposures(self):
+        mock_market = mock.Mock()
+        # Test blotter is not accessed
+        del mock_market.blotter
+        mock_order = mock.Mock(
+            lookup=(1, 2, 3),
+            market_id="1.234",
+            trade=mock.Mock(
+                strategy=mock.Mock(
+                    max_order_exposure=None,
+                    max_selection_exposure=None,
+                    max_market_exposure=None,
+                )
+            ),
+        )
+        # Test order type is not accessed
+        del mock_order.order_type
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
