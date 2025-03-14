@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.8.0 (2025-03-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Add market exposure (@mberk)
+- Trade improvements (pending/rm offset_orders)
+
 2.7.1 (2025-02-19)
 +++++++++++++++++++
 
