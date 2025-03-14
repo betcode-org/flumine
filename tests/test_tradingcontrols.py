@@ -1050,3 +1050,27 @@ class TestStrategyExposure(unittest.TestCase):
             mock_order,
             "Potential market exposure (22.00) is greater than strategy.max_market_exposure (20)",
         )
+
+    def test_optional_max_exposures(self):
+        mock_market = mock.Mock(blotter=mock.Mock())
+        mock_order = mock.Mock(
+            order_type=mock.Mock(),
+            lookup=(1, 2, 3),
+            market_id="1.234",
+            trade=mock.Mock(
+                strategy=mock.Mock(
+                    max_order_exposure=None,
+                    max_selection_exposure=None,
+                    max_market_exposure=None,
+                )
+            ),
+        )
+        self.mock_flumine.markets.markets = {"1.234": mock_market}
+
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_order.order_type.assert_not_called()
+        mock_market.blotter.assert_not_called()
+
+        self.trading_control._validate(mock_order, OrderPackageType.REPLACE)
+        mock_order.order_type.assert_not_called()
+        mock_market.blotter.assert_not_called()
