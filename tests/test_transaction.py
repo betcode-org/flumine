@@ -62,6 +62,73 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
+        "flumine.execution.transaction.Transaction._do_validate_controls",
+        return_value=True,
+    )
+    def test_place_order_with_atomic_success(
+        self,
+        mock__do_validate_controls,
+        mock_get_market_notes,
+    ):
+        self.transaction.atomic = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order2.trade.market_notes = None
+
+        with self.transaction:
+            self.assertTrue(self.transaction.place_order(mock_order1))
+            self.assertTrue(self.transaction.place_order(mock_order2))
+            self.assertEqual(0, self.transaction.execute.call_count)
+
+        self.assertEqual(1, self.transaction.execute.call_count)
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    def test_place_order_with_atomic_fail(
+        self,
+        mock_get_market_notes,
+    ):
+        c = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal c
+            if c == 0:
+                c = c + 1
+                return
+
+            raise ControlError("Intentional")
+
+        self.transaction._do_validate_controls = mock.Mock(side_effect=side_effect)
+
+        self.transaction.atomic = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(id="123", lookup=(1, 2, 3))
+        mock_order2.trade.market_notes = None
+
+        """
+        The second mock order will raise a ControlError
+        """
+        with self.assertRaises(ControlError):
+            with self.transaction:
+                self.assertTrue(self.transaction.place_order(mock_order1))
+                self.assertTrue(self.transaction.place_order(mock_order2))
+
+        self.assertEqual(0, self.transaction.execute.call_count)
+        self.assert_cleared()
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    @mock.patch(
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
@@ -143,6 +210,49 @@ class TransactionTest(unittest.TestCase):
         self.transaction._pending_cancel = [(mock_order, None)]
         self.assertTrue(self.transaction._pending_orders)
 
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    def test_cancel_order_with_atomic_fail(
+        self,
+        mock_get_market_notes,
+    ):
+        c = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal c
+            if c == 0:
+                c = c + 1
+                return
+
+            raise ControlError("Intentional")
+
+        self.transaction._do_validate_controls = mock.Mock(side_effect=side_effect)
+
+        self.transaction.atomic = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order2.trade.market_notes = None
+
+        """
+        The second mock order will raise a ControlError
+        """
+        with self.assertRaises(ControlError):
+            with self.transaction:
+                self.assertTrue(self.transaction.cancel_order(mock_order1))
+                self.assertTrue(self.transaction.cancel_order(mock_order2))
+
+        self.assertEqual(0, self.transaction.execute.call_count)
+        self.assert_cleared()
+
     def test_cancel_order_incorrect_client(self):
         mock_order = mock.Mock(client=123)
         with self.assertRaises(OrderError):
@@ -182,6 +292,57 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
         self.transaction._pending_update = [(mock_order, None)]
         self.assertTrue(self.transaction._pending_orders)
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    def test_update_order_with_atomic_fail(
+        self,
+        mock_get_market_notes,
+    ):
+        c = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal c
+            if c == 0:
+                c = c + 1
+                return
+
+            raise ControlError("Intentional")
+
+        self.transaction._do_validate_controls = mock.Mock(side_effect=side_effect)
+
+        self.transaction.atomic = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order2.trade.market_notes = None
+
+        """
+        The second mock order will raise a ControlError
+        """
+        with self.assertRaises(ControlError):
+            with self.transaction:
+                self.assertTrue(
+                    self.transaction.update_order(
+                        mock_order1, new_persistence_type="KEEP"
+                    )
+                )
+                self.assertTrue(
+                    self.transaction.update_order(
+                        mock_order2, new_persistence_type="KEEP"
+                    )
+                )
+
+        self.assertEqual(0, self.transaction.execute.call_count)
+        self.assert_cleared()
 
     def test_update_order_incorrect_client(self):
         mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
@@ -252,6 +413,53 @@ class TransactionTest(unittest.TestCase):
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
         self.transaction._pending_replace = [(mock_order, None)]
         self.assertTrue(self.transaction._pending_orders)
+
+    @mock.patch("flumine.execution.transaction.get_market_notes")
+    def test_replace_order_with_atomic_fail(
+        self,
+        mock_get_market_notes,
+    ):
+        c = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal c
+            if c == 0:
+                c = c + 1
+                return
+
+            raise ControlError("Intentional")
+
+        self.transaction._do_validate_controls = mock.Mock(side_effect=side_effect)
+
+        self.transaction.atomic = True
+        self.transaction.market.blotter = mock.MagicMock()
+        self.transaction.market.blotter.has_trade.return_value = False
+        self.transaction.execute = mock.Mock()
+
+        mock_order1 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order1.trade.market_notes = None
+
+        mock_order2 = mock.Mock(
+            id="123", lookup=(1, 2, 3), client=self.transaction._client
+        )
+        mock_order2.trade.market_notes = None
+
+        """
+        The second mock order will raise a ControlError
+        """
+        with self.assertRaises(ControlError):
+            with self.transaction:
+                self.assertTrue(
+                    self.transaction.replace_order(mock_order1, new_price=1.01)
+                )
+                self.assertTrue(
+                    self.transaction.replace_order(mock_order2, new_price=1.01)
+                )
+
+        self.assertEqual(0, self.transaction.execute.call_count)
+        self.assert_cleared()
 
     def test_replace_order_incorrect_client(self):
         mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
@@ -514,3 +722,10 @@ class TransactionTest(unittest.TestCase):
             self.assertEqual(self.transaction, t)
             t._pending_orders = True
         mock_execute.assert_called()
+
+    def assert_cleared(self):
+        self.assertEqual(0, len(self.transaction._pending_place))
+        self.assertEqual(0, len(self.transaction._pending_cancel))
+        self.assertEqual(0, len(self.transaction._pending_update))
+        self.assertEqual(0, len(self.transaction._pending_replace))
+        self.assertFalse(self.transaction._pending_orders)
