@@ -1689,7 +1689,7 @@ class BetdaqExecutionTest(unittest.TestCase):
         mock_order_two.trade.__exit__.assert_called_with(None, None, None)
 
     def test_update(self):
-        mock_order_package = mock.Mock()
+        mock_order_package = mock.Mock(update_instructions=[1, 2, 3])
         self.assertEqual(
             self.execution.update(mock_order_package),
             mock_order_package.client.betting_client.betting.update_orders.return_value,
@@ -1697,6 +1697,11 @@ class BetdaqExecutionTest(unittest.TestCase):
         mock_order_package.client.betting_client.betting.update_orders.assert_called_with(
             order_list=mock_order_package.update_instructions
         )
+
+    def test_update_empty(self):
+        mock_order_package = mock.Mock(update_instructions=[], info={})
+        with self.assertRaises(OrderExecutionError):
+            self.execution.update(mock_order_package)
 
     def test__execution_helper(self):
         mock_trading_function = mock.Mock()

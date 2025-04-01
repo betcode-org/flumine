@@ -5,6 +5,7 @@ from betdaq import BetdaqError
 
 from ..clients import ExchangeType
 from .baseexecution import BaseExecution
+from ..exceptions import OrderExecutionError
 from ..order.order import BaseOrder
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 from ..events.events import OrderEvent
@@ -123,8 +124,14 @@ class BetdaqExecution(BaseExecution):
                     order.executable()
 
     def update(self, order_package: BaseOrderPackage):
+        # temp copy to prevent an empty list of instructions sent
+        # this can occur if order is matched during the execution
+        order_list = list(order_package.update_instructions)
+        if not order_list:
+            logger.warning("Empty `order_list`", extra=order_package.info)
+            raise OrderExecutionError()
         return order_package.client.betting_client.betting.update_orders(
-            order_list=order_package.update_instructions
+            order_list=order_list
         )
 
     def _execution_helper(
