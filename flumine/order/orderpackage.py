@@ -82,19 +82,19 @@ class BaseOrderPackage(BaseEvent):
                 return config.replace_latency + self.bet_delay
 
     @property
-    def place_instructions(self) -> dict:
+    def place_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def cancel_instructions(self) -> dict:
+    def cancel_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def update_instructions(self) -> dict:
+    def update_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def replace_instructions(self) -> dict:
+    def replace_instructions(self) -> list:
         raise NotImplementedError
 
     @classmethod
@@ -146,21 +146,19 @@ class BetfairOrderPackage(BaseOrderPackage):
     EXCHANGE = ExchangeType.BETFAIR
 
     @property
-    def place_instructions(self):
+    def place_instructions(self) -> list:
         return [order.create_place_instruction() for order in self]
 
     @property
-    def cancel_instructions(self):
-        return [
-            order.create_cancel_instruction() for order in self
-        ]  # todo? if order.size_remaining > 0
+    def cancel_instructions(self) -> list:
+        return [order.create_cancel_instruction() for order in self]
 
     @property
-    def update_instructions(self):
+    def update_instructions(self) -> list:
         return [order.create_update_instruction() for order in self]
 
     @property
-    def replace_instructions(self):
+    def replace_instructions(self) -> list:
         return [
             order.create_replace_instruction()
             for order in self
@@ -183,15 +181,15 @@ class BetdaqOrderPackage(BaseOrderPackage):
     EXCHANGE = ExchangeType.BETDAQ
 
     @property
-    def place_instructions(self):
+    def place_instructions(self) -> list:
         return [order.create_place_instruction() for order in self]
 
     @property
-    def cancel_instructions(self):
+    def cancel_instructions(self) -> list:
         return [order.create_cancel_instruction() for order in self]
 
     @property
-    def update_instructions(self):
+    def update_instructions(self) -> list:
         return [order.create_update_instruction() for order in self]
 
     @classmethod
