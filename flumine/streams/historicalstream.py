@@ -28,6 +28,10 @@ class FlumineMarketStream(MarketStream):
     which reduces some function calls.
     """
 
+    def __init__(self, *args, **kwargs):
+        super(FlumineMarketStream, self).__init__(*args, **kwargs)
+        self.inplay_publish_times = {}
+
     def _process(self, data: list, publish_time: int) -> bool:
         active = False
         for market_book in data:
@@ -80,6 +84,13 @@ class FlumineMarketStream(MarketStream):
                     "marketTime"
                 ]
 
+            if (
+                self._listener.max_inplay_seconds is not None
+                and _definition_in_play
+                and not market_book_cache._definition_in_play
+            ):
+                self.inplay_publish_times[market_id] = publish_time
+
             # if market is not open (closed/suspended) process regardless
             if _definition_status == "OPEN":
                 if self._listener.inplay:
@@ -93,6 +104,15 @@ class FlumineMarketStream(MarketStream):
                         active = False
                 if self._listener.inplay is False:
                     if _definition_in_play:
+                        active = False
+                if (
+                    self._listener.max_inplay_seconds is not None
+                    and market_id in self.inplay_publish_times
+                ):
+                    inplay_seconds = (
+                        publish_time - self.inplay_publish_times[market_id]
+                    ) / 1000
+                    if inplay_seconds > self._listener.max_inplay_seconds:
                         active = False
             # check if refresh required
             if active and not market_book_cache.active:
@@ -120,6 +140,7 @@ class FlumineRaceStream(RaceStream):
                     market_id, publish_time, race_id, self._lightweight
                 )
                 race_cache.start_time = create_time(publish_time, race_id)
+                race_cache.inplay = False
                 self._caches[market_id] = race_cache
                 logger.info(
                     "[%s: %s]: %s added, %s markets in cache",
@@ -129,15 +150,29 @@ class FlumineRaceStream(RaceStream):
                     len(self._caches),
                 )
 
-            # filter after start time
-            diff = (
-                race_cache.start_time
-                - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
-            ).total_seconds()
-            if diff <= 0:
+            if race_cache.inplay:
                 race_cache.update_cache(update, publish_time)
                 self._updates_processed += 1
                 active = True
+            else:
+                # filter after start time
+                diff = (
+                    race_cache.start_time
+                    - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+                ).total_seconds()
+                # handle US races starting early by checking the update
+                if diff <= 0 or (
+                    "rpc" in update
+                    and (
+                        update["rpc"]["rt"]
+                        or update["rpc"]["spd"]
+                        or update["rpc"]["ord"]
+                    )
+                ):
+                    race_cache.inplay = True
+                    race_cache.update_cache(update, publish_time)
+                    self._updates_processed += 1
+                    active = True
         return active
 
 
@@ -179,10 +214,17 @@ class HistoricListener(StreamListener):
     inplay or seconds_to_start.
     """
 
-    def __init__(self, inplay: bool = None, seconds_to_start: float = None, **kwargs):
+    def __init__(
+        self,
+        inplay: Optional[bool] = None,
+        seconds_to_start: Optional[float] = None,
+        max_inplay_seconds: Optional[float] = None,
+        **kwargs,
+    ):
         super(HistoricListener, self).__init__(**kwargs)
         self.inplay = inplay
         self.seconds_to_start = seconds_to_start
+        self.max_inplay_seconds = max_inplay_seconds
 
     def _add_stream(self, unique_id: int, operation: str):
         if operation == "marketSubscription":

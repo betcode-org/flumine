@@ -97,10 +97,33 @@ class Market:
             return t.cancel_order(order, size_reduction, force)
 
     def update_order(
-        self, order, new_persistence_type: str, force: bool = False
+        self,
+        order,
+        # BETFAIR
+        new_persistence_type: str = None,
+        # BETDAQ
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+        force: bool = False,
     ) -> bool:
         with self.transaction(client=order.client) as t:
-            return t.update_order(order, new_persistence_type, force)
+            return t.update_order(
+                order,
+                new_persistence_type,
+                size_delta,
+                new_price,
+                expected_selection_reset_count,
+                expected_withdrawal_sequence_number,
+                cancel_on_in_running,
+                cancel_if_selection_reset,
+                set_to_be_sp_if_unmatched,
+                force,
+            )
 
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
@@ -116,7 +139,7 @@ class Market:
         for market in self.flumine.markets.events[self.event_id]:
             if (
                 market_start_datetime == market.market_start_datetime
-                or event_type_id == "1"
+                or event_type_id in ["1", "3"]  # soccer, golf
             ):
                 event[market.market_type].append(market)
         return event
@@ -137,7 +160,7 @@ class Market:
 
     @property
     def market_type(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.description:
             return self.market_catalogue.description.market_type
         elif self.market_book:
             return self.market_book.market_definition.market_type
@@ -189,7 +212,7 @@ class Market:
 
     @property
     def race_type(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.description:
             return self.market_catalogue.description.race_type
         elif self.market_book:
             return self.market_book.market_definition.race_type

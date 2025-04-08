@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Iterator, Union, List
+from typing import Iterator, List, Optional, Type, Union
 from betfairlightweight import filters
 from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
@@ -24,7 +24,6 @@ DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
 
 
 class BaseStrategy:
-
     """
     Strategy object to process MarketBook data
     from streams, order placement and handling
@@ -47,8 +46,9 @@ class BaseStrategy:
         stream_class: Type[BaseStream] = MarketStream,
         name: str = None,
         context: dict = None,
-        max_selection_exposure: float = 100,
-        max_order_exposure: float = 10,
+        max_selection_exposure: Optional[float] = 100,
+        max_order_exposure: Optional[float] = 10,
+        max_market_exposure: Optional[float] = None,
         max_trade_count: int = 1e6,
         max_live_trade_count: int = 1,
         multi_order_trades: bool = False,
@@ -64,6 +64,7 @@ class BaseStrategy:
         :param context: Dictionary holding additional user specific vars
         :param max_selection_exposure: Max exposure per selection
         :param max_order_exposure: Max exposure per order
+        :param max_market_exposure: Max exposure per market
         :param max_trade_count: max total number of trades per runner
         :param max_live_trade_count: max live (with executable orders) trades per runner
         :param multi_order_trades: allow multiple live orders per trade
@@ -78,6 +79,7 @@ class BaseStrategy:
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
         self.max_order_exposure = max_order_exposure
+        self.max_market_exposure = max_market_exposure
         self.clients = None
         self.max_trade_count = max_trade_count
         self.max_live_trade_count = max_live_trade_count
@@ -215,9 +217,9 @@ class BaseStrategy:
         try:
             return self._invested[(market_id, selection_id, handicap)]
         except KeyError:
-            self._invested[
-                (market_id, selection_id, handicap)
-            ] = runner_context = RunnerContext(selection_id)
+            self._invested[(market_id, selection_id, handicap)] = runner_context = (
+                RunnerContext(selection_id)
+            )
             return runner_context
 
     def market_cached(self, market_id: str) -> bool:
@@ -273,27 +275,11 @@ class Strategies:
             logger.warning("Strategy of same name '%s' already added", strategy)
         strategy.clients = clients
         self._strategies.append(strategy)
-        try:
-            strategy.add(flumine)
-        except TypeError:  # Wrong call signature
-            logger.warning(
-                "Deprecation warning: Call signature of BaseStrategy.add(self) "
-                "has changed to BaseStrategy.add(self, flumine). Please update "
-                f"{strategy.__class__.__name__} to match the new call signature."
-            )
-            strategy.add()
+        strategy.add(flumine)
 
     def start(self, flumine) -> None:
         for s in self:
-            try:
-                s.start(flumine)
-            except TypeError:  # Wrong call signature
-                logger.warning(
-                    "Deprecation warning: Call signature of BaseStrategy.start(self) "
-                    "has changed to BaseStrategy.start(self, flumine). Please update "
-                    f"{s.__class__.__name__} to match the new call signature."
-                )
-                s.start()
+            s.start(flumine)
 
     def finish(self, flumine) -> None:
         for s in self:

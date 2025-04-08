@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "flumine"
+description = "Betting trading framework"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+authors = [
+    { name = "Liam Pauling", email = "a@unknown.com" },
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "betfairlightweight==2.20.4",
+    "tenacity>=7.0.0,<8.3.1",
+    "python-json-logger==2.0.7",
+    "requests",
+    "betconnect==0.2.2",
+    "smart-open>=6,<8",
+    "betdaq-retail==0.1.1",
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+speed = [
+    "betfairlightweight[speed]==2.20.4"
+]
+test = [
+    "black==24.8.0",
+    "coverage",
+    "pre-commit",
+    "mkdocs",
+    "mkdocs-material",
+    "build",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/betcode-org"
+Documentation = "https://betcode-org.github.io/flumine/"
+Repository = "https://github.com/betcode-org/flumine.git"
+"Bug Tracker" = "https://github.com/betcode-org/flumine/issues"
+Changelog = "https://github.com/betcode-org/flumine/blob/master/HISTORY.rst"
+
+[tool.hatch.version]
+path = "flumine/__version__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/flumine",
+    "/HISTORY.rst",
+    "/README.md",
+    "/tests",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

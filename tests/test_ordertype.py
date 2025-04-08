@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+from betdaq.enums import OrderKillType, WithdrawRepriceOption
+
 from flumine.order.ordertype import (
     ExchangeType,
     OrderTypes,
@@ -8,6 +10,7 @@ from flumine.order.ordertype import (
     LimitOrder,
     LimitOnCloseOrder,
     MarketOnCloseOrder,
+    BetdaqLimitOrder,
 )
 
 
@@ -130,4 +133,72 @@ class MarketOnCloseOrderTest(unittest.TestCase):
     def test_info(self):
         self.assertEqual(
             self.order_type.info, {"liability": 128, "order_type": "Market on close"}
+        )
+
+
+class BetdaqLimitOrderTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_line_range_info = mock.Mock()
+        self.order_type = BetdaqLimitOrder(
+            1.01,
+            2,
+            123,
+            12,
+            34,
+        )
+
+    def test_init(self):
+        self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETDAQ)
+        self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT)
+        self.assertEqual(self.order_type.price, 1.01)
+        self.assertEqual(self.order_type.size, 2)
+        self.assertEqual(self.order_type.betdaq_runner_id, 123)
+        self.assertEqual(self.order_type.runner_reset_count, 12)
+        self.assertEqual(self.order_type.withdrawal_sequence_number, 34)
+        self.assertEqual(
+            self.order_type.kill_type, OrderKillType.FillOrKillDontCancel.value
+        )
+        self.assertEqual(self.order_type.fill_or_kill_threshold, 0.0)
+        self.assertTrue(self.order_type.cancel_on_in_running)
+        self.assertTrue(self.order_type.cancel_if_selection_reset)
+        self.assertEqual(
+            self.order_type.withdrawal_reprice_option,
+            WithdrawRepriceOption.Cancel.value,
+        )
+
+    def test_place_instruction(self):
+        self.assertEqual(
+            self.order_type.place_instruction(1, "test"),
+            {
+                "CancelIfSelectionReset": True,
+                "CancelOnInRunning": True,
+                "ExpectedSelectionResetCount": 12,
+                "ExpectedWithdrawalSequenceNumber": 34,
+                "FillOrKillThreshold": 0.0,
+                "KillType": OrderKillType.FillOrKillDontCancel.value,
+                "Polarity": 1,
+                "Price": 1.01,
+                "PunterReferenceNumber": "test",
+                "SelectionId": 123,
+                "Stake": 2,
+                "WithdrawalRepriceOption": WithdrawRepriceOption.Cancel.value,
+            },
+        )
+
+    def test_info(self):
+        self.assertEqual(
+            self.order_type.info,
+            {
+                "betdaq_runner_id": 123,
+                "cancel_if_selection_reset": True,
+                "cancel_on_in_running": True,
+                "fill_or_kill_threshold": 0.0,
+                "kill_type": OrderKillType.FillOrKillDontCancel.value,
+                "order_type": OrderTypes.LIMIT,
+                "price": 1.01,
+                "runner_reset_count": 12,
+                "size": 2,
+                "withdrawal_reprice_option": WithdrawRepriceOption.Cancel.value,
+                "withdrawal_sequence_number": 34,
+            },
         )

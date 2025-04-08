@@ -31,7 +31,7 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.notes, self.notes)
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
-        self.assertEqual(self.trade.offset_orders, [])
+        self.assertFalse(self.trade.pending_orders)
         self.assertIsNotNone(self.trade.date_time_created)
         self.assertIsNone(self.trade.date_time_complete)
         self.assertIsNone(self.trade.market_notes)
@@ -66,10 +66,10 @@ class TradeTest(unittest.TestCase):
         self.trade.orders.append(mock_order)
         self.assertFalse(self.trade.complete)
 
-    def test_trade_complete_offset(self):
-        self.trade.offset_orders = [mock.Mock(complete=False)]
+    def test_trade_complete_pending(self):
+        self.trade.pending_orders = True
         self.assertFalse(self.trade.complete)
-        self.trade.offset_orders = [mock.Mock(complete=True)]
+        self.trade.pending_orders = False
         self.assertTrue(self.trade.complete)
 
     def test_trade_complete_replace_order(self):
@@ -170,6 +170,23 @@ class TradeTest(unittest.TestCase):
                 mock_client, mock_current_order, "12345"
             )
 
+    def test_create_betdaq_order(self):
+        mock_order_type = mock.Mock(EXCHANGE="BETDAQ")
+        mock_order = mock.Mock(EXCHANGE="BETDAQ")
+        self.trade.create_order(
+            "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
+        )
+        mock_order.assert_called_with(
+            trade=self.trade,
+            side="BACK",
+            order_type=mock_order_type,
+            handicap=self.trade.handicap,
+            sep="-",
+            context={1: 2},
+            notes=None,
+        )
+        self.assertEqual(self.trade.orders, [mock_order()])
+
     def test_elapsed_seconds(self):
         mock_order_one = mock.Mock(elapsed_seconds=123)
         mock_order_two = mock.Mock(elapsed_seconds=12)
@@ -189,7 +206,7 @@ class TradeTest(unittest.TestCase):
             {
                 "id": str(self.trade.id),
                 "orders": [],
-                "offset_orders": [],
+                "pending_orders": False,
                 "place_reset_seconds": 12,
                 "reset_seconds": 34,
                 "strategy": str(self.mock_strategy),

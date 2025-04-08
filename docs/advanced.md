@@ -105,6 +105,17 @@ logger.addHandler(log_handler)
 logger.setLevel(logging.INFO)
 ```
 
+## Simulation
+
+flumine patches `utcnow` when simulating, if you require the 'real datetime' this can be achieved using the following context manager:
+
+```python
+import datetime
+
+with framework.simulated_datetime.real_time():
+    print(datetime.datetime.utcnow())
+```
+
 ## Config
 
 #### simulated

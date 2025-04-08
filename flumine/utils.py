@@ -24,6 +24,7 @@ from .exceptions import FlumineException
 
 logger = logging.getLogger(__name__)
 
+# betfair
 CUTOFFS = (
     (2, 100),
     (3, 50),
@@ -38,6 +39,18 @@ CUTOFFS = (
 )
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
+# betdaq
+BETDAQ_CUTOFFS = [
+    (3.0, 100),
+    (4.0, 20),
+    (10.0, 10),
+    (20.0, 2),
+    (50.0, 1),
+    (200.0, 0.5),
+    (1000.0, 0.2),
+]
+BETDAQ_MIN_PRICE = 1.01
+BETDAQ_MAX_PRICE = 1000
 MARKET_ID_REGEX = re.compile(r"1.\d{9}")
 EVENT_ID_REGEX = re.compile(r"\d{8}")
 STRATEGY_NAME_HASH_LENGTH = 13
@@ -75,9 +88,14 @@ def get_file_md(file_dir: Union[str, tuple]) -> Optional[MarketDefinition]:
     with smart_open.open(file_dir, "r") as f:
         first_line = f.readline()
         update = json.loads(first_line)
-    if "mc" not in update or not isinstance(update["mc"], list) or not update["mc"]:
+    if (
+        "mc" not in update
+        or not isinstance(update["mc"], list)
+        or not update["mc"]
+        or "marketDefinition" not in update["mc"][0]
+    ):
         return None
-    md = update["mc"][0].get("marketDefinition", {})
+    md = update["mc"][0]["marketDefinition"]
     return MarketDefinition(**md)
 
 
@@ -128,6 +146,8 @@ def make_line_prices(min_unit: float, max_unit: float, interval: float) -> list:
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
 PRICES_FLOAT = [float(price) for price in PRICES]
 FINEST_PRICES = make_prices(MIN_PRICE, ((1000, 100),))
+BETDAQ_PRICES = make_prices(BETDAQ_MIN_PRICE, BETDAQ_CUTOFFS)
+BETDAQ_PRICES_FLOAT = [float(price) for price in BETDAQ_PRICES]
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):
@@ -178,14 +198,14 @@ def get_sp(runner: RunnerBook) -> Optional[float]:
         return runner.sp.actual_sp
 
 
-@functools.lru_cache(maxsize=2048)
-def price_ticks_away(price: float, n_ticks: int) -> float:
+def price_ticks_away(price: float, n_ticks: int, prices=None) -> float:
+    prices = PRICES_FLOAT if not prices else prices
     try:
-        price_index = PRICES_FLOAT.index(price)
+        price_index = prices.index(price)
         new_index = price_index + n_ticks
         if new_index < 0:
             return 1.01
-        return PRICES_FLOAT[new_index]
+        return prices[new_index]
     except IndexError:
         return 1000
 
