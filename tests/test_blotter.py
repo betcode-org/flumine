@@ -37,6 +37,15 @@ class BlotterTest(unittest.TestCase):
         self.blotter["456"] = mock_order
         self.assertEqual(self.blotter.get_order_bet_id("123"), mock_order)
 
+    def test_get_trade(self):
+        """Tests retrieving the trade by trade ID."""
+        trade_id = "abc-789"
+        self.assertIsNone(self.blotter.get_trade(trade_id))
+        mock_trade = mock.Mock(id=trade_id)
+        mock_order = mock.Mock(trade=mock_trade)
+        self.blotter["456"] = mock_order
+        self.assertEqual(self.blotter.get_trade(trade_id), mock_trade)
+
     def test_strategy_trades(self):
         mock_trade_one = mock.Mock(status=TradeStatus.PENDING, strategy=1)
         self.blotter._trades[mock_trade_one] = []
