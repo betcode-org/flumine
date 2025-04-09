@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from typing import Optional
 
 from ..clients import ExchangeType
 from ..order.orderpackage import (
@@ -35,9 +36,27 @@ class Transaction:
             ..
             t.cancel_order(order)
             t.place_order(order)  # both executed on transaction __exit__
+
+    When atomic==True, orders within a transaction will
+    only be placed if the all pass validation.
+    For example, supposed we have:
+
+        with market.transaction(atomic=True) as t:
+            t.place_order(order1) # validation passes
+            t.place_order(order2) # validation does not pass and raises a ControlError
+
+    Neither order1 nor order2 will be executed, as order2 failed validation.
+
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool, client):
+    def __init__(
+        self,
+        market,
+        id_: int,
+        async_place_orders: bool,
+        client,
+        atomic: Optional[bool] = False,
+    ):
         self.market = market
         self._client = client
         self._id = id_  # unique per market only
@@ -47,6 +66,7 @@ class Transaction:
         self._pending_cancel = []  # list of (<Order>, None)
         self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
+        self.atomic = atomic
 
     def place_order(
         self,
@@ -59,6 +79,7 @@ class Transaction:
         if (
             execute
             and not force
+            and not self.atomic
             and self._validate_controls(order, OrderPackageType.PLACE) is False
         ):
             return False
@@ -101,6 +122,7 @@ class Transaction:
             )
         if (
             not force
+            and not self.atomic
             and self._validate_controls(order, OrderPackageType.CANCEL) is False
         ):
             return False
@@ -133,6 +155,7 @@ class Transaction:
             )
         if (
             not force
+            and not self.atomic
             and self._validate_controls(order, OrderPackageType.UPDATE) is False
         ):
             return False
@@ -170,6 +193,7 @@ class Transaction:
             )
         if (
             not force
+            and not self.atomic
             and self._validate_controls(order, OrderPackageType.REPLACE) is False
         ):
             return False
@@ -221,14 +245,17 @@ class Transaction:
     def _validate_controls(self, order, package_type: OrderPackageType) -> bool:
         # return False on violation
         try:
-            for control in self.market.flumine.trading_controls:
-                control(order, package_type)
-            for control in self._client.trading_controls:
-                control(order, package_type)
+            self._do_validate_controls(order, package_type)
         except ControlError:
             return False
         else:
             return True
+
+    def _do_validate_controls(self, order, package_type):
+        for control in self.market.flumine.trading_controls:
+            control(order, package_type)
+        for control in self._client.trading_controls:
+            control(order, package_type)
 
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
@@ -268,5 +295,52 @@ class Transaction:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+
         if self._pending_orders:
+
+            if self.atomic:
+                try:
+                    for order in self._pending_place:
+                        self._do_validate_controls(order, OrderPackageType.PLACE)
+                    for order in self._pending_cancel:
+                        self._do_validate_controls(order, OrderPackageType.CANCEL)
+                    for order in self._pending_update:
+                        self._do_validate_controls(order, OrderPackageType.UPDATE)
+                    for order in self._pending_replace:
+                        self._do_validate_controls(order, OrderPackageType.REPLACE)
+                except ControlError as e:
+                    if logger.isEnabledFor(logging.INFO):
+                        extra = {
+                            "market_id": self.market.market_id,
+                            "transaction_id": self._id,
+                            "client_username": self._client.username,
+                        }
+                        if self._pending_place:
+                            extra["pending_place"] = self._pending_place
+                        if self._pending_update:
+                            extra["pending_update"] = self._pending_update
+                        if self._pending_cancel:
+                            extra["pending_cancel"] = self._pending_cancel
+                        if self._pending_replace:
+                            extra["pending_replace"] = self._pending_replace
+                        logger.info(
+                            "Failed to execute transaction. Validation failed: %s"
+                            % str(e),
+                            extra=extra,
+                        )
+                    self._clear()
+                    raise
             self.execute()
+
+    def _clear(self):
+        for order, _ in self._pending_place:
+            self._unwind(order)
+        self._pending_place.clear()
+        self._pending_update.clear()
+        self._pending_replace.clear()
+        self._pending_cancel.clear()
+        self._pending_orders = False
+
+    def _unwind(self, order):
+        runner_context = order.trade.strategy.get_runner_context(*order.lookup)
+        runner_context.live_trades.remove(order.trade.id)
