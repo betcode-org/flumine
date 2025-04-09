@@ -27,7 +27,7 @@ from flumine import BaseStrategy
 
 
 class ExampleStrategy(BaseStrategy):
-    def start(self):
+    def start(self, flumine):
         # subscribe to streams
         print("starting strategy 'ExampleStrategy'")
         
@@ -198,6 +198,7 @@ strategy = ExampleStrategy(
 
 - inplay: Filter inplay flag
 - seconds_to_start: Filter market seconds to start
+- max_inplay_seconds: Filter market on max seconds after market turned inplay
 - calculate_market_tv: As per bflw listener arg
 - cumulative_runner_tv: As per bflw listener arg
 

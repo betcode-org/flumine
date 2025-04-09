@@ -28,6 +28,10 @@ class FlumineMarketStream(MarketStream):
     which reduces some function calls.
     """
 
+    def __init__(self, *args, **kwargs):
+        super(FlumineMarketStream, self).__init__(*args, **kwargs)
+        self.inplay_publish_times = {}
+
     def _process(self, data: list, publish_time: int) -> bool:
         active = False
         for market_book in data:
@@ -80,6 +84,13 @@ class FlumineMarketStream(MarketStream):
                     "marketTime"
                 ]
 
+            if (
+                self._listener.max_inplay_seconds is not None
+                and _definition_in_play
+                and not market_book_cache._definition_in_play
+            ):
+                self.inplay_publish_times[market_id] = publish_time
+
             # if market is not open (closed/suspended) process regardless
             if _definition_status == "OPEN":
                 if self._listener.inplay:
@@ -93,6 +104,15 @@ class FlumineMarketStream(MarketStream):
                         active = False
                 if self._listener.inplay is False:
                     if _definition_in_play:
+                        active = False
+                if (
+                    self._listener.max_inplay_seconds is not None
+                    and market_id in self.inplay_publish_times
+                ):
+                    inplay_seconds = (
+                        publish_time - self.inplay_publish_times[market_id]
+                    ) / 1000
+                    if inplay_seconds > self._listener.max_inplay_seconds:
                         active = False
             # check if refresh required
             if active and not market_book_cache.active:
@@ -194,10 +214,17 @@ class HistoricListener(StreamListener):
     inplay or seconds_to_start.
     """
 
-    def __init__(self, inplay: bool = None, seconds_to_start: float = None, **kwargs):
+    def __init__(
+        self,
+        inplay: Optional[bool] = None,
+        seconds_to_start: Optional[float] = None,
+        max_inplay_seconds: Optional[float] = None,
+        **kwargs,
+    ):
         super(HistoricListener, self).__init__(**kwargs)
         self.inplay = inplay
         self.seconds_to_start = seconds_to_start
+        self.max_inplay_seconds = max_inplay_seconds
 
     def _add_stream(self, unique_id: int, operation: str):
         if operation == "marketSubscription":

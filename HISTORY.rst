@@ -3,6 +3,148 @@
 Release History
 ---------------
 
+2.8.1 (2025-04-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- BETDAQ update bug
+
+2.8.0 (2025-03-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Add market exposure (@mberk)
+- Trade improvements (pending/rm offset_orders)
+
+2.7.1 (2025-02-19)
++++++++++++++++++++
+
+**Libraries**
+
+- betdaq-retail upgraded to 0.1.1
+
+2.7.0 (2025-02-19)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ Retail client integration (account/execution/order only)
+
+**Libraries**
+
+- betdaq-retail 0.1.0 added as dependency
+
+2.6.10 (2025-02-07)
++++++++++++++++++++
+
+**Improvements**
+
+- Process closed market when filter is empty
+
+2.6.9 (2024-01-10)
++++++++++++++++++++
+
+**Libraries**
+
+- betconnect upgraded to 0.2.2
+
+2.6.8 (2024-11-01)
++++++++++++++++++++
+
+**Improvements**
+
+- Bump stream id to 10000 to prevent conflicts on multiple restarts
+
+2.6.7 (2024-11-01)
++++++++++++++++++++
+
+**Improvements**
+
+- Revert `time_updated` changes
+- docs fixed
+
+2.6.6 (2024-10-31)
++++++++++++++++++++
+
+**Improvements**
+
+- FlumineStream update to record `time_updated` on each process
+
+2.6.5 (2024-10-23)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.20.4
+
+2.6.4 (2024-10-03)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.20.3
+
+2.6.3 (2024-09-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Add max_inplay_seconds to HistoricListener (@mberk)
+
+**Bug Fixes**
+
+- #766 use order price when calculating matched price with available volumes
+
+2.6.2 (2024-08-22)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove add/start depreciations
+
+**Bug Fixes**
+
+- Fix utils.get_file_md (@mberk)
+- Erroneous application of dead-heat rules to profit calculations (@petercoles)
+
+**Libraries**
+
+- black upgraded to 24.8.0
+
+2.6.1 (2024-03-26)
++++++++++++++++++++
+
+**Improvements**
+
+- docs
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.20.2
+- betconnect upgraded to 0.2.1
+- black upgraded to 24.4.2
+- smart-open upgraded to <8
+- tenacity upgraded to <8.3.1
+
+2.6.0 (2024-03-11)
++++++++++++++++++++
+
+**Improvements**
+
+- toml file added / repo cleanup
+
+**Bug Fixes**
+
+- Correctly handle sports data files that contain no valid data
+
+**Libraries**
+
+- python 3.12 added
+- betfairlightweight upgraded to 2.20.1
+- black upgraded to 24.2.0
+
 2.5.10 (2024-02-15)
 +++++++++++++++++++
 

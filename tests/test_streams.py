@@ -3,7 +3,8 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flumine.streams import streams, datastream, historicalstream
+from flumine.clients import ExchangeType
+from flumine.streams import streams, datastream, historicalstream, betdaqorderpolling
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.streams import orderstream
@@ -177,6 +178,13 @@ class StreamsTest(unittest.TestCase):
         mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_not_called()
+
+    @mock.patch("flumine.streams.streams.Streams.add_betdaq_order_polling")
+    def test_add_client_betdaq(self, mock_add_order_stream):
+        mock_client = mock.Mock(order_stream=True, paper_trade=False)
+        mock_client.EXCHANGE = streams.ExchangeType.BETDAQ
+        self.streams.add_client(mock_client)
+        mock_add_order_stream.assert_called_with(mock_client)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
@@ -425,6 +433,20 @@ class StreamsTest(unittest.TestCase):
             custom=True,
         )
 
+    @mock.patch("flumine.streams.streams.BetdaqOrderPolling")
+    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
+    def test_add_betdaq_order_polling(self, mock_increment, mock_order_polling_class):
+        mock_client = mock.Mock()
+        self.streams.add_betdaq_order_polling(mock_client)
+        self.assertEqual(len(self.streams), 1)
+        mock_increment.assert_called_with()
+        mock_order_polling_class.assert_called_with(
+            flumine=self.mock_flumine,
+            stream_id=mock_increment(),
+            client=mock_client,
+            streaming_timeout=0.5,
+        )
+
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_custom_stream(self, mock_increment):
         mock_stream = mock.Mock()
@@ -452,7 +474,7 @@ class StreamsTest(unittest.TestCase):
         mock_stream.stop.assert_called_with()
 
     def test__increment_stream_id(self):
-        self.assertEqual(self.streams._increment_stream_id(), 1000)
+        self.assertEqual(self.streams._increment_stream_id(), 10000)
 
     def test_iter(self):
         for i in self.streams:
@@ -615,11 +637,13 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(str(stream), "FlumineStream")
         self.assertEqual(repr(stream), "<FlumineStream [0]>")
 
-    def test_flumine_stream_on_process(self):
+    @mock.patch("flumine.streams.datastream.RawDataEvent")
+    def test_flumine_stream_on_process(self, raw_data_event):
         mock_listener = mock.Mock()
         stream = datastream.FlumineStream(mock_listener, 0)
         stream.on_process([1, 2, 3])
-        mock_listener.output_queue.put.called_with(datastream.RawDataEvent([1, 2, 3]))
+        raw_data_event.assert_called_with([1, 2, 3])
+        mock_listener.output_queue.put.assert_called_with(raw_data_event.return_value)
 
     @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream(self, mock_on_process):
@@ -891,6 +915,86 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
+    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    def test__process_max_inplay_seconds(self, mock_cache):
+        # Set listener attributes
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = None
+        self.stream._listener.max_inplay_seconds = 10  # seconds
+
+        # Get the mock instance
+        mock_cache_instance = mock_cache.return_value
+        # Initialize _definition_in_play to False
+        mock_cache_instance._definition_in_play = False
+
+        # Define side effect for update_cache
+        def update_cache_side_effect(market_book, publish_time, active=True):
+            if "marketDefinition" in market_book:
+                market_definition = market_book["marketDefinition"]
+                mock_cache_instance._definition_in_play = market_definition.get(
+                    "inPlay", False
+                )
+
+        # Assign the side effect
+        mock_cache_instance.update_cache.side_effect = update_cache_side_effect
+
+        # Initial update: market not in-play
+        update_pre_inplay = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": False, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_pre_inplay, 1000)
+        self.assertTrue(active)
+        self.assertNotIn("1.23", self.stream.inplay_publish_times)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_pre_inplay[0], 1000, active=True
+        )
+
+        # Market goes in-play at publish_time=2000 ms
+        update_inplay_start = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_start, 2000)
+        self.assertTrue(active)
+        self.assertIn("1.23", self.stream.inplay_publish_times)
+        self.assertEqual(self.stream.inplay_publish_times["1.23"], 2000)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_start[0], 2000, active=True
+        )
+
+        # Update within max_inplay_seconds (9 seconds after in-play)
+        update_inplay_within_limit = [
+            {
+                "id": "1.23",
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_within_limit, 11000)
+        self.assertTrue(active)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_within_limit[0], 11000, active=True
+        )
+
+        # Update after max_inplay_seconds (10.001 seconds after in-play)
+        update_inplay_exceeded_limit = [
+            {
+                "id": "1.23",
+                "marketDefinition": {"status": "OPEN", "inPlay": True, "runners": []},
+            }
+        ]
+        active = self.stream._process(update_inplay_exceeded_limit, 12001)
+        self.assertFalse(active)
+        mock_cache_instance.update_cache.assert_called_with(
+            update_inplay_exceeded_limit[0], 12001, active=False
+        )
+
 
 class TestFlumineRaceStream(unittest.TestCase):
     def setUp(self) -> None:
@@ -1061,6 +1165,55 @@ class TestSimulatedOrderStream(unittest.TestCase):
         mock_market.blotter.client_orders.return_value = [order_one]
         self.stream.flumine.markets = [mock_market, mock.Mock(closed=True)]
         self.assertEqual(self.stream._get_current_orders(), [order_one])
+
+
+class TestBetdaqOrderPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.BetdaqOrderPolling(self.mock_flumine, 123)
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertIsNone(self.stream.market_filter)
+        self.assertIsNone(self.stream.market_data_filter)
+        self.assertIsNone(self.stream.streaming_timeout)
+        self.assertIsNone(self.stream.conflate_ms)
+        self.assertIsNone(self.stream._stream)
+        self.assertEqual(betdaqorderpolling.START_DELAY, 2)
+        self.assertEqual(betdaqorderpolling.SNAP_DELTA, 2)
+
+    # def test_run(self):
+    #     pass
+
+    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders(self, mock_event):
+        current_orders = [{"sequence_number": 1}]
+        sequence_number = 0
+        self.stream.flumine.markets.live_orders = False
+        self.assertEqual(
+            self.stream._process_current_orders(current_orders, sequence_number), 1
+        )
+        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
+
+    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders_no_live(self, mock_event):
+        current_orders = []
+        sequence_number = 0
+        self.stream.flumine.markets.live_orders = True
+        self.assertEqual(
+            self.stream._process_current_orders(current_orders, sequence_number), 0
+        )
+        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
 
 
 class TestSportsDataStream(unittest.TestCase):

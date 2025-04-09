@@ -61,9 +61,9 @@ class ExampleStrategy(BaseStrategy):
         )
         for fixture in active_fixtures:
             # get markets
-            context["active_markets"][
-                fixture.fixture_id
-            ] = client.betting.active_markets(fixture_id=fixture.fixture_id)
+            context["active_markets"][fixture.fixture_id] = (
+                client.betting.active_markets(fixture_id=fixture.fixture_id)
+            )
             # get the selections and prices for WIN market
             fixture_selection_prices = client.betting.selections_for_market(
                 fixture_id=fixture.fixture_id,

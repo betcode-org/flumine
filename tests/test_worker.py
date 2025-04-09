@@ -197,7 +197,9 @@ class WorkersTest(unittest.TestCase):
         mock_flumine = mock.Mock(clients=[mock_client])
         worker.poll_account_balance(mock_context, mock_flumine)
         mock_client.update_account_details.assert_called_with()
-        mock_events.BalanceEvent.assert_called_with(mock_client)
+        mock_events.BalanceEvent.assert_called_with(
+            mock_client, exchange=mock_client.EXCHANGE
+        )
         mock_flumine.log_control.assert_called_with(mock_events.BalanceEvent())
 
     @mock.patch("flumine.worker._get_cleared_market")
@@ -410,3 +412,30 @@ class WorkersTest(unittest.TestCase):
             group_by="MARKET",
             customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test_betdaq_settled_orders(self, mock_events, mock_config):
+        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        mock_client.betting_client.betting.get_orders_diff.return_value = [
+            {"status": "Settled", "sequence_number": 1},
+            {"status": "Cancelled", "sequence_number": 2},
+            {"status": "Void", "sequence_number": 3},
+            {"status": "Unmatched", "sequence_number": 4},
+        ]
+        mock_flumine = mock.Mock(clients=[mock_client])
+        context = {}
+        worker.betdaq_settled_orders(context, mock_flumine)
+        mock_client.betting_client.betting.get_orders_diff.assert_called_with(0)
+        mock_events.ClearedOrdersEvent.assert_called_with(
+            [
+                {"status": "Settled", "sequence_number": 1},
+                {"status": "Cancelled", "sequence_number": 2},
+                {"status": "Void", "sequence_number": 3},
+            ],
+            exchange=ExchangeType.BETDAQ,
+        )
+        mock_flumine.log_control.assert_called_with(
+            mock_events.ClearedOrdersEvent.return_value
+        )
+        self.assertEqual(context, {mock_client: 4})

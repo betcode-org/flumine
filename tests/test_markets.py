@@ -209,7 +209,9 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
         mock_transaction.assert_called_with(client=mock_order.client)
-        mock_transaction.update_order.assert_called_with(mock_order, "test", True)
+        mock_transaction.update_order.assert_called_with(
+            mock_order, "test", 0.0, None, None, None, None, None, None, True
+        )
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_replace_order(self, mock_transaction):
@@ -221,6 +223,7 @@ class MarketTest(unittest.TestCase):
 
     def test_event(self):
         self.market.market_catalogue.event.id = 12
+        self.market.market_catalogue.event_type.id = "7"
         self.market.market_book.market_definition.market_time = 12
         self.market.flumine.markets.events = defaultdict(list)
         self.assertEqual(self.market.event, {})
@@ -230,12 +233,59 @@ class MarketTest(unittest.TestCase):
         m_three = mock.Mock(market_type=3, event_id=123, market_start_datetime=12)
         m_four = mock.Mock(market_type=1, event_id=12, market_start_datetime=12)
         m_five = mock.Mock(market_type=2, event_id=12, market_start_datetime=13)
+        m_six = mock.Mock(
+            market_type=2, event_id=13, market_start_datetime=13
+        )  # different event
         self.market.flumine.markets.events[m_one.event_id].append(m_one)
         self.market.flumine.markets.events[m_two.event_id].append(m_two)
         self.market.flumine.markets.events[m_three.event_id].append(m_three)
         self.market.flumine.markets.events[m_four.event_id].append(m_four)
         self.market.flumine.markets.events[m_five.event_id].append(m_five)
+        self.market.flumine.markets.events[m_six.event_id].append(m_six)
         self.assertEqual(self.market.event, {1: [m_one, m_four], 2: [m_two]})
+
+    def test_event_filters(self):
+        self.market.market_catalogue.event.id = 12
+        self.market.market_catalogue.event_type.id = "1"
+        self.market.market_book.market_definition.market_time = 12
+        self.market.flumine.markets.events = defaultdict(list)
+        self.assertEqual(self.market.event, {})
+
+        m_one = mock.Mock(
+            market_type=1, event_id=12, event_type_id="1", market_start_datetime=12
+        )
+        m_two = mock.Mock(
+            market_type=2, event_id=12, event_type_id="1", market_start_datetime=12
+        )
+        m_three = mock.Mock(
+            market_type=3, event_id=123, event_type_id="1", market_start_datetime=12
+        )
+        m_four = mock.Mock(
+            market_type=2, event_id=12, event_type_id="1", market_start_datetime=13
+        )
+        m_five = mock.Mock(
+            market_type=1, event_id=13, event_type_id="1", market_start_datetime=13
+        )
+        m_six = mock.Mock(
+            market_type=2, event_id=13, event_type_id="3", market_start_datetime=13
+        )
+        self.market.flumine.markets.events[m_one.event_id].append(m_one)
+        self.market.flumine.markets.events[m_two.event_id].append(m_two)
+        self.market.flumine.markets.events[m_three.event_id].append(m_three)
+        self.market.flumine.markets.events[m_four.event_id].append(m_four)
+        self.market.flumine.markets.events[m_five.event_id].append(m_five)
+        self.market.flumine.markets.events[m_six.event_id].append(m_six)
+        self.assertEqual(self.market.event, {1: [m_one], 2: [m_two, m_four]})
+
+        self.market.market_catalogue.event.id = 13
+        self.market.market_catalogue.event_type.id = "3"
+        self.market.market_book.market_definition.market_time = 12
+        self.market.flumine.markets.events = defaultdict(list)
+        m_six = mock.Mock(
+            market_type=2, event_id=13, event_type_id="3", market_start_datetime=13
+        )
+        self.market.flumine.markets.events[m_six.event_id].append(m_six)
+        self.assertEqual(self.market.event, {2: [m_six]})
 
     def test_event_type_id_mc(self):
         mock_market_catalogue = mock.Mock()
@@ -268,6 +318,12 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = mock_market_catalogue
         self.assertEqual(
             self.market.market_type, mock_market_catalogue.description.market_type
+        )
+        self.market.market_catalogue.description = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.market_type, mock_market_book.market_definition.market_type
         )
 
     def test_market_type_mb(self):
@@ -382,6 +438,12 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = mock_market_catalogue
         self.assertEqual(
             self.market.race_type, mock_market_catalogue.description.race_type
+        )
+        self.market.market_catalogue.description = None
+        mock_market_book = mock.Mock()
+        self.market.market_book = mock_market_book
+        self.assertEqual(
+            self.market.race_type, mock_market_book.market_definition.race_type
         )
 
     def test_race_type_mb(self):

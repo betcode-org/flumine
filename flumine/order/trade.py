@@ -7,8 +7,13 @@ from typing import Union, Type, Optional
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
-from .order import BetfairOrder
-from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder
+from .order import BetfairOrder, BetdaqOrder
+from .ordertype import (
+    LimitOrder,
+    LimitOnCloseOrder,
+    MarketOnCloseOrder,
+    BetdaqLimitOrder,
+)
 from ..exceptions import OrderError
 from .. import config
 
@@ -31,6 +36,7 @@ class Trade:
         notes: collections.OrderedDict = None,  # trade notes (e.g. triggers/market state)
         place_reset_seconds: float = 0.0,  # seconds to wait since `runner_context.place` before allowing another order
         reset_seconds: float = 0.0,  # seconds to wait since `runner_context.reset` before allowing another order
+        pending_orders: bool = False,  # set to True if subsequent orders will be placed before completion
     ):
         self.id = str(uuid.uuid4())
         self.market_id = market_id
@@ -42,7 +48,7 @@ class Trade:
         self.place_reset_seconds = place_reset_seconds
         self.reset_seconds = reset_seconds
         self.orders = []  # all orders linked to trade
-        self.offset_orders = []  # pending offset orders once initial order has matched
+        self.pending_orders = pending_orders
         self.status_log = []
         self.status = TradeStatus.LIVE
         self.date_time_created = datetime.datetime.utcnow()
@@ -70,9 +76,8 @@ class Trade:
     def complete(self) -> bool:
         if self.status != TradeStatus.LIVE:
             return False
-        for order in self.offset_orders:
-            if not order.complete:
-                return False
+        if self.pending_orders:
+            return False
         for order in self.orders:
             if not order.complete:
                 return False
@@ -168,6 +173,31 @@ class Trade:
         self.orders.append(order)
         return order
 
+    def create_betdaq_order(
+        self,
+        side: str,
+        order_type: Union[BetdaqLimitOrder],
+        order: Type[BetdaqOrder] = BetdaqOrder,
+        sep: str = config.order_sep,
+        context: dict = None,
+        notes: collections.OrderedDict = None,
+    ) -> BetdaqOrder:
+        if order_type.EXCHANGE != order.EXCHANGE:
+            raise OrderError(
+                "Incorrect order/order_type exchange combination for trade.create_order"
+            )
+        order = order(
+            trade=self,
+            side=side,
+            order_type=order_type,
+            handicap=self.handicap,
+            sep=sep,
+            context=context,
+            notes=notes,
+        )
+        self.orders.append(order)
+        return order
+
     @property
     def elapsed_seconds(self) -> Optional[float]:
         for order in self.orders:
@@ -185,7 +215,7 @@ class Trade:
             "place_reset_seconds": self.place_reset_seconds,
             "reset_seconds": self.reset_seconds,
             "orders": [o.id for o in self.orders],
-            "offset_orders": [o.id for o in self.offset_orders],
+            "pending_orders": self.pending_orders,
             "notes": self.notes_str,
             "market_notes": self.market_notes,
             "status": self.status.value if self.status else None,

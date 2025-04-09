@@ -13,6 +13,7 @@ from flumine.order.order import (
     VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS,
     LIVE_STATUS,
     COMPLETE_STATUS,
+    BetdaqOrder,
 )
 from flumine.exceptions import OrderUpdateError
 
@@ -58,6 +59,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertIsNone(self.order.market_version)
         self.assertIsNone(self.order.async_)
         self.assertIsNotNone(self.order.date_time_created)
+        self.assertIsNotNone(self.order.date_time_status_update)
         self.assertIsNone(self.order.date_time_execution_complete)
         self.assertFalse(self.order.simulated)
         self.assertFalse(self.order._simulated)
@@ -88,15 +90,20 @@ class BaseOrderTest(unittest.TestCase):
                 x.append(o.id)
         self.assertEqual(len(x), 0)
 
+    @mock.patch("flumine.order.order.datetime")
     @mock.patch("flumine.order.order.BaseOrder._is_complete")
     @mock.patch("flumine.order.order.BaseOrder.info")
-    def test__update_status(self, mock_info, mock__is_complete):
+    def test__update_status(self, mock_info, mock__is_complete, mock_datetime):
         self.mock_trade.complete = True
         self.order._update_status(OrderStatus.EXECUTION_COMPLETE)
         self.assertEqual(self.order.status_log, [OrderStatus.EXECUTION_COMPLETE])
         self.assertEqual(self.order.status, OrderStatus.EXECUTION_COMPLETE)
         self.mock_trade.complete_trade.assert_called()
         mock__is_complete.assert_called()
+        self.assertEqual(
+            self.order.date_time_status_update,
+            mock_datetime.datetime.utcnow.return_value,
+        )
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
     def test_placing(self, mock__update_status):
@@ -262,6 +269,9 @@ class BaseOrderTest(unittest.TestCase):
         self.order.responses = mock_responses
         self.order.date_time_execution_complete = datetime.datetime.utcnow()
         self.assertGreaterEqual(self.order.elapsed_seconds_executable, 0)
+
+    def test_elapsed_seconds_status_update(self):
+        self.assertGreaterEqual(self.order.elapsed_seconds_status_update, 0)
 
     def test_profit(self):
         self.order._simulated = True
@@ -610,6 +620,177 @@ class BetfairOrderTest(unittest.TestCase):
     def test_set_invalid_sep(self):
         with self.assertRaises(ValueError):
             self.order.sep = "@"
+
+
+class BetdaqOrderTest(unittest.TestCase):
+    def setUp(self) -> None:
+        mock_client = mock.Mock(paper_trade=False)
+        self.mock_trade = mock.Mock(
+            client=mock_client, market_id="1.1", selection_id=123, info={}
+        )
+        self.mock_status = mock.Mock()
+        self.mock_order_type = mock.Mock(info={}, size=2.0, liability=2.0)
+        self.order = BetdaqOrder(self.mock_trade, "BACK", self.mock_order_type)
+
+    def test_init(self):
+        self.assertEqual(self.order.EXCHANGE, ExchangeType.BETDAQ)
+
+    @mock.patch("flumine.order.order.BetdaqOrder.placing")
+    def test_place(self, mock_placing):
+        self.order.place(123, 456, False)
+        self.assertFalse(self.order._simulated)
+        self.assertEqual(self.order.publish_time, 123)
+        self.assertEqual(self.order.market_version, 456)
+        self.assertFalse(self.order.async_)
+        mock_placing.assert_called_with()
+
+    def test_create_place_instruction(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.assertEqual(
+            self.order.create_place_instruction(),
+            self.mock_order_type.place_instruction.return_value,
+        )
+
+    @mock.patch("flumine.order.order.BetdaqOrder.cancelling")
+    def test_cancel(self, mock_cancelling):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.cancel()
+        mock_cancelling.assert_called_with()
+
+    def test_cancel_size_reduction(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
+    def test_cancel_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
+    def test_cancel_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
+    def test_create_cancel_instruction(self):
+        self.assertEqual(
+            self.order.create_cancel_instruction(),
+            self.order.bet_id,
+        )
+
+    @mock.patch("flumine.order.order.BetdaqOrder.updating")
+    def test_update(self, mock_updating):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.update(
+            size_delta=-1,
+            new_price=2,
+            expected_selection_reset_count=3,
+            expected_withdrawal_sequence_number=4,
+            cancel_on_in_running=False,
+            cancel_if_selection_reset=False,
+            set_to_be_sp_if_unmatched=True,
+        )
+        mock_updating.assert_called_with()
+        self.assertEqual(
+            self.order.update_data,
+            {
+                "BetId": 1234,
+                "CancelIfSelectionReset": False,
+                "CancelOnInRunning": False,
+                "DeltaStake": -1,
+                "ExpectedSelectionResetCount": 3,
+                "ExpectedWithdrawalSequenceNumber": 4,
+                "Price": 2,
+                "SetToBeSPIfUnmatched": True,
+            },
+        )
+
+    def test_update_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    def test_update_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    def test_create_update_instruction(self):
+        self.order.update_data = {
+            "BetId": 123,
+            "DeltaStake": 12,
+            "Price": 34,
+            "ExpectedSelectionResetCount": None,
+            "ExpectedWithdrawalSequenceNumber": None,
+        }
+        self.assertEqual(
+            self.order.create_update_instruction(),
+            {
+                "BetId": 123,
+                "DeltaStake": 12,
+                "Price": 34,
+            },
+        )
+
+    def test__polarity(self):
+        self.assertEqual(self.order._polarity, 1)
+
+    def test_average_price_matched(self):
+        self.assertEqual(self.order.average_price_matched, 0)
+        mock_current_order = {"matched_price": 12.3}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.average_price_matched, 12.3)
+
+    def test_size_matched(self):
+        self.assertEqual(self.order.size_matched, 0)
+        mock_current_order = {"matched_size": 12}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_matched, 12)
+
+    def test_size_remaining(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.size = 0
+        self.mock_order_type.bet_target_size = 0
+        self.assertEqual(self.order.size_remaining, 0)
+        mock_current_order = {"remaining_size": 34}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 34)
+        mock_current_order = {"size_remaining": 43}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 43)
+        mock_current_order = {"status": "Cancelled"}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 0.0)
+
+    def test_size_cancelled(self):
+        self.assertEqual(self.order.size_cancelled, 0)
+
+    def test_size_lapsed(self):
+        self.assertEqual(self.order.size_lapsed, 0)
+
+    def test_size_voided(self):
+        self.assertEqual(self.order.size_voided, 0)
+
+    def test_current_order(self):
+        self.assertEqual(self.order.current_order, {})
+        self.order.responses.place_response = {"tee": "way"}
+        self.assertEqual(self.order.current_order, {"tee": "way"})
+        self.order.responses.current_order = {"D": "RIZZ"}
+        self.assertEqual(self.order.current_order, {"D": "RIZZ"})
 
 
 class IsValidCustomerOrderRefTestCase(unittest.TestCase):

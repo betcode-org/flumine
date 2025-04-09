@@ -10,6 +10,20 @@ class UtilsTest(unittest.TestCase):
     def setUp(self) -> None:
         logging.disable(logging.CRITICAL)
 
+    def test_defaults(self):
+        self.assertEqual(len(utils.CUTOFFS), 10)
+        self.assertEqual(utils.MIN_PRICE, 1.01)
+        self.assertEqual(utils.MAX_PRICE, 1000)
+        self.assertEqual(len(utils.BETDAQ_CUTOFFS), 7)
+        self.assertEqual(utils.BETDAQ_MIN_PRICE, 1.01)
+        self.assertEqual(utils.BETDAQ_MAX_PRICE, 1000)
+        self.assertEqual(utils.STRATEGY_NAME_HASH_LENGTH, 13)
+        self.assertEqual(len(utils.PRICES), 350)
+        self.assertEqual(len(utils.PRICES), len(utils.PRICES_FLOAT))
+        self.assertEqual(len(utils.FINEST_PRICES), 99900)
+        self.assertEqual(len(utils.BETDAQ_PRICES), 565)
+        self.assertEqual(len(utils.BETDAQ_PRICES), len(utils.BETDAQ_PRICES_FLOAT))
+
     def test_detect_file_type(self):
         self.assertEqual(utils.detect_file_type("hello/world"), "UNKNOWN")
         self.assertEqual(utils.detect_file_type("hello/12345678.gz"), "EVENT")
@@ -124,6 +138,18 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.price_ticks_away(1000, 5), 1000)
         with self.assertRaises(ValueError):
             utils.price_ticks_away(999, -1)
+
+    def test_price_ticks_away_betdaq(self):
+        prices = utils.BETDAQ_PRICES_FLOAT
+        self.assertEqual(utils.price_ticks_away(1.01, 1, prices), 1.02)
+        self.assertEqual(utils.price_ticks_away(1.01, 5, prices), 1.06)
+        self.assertEqual(utils.price_ticks_away(500, 1, prices), 505)
+        self.assertEqual(utils.price_ticks_away(500, -1, prices), 495)
+        self.assertEqual(utils.price_ticks_away(1.01, -1, prices), 1.01)
+        self.assertEqual(utils.price_ticks_away(1.10, -10, prices), 1.01)
+        self.assertEqual(utils.price_ticks_away(1000, 5, prices), 1000)
+        with self.assertRaises(ValueError):
+            utils.price_ticks_away(999, -1, prices)
 
     def test_calculate_matched_exposure(self):
         self.assertEqual(utils.calculate_matched_exposure([], []), (0.0, 0.0))
@@ -375,3 +401,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(
             utils.create_time(123, "12345.1310"), datetime.datetime(1970, 1, 1, 13, 10)
         )
+
+    @mock.patch("betfairlightweight.compat.json.loads", return_value={"mc": [{}]})
+    def test_get_file_md_missing_market_definition(self, mock_loads):
+        self.assertIsNone(utils.get_file_md("tests/resources/PRO-1.170258213"))

@@ -487,13 +487,13 @@ class SimulatedOrder:
             for update in runner.ex.available_to_back:
                 if update["price"] >= price:
                     self._calculate_process_available(
-                        publish_time, update["price"], update["size"]
+                        publish_time, price, update["size"]
                     )
         elif side == "LAY":
             for update in runner.ex.available_to_lay:
                 if update["price"] <= price:
                     self._calculate_process_available(
-                        publish_time, update["price"], update["size"]
+                        publish_time, price, update["size"]
                     )
 
     def _calculate_process_available(

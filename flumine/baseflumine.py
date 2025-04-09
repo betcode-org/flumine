@@ -9,13 +9,14 @@ from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
-from .clients import Clients, BaseClient
+from .clients import Clients, BaseClient, ExchangeType
 from .markets.markets import Markets
 from .markets.market import Market
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
-from .order.process import process_current_orders
+from .execution.betdaqexecution import BetdaqExecution
+from .order.process import process_current_orders, process_betdaq_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
 from .controls.tradingcontrols import (
     OrderValidation,
@@ -59,6 +60,7 @@ class BaseFlumine:
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
         self.betfair_execution = BetfairExecution(self)
+        self.betdaq_execution = BetdaqExecution(self, 1)
 
         # add client
         if client:
@@ -280,9 +282,22 @@ class BaseFlumine:
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
         if event.event:
-            process_current_orders(
-                self.markets, self.strategies, event, self.log_control, self._add_market
-            )
+            if event.exchange == ExchangeType.BETFAIR:
+                process_current_orders(
+                    self.markets,
+                    self.strategies,
+                    event,
+                    self.log_control,
+                    self._add_market,
+                )
+            elif event.exchange == ExchangeType.BETDAQ:
+                process_betdaq_current_orders(
+                    self.markets,
+                    self.strategies,
+                    event,
+                    self.log_control,
+                    self._add_market,
+                )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:
@@ -338,7 +353,7 @@ class BaseFlumine:
             market.blotter.process_closed_market(market, event.event)
 
         for strategy in self.strategies:
-            if stream_id in strategy.stream_ids:
+            if stream_id in strategy.stream_ids or strategy.market_filter == {}:
                 strategy.process_closed_market(market, event.event)
 
         if recorder is False and self.clients.simulated:
@@ -376,17 +391,39 @@ class BaseFlumine:
             self._remove_market(market, clear=False)
 
     def _process_cleared_orders(self, event):
-        market_id = event.event.market_id
-        market = self.markets.markets.get(market_id)
-        if market is None:
-            logger.warning(
-                "Market %s not present when clearing" % market_id,
-                extra={"market_id": market_id, **self.info},
-            )
-            return
+        if event.exchange == ExchangeType.BETFAIR:
+            market_id = event.event.market_id
+            market = self.markets.markets.get(market_id)
+            if market is None:
+                logger.warning(
+                    "Market %s not present when clearing" % market_id,
+                    extra={"market_id": market_id, **self.info},
+                )
+                return
 
-        meta_orders = market.blotter.process_cleared_orders(event.event)
-        self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
+            meta_orders = market.blotter.process_cleared_orders(event.event)
+        elif event.exchange == ExchangeType.BETDAQ:
+            market_id = "betdaq"
+            meta_orders = []
+            for cleared_order in event.event:
+                ref = cleared_order["customer_reference"]
+                # check every market for the order
+                for market in self.markets:
+                    try:
+                        order = market.blotter[str(ref)]
+                    except KeyError:
+                        continue
+                    if order:
+                        order.cleared_order = cleared_order
+                        meta_orders.append(order)
+                        break
+                else:
+                    continue
+        else:
+            logger.warning("Unknown exchange in '_process_cleared_orders'")
+            return
+        if meta_orders:
+            self.log_control(events.ClearedOrdersMetaEvent(meta_orders))
         logger.info(
             "Market cleared",
             extra={
@@ -464,6 +501,7 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
+        self.betdaq_execution.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:

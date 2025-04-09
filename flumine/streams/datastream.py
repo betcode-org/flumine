@@ -198,9 +198,11 @@ class OrderDataStream(DataStream):
         try:
             self.stream_id = self._stream.subscribe_to_orders(
                 order_filter=filters.streaming_order_filter(
-                    customer_strategy_refs=[config.customer_strategy_ref]
-                    if config.customer_strategy_ref
-                    else None,
+                    customer_strategy_refs=(
+                        [config.customer_strategy_ref]
+                        if config.customer_strategy_ref
+                        else None
+                    ),
                     partition_matched_by_strategy_ref=True,
                     include_overall_position=False,
                 ),
