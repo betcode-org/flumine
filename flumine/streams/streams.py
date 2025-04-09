@@ -29,6 +29,7 @@ class Streams:
             market_types = strategy.market_filter.get("market_types")
             country_codes = strategy.market_filter.get("country_codes")
             event_processing = strategy.market_filter.get("event_processing", False)
+            event_groups = strategy.market_filter.get("event_groups", {})
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets and events:
@@ -67,6 +68,7 @@ class Streams:
                             market,
                             market_definition,
                             event_processing,
+                            event_groups,
                             **listener_kwargs,
                         )
                         strategy.streams.append(stream)
@@ -167,12 +169,20 @@ class Streams:
         market: str,
         market_definition: Optional[MarketDefinition],
         event_processing: bool,
+        event_groups: dict,
         **listener_kwargs,
     ) -> HistoricalStream:
         for stream in self:
+            # Get the expected event group of a stream considering its event id and group mapping
+            event_group = (
+                event_groups.get(stream.event_id, stream.event_id)
+                if event_processing
+                else None
+            )
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
+                and stream.event_group == event_group
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
@@ -181,6 +191,9 @@ class Streams:
             event_id = getattr(market_definition, "event_id", None)
             if event_processing and event_id is None:
                 logger.warning("EventId not found for market %s" % market)
+            event_group = (
+                event_groups.get(event_id, event_id) if event_processing else None
+            )  # Event ID by default, None if event_processing is False
             logger.info(
                 "Creating new %s (%s) for strategy %s",
                 HistoricalStream.__name__,
@@ -190,6 +203,7 @@ class Streams:
                     "strategy": strategy,
                     "stream_id": stream_id,
                     "market_filter": market,
+                    "event_group": event_group,
                     "event_id": event_id,
                     "event_processing": event_processing,
                 },
@@ -203,6 +217,7 @@ class Streams:
                 conflate_ms=strategy.conflate_ms,
                 output_queue=False,
                 event_processing=event_processing,
+                event_group=event_group,
                 event_id=event_id,
                 **listener_kwargs,
             )

@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, Optional, List
+from typing import Iterable, Optional, List, TYPE_CHECKING
 from collections import defaultdict
 
 from ..order.ordertype import OrderTypes
@@ -9,6 +9,10 @@ from ..utils import (
     STRATEGY_NAME_HASH_LENGTH,
 )
 from ..order.order import BaseOrder, OrderStatus
+
+if TYPE_CHECKING:
+    # Trade cannot be imported at runtime due to a circular import
+    from flumine.order.trade import Trade
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +48,7 @@ class Blotter:
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade: [Order,]}
         self._bet_id_lookup = {}  # {Order.bet_id: Order, }
+        self._trade_lookup = {}  # {Trade.id: Trade}
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
         self._strategy_selection_orders = defaultdict(list)
@@ -55,6 +60,10 @@ class Blotter:
             return self._bet_id_lookup[bet_id]
         except KeyError:
             return
+
+    def get_trade(self, trade_id: str) -> Optional["Trade"]:
+        """Returns the Trade with the given trade_id if one exists, else None."""
+        return self._trade_lookup.get(trade_id)
 
     def strategy_trades(
         self,
@@ -305,6 +314,7 @@ class Blotter:
         self.active = True
         self._orders[customer_order_ref] = order
         self._bet_id_lookup[order.bet_id] = order
+        self._trade_lookup[order.trade.id] = order.trade
         self._live_orders.append(order)
         strategy = order.trade.strategy
         self._trades[order.trade].append(order)

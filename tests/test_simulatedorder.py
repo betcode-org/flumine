@@ -210,6 +210,23 @@ class SimulatedOrderTest(unittest.TestCase):
             self.simulated.place(mock_order_package, mock_market_book, {}, 1)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_fill_or_kill_invalid_min_fill_size(self, mock__get_runner):
+        mock_client = mock.Mock(best_price_execution=False)
+        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_market_book = mock.Mock(status="OPEN")
+        instruction = self.mock_betfair_place_instruction_fill_or_kill(
+            size=1, min_fill_size=2
+        )
+        resp = self.simulated.place(
+            mock_order_package, mock_market_book, instruction, 1
+        )
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "INVALID_MIN_FILL_SIZE")
+        self.assertEqual(self.simulated.matched, [])
+        self.assertEqual(self.simulated.size_cancelled, 1)
+        self.assertEqual(self.simulated.size_remaining, 0)
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_fill_or_kill_matched(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=True)
         mock_order_package = mock.Mock(client=mock_client, market_version=None)
@@ -373,9 +390,9 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_market_book = mock.Mock(status="OPEN", version=124)
         resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
         self.assertEqual(resp.status, "FAILURE")
-        self.assertEqual(resp.error_code, "ERROR_IN_ORDER")
+        self.assertEqual(resp.error_code, "BET_TAKEN_OR_LAPSED")
         self.assertEqual(self.simulated.matched, [])
-        self.assertEqual(self.simulated.size_voided, 2)
+        self.assertEqual(self.simulated.size_lapsed, 2)
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_unmatched(self, mock__get_runner):

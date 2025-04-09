@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+2.8.2 (2025-04-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Add get_trade(trade_id) method to blotter (@mzaja)
+- Feature/parallel multi event simulation (@mzaja)
+
+**Bug Fixes**
+
+- #702 reject invalid min fill size (@mzaja)
+- #739 reset size remaining on failed order placement (@mzaja)
+
 2.8.1 (2025-04-01)
 +++++++++++++++++++
 
