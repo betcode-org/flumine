@@ -55,12 +55,12 @@ class FlumineSimulationTest(unittest.TestCase):
         mock_events,
         mock__process_end_flumine,
     ):
-        mock_stream_one = mock.Mock(event_processing=True, event_id=123)
+        mock_stream_one = mock.Mock(event_processing=True, event_group="123")
         mock_market_book_one = mock.Mock(publish_time_epoch=321)
         mock_gen_one = mock.Mock(return_value=iter([[mock_market_book_one]]))
         mock_stream_one.create_generator.return_value = mock_gen_one
 
-        mock_stream_two = mock.Mock(event_processing=True, event_id=123)
+        mock_stream_two = mock.Mock(event_processing=True, event_group="123")
         mock_market_book_two = mock.Mock(publish_time_epoch=123)
         mock_gen_two = mock.Mock(return_value=iter([[mock_market_book_two]]))
         mock_stream_two.create_generator.return_value = mock_gen_two
