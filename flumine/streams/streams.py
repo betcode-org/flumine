@@ -292,6 +292,7 @@ class Streams:
                 # wait for successful start
                 while not stream.custom and not stream.stream_running:
                     time.sleep(0.25)
+                time.sleep(0.5)  # prevent an SSL lock
 
     def stop(self) -> None:
         for stream in self:

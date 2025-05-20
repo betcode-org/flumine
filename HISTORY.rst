@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.8.3 (2025-05-20)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent SSL Lock on streams on initial start
+
 2.8.2 (2025-04-09)
 +++++++++++++++++++
 
