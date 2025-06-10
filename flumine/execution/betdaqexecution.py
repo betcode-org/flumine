@@ -18,7 +18,7 @@ class BetdaqExecution(BaseExecution):
     BETDAQ execution for place, cancel and update, default
     single thread pool:
 
-    'A Punter can not issue more than one order API (PlaceSimgleOrder,
+    'A Punter can not issue more than one order API (PlaceSingleOrder,
     PlaceGroupOrder or ChangeOrder) at the same time'
     """
 
