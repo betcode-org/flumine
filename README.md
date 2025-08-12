@@ -27,7 +27,7 @@ flumine is an open-source, event-based trading framework for sports betting, des
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 
-Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
+Tested on Python 3.9, 3.10, 3.11 and 3.12.
 
 ## installation
 
@@ -35,7 +35,7 @@ Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 $ pip install flumine
 ```
 
-flumine requires Python 3.8+
+flumine requires Python 3.9+
 
 ## setup
 
