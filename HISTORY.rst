@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+2.9.0 (2025-08-12)
++++++++++++++++++++
+
+**Libraries**
+
+- Remove python 3.8
+- betfairlightweight upgraded to 2.21.0
+- black upgraded to 25.1.0
+
 2.8.3 (2025-05-20)
 +++++++++++++++++++
 
