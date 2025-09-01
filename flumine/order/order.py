@@ -11,7 +11,13 @@ import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import ExchangeType
-from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
+from .ordertype import (
+    LimitOrder,
+    LimitOnCloseOrder,
+    MarketOnCloseOrder,
+    OrderTypes,
+    BetdaqLimitOrder,
+)
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 from ..simulation.simulatedorder import SimulatedOrder
@@ -61,7 +67,9 @@ class BaseOrder:
         self,
         trade,
         side: str,
-        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        order_type: Union[
+            LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, BetdaqLimitOrder
+        ],
         handicap: float = 0,
         sep: str = config.order_sep,
         context: dict = None,

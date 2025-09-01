@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.9.1 (2025-09-01)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ cleanup stolen from @lunswor
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.21.1
+- betdaq-retail upgraded to 0.2.0
+
 2.9.0 (2025-08-12)
 +++++++++++++++++++
 
