@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "betfairlightweight==2.21.1",
+    "betfairlightweight==2.21.2",
     "tenacity>=7.0.0,<8.3.1",
     "python-json-logger==2.0.7",
     "requests",
@@ -33,7 +33,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 speed = [
-    "betfairlightweight[speed]==2.21.1"
+    "betfairlightweight[speed]==2.21.2"
 ]
 test = [
     "black==25.1.0",
