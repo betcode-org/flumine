@@ -1,17 +1,11 @@
 import os
-import socket
 
 simulated = False
 simulated_strategy_isolation = True
 simulation_available_prices = False
 
-instance_id = None  # instance id (e.g. AWS ec2 instanceId)
-
-customer_strategy_ref = socket.gethostname()[
-    :15
-]  # ie. docker container id (used as order customerStrategyRefs)
-
-hostname = customer_strategy_ref
+# overrides even when value passed to Transaction / market.place_order
+customer_strategy_ref = None
 
 process_id = os.getpid()  # process id of app
 

@@ -170,6 +170,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=False,
             client=self.market.flumine.clients.get_default(),
+            customer_strategy_ref=None,
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -182,6 +183,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=True,
             client=self.market.flumine.clients.get_default(),
+            customer_strategy_ref=None,
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -189,10 +191,34 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
+        mock_order.trade.strategy = "test"
         self.assertTrue(
-            self.market.place_order(mock_order, 2, False, force=True, client=1)
+            self.market.place_order(
+                mock_order,
+                2,
+                False,
+                force=True,
+                client=1,
+            )
         )
-        mock_transaction.assert_called_with(client=1)
+        mock_transaction.assert_called_with(client=1, customer_strategy_ref="test")
+        mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
+
+    @mock.patch("flumine.markets.market.Market.transaction")
+    def test_place_order_ref(self, mock_transaction):
+        mock_transaction.return_value.__enter__.return_value = mock_transaction
+        mock_order = mock.Mock()
+        self.assertTrue(
+            self.market.place_order(
+                mock_order,
+                2,
+                False,
+                force=True,
+                client=1,
+                customer_strategy_ref="dinger",
+            )
+        )
+        mock_transaction.assert_called_with(client=1, customer_strategy_ref="dinger")
         mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")

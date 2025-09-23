@@ -45,7 +45,7 @@ This is created on a per market basis when simulating.
 
 ### Order Stream
 
-Subscribes to all orders per running instance using the `config.customer_strategy_ref`
+Subscribes to all orders per account or per `config.customer_strategy_ref` if provided
 
 ## Custom Streams
 
@@ -130,11 +130,7 @@ Defaults to True to match orders per strategy, when False prevents double counti
 
 When True will simulate matches against available prices after initial execution, note this will double count liquidity.
 
-#### instance_id
-
-Store server id or similar (e.g. AWS ec2 instanceId)
-
-#### customer_strategy_ref / hostname
+#### customer_strategy_ref
 
 Used as customerStrategyRefs so that only orders created by the running instance are returned.
 
