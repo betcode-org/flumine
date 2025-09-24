@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.10.0 (2025-09-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Dynamic customer strategy ref *Breaking Change*
+
 2.9.2 (2025-09-18)
 +++++++++++++++++++
 

@@ -12,7 +12,9 @@ class TransactionTest(unittest.TestCase):
         mock_blotter = {}
         self.mock_market = mock.Mock(blotter=mock_blotter)
         self.mock_client = mock.Mock(trading_controls=[], EXCHANGE=ExchangeType.BETFAIR)
-        self.transaction = Transaction(self.mock_market, 1, False, self.mock_client)
+        self.transaction = Transaction(
+            self.mock_market, 1, False, self.mock_client, customer_strategy_ref="dotty"
+        )
 
     def test_init(self):
         self.assertEqual(self.transaction.market, self.mock_market)
@@ -24,6 +26,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(self.transaction._pending_cancel, [])
         self.assertEqual(self.transaction._pending_update, [])
         self.assertEqual(self.transaction._pending_replace, [])
+        self.assertEqual(self.transaction.customer_strategy_ref, "dotty")
 
     @mock.patch("flumine.execution.transaction.get_market_notes")
     @mock.patch(
@@ -406,6 +409,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
                 call(
                     client=self.transaction._client,
@@ -415,6 +419,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=123,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
                 call(
                     client=self.transaction._client,
@@ -424,6 +429,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=123,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
             ]
         )
@@ -455,6 +461,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
                 call(
                     client=self.transaction._client,
@@ -464,6 +471,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
             ]
         )
@@ -495,6 +503,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
                 call(
                     client=self.transaction._client,
@@ -504,6 +513,7 @@ class TransactionTest(unittest.TestCase):
                     bet_delay=self.transaction.market.market_book.bet_delay,
                     market_version=None,
                     async_=False,
+                    customer_strategy_ref="dotty",
                 ),
             ]
         )

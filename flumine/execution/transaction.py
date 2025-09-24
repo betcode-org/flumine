@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+from .. import config
 from ..clients import ExchangeType
 from ..order.orderpackage import (
     OrderPackageType,
@@ -37,7 +38,14 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool, client):
+    def __init__(
+        self,
+        market,
+        id_: int,
+        async_place_orders: bool,
+        client,
+        customer_strategy_ref=None,
+    ):
         self.market = market
         self._client = client
         self._id = id_  # unique per market only
@@ -47,6 +55,9 @@ class Transaction:
         self._pending_cancel = []  # list of (<Order>, None)
         self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
+        self.customer_strategy_ref = (
+            config.customer_strategy_ref or customer_strategy_ref
+        )
 
     def place_order(
         self,
@@ -258,6 +269,7 @@ class Transaction:
                         package_type=package_type,
                         bet_delay=self.market.market_book.bet_delay,
                         market_version=market_version,
+                        customer_strategy_ref=self.customer_strategy_ref,
                         async_=async_,
                     )
                 )

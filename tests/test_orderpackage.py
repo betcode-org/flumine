@@ -27,6 +27,7 @@ class OrderPackageTest(unittest.TestCase):
             self.mock_package_type,
             1,
             market_version=123,
+            customer_strategy_ref="test",
         )
 
     def test_init(self):
@@ -45,6 +46,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package._max_retries, 3)
         self.assertEqual(self.order_package._retry_count, 0)
         self.assertIsNone(self.order_package.simulated_delay)
+        self.assertEqual(self.order_package.customer_strategy_ref, "test")
 
     def test_retry(self):
         self.assertTrue(self.order_package.retry())

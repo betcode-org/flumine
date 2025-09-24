@@ -199,7 +199,11 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
                 bet_status="SETTLED",
                 from_record=from_record,
                 market_ids=[market_id],
-                customer_strategy_refs=[config.customer_strategy_ref],
+                customer_strategy_refs=(
+                    [config.customer_strategy_ref]
+                    if config.customer_strategy_ref
+                    else None
+                ),
             )
         except exceptions.StatusCodeError as e:
             # log as warning to prevent duplicate logs on betfair meltdown
@@ -245,7 +249,9 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         cleared_markets = betting_client.betting.list_cleared_orders(
             bet_status="SETTLED",
             market_ids=[market_id],
-            customer_strategy_refs=[config.customer_strategy_ref],
+            customer_strategy_refs=(
+                [config.customer_strategy_ref] if config.customer_strategy_ref else None
+            ),
             group_by="MARKET",
         )
     except exceptions.StatusCodeError as e:

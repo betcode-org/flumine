@@ -2,7 +2,6 @@ import datetime
 import logging
 from typing import Optional
 from collections import defaultdict
-from pathlib import Path
 from betfairlightweight.resources.bettingresources import MarketBook, MarketCatalogue
 
 from .. import config
@@ -65,7 +64,9 @@ class Market:
             extra=self.info,
         )
 
-    def transaction(self, async_place_orders: bool = None, client=None) -> Transaction:
+    def transaction(
+        self, async_place_orders: bool = None, client=None, customer_strategy_ref=None
+    ) -> Transaction:
         if async_place_orders is None:
             async_place_orders = config.async_place_orders
         if client is None:
@@ -76,6 +77,7 @@ class Market:
             id_=self._transaction_id,
             async_place_orders=async_place_orders,
             client=client,
+            customer_strategy_ref=customer_strategy_ref,
         )
 
     # order
@@ -86,8 +88,13 @@ class Market:
         execute: bool = True,
         force: bool = False,
         client=None,
+        customer_strategy_ref=None,
     ) -> bool:
-        with self.transaction(client=client) as t:
+        if customer_strategy_ref is None and config.customer_strategy_ref is None:
+            customer_strategy_ref = str(order.trade.strategy)[:15]
+        with self.transaction(
+            client=client, customer_strategy_ref=customer_strategy_ref
+        ) as t:
             return t.place_order(order, market_version, execute, force)
 
     def cancel_order(
@@ -156,7 +163,10 @@ class Market:
         if self.market_catalogue:
             return self.market_catalogue.event.id
         elif self.market_book:
-            return self.market_book.market_definition.event_id
+            if self.market_book.market_definition:
+                return self.market_book.market_definition.event_id
+            else:
+                return ""
 
     @property
     def market_type(self) -> str:
