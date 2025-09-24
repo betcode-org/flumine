@@ -7,7 +7,7 @@ smart-open>=6,<8
 betdaq-retail==0.2.0
 
 # Tests & Linting
-black==25.1.0
+black==25.9.0
 coverage
 pre-commit
 
