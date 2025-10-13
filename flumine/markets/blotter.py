@@ -158,7 +158,7 @@ class Blotter:
                     )
                     if market_book.number_of_winners == 0:
                         order.number_of_dead_heat_winners = 1
-                    elif number_of_winners > market_book.number_of_winners and market_book.number_of_winners == 1:
+                    elif number_of_winners > market_book.number_of_winners == 1:
                         order.number_of_dead_heat_winners = number_of_winners
                     else:
                         order.number_of_dead_heat_winners = 1
