@@ -1277,6 +1277,17 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.runner_status = "LOSER"
         self.assertEqual(self.simulated.profit, -10)
 
+
+
+    def test_profit_place_lay(self):
+
+        self.simulated.order.side = "LAY"
+        self.simulated.order.number_of_dead_heat_winners = 1
+        self.simulated.order.runner_status = "WINNER"
+        self.simulated._update_matched([1235, 1.87, 2.0])
+        self.assertEqual(self.simulated.profit, -1.74) # v2.10.0 LAY WINNER "3 TBP" with 4 actual winners yields profit +1.06
+
+
     def test_profit_dead_heat_lay(self):
         self.simulated.order.side = "LAY"
         self.simulated.order.number_of_dead_heat_winners = 2
@@ -1293,6 +1304,8 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated.order.runner_status = "WINNER"
         self.simulated._update_matched([1234, 11.0, 50.0])
         self.assertEqual(self.simulated.profit, 87.50)
+
+
 
     def test_profit_ew_back(self):
         self.simulated.order.market_type = "EACH_WAY"
