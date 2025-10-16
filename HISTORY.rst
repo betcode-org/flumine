@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.10.1 (2025-10-16)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Improved handling of PLACE profit calculations for dead-heat (@derek-cl)
+
 2.10.0 (2025-09-24)
 +++++++++++++++++++
 
