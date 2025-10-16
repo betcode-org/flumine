@@ -1,8 +1,10 @@
 # Known Issues and Limitations
 
+This page documents known issues, limitations, and edge cases in flumine that users should be aware of.
+
 ## Simulating Dead-Heat Results in PLACE markets
 
-### Problem:
+### Known Limitations:
 To correctly calculate the profit on a PLACE bet when there were more winners than expected, e.g. the market is '3 TBP' but due to a dead heat there are actually 4 winners, requires knowing which 2 selections were in a dead heat.
 
 [Betfair dead heat rules](https://www.betfair.com/www/GBR/en/aboutUs/Rules.and.Regulations/#dheat)
