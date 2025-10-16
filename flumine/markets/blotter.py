@@ -158,8 +158,10 @@ class Blotter:
                     )
                     if market_book.number_of_winners == 0:
                         order.number_of_dead_heat_winners = 1
-                    elif number_of_winners > market_book.number_of_winners:
+                    elif number_of_winners > market_book.number_of_winners == 1:
                         order.number_of_dead_heat_winners = number_of_winners
+                    else:
+                        order.number_of_dead_heat_winners = 1
                     if (
                         order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT
                         and order.order_type.price_ladder_definition == "LINE_RANGE"
