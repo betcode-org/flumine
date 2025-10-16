@@ -34,6 +34,7 @@ nav:
       - Advanced Usage: 'advanced.md'
       - Performance: 'performance.md'
       - Architecture: 'architecture.md'
+      - Known Issues: 'known_issues.md'
 
 markdown_extensions:
   - admonition
