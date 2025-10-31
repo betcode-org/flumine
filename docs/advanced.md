@@ -113,7 +113,7 @@ flumine patches `utcnow` when simulating, if you require the 'real datetime' thi
 import datetime
 
 with framework.simulated_datetime.real_time():
-    print(datetime.datetime.utcnow())
+    print(datetime.datetime.now(datetime.timezone.utc))
 ```
 
 ## Config

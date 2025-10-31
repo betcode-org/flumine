@@ -106,9 +106,9 @@ class BaseOrder:
         self.market_version = None  # marketBook.version
         self.async_ = None
 
-        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_created = datetime.datetime.now(datetime.timezone.utc)
         self.date_time_execution_complete = None
-        self.date_time_status_update = datetime.datetime.utcnow()
+        self.date_time_status_update = datetime.datetime.now(datetime.timezone.utc)
 
         self.cleared_order = None
 
@@ -119,7 +119,7 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
-        self.date_time_status_update = datetime.datetime.utcnow()
+        self.date_time_status_update = datetime.datetime.now(datetime.timezone.utc)
         self.complete = self._is_complete()
         if logger.isEnabledFor(logging.INFO):
             logger.info("Order status update: %s" % self.status.value, extra=self.info)
@@ -135,7 +135,7 @@ class BaseOrder:
 
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
-        self.date_time_execution_complete = datetime.datetime.utcnow()
+        self.date_time_execution_complete = datetime.datetime.now(datetime.timezone.utc)
         self.update_data.clear()
 
     def cancelling(self) -> None:
@@ -248,13 +248,17 @@ class BaseOrder:
     def elapsed_seconds(self) -> Optional[float]:
         date_time_placed = self.responses.date_time_placed
         if date_time_placed:
-            return (datetime.datetime.utcnow() - date_time_placed).total_seconds()
+            return (
+                datetime.datetime.now(datetime.timezone.utc) - date_time_placed
+            ).total_seconds()
         else:
             return
 
     @property
     def elapsed_seconds_created(self) -> float:
-        return (datetime.datetime.utcnow() - self.date_time_created).total_seconds()
+        return (
+            datetime.datetime.now(datetime.timezone.utc) - self.date_time_created
+        ).total_seconds()
 
     @property
     def elapsed_seconds_executable(self) -> Optional[float]:
@@ -266,7 +270,7 @@ class BaseOrder:
     @property
     def elapsed_seconds_status_update(self) -> float:
         return (
-            datetime.datetime.utcnow() - self.date_time_status_update
+            datetime.datetime.now(datetime.timezone.utc) - self.date_time_status_update
         ).total_seconds()
 
     @property

@@ -33,7 +33,8 @@ def terminate(
     markets_today = [
         m
         for m in markets
-        if m.market_start_datetime.date() == datetime.datetime.utcnow().date()
+        if m.market_start_datetime.date()
+        == datetime.datetime.now(datetime.timezone.utc).date()
         and (
             m.elapsed_seconds_closed is None
             or (m.elapsed_seconds_closed and m.elapsed_seconds_closed < seconds_closed)

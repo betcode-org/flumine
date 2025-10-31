@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.11.0 (2025-09-30)
++++++++++++++++++++
+
+**Libraries**
+
+- Add python 3.13 & 3.14
+- betfairlightweight upgraded to 2.22.0
+
 2.10.1 (2025-10-16)
 +++++++++++++++++++
 

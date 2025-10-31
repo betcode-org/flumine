@@ -103,7 +103,7 @@ class TradeTest(unittest.TestCase):
             self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
     def test_create_order_replacement(self):
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         mock_order = mock.Mock(sep="-")
         replacement_order = self.trade.create_order_replacement(
             mock_order, 12, 2.00, now

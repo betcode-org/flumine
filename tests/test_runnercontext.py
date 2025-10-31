@@ -54,10 +54,10 @@ class RunnerContextTest(unittest.TestCase):
 
     def test_placed_elapsed_seconds(self):
         self.assertIsNone(self.context.placed_elapsed_seconds)
-        self.context.datetime_last_placed = datetime.datetime.utcnow()
+        self.context.datetime_last_placed = datetime.datetime.now(datetime.timezone.utc)
         self.assertGreaterEqual(self.context.placed_elapsed_seconds, 0)
 
     def test_reset_elapsed_seconds(self):
         self.assertIsNone(self.context.reset_elapsed_seconds)
-        self.context.datetime_last_reset = datetime.datetime.utcnow()
+        self.context.datetime_last_reset = datetime.datetime.now(datetime.timezone.utc)
         self.assertGreaterEqual(self.context.reset_elapsed_seconds, 0)

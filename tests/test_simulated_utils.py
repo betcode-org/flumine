@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from unittest import mock
 
 from flumine.simulation import utils
@@ -6,10 +7,16 @@ from flumine.simulation import utils
 
 class NewDateTimeTest(unittest.TestCase):
     @mock.patch("flumine.simulation.utils.config")
-    def test_new_date_time(self, mock_config):
+    def test_utcnow(self, mock_config):
         mock_config.current_time = 123
         x = utils.NewDateTime
         self.assertEqual(x.utcnow(), 123)
+
+    @mock.patch("flumine.simulation.utils.config")
+    def test_now(self, mock_config):
+        mock_config.current_time = 123
+        x = utils.NewDateTime
+        self.assertEqual(x.now(datetime.timezone.utc), 123)
 
 
 class SimulatedDateTimeTest(unittest.TestCase):
@@ -24,8 +31,10 @@ class SimulatedDateTimeTest(unittest.TestCase):
         mock_real_datetime = mock.Mock()
         self.s._real_datetime = mock_real_datetime
         self.s.reset_real_datetime()
-        mock_real_datetime.utcnow.assert_called()
-        self.assertEqual(mock_config.current_time, mock_real_datetime.utcnow())
+        mock_real_datetime.now.assert_called()
+        self.assertEqual(
+            mock_config.current_time, mock_real_datetime.now(datetime.timezone.utc)
+        )
 
     @mock.patch("flumine.simulation.utils.config")
     def test_call(self, mock_config):
@@ -38,6 +47,8 @@ class SimulatedDateTimeTest(unittest.TestCase):
         with self.s as datetime:
             mock_config.current_time = 456
             self.assertEqual(datetime.utcnow(), 456)
+            self.assertEqual(datetime.now(), 456)
         import datetime
 
         self.assertIsInstance(datetime.datetime.utcnow(), datetime.datetime)
+        self.assertIsInstance(datetime.datetime.now(), datetime.datetime)

@@ -390,7 +390,9 @@ def get_event_ids(markets: list, event_type_id: str) -> list:
 
 
 def create_time(publish_time: int, id_: str) -> datetime.datetime:
-    pt_datetime = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+    pt_datetime = datetime.datetime.fromtimestamp(
+        publish_time / 1e3, datetime.timezone.utc
+    )
     event_id, start_time = id_.split(".")
     hour, minute = int(start_time[:2]), int(start_time[2:])
     return pt_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)
