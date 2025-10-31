@@ -937,7 +937,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 "img": {1: 2},
                 "marketDefinition": {
                     "status": "OPEN",
-                    "marketTime": 456,
+                    "marketTime": "2017-06-14T18:55:00.000Z",
                     "runners": [],
                 },
             }
@@ -945,10 +945,12 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertTrue(
             self.stream._process(
                 update,
-                12345,
+                1497470702112,
             )
         )
-        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
+        mock_cache().update_cache.assert_called_with(
+            update[0], 1497470702112, active=True
+        )
 
         update = [
             {
@@ -956,7 +958,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 "img": {1: 2},
                 "marketDefinition": {
                     "status": "OPEN",
-                    "marketTime": 1234567,
+                    "marketTime": "2017-06-14T21:55:00.000Z",
                     "runners": [],
                 },
             }
@@ -964,10 +966,12 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertFalse(
             self.stream._process(
                 update,
-                12345,
+                1497470702112,
             )
         )
-        mock_cache().update_cache.assert_called_with(update[0], 12345, active=False)
+        mock_cache().update_cache.assert_called_with(
+            update[0], 1497470702112, active=False
+        )
 
         update = [
             {
@@ -975,7 +979,7 @@ class TestFlumineMarketStream(unittest.TestCase):
                 "img": {1: 2},
                 "marketDefinition": {
                     "status": "SUSPENDED",
-                    "marketTime": 1234567,
+                    "marketTime": "2017-06-14T18:55:00.000Z",
                     "runners": [],
                 },
             }
@@ -983,10 +987,12 @@ class TestFlumineMarketStream(unittest.TestCase):
         self.assertTrue(
             self.stream._process(
                 update,
-                12345,
+                1497470702112,
             )
         )
-        mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
+        mock_cache().update_cache.assert_called_with(
+            update[0], 1497470702112, active=True
+        )
 
     @mock.patch("flumine.streams.historicalstream.MarketBookCache")
     def test__process_max_inplay_seconds(self, mock_cache):
@@ -1076,7 +1082,9 @@ class TestFlumineRaceStream(unittest.TestCase):
 
     @mock.patch(
         "flumine.streams.historicalstream.create_time",
-        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+        return_value=datetime.datetime(
+            1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
+        ),
     )
     def test__process(self, mock_create_time):
         self.assertTrue(
@@ -1092,7 +1100,9 @@ class TestFlumineRaceStream(unittest.TestCase):
 
     @mock.patch(
         "flumine.streams.historicalstream.create_time",
-        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+        return_value=datetime.datetime(
+            1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
+        ),
     )
     def test__process_false(self, mock_create_time):
         self.assertFalse(
@@ -1108,7 +1118,9 @@ class TestFlumineRaceStream(unittest.TestCase):
 
     @mock.patch(
         "flumine.streams.historicalstream.create_time",
-        return_value=datetime.datetime(1970, 1, 1, 13, 10),
+        return_value=datetime.datetime(
+            1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
+        ),
     )
     def test__process_early_start(self, mock_create_time):
         self.assertTrue(
