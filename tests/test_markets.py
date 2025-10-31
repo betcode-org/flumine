@@ -418,8 +418,8 @@ class MarketTest(unittest.TestCase):
     )
     def test_market_start_hour_minute(self, mock_market_start_datetime):
         self.assertIsNone(self.market.market_start_hour_minute)
-        mock_market_start_datetime.return_value = datetime.datetime.utcfromtimestamp(
-            12000000000
+        mock_market_start_datetime.return_value = datetime.datetime.fromtimestamp(
+            12000000000, datetime.timezone.utc
         )
         self.assertEqual(self.market.market_start_hour_minute, "2120")
 
