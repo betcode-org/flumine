@@ -102,7 +102,7 @@ class BaseOrderTest(unittest.TestCase):
         mock__is_complete.assert_called()
         self.assertEqual(
             self.order.date_time_status_update,
-            mock_datetime.datetime.utcnow.return_value,
+            mock_datetime.datetime.now.return_value,
         )
 
     @mock.patch("flumine.order.order.BaseOrder._update_status")
@@ -255,7 +255,7 @@ class BaseOrderTest(unittest.TestCase):
     def test_elapsed_seconds(self):
         self.assertIsNone(self.order.elapsed_seconds)
         mock_responses = mock.Mock()
-        mock_responses.date_time_placed = datetime.datetime.utcnow()
+        mock_responses.date_time_placed = datetime.datetime.now(datetime.timezone.utc)
         self.order.responses = mock_responses
         self.assertGreaterEqual(self.order.elapsed_seconds, 0)
 
@@ -265,9 +265,11 @@ class BaseOrderTest(unittest.TestCase):
     def test_elapsed_seconds_executable(self):
         self.assertIsNone(self.order.elapsed_seconds_executable)
         mock_responses = mock.Mock()
-        mock_responses.date_time_placed = datetime.datetime.utcnow()
+        mock_responses.date_time_placed = datetime.datetime.now(datetime.timezone.utc)
         self.order.responses = mock_responses
-        self.order.date_time_execution_complete = datetime.datetime.utcnow()
+        self.order.date_time_execution_complete = datetime.datetime.now(
+            datetime.timezone.utc
+        )
         self.assertGreaterEqual(self.order.elapsed_seconds_executable, 0)
 
     def test_elapsed_seconds_status_update(self):

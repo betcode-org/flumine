@@ -6,7 +6,7 @@ class Responses:
     """Order responses"""
 
     def __init__(self):
-        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_created = datetime.datetime.now(datetime.timezone.utc)
         self.current_order = None  # resources.CurrentOrder
         self.place_response = None  # resources.PlaceOrderInstructionReports
         self.cancel_responses = []
@@ -18,7 +18,7 @@ class Responses:
         if response:
             self.place_response = response
         if dt:
-            self._date_time_placed = datetime.datetime.utcnow()
+            self._date_time_placed = datetime.datetime.now(datetime.timezone.utc)
 
     def cancelled(self, response) -> None:
         self.cancel_responses.append(response)
