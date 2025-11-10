@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.10.2 (2025-11-10)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Handle orders placed outside of flumine (2.10 change)
+
 2.10.1 (2025-10-16)
 +++++++++++++++++++
 
