@@ -10,6 +10,11 @@ Release History
 
 - Handle orders placed outside of flumine (2.10 change)
 
+**Libraries**
+
+- betfairlightweight upgraded to 2.22.0
+- betconnect upgraded to 0.3.0
+
 2.10.1 (2025-10-16)
 +++++++++++++++++++
 
