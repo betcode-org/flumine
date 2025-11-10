@@ -36,7 +36,7 @@ speed = [
     "betfairlightweight[speed]==2.22.0"
 ]
 test = [
-    "black==25.1.0",
+    "black==25.11.0",
     "coverage",
     "pre-commit",
     "mkdocs",
