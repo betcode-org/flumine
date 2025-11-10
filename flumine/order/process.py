@@ -36,6 +36,8 @@ def process_current_orders(
     for current_orders in event.event:
         client = current_orders.client
         for current_order in current_orders.orders:
+            if current_order.customer_order_ref is None:
+                continue
             order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
                 market_id=current_order.market_id,
