@@ -74,7 +74,7 @@ class TestMaxTransactionCount(unittest.TestCase):
 
     @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._set_next_hour")
     def test_check_hour(self, mock_set_next_hour):
-        self.trading_control._next_hour = datetime.datetime.utcnow()
+        self.trading_control._next_hour = datetime.datetime.now(datetime.timezone.utc)
         self.trading_control._check_hour()
 
         now = datetime.datetime.now()
@@ -94,7 +94,7 @@ class TestMaxTransactionCount(unittest.TestCase):
         self.trading_control._set_next_hour()
         self.trading_control.current_transaction_count = 5069
         self.trading_control.current_failed_transaction_count = 5069
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_1 = (now + datetime.timedelta(days=1)).replace(
             minute=0, second=0, microsecond=0
         )
@@ -110,7 +110,7 @@ class TestMaxTransactionCount(unittest.TestCase):
         self.trading_control._next_hour = None
 
         self.trading_control._set_next_hour()
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_1 = (now + datetime.timedelta(hours=1)).replace(
             minute=0, second=0, microsecond=0
         )
