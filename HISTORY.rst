@@ -3,13 +3,24 @@
 Release History
 ---------------
 
-2.11.0 (2025-09-30)
+2.11.0 (2025-12-11)
 +++++++++++++++++++
 
 **Libraries**
 
 - Add python 3.13 & 3.14
+
+2.10.2 (2025-11-10)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Handle orders placed outside of flumine (2.10 change)
+
+**Libraries**
+
 - betfairlightweight upgraded to 2.22.0
+- betconnect upgraded to 0.3.0
 
 2.10.1 (2025-10-16)
 +++++++++++++++++++

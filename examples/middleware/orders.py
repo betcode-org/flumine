@@ -40,6 +40,8 @@ class OrdersMiddleware(Middleware):
                         "client_username": client.username,
                     },
                 )
+                if current_order.customer_order_ref is None:
+                    continue
                 order = self._create_order_from_current(client, current_order, market)
                 if order:
                     order.update_current_order(current_order)
