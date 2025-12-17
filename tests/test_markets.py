@@ -363,9 +363,7 @@ class MarketTest(unittest.TestCase):
     def test_seconds_to_start(self):
         self.market.market_book = None
         mock_market_catalogue = mock.Mock()
-        mock_market_catalogue.market_start_time = datetime.datetime.fromtimestamp(
-            0
-        )
+        mock_market_catalogue.market_start_time = datetime.datetime.fromtimestamp(0)
         self.market.market_catalogue = mock_market_catalogue
         self.assertLess(self.market.seconds_to_start, 0)
 

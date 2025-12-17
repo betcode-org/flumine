@@ -178,7 +178,8 @@ class Market:
     @property
     def seconds_to_start(self) -> float:
         return (
-            self.market_start_datetime - datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+            self.market_start_datetime
+            - datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         ).total_seconds()
 
     @property
