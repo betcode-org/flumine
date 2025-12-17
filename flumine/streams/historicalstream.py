@@ -96,7 +96,7 @@ class FlumineMarketStream(MarketStream):
                 if self._listener.inplay:
                     if not _definition_in_play:
                         active = False
-                elif self._listener.seconds_to_start:
+                elif self._listener.seconds_to_start is not None:
                     _now = datetime.datetime.fromtimestamp(publish_time / 1e3)
                     _market_time = BaseResource.strip_datetime(_definition_market_time)
                     seconds_to_start = (_market_time - _now).total_seconds()

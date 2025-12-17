@@ -9,6 +9,7 @@ Release History
 **Bug Fixes**
 
 - 3.14 utc market fix
+- seconds_to_start bug when set to 0 seconds
 
 2.11.0 (2025-12-11)
 +++++++++++++++++++
