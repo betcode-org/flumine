@@ -11,6 +11,7 @@ Release History
 - 3.14 utc market fix
 - seconds_to_start bug when set to 0 seconds
 - limit order persistence validation (MarketOnClose when market is inplay or no inplay available)
+- correctly update MarketOnClose/LimitOnClose as EXECUTION_COMPLETE once processed
 
 2.11.0 (2025-12-11)
 +++++++++++++++++++

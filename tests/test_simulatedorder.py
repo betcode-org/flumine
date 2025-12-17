@@ -684,7 +684,16 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(self.simulated.matched, [])
         self.assertEqual(self.simulated.size_voided, 0)
 
-    def test__create_place_response(self):
+    def test__create_place_response_e(self):
+        resp = self.simulated._create_place_response(1234)
+        self.assertEqual(resp.bet_id, "1234")
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.order_status, "EXECUTABLE")
+        self.assertIsNone(resp.error_code)
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+
+    def test__create_place_response_failure(self):
         resp = self.simulated._create_place_response(
             1234, "FAILURE", error_code="dubs of the mad skint and british"
         )
@@ -692,6 +701,18 @@ class SimulatedOrderTest(unittest.TestCase):
         self.assertEqual(resp.status, "FAILURE")
         self.assertEqual(resp.order_status, "EXECUTABLE")
         self.assertEqual(resp.error_code, "dubs of the mad skint and british")
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
+
+    def test__create_place_response_sp(self):
+        self.mock_order.order_type.ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
+        resp = self.simulated._create_place_response(1234)
+        self.assertEqual(resp.bet_id, "1234")
+        self.assertEqual(resp.status, "SUCCESS")
+        self.assertEqual(resp.order_status, "EXECUTION_COMPLETE")
+        self.assertIsNone(resp.error_code)
+        self.assertEqual(resp.average_price_matched, 0)
+        self.assertEqual(resp.size_matched, 0)
 
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder.size_remaining",

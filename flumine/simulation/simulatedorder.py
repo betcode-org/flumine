@@ -266,10 +266,13 @@ class SimulatedOrder:
                 )
                 self.size_matched, self.average_price_matched = wap(self.matched)
         if order_status is None:
-            if self.size_remaining == 0:
-                order_status = "EXECUTION_COMPLETE"
+            if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                if self.size_remaining == 0:
+                    order_status = "EXECUTION_COMPLETE"
+                else:
+                    order_status = "EXECUTABLE"
             else:
-                order_status = "EXECUTABLE"
+                order_status = "EXECUTION_COMPLETE"
         return SimulatedPlaceResponse(
             status=status,
             order_status=order_status,
