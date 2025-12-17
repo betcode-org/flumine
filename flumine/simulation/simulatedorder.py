@@ -97,6 +97,20 @@ class SimulatedOrder:
                 error_code="RUNNER_REMOVED",
             )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            # validate persistence
+            if self.order.order_type.persistence_type == "MARKET_ON_CLOSE":
+                if (
+                    market_book.market_definition.bsp_market is False
+                    or market_book.bsp_reconciled is True
+                    or market_book.inplay is True
+                ):
+                    self.size_voided += self.size_remaining
+                    return self._create_place_response(
+                        None,
+                        status="FAILURE",
+                        error_code="BET_ACTION_ERROR",
+                    )
+
             price = self.order.order_type.price
             size = self.order.order_type.size
             if "limitOrder" in instruction:

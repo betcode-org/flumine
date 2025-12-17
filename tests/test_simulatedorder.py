@@ -197,6 +197,22 @@ class SimulatedOrderTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    def test_place_limit_persistence_validation(self, mock__get_runner):
+        self.mock_order.order_type.persistence_type = "MARKET_ON_CLOSE"
+        mock_client = mock.Mock(best_price_execution=True)
+        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_market_book = mock.Mock(status="OPEN", inplay=True)
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 12, "size": 120}]
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 120}]
+        mock__get_runner.return_value = mock_runner
+        resp = self.simulated.place(mock_order_package, mock_market_book, {}, 1)
+        self.assertEqual(self.simulated.market_version, mock_market_book.version)
+        self.assertEqual(resp.status, "FAILURE")
+        self.assertEqual(resp.error_code, "BET_ACTION_ERROR")
+        self.assertEqual(self.simulated.matched, [])
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_back_target_size(self, mock__get_runner):
         self.mock_order.order_type.size = None
         mock_client = mock.Mock(best_price_execution=True)
