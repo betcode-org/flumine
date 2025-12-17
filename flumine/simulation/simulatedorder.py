@@ -97,6 +97,20 @@ class SimulatedOrder:
                 error_code="RUNNER_REMOVED",
             )
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            # validate persistence
+            if self.order.order_type.persistence_type == "MARKET_ON_CLOSE":
+                if (
+                    market_book.market_definition.bsp_market is False
+                    or market_book.bsp_reconciled is True
+                    or market_book.inplay is True
+                ):
+                    self.size_voided += self.size_remaining
+                    return self._create_place_response(
+                        None,
+                        status="FAILURE",
+                        error_code="BET_ACTION_ERROR",
+                    )
+
             price = self.order.order_type.price
             size = self.order.order_type.size
             if "limitOrder" in instruction:
@@ -252,17 +266,22 @@ class SimulatedOrder:
                 )
                 self.size_matched, self.average_price_matched = wap(self.matched)
         if order_status is None:
-            if self.size_remaining == 0:
-                order_status = "EXECUTION_COMPLETE"
+            if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+                if self.size_remaining == 0:
+                    order_status = "EXECUTION_COMPLETE"
+                else:
+                    order_status = "EXECUTABLE"
             else:
-                order_status = "EXECUTABLE"
+                order_status = "EXECUTION_COMPLETE"
         return SimulatedPlaceResponse(
             status=status,
             order_status=order_status,
             bet_id=str(bet_id) if bet_id else bet_id,
             average_price_matched=self.average_price_matched,
             size_matched=self.size_matched,
-            placed_date=datetime.datetime.now(datetime.timezone.utc),
+            placed_date=datetime.datetime.now(datetime.timezone.utc).replace(
+                tzinfo=None
+            ),
             error_code=error_code,
         )
 
@@ -284,7 +303,9 @@ class SimulatedOrder:
             return SimulatedCancelResponse(
                 status="SUCCESS",  # todo handle errors
                 size_cancelled=_size_cancelled,
-                cancelled_date=datetime.datetime.now(datetime.timezone.utc),
+                cancelled_date=datetime.datetime.now(datetime.timezone.utc).replace(
+                    tzinfo=None
+                ),
             )
         else:
             return SimulatedCancelResponse(
