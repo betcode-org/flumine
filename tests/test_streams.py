@@ -164,7 +164,7 @@ class StreamsTest(unittest.TestCase):
         mock_client = mock.Mock(order_stream=True, paper_trade=False)
         mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
         self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_called_with(mock_client)
+        mock_add_order_stream.assert_called_with(mock_client, conflate_ms=mock_client.order_stream_conflate_ms)
 
     @mock.patch("flumine.streams.streams.Streams.add_simulated_order_stream")
     def test_add_client_paper_trade(self, mock_add_simulated_order_stream):
