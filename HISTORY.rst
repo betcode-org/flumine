@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.11.2 (2025-12-19)
++++++++++++++++++++
+
+**Improvements**
+
+- order_stream_conflate_ms added
+
 2.11.1 (2025-12-17)
 +++++++++++++++++++
 

@@ -83,7 +83,9 @@ class Streams:
             if client.paper_trade:
                 self.add_simulated_order_stream(client)
             elif client.EXCHANGE == ExchangeType.BETFAIR:
-                self.add_order_stream(client)
+                self.add_order_stream(
+                    client, conflate_ms=client.order_stream_conflate_ms
+                )
             elif client.EXCHANGE == ExchangeType.BETDAQ:
                 self.add_betdaq_order_polling(client)
 

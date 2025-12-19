@@ -154,6 +154,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertIsNone(self.base_client.execution)
         self.assertEqual(self.base_client.trading_controls, [])
         self.assertTrue(self.base_client.order_stream)
+        self.assertIsNone(self.base_client.order_stream_conflate_ms)
         self.assertTrue(self.base_client.best_price_execution)
         self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)

@@ -24,6 +24,7 @@ class BaseClient:
         interactive_login: bool = False,
         username: str = None,
         order_stream: bool = True,
+        order_stream_conflate_ms: int = None,
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
         paper_trade: bool = False,
@@ -42,6 +43,7 @@ class BaseClient:
         self.commission_base = commission_base  # not implemented
         self.interactive_login = interactive_login
         self.order_stream = order_stream
+        self.order_stream_conflate_ms = order_stream_conflate_ms
         self.best_price_execution = best_price_execution  # simulation only
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
         self.paper_trade = paper_trade  # simulated order placement using live data
@@ -129,6 +131,7 @@ class BaseClient:
             "transaction_count_total": self.transaction_count_total,
             "trading_controls": self.trading_controls,
             "order_stream": self.order_stream,
+            "order_stream_conflate_ms": self.order_stream_conflate_ms,
             "best_price_execution": self.best_price_execution,
             "paper_trade": self.paper_trade,
         }
