@@ -372,12 +372,28 @@ class TransactionTest(unittest.TestCase):
         self.transaction.market.flumine.trading_controls = [mock_trading_control]
         self.transaction._client.trading_controls = [mock_client_control]
         mock_order = mock.Mock()
-        mock_package_type = mock.Mock()
+        mock_package_type = OrderPackageType.CANCEL
         self.assertFalse(
             self.transaction._validate_controls(mock_order, mock_package_type)
         )
         mock_trading_control.assert_called_with(mock_order, mock_package_type)
         mock_client_control.assert_not_called()
+        mock_order.executable.assert_called()
+
+    def test__validate_controls_violation_place(self):
+        mock_trading_control = mock.Mock()
+        mock_trading_control.side_effect = ControlError("test")
+        mock_client_control = mock.Mock()
+        self.transaction.market.flumine.trading_controls = [mock_trading_control]
+        self.transaction._client.trading_controls = [mock_client_control]
+        mock_order = mock.Mock()
+        mock_package_type = OrderPackageType.PLACE
+        self.assertFalse(
+            self.transaction._validate_controls(mock_order, mock_package_type)
+        )
+        mock_trading_control.assert_called_with(mock_order, mock_package_type)
+        mock_client_control.assert_not_called()
+        mock_order.executable.assert_not_called()
 
     @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
     def test__create_order_package_betfair(self, mock_betfair_order_package):
