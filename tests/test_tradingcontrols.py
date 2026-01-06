@@ -381,9 +381,18 @@ class TestOrderValidation(unittest.TestCase):
         mock_client = mock.Mock(min_bet_size=2)
         order = mock.Mock(client=mock_client)
         order.side = "BACK"
-        order.order_type.liability = 2
+        order.order_type.size = 2
         self.trading_control._validate_betdaq_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
         mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
+    def test__validate_betdaq_min_size_error(self, mock_on_error):
+        mock_client = mock.Mock(min_bet_size=2)
+        order = mock.Mock(client=mock_client)
+        order.side = "BACK"
+        order.order_type.size = 0.09
+        self.trading_control._validate_betdaq_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
+        mock_on_error.assert_called()
 
 
 class TestMarketValidation(unittest.TestCase):
