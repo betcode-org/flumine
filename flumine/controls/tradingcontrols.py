@@ -134,7 +134,11 @@ class OrderValidation(BaseControl):
         client = order.client
         if client.min_bet_validation is False:
             return  # some accounts do not have min bet restrictions
-        # todo wtf is this?
+        if order.order_type.size < 0.10:
+            self._on_error(
+                order,
+                "Bet size is less than min bet size (0.10) for currency",
+            )
 
 
 class MarketValidation(BaseControl):
