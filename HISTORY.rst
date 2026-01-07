@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+2.11.3 (2026-01-07)
++++++++++++++++++++
+
+**Improvements**
+
+- betdaq 0.10 min bet size added
+- simulation move lapse to after calculating any matches
+
+**Bug Fixes**
+
+- reset order to executable when a cancel/update or replace fails
+- placed_date add tzinfo so that elapsed seconds can be calculated correctly
+
 2.11.2 (2025-12-19)
 +++++++++++++++++++
 

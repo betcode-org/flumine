@@ -237,6 +237,8 @@ class Transaction:
             for control in self._client.trading_controls:
                 control(order, package_type)
         except ControlError:
+            if package_type != OrderPackageType.PLACE:
+                order.executable()  # reset
             return False
         else:
             return True

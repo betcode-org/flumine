@@ -35,6 +35,8 @@ class Responses:
             return self._date_time_placed
         elif self.current_order:
             try:
-                return self.current_order.placed_date
+                return self.current_order.placed_date.replace(
+                    tzinfo=datetime.timezone.utc
+                )
             except AttributeError:
                 return

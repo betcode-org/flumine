@@ -44,13 +44,6 @@ class SimulatedOrder:
                 self._bsp_reconciled = True
 
         if self.order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            if market_book.version != self.market_version:
-                self.market_version = market_book.version  # update for next time
-                if market_book.status == "SUSPENDED":  # Material change
-                    if self.order.order_type.persistence_type == "LAPSE":
-                        self.size_lapsed += self.size_remaining
-                        return
-
             # todo estimated piq cancellations
             traded = runner_traded[1]
             if traded:
@@ -60,6 +53,13 @@ class SimulatedOrder:
                 self._process_available(
                     market_book.publish_time_epoch, runner_traded[0]
                 )
+
+            if market_book.version != self.market_version:
+                self.market_version = market_book.version  # update for next time
+                if market_book.status == "SUSPENDED":  # Material change
+                    if self.order.order_type.persistence_type == "LAPSE":
+                        self.size_lapsed += self.size_remaining
+                        return
 
     def place(
         self, order_package, market_book: MarketBook, instruction: dict, bet_id: int

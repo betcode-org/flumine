@@ -132,12 +132,15 @@ class SimulatedOrderTest(unittest.TestCase):
         mock_market_book = mock.Mock(
             bsp_reconciled=False, version=124, status="SUSPENDED"
         )
-        mock_runner_analytics = mock.Mock()
-        self.simulated(mock_market_book, mock_runner_analytics)
+        traded = {1: 2}
+        mock_runner_book = mock.Mock()
+        self.simulated(mock_market_book, (mock_runner_book, traded))
         self.assertEqual(self.simulated.size_lapsed, 2.0)
         self.assertEqual(self.simulated.size_remaining, 0.0)
         mock__process_sp.assert_not_called()
-        mock__process_traded.assert_not_called()
+        mock__process_traded.assert_called_with(
+            mock_market_book.publish_time_epoch, traded
+        )
 
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     @mock.patch(
