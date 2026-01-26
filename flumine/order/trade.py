@@ -164,11 +164,16 @@ class Trade:
         order.id = order_id
         order.update_client(client)
         # update dates
-        order.date_time_created = current_order.placed_date
-        order.date_time_execution_complete = (
+        order.date_time_created = current_order.placed_date.replace(
+            tzinfo=datetime.timezone.utc
+        )
+        date_time_execution_complete = (
             current_order.matched_date
             or current_order.cancelled_date
             or current_order.lapsed_date
+        )
+        order.date_time_execution_complete = date_time_execution_complete.replace(
+            tzinfo=datetime.timezone.utc
         )
         self.orders.append(order)
         return order
