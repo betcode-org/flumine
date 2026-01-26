@@ -3,12 +3,19 @@
 Release History
 ---------------
 
+2.11.5 (2026-01-26)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #820 correctly add tzinfo to execution completed orders on restart
+
 2.11.4 (2026-01-08)
 +++++++++++++++++++
 
 **Libraries**
 
-- betfairlightweight upgraded to 2.21.1
+- betfairlightweight upgraded to 2.22.1
 
 2.11.3 (2026-01-07)
 +++++++++++++++++++
