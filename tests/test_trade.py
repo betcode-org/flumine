@@ -142,11 +142,11 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [order])
         self.assertEqual(
             order.date_time_created,
-            datetime.datetime(1970, 1, 1, 1, 0, 12, tzinfo=datetime.timezone.utc),
+            datetime.datetime.fromtimestamp(12).replace(tzinfo=datetime.timezone.utc),
         )
         self.assertEqual(
             order.date_time_execution_complete,
-            datetime.datetime(1970, 1, 1, 1, 0, 34, tzinfo=datetime.timezone.utc),
+            datetime.datetime.fromtimestamp(34).replace(tzinfo=datetime.timezone.utc),
         )
 
     def test_create_order_from_current_limit_on_close(self):
