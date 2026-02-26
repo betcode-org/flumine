@@ -178,8 +178,7 @@ class Market:
     @property
     def seconds_to_start(self) -> float:
         return (
-            self.market_start_datetime
-            - datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+            self.market_start_datetime - datetime.datetime.now(datetime.timezone.utc)
         ).total_seconds()
 
     @property
@@ -196,7 +195,7 @@ class Market:
         elif self.market_catalogue:
             return self.market_catalogue.market_start_time
         else:
-            return datetime.datetime.fromtimestamp(0)
+            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
 
     @property
     def market_start_hour_minute(self) -> Optional[str]:

@@ -279,9 +279,7 @@ class SimulatedOrder:
             bet_id=str(bet_id) if bet_id else bet_id,
             average_price_matched=self.average_price_matched,
             size_matched=self.size_matched,
-            placed_date=datetime.datetime.now(datetime.timezone.utc).replace(
-                tzinfo=None
-            ),
+            placed_date=datetime.datetime.now(datetime.timezone.utc),
             error_code=error_code,
         )
 
@@ -303,9 +301,7 @@ class SimulatedOrder:
             return SimulatedCancelResponse(
                 status="SUCCESS",  # todo handle errors
                 size_cancelled=_size_cancelled,
-                cancelled_date=datetime.datetime.now(datetime.timezone.utc).replace(
-                    tzinfo=None
-                ),
+                cancelled_date=datetime.datetime.now(datetime.timezone.utc),
             )
         else:
             return SimulatedCancelResponse(

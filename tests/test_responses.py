@@ -39,7 +39,7 @@ class ResponsesTest(unittest.TestCase):
         self.assertIsNone(self.responses.date_time_placed)
         self.responses._date_time_placed = 1
         self.responses.current_order = mock.Mock()
-        self.responses.current_order.placed_date.replace.return_value = 2
+        self.responses.current_order.placed_date = 2
         self.assertEqual(self.responses.date_time_placed, 1)
         self.responses._date_time_placed = None
         self.assertEqual(self.responses.date_time_placed, 2)
