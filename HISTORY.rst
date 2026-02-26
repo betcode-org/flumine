@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.12.0 (2026-02-26)
++++++++++++++++++++
+
+**Improvements**
+
+- *Breaking Change* All datetimes are now timezone-aware as per bflw 2.23.0
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.23.0
+
 2.11.5 (2026-01-26)
 +++++++++++++++++++
 

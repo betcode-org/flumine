@@ -363,7 +363,7 @@ class MarketTest(unittest.TestCase):
     def test_seconds_to_start(self):
         self.market.market_book = None
         mock_market_catalogue = mock.Mock()
-        mock_market_catalogue.market_start_time = datetime.datetime.fromtimestamp(0)
+        mock_market_catalogue.market_start_time = datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
         self.market.market_catalogue = mock_market_catalogue
         self.assertLess(self.market.seconds_to_start, 0)
 
@@ -371,14 +371,14 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         mock_market_book.market_definition.market_time = (
-            datetime.datetime.fromtimestamp(0)
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
         )
         self.market.market_book = mock_market_book
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_market_catalogue(self):
         self.market.market_book.market_definition.market_time = (
-            datetime.datetime.fromtimestamp(0)
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
         )
         self.assertLess(self.market.seconds_to_start, 0)
 
@@ -406,7 +406,7 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = None
         self.assertEqual(
             self.market.market_start_datetime,
-            datetime.datetime.fromtimestamp(0),
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc),
         )
 
     @mock.patch(

@@ -129,9 +129,9 @@ class TradeTest(unittest.TestCase):
         mock_client = mock.Mock()
         mock_current_order = mock.Mock(
             order_type="LIMIT",
-            placed_date=datetime.datetime.fromtimestamp(12),
+            placed_date=datetime.datetime.fromtimestamp(12, tz=datetime.timezone.utc),
             matched_date=None,
-            cancelled_date=datetime.datetime.fromtimestamp(34),
+            cancelled_date=datetime.datetime.fromtimestamp(34, tz=datetime.timezone.utc),
         )
         order = self.trade.create_order_from_current(
             mock_client, mock_current_order, "12345"
@@ -142,11 +142,11 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [order])
         self.assertEqual(
             order.date_time_created,
-            datetime.datetime.fromtimestamp(12).replace(tzinfo=datetime.timezone.utc),
+            datetime.datetime.fromtimestamp(12, tz=datetime.timezone.utc),
         )
         self.assertEqual(
             order.date_time_execution_complete,
-            datetime.datetime.fromtimestamp(34).replace(tzinfo=datetime.timezone.utc),
+            datetime.datetime.fromtimestamp(34, tz=datetime.timezone.utc),
         )
 
     def test_create_order_from_current_limit_on_close(self):
