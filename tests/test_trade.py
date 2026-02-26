@@ -131,7 +131,9 @@ class TradeTest(unittest.TestCase):
             order_type="LIMIT",
             placed_date=datetime.datetime.fromtimestamp(12, tz=datetime.timezone.utc),
             matched_date=None,
-            cancelled_date=datetime.datetime.fromtimestamp(34, tz=datetime.timezone.utc),
+            cancelled_date=datetime.datetime.fromtimestamp(
+                34, tz=datetime.timezone.utc
+            ),
         )
         order = self.trade.create_order_from_current(
             mock_client, mock_current_order, "12345"
