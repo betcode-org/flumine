@@ -280,32 +280,38 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
 def betdaq_settled_orders(context: dict, flumine) -> None:
     for client in flumine.clients:
         if client.EXCHANGE == ExchangeType.BETDAQ:
-            sequence_number = context.get(client, 0)
-            try:
-                current_orders = client.betting_client.betting.get_orders_diff(
-                    sequence_number
-                )
-            except (BetdaqError, Exception):
-                logger.error("betdaq_settled_orders run error", exc_info=True)
-                continue
+            _last_sequence_number = -1
+            while True:
+                sequence_number = context.get(client, 0)
+                try:
+                    current_orders = client.betting_client.betting.get_orders_diff(
+                        sequence_number
+                    )
+                except (BetdaqError, Exception):
+                    logger.error("betdaq_settled_orders run error", exc_info=True)
+                    continue
 
-            cleared_orders = [
-                o
-                for o in current_orders
-                if o["status"] in ["Settled", "Cancelled", "Void"]
-            ]
-            if cleared_orders:
-                flumine.handler_queue.put(
-                    events.ClearedOrdersEvent(
-                        cleared_orders, exchange=ExchangeType.BETDAQ
+                cleared_orders = [
+                    o
+                    for o in current_orders
+                    if o["status"] in ["Settled", "Cancelled", "Void"]
+                ]
+                if cleared_orders:
+                    flumine.handler_queue.put(
+                        events.ClearedOrdersEvent(
+                            cleared_orders, exchange=ExchangeType.BETDAQ
+                        )
                     )
-                )
-                flumine.log_control(
-                    events.ClearedOrdersEvent(
-                        cleared_orders, exchange=ExchangeType.BETDAQ
+                    flumine.log_control(
+                        events.ClearedOrdersEvent(
+                            cleared_orders, exchange=ExchangeType.BETDAQ
+                        )
                     )
-                )
-            # update SequenceNumber
-            for order in current_orders:
-                sequence_number = max(order["sequence_number"], sequence_number)
-            context[client] = sequence_number
+                # update SequenceNumber
+                for order in current_orders:
+                    sequence_number = max(order["sequence_number"], sequence_number)
+                context[client] = sequence_number
+
+                if _last_sequence_number == sequence_number:
+                    break
+                _last_sequence_number = sequence_number

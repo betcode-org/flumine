@@ -426,7 +426,9 @@ class WorkersTest(unittest.TestCase):
         mock_flumine = mock.Mock(clients=[mock_client])
         context = {}
         worker.betdaq_settled_orders(context, mock_flumine)
-        mock_client.betting_client.betting.get_orders_diff.assert_called_with(0)
+        mock_client.betting_client.betting.get_orders_diff.assert_has_calls(
+            [mock.call(0), mock.call(4)]
+        )
         mock_events.ClearedOrdersEvent.assert_called_with(
             [
                 {"status": "Settled", "sequence_number": 1},

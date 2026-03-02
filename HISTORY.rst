@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.12.2 (2026-03-02)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- update betdaq_settled_orders to loop all cleared orders
+
 2.12.1 (2026-02-26)
 +++++++++++++++++++
 
