@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.12.2 (2026-03-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- update betdaq_settled_orders to get latest sequence number during init
+
 2.12.1 (2026-02-26)
 +++++++++++++++++++
 

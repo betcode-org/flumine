@@ -417,6 +417,10 @@ class WorkersTest(unittest.TestCase):
     @mock.patch("flumine.worker.events")
     def test_betdaq_settled_orders(self, mock_events, mock_config):
         mock_client = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        mock_client.betting_client.betting.get_orders.return_value = {
+            "orders": [],
+            "maximum_sequence_number": 354301,
+        }
         mock_client.betting_client.betting.get_orders_diff.return_value = [
             {"status": "Settled", "sequence_number": 1},
             {"status": "Cancelled", "sequence_number": 2},
@@ -426,7 +430,9 @@ class WorkersTest(unittest.TestCase):
         mock_flumine = mock.Mock(clients=[mock_client])
         context = {}
         worker.betdaq_settled_orders(context, mock_flumine)
-        mock_client.betting_client.betting.get_orders_diff.assert_called_with(0)
+        mock_client.betting_client.betting.get_orders_diff.assert_has_calls(
+            [mock.call(354301)]
+        )
         mock_events.ClearedOrdersEvent.assert_called_with(
             [
                 {"status": "Settled", "sequence_number": 1},
@@ -438,4 +444,4 @@ class WorkersTest(unittest.TestCase):
         mock_flumine.log_control.assert_called_with(
             mock_events.ClearedOrdersEvent.return_value
         )
-        self.assertEqual(context, {mock_client: 4})
+        self.assertEqual(context, {mock_client: 354301})
