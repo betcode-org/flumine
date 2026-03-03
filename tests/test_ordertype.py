@@ -4,7 +4,7 @@ from unittest import mock
 from betdaq.enums import OrderKillType, WithdrawRepriceOption
 
 from flumine.order.ordertype import (
-    ExchangeType,
+    VenueType,
     OrderTypes,
     BaseOrderType,
     LimitOrder,
@@ -19,7 +19,7 @@ class BaseOrderTypeTest(unittest.TestCase):
         self.order_type = BaseOrderType()
 
     def test_init(self):
-        self.assertIsNone(self.order_type.EXCHANGE)
+        self.assertIsNone(self.order_type.VENUE)
         self.assertIsNone(self.order_type.ORDER_TYPE)
 
     def test_place_instruction(self):
@@ -47,7 +47,7 @@ class LimitOrderTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order_type.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT)
         self.assertEqual(self.order_type.price, 1.01)
         self.assertEqual(self.order_type.size, 2)
@@ -95,7 +95,7 @@ class LimitOnCloseOrderTest(unittest.TestCase):
         self.order_type = LimitOnCloseOrder(64, 1.01)
 
     def test_init(self):
-        self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order_type.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT_ON_CLOSE)
         self.assertEqual(self.order_type.liability, 64)
         self.assertEqual(self.order_type.price, 1.01)
@@ -123,7 +123,7 @@ class MarketOnCloseOrderTest(unittest.TestCase):
         self.order_type = MarketOnCloseOrder(128)
 
     def test_init(self):
-        self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order_type.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.MARKET_ON_CLOSE)
         self.assertEqual(self.order_type.liability, 128)
 
@@ -148,7 +148,7 @@ class BetdaqLimitOrderTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.order_type.EXCHANGE, ExchangeType.BETDAQ)
+        self.assertEqual(self.order_type.VENUE, VenueType.BETDAQ)
         self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT)
         self.assertEqual(self.order_type.price, 1.01)
         self.assertEqual(self.order_type.size, 2)

@@ -8,7 +8,7 @@ from betfairlightweight import BetfairError, filters, exceptions
 from . import config
 from .events import events
 from .utils import chunks
-from .clients import ExchangeType
+from .clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +101,16 @@ def keep_alive(context: dict, flumine) -> None:
     login if keep alive failed
     """
     for client in flumine.clients:
-        if client.EXCHANGE == ExchangeType.BETFAIR:
+        if client.VENUE == VenueType.BETFAIR:
             if client.betting_client.session_token:
                 resp = client.keep_alive()
                 if resp is True or resp.status == "SUCCESS":
                     continue
-        elif client.EXCHANGE == ExchangeType.BETCONNECT:
+        elif client.VENUE == VenueType.BETCONNECT:
             resp = client.keep_alive()
             if resp:
                 continue
-        elif client.EXCHANGE == ExchangeType.BETDAQ:
+        elif client.VENUE == VenueType.BETDAQ:
             continue
         # keep-alive failed lets try a login
         client.login()
@@ -164,7 +164,7 @@ def poll_account_balance(context: dict, flumine) -> None:
         client.update_account_details()
         logger.info("Client update account details", extra=client.info)
         if client.account_funds:
-            flumine.log_control(events.BalanceEvent(client, exchange=client.EXCHANGE))
+            flumine.log_control(events.BalanceEvent(client, venue=client.VENUE))
 
 
 def poll_market_closure(context: dict, flumine) -> None:
@@ -173,7 +173,7 @@ def poll_market_closure(context: dict, flumine) -> None:
     ]
     for client in flumine.clients:
         if (
-            client.EXCHANGE != ExchangeType.BETFAIR
+            client.VENUE != VenueType.BETFAIR
             or client.paper_trade
             or client.market_recording_mode
         ):
@@ -279,7 +279,7 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
 
 def betdaq_settled_orders(context: dict, flumine) -> None:
     for client in flumine.clients:
-        if client.EXCHANGE == ExchangeType.BETDAQ:
+        if client.VENUE == VenueType.BETDAQ:
             sequence_number = context.get(client, 0)
             # get initial sequence number
             if sequence_number == 0:
@@ -309,12 +309,12 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                 if cleared_orders:
                     flumine.handler_queue.put(
                         events.ClearedOrdersEvent(
-                            cleared_orders, exchange=ExchangeType.BETDAQ
+                            cleared_orders, venue=VenueType.BETDAQ
                         )
                     )
                     flumine.log_control(
                         events.ClearedOrdersEvent(
-                            cleared_orders, exchange=ExchangeType.BETDAQ
+                            cleared_orders, venue=VenueType.BETDAQ
                         )
                     )
                 # update SequenceNumber

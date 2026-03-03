@@ -7,7 +7,7 @@ from unittest import mock
 from flumine.order.order import (
     BaseOrder,
     BetfairOrder,
-    ExchangeType,
+    VenueType,
     OrderTypes,
     OrderStatus,
     VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS,
@@ -53,7 +53,7 @@ class BaseOrderTest(unittest.TestCase):
         self.assertEqual(self.order.notes, {})
         self.assertIsNone(self.order.market_notes)
         self.assertIsNone(self.order.bet_id)
-        self.assertIsNone(self.order.EXCHANGE)
+        self.assertIsNone(self.order.VENUE)
         self.assertEqual(self.order.update_data, {})
         self.assertIsNone(self.order.publish_time)
         self.assertIsNone(self.order.market_version)
@@ -333,7 +333,7 @@ class BetfairOrderTest(unittest.TestCase):
         self.order = BetfairOrder(self.mock_trade, "BACK", self.mock_order_type)
 
     def test_init(self):
-        self.assertEqual(self.order.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order.VENUE, VenueType.BETFAIR)
 
     @mock.patch("flumine.order.order.BetfairOrder.placing")
     def test_place(self, mock_placing):
@@ -635,7 +635,7 @@ class BetdaqOrderTest(unittest.TestCase):
         self.order = BetdaqOrder(self.mock_trade, "BACK", self.mock_order_type)
 
     def test_init(self):
-        self.assertEqual(self.order.EXCHANGE, ExchangeType.BETDAQ)
+        self.assertEqual(self.order.VENUE, VenueType.BETDAQ)
 
     @mock.patch("flumine.order.order.BetdaqOrder.placing")
     def test_place(self, mock_placing):

@@ -10,7 +10,7 @@ from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from .betdaqorderpolling import BetdaqOrderPolling
-from ..clients import ExchangeType, BaseClient
+from ..clients import VenueType, BaseClient
 from ..utils import get_file_md
 from betfairlightweight.resources.streamingresources import MarketDefinition
 
@@ -82,11 +82,11 @@ class Streams:
         if client.order_stream:
             if client.paper_trade:
                 self.add_simulated_order_stream(client)
-            elif client.EXCHANGE == ExchangeType.BETFAIR:
+            elif client.VENUE == VenueType.BETFAIR:
                 self.add_order_stream(
                     client, conflate_ms=client.order_stream_conflate_ms
                 )
-            elif client.EXCHANGE == ExchangeType.BETDAQ:
+            elif client.VENUE == VenueType.BETDAQ:
                 self.add_betdaq_order_polling(client)
 
     """ market data """

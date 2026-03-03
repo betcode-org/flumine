@@ -13,7 +13,7 @@ class BaseEventTest(unittest.TestCase):
         self.assertIsNone(self.base_event.EVENT_TYPE)
         self.assertIsNone(self.base_event.QUEUE_TYPE)
         self.assertEqual(self.base_event.event, self.mock_event)
-        self.assertEqual(self.base_event.exchange, 123)
+        self.assertEqual(self.base_event.venue, 123)
         self.assertIsNotNone(self.base_event._time_created)
 
     def test_elapsed_seconds(self):

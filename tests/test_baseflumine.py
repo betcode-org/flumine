@@ -8,13 +8,13 @@ from flumine.baseflumine import (
     SimulatedMiddleware,
     Market,
 )
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 from flumine.exceptions import ClientError
 
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, paper_trade=False)
+        self.mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=False)
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
@@ -29,7 +29,7 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
     def test_init_simulated(self, mock_add_market_middleware, mock_SimulatedMiddleware):
         BaseFlumine.SIMULATED = True
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED, paper_trade=False)
+        mock_client = mock.Mock(VENUE=VenueType.SIMULATED, paper_trade=False)
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
         BaseFlumine.SIMULATED = False
@@ -39,7 +39,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test_init_paper_trade(
         self, mock_add_market_middleware, mock_SimulatedMiddleware
     ):
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, paper_trade=True)
+        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=True)
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
 
@@ -441,9 +441,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
         mock_current_orders = mock.Mock(orders=[mock_order])
-        mock_event = mock.Mock(
-            event=[mock_current_orders], exchange=ExchangeType.BETFAIR
-        )
+        mock_event = mock.Mock(event=[mock_current_orders], venue=VenueType.BETFAIR)
         self.base_flumine._process_current_orders(mock_event)
         mock_process_current_orders.assert_called_with(
             self.base_flumine.markets,
@@ -472,9 +470,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
         mock_current_orders = mock.Mock(orders=[mock_order])
-        mock_event = mock.Mock(
-            event=[mock_current_orders], exchange=ExchangeType.BETDAQ
-        )
+        mock_event = mock.Mock(event=[mock_current_orders], venue=VenueType.BETDAQ)
         self.base_flumine._process_current_orders(mock_event)
         mock_process_betdaq_current_orders.assert_called_with(
             self.base_flumine.markets,
@@ -669,7 +665,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_markets = mock.Mock()
         mock_markets.markets = {"1.23": mock_market}
         self.base_flumine.markets = mock_markets
-        mock_event = mock.Mock(exchange=ExchangeType.BETFAIR)
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_event.event.market_id = "1.23"
         mock_event.event.orders = []
         self.base_flumine._process_cleared_orders(mock_event)
@@ -700,7 +696,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_market = mock.Mock(blotter={"123": mock_order})
         self.base_flumine.markets = [mock_market]
-        mock_event = mock.Mock(exchange=ExchangeType.BETDAQ)
+        mock_event = mock.Mock(venue=VenueType.BETDAQ)
         mock_event.event = [{"customer_reference": 123}]
         self.base_flumine._process_cleared_orders(mock_event)
         mock_events.ClearedOrdersMetaEvent.assert_called_with([mock_order])

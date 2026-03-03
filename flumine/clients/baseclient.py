@@ -2,7 +2,7 @@ from typing import Optional
 from betfairlightweight.metadata import transaction_limit as betfair_transaction_limit
 
 from ..utils import create_short_uuid
-from .clients import ExchangeType
+from .clients import VenueType
 
 DEFAULT_CAPITAL_BASE = 0
 DEFAULT_COMMISSION_BASE = 0.05
@@ -13,7 +13,7 @@ class BaseClient:
     Abstraction of betting client.
     """
 
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
@@ -76,11 +76,11 @@ class BaseClient:
         if self._execution_cls:
             self.execution = self._execution_cls(flumine)
         else:
-            if self.EXCHANGE == ExchangeType.SIMULATED or self.paper_trade:
+            if self.VENUE == VenueType.SIMULATED or self.paper_trade:
                 self.execution = flumine.simulated_execution
-            elif self.EXCHANGE == ExchangeType.BETFAIR:
+            elif self.VENUE == VenueType.BETFAIR:
                 self.execution = flumine.betfair_execution
-            elif self.EXCHANGE == ExchangeType.BETDAQ:
+            elif self.VENUE == VenueType.BETDAQ:
                 self.execution = flumine.betdaq_execution
 
     def add_transaction(self, count: int, failed: bool = False) -> None:
@@ -125,7 +125,7 @@ class BaseClient:
     def info(self) -> dict:
         return {
             "username": self.username,
-            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
+            "venue": self.VENUE.value if self.VENUE else None,
             "betting_client": self.betting_client,
             "current_transaction_count_total": self.current_transaction_count_total,
             "transaction_count_total": self.transaction_count_total,

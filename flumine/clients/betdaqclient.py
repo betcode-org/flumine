@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 from .baseclient import BaseClient
-from .clients import ExchangeType
+from .clients import VenueType
 
 from betdaq.exceptions import BetdaqError
 
@@ -13,7 +13,7 @@ class BetdaqClient(BaseClient):
     BETDAQ betting client.
     """
 
-    EXCHANGE = ExchangeType.BETDAQ
+    VENUE = VenueType.BETDAQ
 
     def login(self) -> None:
         pass  # NR

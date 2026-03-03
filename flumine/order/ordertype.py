@@ -3,7 +3,7 @@ from enum import Enum
 from betdaq.enums import OrderKillType, WithdrawRepriceOption
 from betfairlightweight.resources.bettingresources import LineRangeInfo
 
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 
 
 class OrderTypes(Enum):
@@ -13,7 +13,7 @@ class OrderTypes(Enum):
 
 
 class BaseOrderType:
-    EXCHANGE = None
+    VENUE = None
     ORDER_TYPE = None
 
     def place_instruction(self) -> dict:
@@ -25,7 +25,7 @@ class BaseOrderType:
 
 
 class LimitOrder(BaseOrderType):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT
 
     def __init__(
@@ -77,7 +77,7 @@ class LimitOrder(BaseOrderType):
 
 
 class LimitOnCloseOrder(BaseOrderType):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
     ORDER_TYPE = OrderTypes.LIMIT_ON_CLOSE
 
     def __init__(
@@ -104,7 +104,7 @@ class LimitOnCloseOrder(BaseOrderType):
 
 
 class MarketOnCloseOrder(BaseOrderType):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
     ORDER_TYPE = OrderTypes.MARKET_ON_CLOSE
 
     def __init__(self, liability: float):
@@ -124,7 +124,7 @@ class MarketOnCloseOrder(BaseOrderType):
 
 
 class BetdaqLimitOrder(BaseOrderType):
-    EXCHANGE = ExchangeType.BETDAQ
+    VENUE = VenueType.BETDAQ
     ORDER_TYPE = OrderTypes.LIMIT
 
     def __init__(

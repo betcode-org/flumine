@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 
 
 class EventType(Enum):
@@ -36,12 +36,12 @@ class BaseEvent:
     EVENT_TYPE = None
     QUEUE_TYPE = None
 
-    __slots__ = ["_time_created", "event", "exchange", "callback"]
+    __slots__ = ["_time_created", "event", "venue", "callback"]
 
-    def __init__(self, event, exchange: ExchangeType = ExchangeType.BETFAIR):
+    def __init__(self, event, venue: VenueType = VenueType.BETFAIR):
         self._time_created = datetime.datetime.now(datetime.timezone.utc)
         self.event = event
-        self.exchange = exchange
+        self.venue = venue
 
     @property
     def elapsed_seconds(self):

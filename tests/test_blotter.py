@@ -497,7 +497,7 @@ class BlotterTest(unittest.TestCase):
         """
         Check that get_exposures works if order.order_type.price is None.
         If order.order_type.price is None, the controls will flag the order as a violation
-        and it won't be set to the exchange, so there won't be any exposure and we can ignore it.
+        and it won't be set to the venue, so there won't be any exposure and we can ignore it.
         """
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)

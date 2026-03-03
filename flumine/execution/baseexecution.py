@@ -14,7 +14,7 @@ BET_ID_START = 100000000000  # simulated start betId->
 
 
 class BaseExecution:
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(self, flumine, max_workers: int = config.max_execution_workers):
         self.flumine = flumine
@@ -143,7 +143,7 @@ class BaseExecution:
             order.responses.placed(instruction_report, dt=dt)
             if instruction_report.bet_id:
                 order.bet_id = instruction_report.bet_id
-                self.flumine.log_control(OrderEvent(order, exchange=order.EXCHANGE))
+                self.flumine.log_control(OrderEvent(order, venue=order.VENUE))
         elif package_type == OrderPackageType.CANCEL:
             order.responses.cancelled(instruction_report)
         elif package_type == OrderPackageType.UPDATE:
@@ -151,7 +151,7 @@ class BaseExecution:
         elif package_type == OrderPackageType.REPLACE:
             order.responses.placed(instruction_report)
             order.bet_id = instruction_report.bet_id
-            self.flumine.log_control(OrderEvent(order, exchange=order.EXCHANGE))
+            self.flumine.log_control(OrderEvent(order, venue=order.VENUE))
 
     def shutdown(self):
         logger.info("Shutting down Execution (%s)" % self.__class__.__name__)

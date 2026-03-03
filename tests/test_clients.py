@@ -4,7 +4,7 @@ from betfairlightweight.metadata import currency_parameters
 from betfairlightweight.exceptions import BetfairError
 from betconnect.exceptions import BetConnectException
 
-from flumine.clients.clients import ExchangeType, Clients
+from flumine.clients.clients import VenueType, Clients
 from flumine.clients import (
     BaseClient,
     BetfairClient,
@@ -20,40 +20,40 @@ class ClientsTest(unittest.TestCase):
     def setUp(self):
         self.clients = Clients()
 
-    def test_exchange_type(self):
-        self.assertEqual(len(ExchangeType), 4)
-        assert ExchangeType
+    def test_venue_type(self):
+        self.assertEqual(len(VenueType), 8)
+        assert VenueType
 
     def test_init(self):
         self.assertEqual(self.clients._clients, [])
         self.assertEqual(
-            self.clients._exchange_clients,
-            {exchange: {} for exchange in ExchangeType},
+            self.clients._venue_clients,
+            {venue: {} for venue in VenueType},
         )
 
     def test_add_client(self):
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, username="test")
+        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, username="test")
         self.clients._clients = [mock_client]
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
         with self.assertRaises(exceptions.ClientError):
-            self.clients.add_client(mock.Mock(EXCHANGE="test", username="test"))
+            self.clients.add_client(mock.Mock(VENUE="test", username="test"))
 
         self.clients._clients = []
-        self.clients._exchange_clients[ExchangeType.BETFAIR][
+        self.clients._venue_clients[VenueType.BETFAIR][
             mock_client.username
         ] = mock_client
         with self.assertRaises(exceptions.ClientError):
             self.clients.add_client(mock_client)
 
         self.clients._clients = []
-        self.clients._exchange_clients = {exchange: {} for exchange in ExchangeType}
-        mock_client.EXCHANGE = ExchangeType.BETFAIR
+        self.clients._venue_clients = {venue: {} for venue in VenueType}
+        mock_client.VENUE = VenueType.BETFAIR
         self.assertEqual(self.clients.add_client(mock_client), mock_client)
         self.assertEqual(self.clients._clients, [mock_client])
         self.assertEqual(
-            self.clients._exchange_clients[mock_client.EXCHANGE],
+            self.clients._venue_clients[mock_client.VENUE],
             {mock_client.username: mock_client},
         )
 
@@ -62,24 +62,22 @@ class ClientsTest(unittest.TestCase):
         self.assertEqual(self.clients.get_default(), "howlandthehum")
 
     def test_get_betfair_default(self):
-        mock_client_one = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
-        mock_client_two = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_one = mock.Mock(VENUE=VenueType.SIMULATED)
+        mock_client_two = mock.Mock(VENUE=VenueType.BETFAIR)
         self.clients._clients.append(mock_client_one)
         self.clients._clients.append(mock_client_two)
         self.assertEqual(self.clients.get_betfair_default(), mock_client_two)
 
     def test_get_betdaq_default(self):
-        mock_client_one = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
-        mock_client_two = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        mock_client_one = mock.Mock(VENUE=VenueType.SIMULATED)
+        mock_client_two = mock.Mock(VENUE=VenueType.BETDAQ)
         self.clients._clients.append(mock_client_one)
         self.clients._clients.append(mock_client_two)
         self.assertEqual(self.clients.get_betdaq_default(), mock_client_two)
 
     def test_get_client(self):
-        self.clients._exchange_clients[ExchangeType.SIMULATED]["joejames"] = 12
-        self.assertEqual(
-            self.clients.get_client(ExchangeType.SIMULATED, "joejames"), 12
-        )
+        self.clients._venue_clients[VenueType.SIMULATED]["joejames"] = 12
+        self.assertEqual(self.clients.get_client(VenueType.SIMULATED, "joejames"), 12)
 
     def test_login(self):
         mock_client = unittest.mock.Mock()
@@ -111,18 +109,20 @@ class ClientsTest(unittest.TestCase):
         self.assertTrue(self.clients.simulated)
 
     def test_info(self):
-        self.assertEqual(
-            self.clients.info, {exchange.value: {} for exchange in ExchangeType}
-        )
+        self.assertEqual(self.clients.info, {venue.value: {} for venue in VenueType})
         mock_client = mock.Mock()
-        self.clients._exchange_clients[ExchangeType.BETFAIR]["james"] = mock_client
+        self.clients._venue_clients[VenueType.BETFAIR]["james"] = mock_client
         self.assertEqual(
             self.clients.info,
             {
-                ExchangeType.BETFAIR.value: {"james": mock_client.info},
-                ExchangeType.SIMULATED.value: {},
-                ExchangeType.BETCONNECT.value: {},
-                ExchangeType.BETDAQ.value: {},
+                VenueType.BETFAIR.value: {"james": mock_client.info},
+                VenueType.SIMULATED.value: {},
+                VenueType.BETCONNECT.value: {},
+                VenueType.BETDAQ.value: {},
+                VenueType.KALSHI.value: {},
+                VenueType.POLYMARKET.value: {},
+                VenueType.SMARKETS.value: {},
+                VenueType.MATCHBOOK.value: {},
             },
         )
 
@@ -183,19 +183,19 @@ class BaseClientTest(unittest.TestCase):
 
     def test_add_execution(self):
         mock_flumine = mock.Mock()
-        self.base_client.EXCHANGE = ExchangeType.SIMULATED
+        self.base_client.VENUE = VenueType.SIMULATED
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.simulated_execution)
-        self.base_client.EXCHANGE = ExchangeType.BETFAIR
+        self.base_client.VENUE = VenueType.BETFAIR
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
-        self.base_client.EXCHANGE = ExchangeType.BETDAQ
+        self.base_client.VENUE = VenueType.BETDAQ
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betdaq_execution)
 
     def test_add_execution_cls(self):
         mock_flumine = mock.Mock()
-        self.base_client.EXCHANGE = ExchangeType.SIMULATED
+        self.base_client.VENUE = VenueType.SIMULATED
         mock_execution_cls = mock.Mock()
         self.base_client._execution_cls = mock_execution_cls
         self.base_client.add_execution(mock_flumine)
@@ -204,7 +204,7 @@ class BaseClientTest(unittest.TestCase):
 
     def test_add_execution_paper(self):
         self.base_client.paper_trade = True
-        self.base_client.EXCHANGE = ExchangeType.BETFAIR
+        self.base_client.VENUE = VenueType.BETFAIR
         mock_flumine = mock.Mock()
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.simulated_execution)

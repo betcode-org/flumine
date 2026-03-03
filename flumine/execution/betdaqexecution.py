@@ -3,7 +3,7 @@ import requests
 from typing import Callable
 from betdaq import BetdaqError
 
-from ..clients import ExchangeType
+from ..clients import VenueType
 from .baseexecution import BaseExecution
 from ..exceptions import OrderExecutionError
 from ..order.order import BaseOrder
@@ -22,7 +22,7 @@ class BetdaqExecution(BaseExecution):
     PlaceGroupOrder or ChangeOrder) at the same time'
     """
 
-    EXCHANGE = ExchangeType.BETDAQ
+    VENUE = VenueType.BETDAQ
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session
@@ -192,7 +192,7 @@ class BetdaqExecution(BaseExecution):
             order.responses.placed(instruction_report, dt=dt)
             if order_id:
                 order.bet_id = order_id
-                self.flumine.log_control(OrderEvent(order, exchange=order.EXCHANGE))
+                self.flumine.log_control(OrderEvent(order, venue=order.VENUE))
         elif package_type == OrderPackageType.CANCEL:
             order.responses.cancelled(instruction_report)
         elif package_type == OrderPackageType.UPDATE:

@@ -8,7 +8,7 @@
 
 ![Build Status](https://github.com/betcode-org/flumine/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine) [![Downloads](https://pepy.tech/badge/flumine)](https://pepy.tech/project/flumine)
 
-flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting venues. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
 [docs](https://betcode-org.github.io/flumine/)
 
@@ -23,7 +23,7 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Simulation: Simulate strategies/execution using historical data
 - Paper Trading: Test strategies in a simulated environment before going live
 - Data: Support for market, order and custom streaming data
-- Exchanges: Betfair, Betdaq (dev) and Betconnect
+- Venues: Betfair, Betdaq (dev) and Betconnect
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 

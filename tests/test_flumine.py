@@ -3,12 +3,12 @@ from unittest import mock
 
 from flumine import Flumine, worker
 from flumine.events import events
-from flumine.clients import ExchangeType, BetdaqClient
+from flumine.clients import VenueType, BetdaqClient
 
 
 class FlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED)
         self.flumine = Flumine(self.mock_client)
 
     @mock.patch("flumine.flumine.Flumine._add_default_workers")

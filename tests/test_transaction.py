@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 from unittest.mock import call
 
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 from flumine.execution.transaction import Transaction, OrderPackageType
 from flumine.exceptions import ControlError, OrderError
 
@@ -11,7 +11,7 @@ class TransactionTest(unittest.TestCase):
     def setUp(self) -> None:
         mock_blotter = {}
         self.mock_market = mock.Mock(blotter=mock_blotter)
-        self.mock_client = mock.Mock(trading_controls=[], EXCHANGE=ExchangeType.BETFAIR)
+        self.mock_client = mock.Mock(trading_controls=[], VENUE=VenueType.BETFAIR)
         self.transaction = Transaction(
             self.mock_market, 1, False, self.mock_client, customer_strategy_ref="dotty"
         )
@@ -179,7 +179,7 @@ class TransactionTest(unittest.TestCase):
         return_value=True,
     )
     def test_update_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertTrue(self.transaction.update_order(mock_order, "PERSIST"))
         mock_order.update.assert_called_with("PERSIST")
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
@@ -187,7 +187,7 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction._pending_orders)
 
     def test_update_order_incorrect_client(self):
-        mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=123, VENUE=VenueType.BETFAIR)
         with self.assertRaises(OrderError):
             self.transaction.update_order(mock_order, "PERSIST")
 
@@ -196,14 +196,14 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_update_order_violation(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertFalse(self.transaction.update_order(mock_order, "test"))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
         self.transaction._pending_update = []
         self.assertFalse(self.transaction._pending_orders)
 
-    def test_update_order_unknown_exchange(self):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=123)
+    def test_update_order_unknown_venue(self):
+        mock_order = mock.Mock(client=self.mock_client, VENUE=123)
         with self.assertRaises(OrderError):
             self.transaction.update_order(mock_order, "PERSIST", force=True)
 
@@ -212,7 +212,7 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_force_update_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertTrue(
             self.transaction.update_order(mock_order, "PERSIST", force=True)
         )
@@ -226,7 +226,7 @@ class TransactionTest(unittest.TestCase):
         return_value=True,
     )
     def test_update_order_betdaq(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETDAQ)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETDAQ)
         self.assertTrue(
             self.transaction.update_order(
                 mock_order,
@@ -249,7 +249,7 @@ class TransactionTest(unittest.TestCase):
         return_value=True,
     )
     def test_replace_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertTrue(self.transaction.replace_order(mock_order, 1.01, 321))
         mock_order.replace.assert_called_with(1.01)
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
@@ -257,12 +257,12 @@ class TransactionTest(unittest.TestCase):
         self.assertTrue(self.transaction._pending_orders)
 
     def test_replace_order_incorrect_client(self):
-        mock_order = mock.Mock(client=123, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=123, VENUE=VenueType.BETFAIR)
         with self.assertRaises(OrderError):
             self.transaction.replace_order(mock_order, 1.01, 321)
 
-    def test_replace_order_incorrect_exchange(self):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=123)
+    def test_replace_order_incorrect_venue(self):
+        mock_order = mock.Mock(client=self.mock_client, VENUE=123)
         with self.assertRaises(OrderError):
             self.transaction.replace_order(mock_order, 1.01, 321)
 
@@ -271,7 +271,7 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_replace_order_violation(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertFalse(self.transaction.replace_order(mock_order, 2.02))
         mock__validate_controls.assert_called_with(mock_order, OrderPackageType.REPLACE)
         self.transaction._pending_replace = []
@@ -282,7 +282,7 @@ class TransactionTest(unittest.TestCase):
         return_value=False,
     )
     def test_force_replace_order(self, mock__validate_controls):
-        mock_order = mock.Mock(client=self.mock_client, EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertTrue(
             self.transaction.replace_order(mock_order, 1.01, 321, force=True)
         )
@@ -398,11 +398,11 @@ class TransactionTest(unittest.TestCase):
     @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
     def test__create_order_package_betfair(self, mock_betfair_order_package):
         mock_betfair_order_package.order_limit.return_value = 2
-        mock_order_one = mock.Mock(id=1, exchange="BETFAIR")
-        mock_order_two = mock.Mock(id=2, exchange="BETFAIR")
-        mock_order_three = mock.Mock(id=3, exchange="BETFAIR")
-        mock_order_four = mock.Mock(id=4, exchange="BETFAIR")
-        mock_order_five = mock.Mock(id=5, exchange="BETFAIR")
+        mock_order_one = mock.Mock(id=1, venue="BETFAIR")
+        mock_order_two = mock.Mock(id=2, venue="BETFAIR")
+        mock_order_three = mock.Mock(id=3, venue="BETFAIR")
+        mock_order_four = mock.Mock(id=4, venue="BETFAIR")
+        mock_order_five = mock.Mock(id=5, venue="BETFAIR")
         packages = self.transaction._create_order_package(
             [
                 (mock_order_one, None),
@@ -452,11 +452,11 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.BetfairOrderPackage")
     def test__create_order_package_simulated(self, mock_betfair_order_package):
-        self.transaction._client.EXCHANGE = ExchangeType.SIMULATED
+        self.transaction._client.VENUE = VenueType.SIMULATED
         mock_betfair_order_package.order_limit.return_value = 2
-        mock_order_one = mock.Mock(id=1, exchange="SIMULATED")
-        mock_order_two = mock.Mock(id=2, exchange="SIMULATED")
-        mock_order_three = mock.Mock(id=3, exchange="SIMULATED")
+        mock_order_one = mock.Mock(id=1, venue="SIMULATED")
+        mock_order_two = mock.Mock(id=2, venue="SIMULATED")
+        mock_order_three = mock.Mock(id=3, venue="SIMULATED")
         packages = self.transaction._create_order_package(
             [
                 (mock_order_one, None),
@@ -494,11 +494,11 @@ class TransactionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.transaction.BetdaqOrderPackage")
     def test__create_order_package_betdaq(self, mock_betdaq_order_package):
-        self.transaction._client.EXCHANGE = ExchangeType.BETDAQ
+        self.transaction._client.VENUE = VenueType.BETDAQ
         mock_betdaq_order_package.order_limit.return_value = 2
-        mock_order_one = mock.Mock(id=1, exchange="BETDAQ")
-        mock_order_two = mock.Mock(id=2, exchange="BETDAQ")
-        mock_order_three = mock.Mock(id=3, exchange="BETDAQ")
+        mock_order_one = mock.Mock(id=1, venue="BETDAQ")
+        mock_order_two = mock.Mock(id=2, venue="BETDAQ")
+        mock_order_three = mock.Mock(id=3, venue="BETDAQ")
         packages = self.transaction._create_order_package(
             [
                 (mock_order_one, None),
