@@ -280,17 +280,27 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
 def betdaq_settled_orders(context: dict, flumine) -> None:
     for client in flumine.clients:
         if client.EXCHANGE == ExchangeType.BETDAQ:
-            _last_sequence_number = -1
+            sequence_number = context.get(client, 0)
+            # get initial sequence number
+            if sequence_number == 0:
+                current_orders = client.betting_client.betting.get_orders(
+                    sequence_number
+                )
+                sequence_number = current_orders["maximum_sequence_number"]
+                context[client] = sequence_number
+
             while True:
-                sequence_number = context.get(client, 0)
                 try:
                     current_orders = client.betting_client.betting.get_orders_diff(
                         sequence_number
                     )
                 except (BetdaqError, Exception):
+                    time.sleep(1)
                     logger.error("betdaq_settled_orders run error", exc_info=True)
                     continue
 
+                if not current_orders:
+                    break
                 cleared_orders = [
                     o
                     for o in current_orders
@@ -308,10 +318,15 @@ def betdaq_settled_orders(context: dict, flumine) -> None:
                         )
                     )
                 # update SequenceNumber
-                for order in current_orders:
-                    sequence_number = max(order["sequence_number"], sequence_number)
-                context[client] = sequence_number
-
-                if _last_sequence_number == sequence_number:
+                new_sequence_number = max(
+                    sequence_number,
+                    *(
+                        o.get("sequence_number", sequence_number)
+                        for o in current_orders
+                    ),
+                )
+                if new_sequence_number == sequence_number:
                     break
-                _last_sequence_number = sequence_number
+
+                sequence_number = new_sequence_number
+                context[client] = new_sequence_number
