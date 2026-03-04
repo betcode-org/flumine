@@ -1,3 +1,5 @@
+from flumine.clients import VenueType
+
 # Clients
 
 Flumine is capable of using multiple clients, these can be of the same `ExchangeType`, a variation depending on use case or your own custom client/wrapper. The default workers handle login/keep-alive/logout and market closure for all clients added to the framework automatically.
@@ -35,13 +37,13 @@ framework.add_client(client)
 To access clients within a strategy use the helper functions:
 
 ```python
-betfair_client = self.clients.get_betfair_default()
+betfair_client = self.clients.get_default(VenueType.BETFAIR)
 
 client = self.clients.get_client(ExchangeType.SIMULATED, username="123")
 ```
 
 !!! tip
-    `get_default` and `get_betfair_default` will use the first client added via `add_client` (ordered list)
+    `get_default` will use the first client added via `add_client` (ordered list) per Venue
 
 By default a transaction will use `clients.get_default()` however you can use a particular client:
 

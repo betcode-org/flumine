@@ -118,7 +118,7 @@ def keep_alive(context: dict, flumine) -> None:
 
 def poll_market_catalogue(context: dict, flumine) -> None:
     # get betfair client
-    client = flumine.clients.get_betfair_default()
+    client = flumine.clients.get_default(VenueType.BETFAIR)
     markets = [
         m.market_id
         for m in list(flumine.markets.markets.values())

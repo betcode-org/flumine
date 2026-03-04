@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from typing import Optional
 
 from ..exceptions import ClientError
 
@@ -50,18 +51,11 @@ class Clients:
         except KeyError:
             return
 
-    def get_default(self):
-        return self._clients[0]
-
-    def get_betfair_default(self):
-        for client in self._clients:
-            if client.VENUE == VenueType.BETFAIR:
-                return client
-
-    def get_betdaq_default(self):
-        for client in self._clients:
-            if client.VENUE == VenueType.BETDAQ:
-                return client
+    def get_default(self, venue_type: Optional[VenueType] = None):
+        if venue_type:
+            return next(iter(self._venue_clients[venue_type].values()), None)
+        else:
+            return self._clients[0]
 
     def login(self) -> None:
         for client in self._clients:

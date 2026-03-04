@@ -92,7 +92,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -131,7 +131,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -163,7 +163,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )

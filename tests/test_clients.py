@@ -58,22 +58,21 @@ class ClientsTest(unittest.TestCase):
         )
 
     def test_get_default(self):
-        self.clients._clients.append("howlandthehum")
-        self.assertEqual(self.clients.get_default(), "howlandthehum")
-
-    def test_get_betfair_default(self):
-        mock_client_one = mock.Mock(VENUE=VenueType.SIMULATED)
-        mock_client_two = mock.Mock(VENUE=VenueType.BETFAIR)
+        mock_client_one = mock.Mock(VENUE=VenueType.BETFAIR)
+        mock_client_two = mock.Mock(VENUE=VenueType.SMARKETS)
         self.clients._clients.append(mock_client_one)
+        self.clients._venue_clients[mock_client_one.VENUE][
+            mock_client_one.username
+        ] = mock_client_one
         self.clients._clients.append(mock_client_two)
-        self.assertEqual(self.clients.get_betfair_default(), mock_client_two)
-
-    def test_get_betdaq_default(self):
-        mock_client_one = mock.Mock(VENUE=VenueType.SIMULATED)
-        mock_client_two = mock.Mock(VENUE=VenueType.BETDAQ)
-        self.clients._clients.append(mock_client_one)
-        self.clients._clients.append(mock_client_two)
-        self.assertEqual(self.clients.get_betdaq_default(), mock_client_two)
+        self.clients._venue_clients[mock_client_two.VENUE][
+            mock_client_two.username
+        ] = mock_client_two
+        self.assertEqual(self.clients.get_default(), mock_client_one)
+        self.assertEqual(
+            self.clients.get_default(venue_type=VenueType.SMARKETS), mock_client_two
+        )
+        self.assertIsNone(self.clients.get_default(venue_type=VenueType.POLYMARKET))
 
     def test_get_client(self):
         self.clients._venue_clients[VenueType.SIMULATED]["joejames"] = 12
