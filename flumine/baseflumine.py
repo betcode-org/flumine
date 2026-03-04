@@ -282,22 +282,31 @@ class BaseFlumine:
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
         if event.event:
-            if event.venue == VenueType.BETFAIR:
-                process_current_orders(
+            if event.callback:
+                event.callback(
                     self.markets,
                     self.strategies,
                     event,
                     self.log_control,
                     self._add_market,
                 )
-            elif event.venue == VenueType.BETDAQ:
-                process_betdaq_current_orders(
-                    self.markets,
-                    self.strategies,
-                    event,
-                    self.log_control,
-                    self._add_market,
-                )
+            else:
+                if event.venue == VenueType.BETFAIR:
+                    process_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
+                elif event.venue == VenueType.BETDAQ:
+                    process_betdaq_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:

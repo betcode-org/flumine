@@ -80,6 +80,15 @@ class CurrentOrdersEvent(BaseEvent):
     EVENT_TYPE = EventType.CURRENT_ORDERS
     QUEUE_TYPE = QueueType.HANDLER
 
+    def __init__(
+        self,
+        event,
+        venue: VenueType = VenueType.BETFAIR,
+        callback=None,
+    ):
+        super(CurrentOrdersEvent, self).__init__(event, venue)
+        self.callback = callback
+
 
 class ClearedMarketsEvent(BaseEvent):
     EVENT_TYPE = EventType.CLEARED_MARKETS

@@ -11,6 +11,7 @@ Release History
 - *breaking change* ExchangeType -> VenueType
 - clients.get_default now filtered by Venue
 - client.order_stream_cls added to allow custom order stream
+- CurrentOrdersEvent callback added to allow custom processing on orders
 
 2.12.2 (2026-03-03)
 +++++++++++++++++++
