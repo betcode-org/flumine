@@ -31,6 +31,7 @@ class BaseClient:
         market_recording_mode: bool = False,
         simulated_full_match: bool = False,
         execution_cls=None,
+        order_stream_cls=None,
     ):
         if hasattr(betting_client, "lightweight"):
             assert (
@@ -56,7 +57,8 @@ class BaseClient:
         self.account_funds = None
         self.commission_paid = 0
 
-        self._execution_cls = execution_cls
+        self._execution_cls = execution_cls  # custom execution
+        self.order_stream_cls = order_stream_cls  # custom order stream
         self.execution = None  # set during flumine init
         self.trading_controls = []
 

@@ -80,14 +80,22 @@ class Streams:
 
     def add_client(self, client: BaseClient) -> None:
         if client.order_stream:
-            if client.paper_trade:
-                self.add_simulated_order_stream(client)
-            elif client.VENUE == VenueType.BETFAIR:
-                self.add_order_stream(
-                    client, conflate_ms=client.order_stream_conflate_ms
+            if client.order_stream_cls:
+                order_stream = client.order_stream_cls(
+                    flumine=self.flumine,
+                    client=client,
+                    custom=True,
                 )
-            elif client.VENUE == VenueType.BETDAQ:
-                self.add_betdaq_order_polling(client)
+                self.add_custom_stream(order_stream)
+            else:
+                if client.paper_trade:
+                    self.add_simulated_order_stream(client)
+                elif client.VENUE == VenueType.BETFAIR:
+                    self.add_order_stream(
+                        client, conflate_ms=client.order_stream_conflate_ms
+                    )
+                elif client.VENUE == VenueType.BETDAQ:
+                    self.add_betdaq_order_polling(client)
 
     """ market data """
 

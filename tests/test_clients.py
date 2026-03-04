@@ -150,7 +150,6 @@ class BaseClientTest(unittest.TestCase):
         self.assertIsNone(self.base_client.account_details)
         self.assertIsNone(self.base_client.account_funds)
         self.assertEqual(self.base_client.commission_paid, 0)
-        self.assertIsNone(self.base_client.execution)
         self.assertEqual(self.base_client.trading_controls, [])
         self.assertTrue(self.base_client.order_stream)
         self.assertIsNone(self.base_client.order_stream_conflate_ms)
@@ -159,6 +158,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertFalse(self.base_client.paper_trade)
         self.assertFalse(self.base_client.simulated_full_match)
         self.assertIsNone(self.base_client.execution)
+        self.assertIsNone(self.base_client.order_stream_cls)
 
     def test_init_assert(self):
         with self.assertRaises(AssertionError):

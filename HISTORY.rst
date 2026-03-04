@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+2.13.0 (2026-03-??)
++++++++++++++++++++
+
+**Improvements**
+
+- *breaking change* ExchangeType -> VenueType
+- clients.get_default now filtered by Venue
+- client.order_stream_cls added to allow custom order stream
+
 2.12.2 (2026-03-03)
 +++++++++++++++++++
 
