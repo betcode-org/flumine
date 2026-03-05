@@ -249,27 +249,18 @@ class StrategyExposure(BaseControl):
                 or strategy.max_selection_exposure is not None
             ):
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    if (
-                        order.VENUE == VenueType.BETDAQ
-                        or order.order_type.price_ladder_definition
-                        in [
-                            "CLASSIC",
-                            "FINEST",
-                        ]
-                    ):
+                    if order.order_type.price_ladder_definition == "LINE_RANGE":
+                        # All bets are struck at 2.0
+                        order_exposure = (
+                            order.order_type.size or order.order_type.bet_target_size
+                        )
+                    else:
                         size = order.order_type.size or order.order_type.bet_target_size
                         price = order.order_type.price
                         if order.side == "BACK":
                             order_exposure = size
                         else:
                             order_exposure = (price - 1) * size
-                    elif order.order_type.price_ladder_definition == "LINE_RANGE":
-                        # All bets are struck at 2.0
-                        order_exposure = (
-                            order.order_type.size or order.order_type.bet_target_size
-                        )
-                    else:
-                        return self._on_error(order, "Unknown priceLadderDefinition")
                 elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                     order_exposure = order.order_type.liability
                 elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
