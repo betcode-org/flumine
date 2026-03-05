@@ -12,6 +12,8 @@ Release History
 - clients.get_default now filtered by Venue
 - client.order_stream_cls added to allow custom order stream
 - CurrentOrdersEvent callback added to allow custom processing on orders
+- bet_id lookup dynamic to handle async place methods
+- BetfairOrderPackage is now default
 
 2.12.2 (2026-03-03)
 +++++++++++++++++++

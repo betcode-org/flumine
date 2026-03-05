@@ -244,14 +244,10 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
-        if self._client.VENUE in [VenueType.BETFAIR, VenueType.SIMULATED]:
-            package = BetfairOrderPackage
-        elif self._client.VENUE == VenueType.BETDAQ:
+        if self._client.VENUE == VenueType.BETDAQ:
             package = BetdaqOrderPackage
         else:
-            raise OrderError(
-                f"Invalid venue '{self._client.VENUE}' provided to transaction"
-            )
+            package = BetfairOrderPackage
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:
