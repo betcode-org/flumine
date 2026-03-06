@@ -8,11 +8,11 @@
 
 ![Build Status](https://github.com/betcode-org/flumine/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/liampauling/flumine/badge.svg?branch=master)](https://coveralls.io/github/liampauling/flumine?branch=master) [![PyPI version](https://badge.fury.io/py/flumine.svg)](https://pypi.python.org/pypi/flumine) [![Downloads](https://pepy.tech/badge/flumine)](https://pepy.tech/project/flumine)
 
-flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting venues. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
 [docs](https://betcode-org.github.io/flumine/)
 
-[join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
+[join betcode slack group (2.5k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
 ## overview
 
@@ -23,7 +23,18 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Simulation: Simulate strategies/execution using historical data
 - Paper Trading: Test strategies in a simulated environment before going live
 - Data: Support for market, order and custom streaming data
-- Exchanges: Betfair, Betdaq (dev) and Betconnect
+- Venues: Multi venue / concurrent venue support
+
+## venues
+
+- Betfair
+- Betconnect (account/execution functionality)
+- Betdaq (account/execution functionality)
+- Smarkets (future)
+- Matchbook (future)
+- Polymarket (future)
+- Kalshi (future)
+
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 

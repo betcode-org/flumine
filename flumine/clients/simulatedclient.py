@@ -3,7 +3,7 @@ from betfairlightweight.metadata import currency_parameters
 from betfairlightweight.resources.accountresources import AccountDetails
 
 from .baseclient import BaseClient
-from .clients import ExchangeType
+from .clients import VenueType
 
 
 class SimulatedClient(BaseClient):
@@ -11,7 +11,7 @@ class SimulatedClient(BaseClient):
     Simulated betting client.
     """
 
-    EXCHANGE = ExchangeType.SIMULATED
+    VENUE = VenueType.SIMULATED
     DISCOUNT_RATE = 0
     CURRENCY_CODE = "GBP"
 

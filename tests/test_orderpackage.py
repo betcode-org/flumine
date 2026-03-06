@@ -8,7 +8,7 @@ from flumine.order.orderpackage import (
     EventType,
     QueueType,
     BetfairOrderPackage,
-    ExchangeType,
+    VenueType,
     OrderStatus,
     BetdaqOrderPackage,
 )
@@ -38,7 +38,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.EVENT_TYPE, EventType.ORDER_PACKAGE)
         self.assertEqual(self.order_package.QUEUE_TYPE, QueueType.HANDLER)
         self.assertEqual(self.order_package.bet_delay, 1)
-        self.assertIsNone(self.order_package.EXCHANGE)
+        self.assertIsNone(self.order_package.VENUE)
         self.assertFalse(self.order_package.async_)
         self.assertEqual(self.order_package._market_version, 123)
         self.assertFalse(self.order_package.processed)
@@ -80,7 +80,7 @@ class OrderPackageTest(unittest.TestCase):
         config.replace_latency = 0.4
 
         self.assertIsNone(self.order_package.calc_simulated_delay())
-        self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
+        self.order_package.client.execution.VENUE = VenueType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_delay(), 1.1)
         self.order_package.package_type = OrderPackageType.CANCEL
@@ -175,7 +175,7 @@ class BetfairOrderPackageTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.order_package.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order_package.VENUE, VenueType.BETFAIR)
 
     def test_place_instructions(self):
         self.assertEqual(
@@ -223,7 +223,7 @@ class BetdaqOrderPackageTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.order_package.EXCHANGE, ExchangeType.BETDAQ)
+        self.assertEqual(self.order_package.VENUE, VenueType.BETDAQ)
 
     def test_place_instructions(self):
         self.assertEqual(

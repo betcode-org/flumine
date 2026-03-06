@@ -4,7 +4,7 @@ from betdaq import BetdaqError
 from tenacity import retry
 
 from .basestream import BaseStream
-from ..clients import ExchangeType
+from ..clients import VenueType
 from ..events.events import CurrentOrdersEvent
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class BetdaqOrderPolling(BaseStream):
     ) -> int:
         if current_orders or self.flumine.markets.live_orders:
             self.flumine.handler_queue.put(
-                CurrentOrdersEvent(current_orders, exchange=ExchangeType.BETDAQ)
+                CurrentOrdersEvent(current_orders, venue=VenueType.BETDAQ)
             )
             # update SequenceNumber
             for order in current_orders:

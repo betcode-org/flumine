@@ -85,7 +85,7 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     if order.async_ and order.bet_id is None and current_order.bet_id:
         order.responses.placed()
         order.bet_id = current_order.bet_id
-        log_control(OrderEvent(order, exchange=order.EXCHANGE))
+        log_control(OrderEvent(order, venue=order.VENUE))
     # update status
     if order.bet_id and order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":

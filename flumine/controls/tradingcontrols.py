@@ -1,6 +1,6 @@
 import logging
 
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from ..order.ordertype import OrderTypes
 from ..order.orderpackage import OrderPackageType, BaseOrder
 from . import BaseControl
@@ -13,15 +13,15 @@ logger = logging.getLogger(__name__)
 class OrderValidation(BaseControl):
     """
     Validates order price and size is valid for
-    exchange.
+    venue.
     """
 
     NAME = "ORDER_VALIDATION"
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if order.EXCHANGE == ExchangeType.BETFAIR:
+        if order.VENUE == VenueType.BETFAIR:
             self._validate_betfair_order(order)
-        elif order.EXCHANGE == ExchangeType.BETDAQ:
+        elif order.VENUE == VenueType.BETDAQ:
             self._validate_betdaq_order(order)
 
     def _validate_betfair_order(self, order):
@@ -48,7 +48,7 @@ class OrderValidation(BaseControl):
             self._on_error(order, "Unknown orderType")
 
     def _validate_size(self, order):
-        if order.EXCHANGE == ExchangeType.BETFAIR:
+        if order.VENUE == VenueType.BETFAIR:
             size = order.order_type.size or order.order_type.bet_target_size
         else:
             size = order.order_type.size
@@ -149,7 +149,7 @@ class MarketValidation(BaseControl):
     NAME = "MARKET_VALIDATION"
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
-        if order.EXCHANGE == ExchangeType.BETFAIR:
+        if order.VENUE == VenueType.BETFAIR:
             self._validate_betfair_market_status(order)
         # todo BETDAQ
 
@@ -211,7 +211,7 @@ class ExecutionValidation(BaseControl):
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if self.flumine.clients.simulated:
             return
-        if order.EXCHANGE == ExchangeType.BETFAIR:
+        if order.VENUE == VenueType.BETFAIR:
             self.validate_order(order, package_type)
 
 
@@ -240,8 +240,7 @@ class StrategyExposure(BaseControl):
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,
         ) or (
-            order.EXCHANGE == ExchangeType.BETDAQ
-            and package_type == OrderPackageType.UPDATE
+            order.VENUE == VenueType.BETDAQ and package_type == OrderPackageType.UPDATE
         ):
             strategy = order.trade.strategy
             market = self.flumine.markets.markets[order.market_id]
@@ -250,27 +249,18 @@ class StrategyExposure(BaseControl):
                 or strategy.max_selection_exposure is not None
             ):
                 if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-                    if (
-                        order.EXCHANGE == ExchangeType.BETDAQ
-                        or order.order_type.price_ladder_definition
-                        in [
-                            "CLASSIC",
-                            "FINEST",
-                        ]
-                    ):
+                    if order.order_type.price_ladder_definition == "LINE_RANGE":
+                        # All bets are struck at 2.0
+                        order_exposure = (
+                            order.order_type.size or order.order_type.bet_target_size
+                        )
+                    else:
                         size = order.order_type.size or order.order_type.bet_target_size
                         price = order.order_type.price
                         if order.side == "BACK":
                             order_exposure = size
                         else:
                             order_exposure = (price - 1) * size
-                    elif order.order_type.price_ladder_definition == "LINE_RANGE":
-                        # All bets are struck at 2.0
-                        order_exposure = (
-                            order.order_type.size or order.order_type.bet_target_size
-                        )
-                    else:
-                        return self._on_error(order, "Unknown priceLadderDefinition")
                 elif order.order_type.ORDER_TYPE == OrderTypes.LIMIT_ON_CLOSE:
                     order_exposure = order.order_type.liability
                 elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:

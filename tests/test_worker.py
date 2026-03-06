@@ -4,7 +4,7 @@ from unittest import mock
 from betfairlightweight import BetfairError, exceptions
 
 from flumine import worker
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 
 
 class BackgroundWorkerTest(unittest.TestCase):
@@ -63,12 +63,12 @@ class WorkersTest(unittest.TestCase):
 
     def test_keep_alive(self):
         mock_context = mock.Mock()
-        mock_client_simulated = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
-        mock_client_betfair = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_simulated = mock.Mock(VENUE=VenueType.SIMULATED)
+        mock_client_betfair = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_client_betfair.betting_client.session_token = None
-        mock_client_betfair_st = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_betfair_st = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_client_betfair_st.betting_client.session_token = "test"
-        mock_client_betconnect = mock.Mock(EXCHANGE=ExchangeType.BETCONNECT)
+        mock_client_betconnect = mock.Mock(VENUE=VenueType.BETCONNECT)
         mock_client_betconnect.keep_alive.return_value = None
         mock_flumine = mock.Mock(
             clients=[
@@ -92,7 +92,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -131,7 +131,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -163,7 +163,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -198,7 +198,7 @@ class WorkersTest(unittest.TestCase):
         worker.poll_account_balance(mock_context, mock_flumine)
         mock_client.update_account_details.assert_called_with()
         mock_events.BalanceEvent.assert_called_with(
-            mock_client, exchange=mock_client.EXCHANGE
+            mock_client, venue=mock_client.VENUE
         )
         mock_flumine.log_control.assert_called_with(mock_events.BalanceEvent())
 
@@ -211,13 +211,13 @@ class WorkersTest(unittest.TestCase):
             id="123",
             paper_trade=False,
             market_recording_mode=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         mock_client_sim = mock.Mock(
             id="456",
             paper_trade=False,
             market_recording_mode=False,
-            EXCHANGE=ExchangeType.SIMULATED,
+            VENUE=VenueType.SIMULATED,
         )
         mock_flumine = mock.Mock(clients=[mock_client, mock_client_sim])
         market_one = mock.Mock(closed=False)
@@ -416,7 +416,7 @@ class WorkersTest(unittest.TestCase):
     @mock.patch("flumine.worker.config")
     @mock.patch("flumine.worker.events")
     def test_betdaq_settled_orders(self, mock_events, mock_config):
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        mock_client = mock.Mock(VENUE=VenueType.BETDAQ)
         mock_client.betting_client.betting.get_orders.return_value = {
             "orders": [],
             "maximum_sequence_number": 354301,
@@ -439,7 +439,7 @@ class WorkersTest(unittest.TestCase):
                 {"status": "Cancelled", "sequence_number": 2},
                 {"status": "Void", "sequence_number": 3},
             ],
-            exchange=ExchangeType.BETDAQ,
+            venue=VenueType.BETDAQ,
         )
         mock_flumine.log_control.assert_called_with(
             mock_events.ClearedOrdersEvent.return_value

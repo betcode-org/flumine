@@ -6,7 +6,7 @@ from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
 
 from ..events.events import BaseEvent, EventType, QueueType
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from .. import config
 from .order import BaseOrder, OrderStatus
 
@@ -26,7 +26,7 @@ class BaseOrderPackage(BaseEvent):
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
@@ -72,7 +72,7 @@ class BaseOrderPackage(BaseEvent):
                     order.executable()
 
     def calc_simulated_delay(self) -> float:
-        if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
+        if self.client.execution.VENUE == VenueType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
                 return config.place_latency + self.bet_delay
             elif self.package_type == OrderPackageType.CANCEL:
@@ -144,7 +144,7 @@ class BaseOrderPackage(BaseEvent):
 
 
 class BetfairOrderPackage(BaseOrderPackage):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     @property
     def place_instructions(self) -> list:
@@ -179,7 +179,7 @@ class BetfairOrderPackage(BaseOrderPackage):
 
 
 class BetdaqOrderPackage(BaseOrderPackage):
-    EXCHANGE = ExchangeType.BETDAQ
+    VENUE = VenueType.BETDAQ
 
     @property
     def place_instructions(self) -> list:

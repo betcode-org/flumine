@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 
 from .. import config
-from ..clients import ExchangeType
+from ..clients import VenueType
 from ..order.orderpackage import (
     OrderPackageType,
     BetfairOrderPackage,
@@ -19,7 +19,7 @@ class Transaction:
     """
     Process place, cancel, update and replace requests.
 
-    Transaction per single client/exchange only.
+    Transaction per single client/venue only.
 
     Default behaviour is to execute immediately however
     when it is used as a context manager requests can
@@ -148,9 +148,9 @@ class Transaction:
         ):
             return False
         # update
-        if order.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
+        if order.VENUE in [VenueType.BETFAIR, VenueType.SIMULATED]:
             order.update(new_persistence_type)
-        elif order.EXCHANGE == ExchangeType.BETDAQ:
+        elif order.VENUE == VenueType.BETDAQ:
             order.update(
                 size_delta,
                 new_price,
@@ -161,7 +161,7 @@ class Transaction:
                 set_to_be_sp_if_unmatched,
             )
         else:
-            raise OrderError(f"update_order: Unknown exchange '{order.EXCHANGE}'")
+            raise OrderError(f"update_order: Unknown venue '{order.VENUE}'")
         self._pending_update.append((order, None))
         self._pending_orders = True
         return True
@@ -169,10 +169,8 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
-        if order.EXCHANGE not in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
-            raise OrderError(
-                f"replace_order: Order EXCHANGE cannot be {order.EXCHANGE}"
-            )
+        if order.VENUE not in [VenueType.BETFAIR, VenueType.SIMULATED]:
+            raise OrderError(f"replace_order: Order VENUE cannot be {order.VENUE}")
         if order.client != self._client:
             raise OrderError(
                 "replace_order: Order client '{0}' does not match transaction client '{1}'".format(
@@ -246,14 +244,10 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
-        if self._client.EXCHANGE in [ExchangeType.BETFAIR, ExchangeType.SIMULATED]:
-            package = BetfairOrderPackage
-        elif self._client.EXCHANGE == ExchangeType.BETDAQ:
+        if self._client.VENUE == VenueType.BETDAQ:
             package = BetdaqOrderPackage
         else:
-            raise OrderError(
-                f"Invalid exchange '{self._client.EXCHANGE}' provided to transaction"
-            )
+            package = BetfairOrderPackage
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:

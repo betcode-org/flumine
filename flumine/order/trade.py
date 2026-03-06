@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class TradeStatus(Enum):
-    PENDING = "Pending"  # pending exchange processing
+    PENDING = "Pending"  # pending venue processing
     LIVE = "Live"
     COMPLETE = "Complete"
 
@@ -92,9 +92,9 @@ class Trade:
         context: dict = None,
         notes: collections.OrderedDict = None,
     ) -> BetfairOrder:
-        if order_type.EXCHANGE != order.EXCHANGE:
+        if order_type.VENUE != order.VENUE:
             raise OrderError(
-                "Incorrect order/order_type exchange combination for trade.create_order"
+                "Incorrect order/order_type venue combination for trade.create_order"
             )
         order = order(
             trade=self,
@@ -183,9 +183,9 @@ class Trade:
         context: dict = None,
         notes: collections.OrderedDict = None,
     ) -> BetdaqOrder:
-        if order_type.EXCHANGE != order.EXCHANGE:
+        if order_type.VENUE != order.VENUE:
             raise OrderError(
-                "Incorrect order/order_type exchange combination for trade.create_order"
+                "Incorrect order/order_type venue combination for trade.create_order"
             )
         order = order(
             trade=self,

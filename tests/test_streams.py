@@ -3,7 +3,7 @@ import datetime
 from unittest import mock
 from unittest.mock import call
 
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 from flumine.streams import streams, datastream, historicalstream, betdaqorderpolling
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
@@ -161,8 +161,10 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams.add_order_stream")
     def test_add_client_betfair(self, mock_add_order_stream):
-        mock_client = mock.Mock(order_stream=True, paper_trade=False)
-        mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
+        mock_client = mock.Mock(
+            order_stream=True, paper_trade=False, order_stream_cls=None
+        )
+        mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_called_with(
             mock_client, conflate_ms=mock_client.order_stream_conflate_ms
@@ -170,24 +172,41 @@ class StreamsTest(unittest.TestCase):
 
     @mock.patch("flumine.streams.streams.Streams.add_simulated_order_stream")
     def test_add_client_paper_trade(self, mock_add_simulated_order_stream):
-        mock_client = mock.Mock(order_stream=True, paper_trade=True)
-        mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
+        mock_client = mock.Mock(
+            order_stream=True, paper_trade=True, order_stream_cls=None
+        )
+        mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_simulated_order_stream.assert_called_with(mock_client)
 
     @mock.patch("flumine.streams.streams.Streams.add_order_stream")
     def test_add_client_no_order_stream(self, mock_add_order_stream):
-        mock_client = mock.Mock(order_stream=False)
-        mock_client.EXCHANGE = streams.ExchangeType.BETFAIR
+        mock_client = mock.Mock(order_stream=False, order_stream_cls=None)
+        mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_not_called()
 
     @mock.patch("flumine.streams.streams.Streams.add_betdaq_order_polling")
     def test_add_client_betdaq(self, mock_add_order_stream):
-        mock_client = mock.Mock(order_stream=True, paper_trade=False)
-        mock_client.EXCHANGE = streams.ExchangeType.BETDAQ
+        mock_client = mock.Mock(
+            order_stream=True, paper_trade=False, order_stream_cls=None
+        )
+        mock_client.VENUE = streams.VenueType.BETDAQ
         self.streams.add_client(mock_client)
         mock_add_order_stream.assert_called_with(mock_client)
+
+    @mock.patch("flumine.streams.streams.Streams.add_custom_stream")
+    def test_add_client_custom_order_stream(self, mock_add_custom_stream):
+        mock_order_stream_cls = mock.Mock()
+        mock_client = mock.Mock(
+            order_stream=True, paper_trade=False, order_stream_cls=mock_order_stream_cls
+        )
+        mock_client.VENUE = streams.VenueType.BETDAQ
+        self.streams.add_client(mock_client)
+        mock_order_stream_cls.assert_called_with(
+            flumine=self.mock_flumine, client=mock_client, custom=True
+        )
+        mock_add_custom_stream.assert_called_with(mock_order_stream_cls.return_value)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
     def test_add_stream_new(self, mock_increment):
@@ -1281,7 +1300,7 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.assertEqual(
             self.stream._process_current_orders(current_orders, sequence_number), 1
         )
-        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        mock_event.assert_called_with(current_orders, venue=VenueType.BETDAQ)
         self.stream.flumine.handler_queue.put.assert_called_with(
             mock_event.return_value
         )
@@ -1294,7 +1313,7 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.assertEqual(
             self.stream._process_current_orders(current_orders, sequence_number), 0
         )
-        mock_event.assert_called_with(current_orders, exchange=ExchangeType.BETDAQ)
+        mock_event.assert_called_with(current_orders, venue=VenueType.BETDAQ)
         self.stream.flumine.handler_queue.put.assert_called_with(
             mock_event.return_value
         )

@@ -9,7 +9,7 @@ from .strategy.strategy import Strategies, BaseStrategy
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
-from .clients import Clients, BaseClient, ExchangeType
+from .clients import Clients, BaseClient, VenueType
 from .markets.markets import Markets
 from .markets.market import Market
 from .markets.middleware import Middleware, SimulatedMiddleware
@@ -282,22 +282,31 @@ class BaseFlumine:
     def _process_current_orders(self, event: events.CurrentOrdersEvent) -> None:
         # update state
         if event.event:
-            if event.exchange == ExchangeType.BETFAIR:
-                process_current_orders(
+            if event.callback:
+                event.callback(
                     self.markets,
                     self.strategies,
                     event,
                     self.log_control,
                     self._add_market,
                 )
-            elif event.exchange == ExchangeType.BETDAQ:
-                process_betdaq_current_orders(
-                    self.markets,
-                    self.strategies,
-                    event,
-                    self.log_control,
-                    self._add_market,
-                )
+            else:
+                if event.venue == VenueType.BETFAIR:
+                    process_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
+                elif event.venue == VenueType.BETDAQ:
+                    process_betdaq_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
                 for strategy in self.strategies:
@@ -391,7 +400,7 @@ class BaseFlumine:
             self._remove_market(market, clear=False)
 
     def _process_cleared_orders(self, event):
-        if event.exchange == ExchangeType.BETFAIR:
+        if event.venue == VenueType.BETFAIR:
             market_id = event.event.market_id
             market = self.markets.markets.get(market_id)
             if market is None:
@@ -402,7 +411,7 @@ class BaseFlumine:
                 return
 
             meta_orders = market.blotter.process_cleared_orders(event.event)
-        elif event.exchange == ExchangeType.BETDAQ:
+        elif event.venue == VenueType.BETDAQ:
             market_id = "betdaq"
             meta_orders = []
             for cleared_order in event.event:
@@ -420,7 +429,7 @@ class BaseFlumine:
                 else:
                     continue
         else:
-            logger.warning("Unknown exchange in '_process_cleared_orders'")
+            logger.warning("Unknown venue in '_process_cleared_orders'")
             return
         if meta_orders:
             self.log_control(events.ClearedOrdersMetaEvent(meta_orders))

@@ -10,7 +10,7 @@ from typing import Union, Optional
 import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from .ordertype import (
     LimitOrder,
     LimitOnCloseOrder,
@@ -34,7 +34,7 @@ VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
 
 
 class OrderStatus(Enum):
-    # Pending exchange processing
+    # Pending venue processing
     PENDING = "Pending"
     CANCELLING = "Cancelling"
     UPDATING = "Updating"
@@ -61,7 +61,7 @@ COMPLETE_STATUS = [
 
 
 class BaseOrder:
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
@@ -348,7 +348,7 @@ class BaseOrder:
 
 
 class BetfairOrder(BaseOrder):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     # updates
     def place(self, publish_time: int, market_version: int, async_: bool) -> None:
@@ -516,7 +516,7 @@ class BetfairOrder(BaseOrder):
 
 
 class BetdaqOrder(BaseOrder):
-    EXCHANGE = ExchangeType.BETDAQ
+    VENUE = VenueType.BETDAQ
 
     # updates
     def place(self, publish_time: int, market_version: int, async_: bool) -> None:

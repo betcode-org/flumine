@@ -80,8 +80,8 @@ class TradeTest(unittest.TestCase):
         self.assertFalse(self.trade.complete)
 
     def test_create_order(self):
-        mock_order_type = mock.Mock(EXCHANGE="SYM")
-        mock_order = mock.Mock(EXCHANGE="SYM")
+        mock_order_type = mock.Mock(VENUE="SYM")
+        mock_order = mock.Mock(VENUE="SYM")
         self.trade.create_order(
             "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
         )
@@ -97,8 +97,8 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [mock_order()])
 
     def test_create_order_error(self):
-        mock_order_type = mock.Mock(EXCHANGE="SYM")
-        mock_order = mock.Mock(EXCHANGE="MYS")
+        mock_order_type = mock.Mock(VENUE="SYM")
+        mock_order = mock.Mock(VENUE="MYS")
         with self.assertRaises(OrderError):
             self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
@@ -182,8 +182,8 @@ class TradeTest(unittest.TestCase):
             )
 
     def test_create_betdaq_order(self):
-        mock_order_type = mock.Mock(EXCHANGE="BETDAQ")
-        mock_order = mock.Mock(EXCHANGE="BETDAQ")
+        mock_order_type = mock.Mock(VENUE="BETDAQ")
+        mock_order = mock.Mock(VENUE="BETDAQ")
         self.trade.create_order(
             "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
         )

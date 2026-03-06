@@ -6,7 +6,7 @@ from flumine.controls.tradingcontrols import (
     OrderValidation,
     StrategyExposure,
     OrderTypes,
-    ExchangeType,
+    VenueType,
     OrderPackageType,
     MarketValidation,
     ExecutionValidation,
@@ -31,7 +31,7 @@ class TestOrderValidation(unittest.TestCase):
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_order"
     )
     def test_validate_betfair(self, mock_validate_betfair_order):
-        mock_order = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_order = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.order_type.size = 12
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
@@ -41,7 +41,7 @@ class TestOrderValidation(unittest.TestCase):
         "flumine.controls.tradingcontrols.OrderValidation._validate_betdaq_order"
     )
     def test_validate_betdaq(self, mock_validate_betfair_order):
-        mock_order = mock.Mock(EXCHANGE=ExchangeType.BETDAQ)
+        mock_order = mock.Mock(VENUE=VenueType.BETDAQ)
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
         mock_order.order_type.size = 12
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
@@ -139,7 +139,7 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_target_size_on_error_two(self, mock_on_error):
-        order = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        order = mock.Mock(VENUE=VenueType.BETFAIR)
         order.order_type.size = None
         order.order_type.bet_target_size = -1
         self.trading_control._validate_size(order)
@@ -154,7 +154,7 @@ class TestOrderValidation(unittest.TestCase):
 
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
     def test__validate_betfair_target_size_on_error_three(self, mock_on_error):
-        order = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        order = mock.Mock(VENUE=VenueType.BETFAIR)
         order.order_type.size = None
         order.order_type.bet_target_size = 1.999
         self.trading_control._validate_size(order)
@@ -446,7 +446,7 @@ class TestExecutionValidation(unittest.TestCase):
         )
         self.trading_control = ExecutionValidation(self.mock_flumine)
         self.mock_order = mock.Mock(
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
             responses=mock.Mock(
                 replace_responses=[], update_responses=[], cancel_responses=[]
             ),
@@ -576,8 +576,8 @@ class TestExecutionValidation(unittest.TestCase):
         mock_validate_order.assert_not_called()
 
     @mock.patch("flumine.controls.tradingcontrols.ExecutionValidation.validate_order")
-    def test__validate_exchange(self, mock_validate_order):
-        self.mock_order.EXCHANGE = "OTHER"
+    def test__validate_venue(self, mock_validate_order):
+        self.mock_order.VENUE = "OTHER"
         self.trading_control._validate(self.mock_order, OrderPackageType.CANCEL)
         mock_validate_order.assert_not_called()
 
@@ -620,7 +620,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit(self, mock_on_error):
         mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETFAIR
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -637,7 +637,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_target(self, mock_on_error):
         mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETFAIR
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -715,7 +715,7 @@ class TestStrategyExposure(unittest.TestCase):
             size_matched=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -733,7 +733,7 @@ class TestStrategyExposure(unittest.TestCase):
             size_matched=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         order2.trade.strategy = strategy
         order2.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -753,7 +753,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_line_range(self, mock_on_error):
         mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETFAIR
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -770,7 +770,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_on_close(self, mock_on_error):
         mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETFAIR
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -791,7 +791,7 @@ class TestStrategyExposure(unittest.TestCase):
         self.mock_flumine.markets.markets = {"1.234": mock_market}
 
         mock_order = mock.Mock(
-            market_id="1.234", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETFAIR
+            market_id="1.234", lookup=(1, 2, 3), VENUE=VenueType.BETFAIR
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -815,7 +815,7 @@ class TestStrategyExposure(unittest.TestCase):
             market_id="1.234",
             lookup=(1, 2, 3),
             side="LAY",
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 10
@@ -851,7 +851,7 @@ class TestStrategyExposure(unittest.TestCase):
             market_id="1.234",
             lookup=(1, 2, 3),
             side="LAY",
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         mock_order.trade = mock_trade
         mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -936,7 +936,7 @@ class TestStrategyExposure(unittest.TestCase):
             handicap=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         order1.trade.strategy = strategy
         order1.order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -958,7 +958,7 @@ class TestStrategyExposure(unittest.TestCase):
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_limit_betdaq(self, mock_on_error):
         mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), EXCHANGE=ExchangeType.BETDAQ
+            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETDAQ
         )
         mock_order.trade.strategy.max_order_exposure = 10
         mock_order.trade.strategy.max_selection_exposure = 100
@@ -1010,7 +1010,7 @@ class TestStrategyExposure(unittest.TestCase):
                 handicap=0,
                 status=OrderStatus.EXECUTABLE,
                 complete=False,
-                EXCHANGE=ExchangeType.BETFAIR,
+                VENUE=VenueType.BETFAIR,
                 order_type=mock.Mock(
                     ORDER_TYPE=OrderTypes.LIMIT,
                     price_ladder_definition="CLASSIC",
@@ -1031,7 +1031,7 @@ class TestStrategyExposure(unittest.TestCase):
             handicap=0,
             status=OrderStatus.EXECUTABLE,
             complete=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
             order_type=mock.Mock(
                 ORDER_TYPE=OrderTypes.LIMIT,
                 price_ladder_definition="CLASSIC",

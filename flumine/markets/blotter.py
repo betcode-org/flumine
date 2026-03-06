@@ -47,7 +47,6 @@ class Blotter:
         self._orders = {}  # {Order.id: Order}
         # cached lists/dicts for faster lookup
         self._trades = defaultdict(list)  # {Trade: [Order,]}
-        self._bet_id_lookup = {}  # {Order.bet_id: Order, }
         self._trade_lookup = {}  # {Trade.id: Trade}
         self._live_orders = []
         self._strategy_orders = defaultdict(list)
@@ -312,12 +311,15 @@ class Blotter:
     def has_trade(self, trade) -> bool:
         return trade in self._trades
 
+    @property
+    def _bet_id_lookup(self):
+        return {order.bet_id: order for order in self}
+
     __contains__ = has_order
 
     def __setitem__(self, customer_order_ref: str, order) -> None:
         self.active = True
         self._orders[customer_order_ref] = order
-        self._bet_id_lookup[order.bet_id] = order
         self._trade_lookup[order.trade.id] = order.trade
         self._live_orders.append(order)
         strategy = order.trade.strategy

@@ -7,7 +7,7 @@ from betdaq import BetdaqError
 from betfairlightweight import BetfairError
 
 from flumine import config
-from flumine.clients.clients import ExchangeType
+from flumine.clients.clients import VenueType
 from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import (
     MAX_SESSION_AGE,
@@ -31,7 +31,7 @@ class BaseExecutionTest(unittest.TestCase):
         self.assertEqual(self.execution.flumine, self.mock_flumine)
         self.assertEqual(self.execution._max_workers, 2)
         self.assertIsNotNone(self.execution._thread_pool)
-        self.assertIsNone(self.execution.EXCHANGE)
+        self.assertIsNone(self.execution.VENUE)
         self.assertEqual(self.execution._bet_id, 100000000000)
         self.assertEqual(self.execution._sessions, [])
         self.assertEqual(self.execution._sessions_created, 0)
@@ -239,7 +239,7 @@ class BetfairExecutionTest(unittest.TestCase):
         self.execution = BetfairExecution(self.mock_flumine)
 
     def test_init(self):
-        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.execution.VENUE, VenueType.BETFAIR)
 
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution._order_logger")
     @mock.patch("flumine.execution.betfairexecution.BetfairExecution.place")
@@ -1018,7 +1018,7 @@ class SimulatedExecutionTest(unittest.TestCase):
         self.execution = SimulatedExecution(self.mock_flumine)
 
     def test_init(self):
-        self.assertEqual(self.execution.EXCHANGE, ExchangeType.SIMULATED)
+        self.assertEqual(self.execution.VENUE, VenueType.SIMULATED)
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution.execute_place")
     def test_handler_paper_trade(self, mock_execute_place):
@@ -1372,7 +1372,7 @@ class BetdaqExecutionTest(unittest.TestCase):
         self.execution = BetdaqExecution(self.mock_flumine)
 
     def test_init(self):
-        self.assertEqual(self.execution.EXCHANGE, ExchangeType.BETDAQ)
+        self.assertEqual(self.execution.VENUE, VenueType.BETDAQ)
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._execution_helper")

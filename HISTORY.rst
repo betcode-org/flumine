@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+2.13.0 (2026-03-06)
++++++++++++++++++++
+
+**Improvements**
+
+- *breaking change* ExchangeType -> VenueType
+- clients.get_default now filtered by Venue
+- client.order_stream_cls added to allow custom order stream
+- CurrentOrdersEvent callback added to allow custom processing on orders
+- BetfairOrderPackage is now default
+
+**Bug Fixes**
+
+- bet_id lookup dynamic to correctly handle async place methods
+
 2.12.2 (2026-03-03)
 +++++++++++++++++++
 

@@ -4,7 +4,7 @@ from typing import Callable
 from betfairlightweight import BetfairError
 
 from .baseexecution import BaseExecution
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 from ..exceptions import OrderExecutionError
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class BetfairExecution(BaseExecution):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session
