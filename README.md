@@ -12,7 +12,7 @@ flumine is an open-source, event-based trading framework for sports betting, des
 
 [docs](https://betcode-org.github.io/flumine/)
 
-[join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
+[join betcode slack group (2.5k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
 ## overview
 
@@ -23,7 +23,18 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Simulation: Simulate strategies/execution using historical data
 - Paper Trading: Test strategies in a simulated environment before going live
 - Data: Support for market, order and custom streaming data
-- Venues: Betfair, Betdaq (dev) and Betconnect
+- Venues: Multi venue / concurrent venue support
+
+## venues
+
+- Betfair
+- Betconnect (account/execution functionality)
+- Betdaq (account/execution functionality)
+- Smarkets (future)
+- Matchbook (future)
+- Polymarket (future)
+- Kalshi (future)
+
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 
