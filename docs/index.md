@@ -18,7 +18,7 @@ flūmine
 </p>
 </div>
 
-flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting venues. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
 [join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
