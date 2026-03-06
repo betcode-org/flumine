@@ -57,9 +57,11 @@ class MarketStream(BaseStream):
                     block=True, timeout=self.streaming_timeout
                 )
             except queue.Empty:
-                market_books = self._listener.snap(
-                    market_ids=self.flumine.markets.open_market_ids
-                )
+                market_ids = self.flumine.markets.open_market_ids
+                if market_ids:
+                    market_books = self._listener.snap(market_ids=market_ids)
+                else:
+                    continue
             if market_books:
                 self.flumine.handler_queue.put(MarketBookEvent(market_books))
 
