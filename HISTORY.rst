@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.13.1 (2026-03-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove missing order logging on betdaq (too slow)
+
+**Bug Fixes**
+
+- stream passing an empty list due to all markets closed causes a full snap
+
 2.13.0 (2026-03-06)
 +++++++++++++++++++
 
