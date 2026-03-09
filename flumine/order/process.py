@@ -149,7 +149,6 @@ def process_betdaq_current_orders(
     markets: Markets, strategies: Strategies, event, log_control, add_market
 ) -> None:
     for current_order in event.event:
-        order_id = current_order["order_id"]
         ref = current_order["customer_reference"]
         # check every market for the order
         for market in markets:
@@ -160,13 +159,6 @@ def process_betdaq_current_orders(
             if order:
                 break
         else:
-            logger.warning(
-                f"Betdaq Order {order_id} not present in blotter",
-                extra={
-                    "order_id": order_id,
-                    "current_order": current_order,
-                },
-            )
             continue
         # process order status
         process_betdaq_current_order(order, current_order)
