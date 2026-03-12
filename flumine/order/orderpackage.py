@@ -125,6 +125,7 @@ class BaseOrderPackage(BaseEvent):
             "retry": self._retry,
             "retry_count": self._retry_count,
             "async": self.async_,
+            "elapsed_seconds": self.elapsed_seconds,
         }
 
     @property

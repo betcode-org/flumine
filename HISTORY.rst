@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.13.2 (2026-03-12)
++++++++++++++++++++
+
+**Improvements**
+
+- Execution latency logging improved
+
 2.13.1 (2026-03-09)
 +++++++++++++++++++
 

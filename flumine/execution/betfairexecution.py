@@ -296,6 +296,10 @@ class BetfairExecution(BaseExecution):
                     "elapsed_time": response.elapsed_time,
                     "response": response._data,
                     "order_package": order_package.info,
+                    "thread_pool": {
+                        "num_threads": len(self._thread_pool._threads),
+                        "work_queue_size": self._thread_pool._work_queue.qsize(),
+                    },
                 },
             )
             self._return_http_session(http_session)
