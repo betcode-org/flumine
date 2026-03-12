@@ -123,7 +123,11 @@ class OrderPackageTest(unittest.TestCase):
         self.order_package._retry_count = 1
         self.assertEqual(self.order_package.retry_count, 1)
 
-    def test_info(self):
+    @mock.patch(
+        "flumine.order.orderpackage.BaseOrderPackage.elapsed_seconds",
+        new_callable=mock.PropertyMock,
+    )
+    def test_info(self, mock_elapsed_seconds):
         self.assertEqual(
             self.order_package.info,
             {
@@ -139,6 +143,7 @@ class OrderPackageTest(unittest.TestCase):
                 "retry": self.order_package._retry,
                 "retry_count": self.order_package._retry_count,
                 "async": self.order_package.async_,
+                "elapsed_seconds": mock_elapsed_seconds.return_value,
             },
         )
 
