@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+2.13.3 (2026-03-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Betdaq execution updated to 'PlaceOrdersNoReceipt'
+
+**Libraries**
+
+- betdaq-retail upgraded to 0.3.0
+
 2.13.2 (2026-03-12)
 +++++++++++++++++++
 

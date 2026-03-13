@@ -59,7 +59,7 @@ class BetdaqExecution(BaseExecution):
 
     def place(self, order_package: BaseOrderPackage):
         return order_package.client.betting_client.betting.place_orders(
-            order_list=order_package.place_instructions
+            order_list=order_package.place_instructions, receipt=False
         )
 
     def execute_cancel(

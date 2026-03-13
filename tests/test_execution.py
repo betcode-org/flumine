@@ -1490,7 +1490,7 @@ class BetdaqExecutionTest(unittest.TestCase):
             mock_order_package.client.betting_client.betting.place_orders.return_value,
         )
         mock_order_package.client.betting_client.betting.place_orders.assert_called_with(
-            order_list=mock_order_package.place_instructions
+            order_list=mock_order_package.place_instructions, receipt=False
         )
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._order_logger")
