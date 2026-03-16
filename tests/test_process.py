@@ -169,7 +169,7 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         mock_current_order = mock.Mock()
         process.process_betdaq_current_order(mock_order, mock_current_order)
         mock_order.update_current_order.assert_called_with(mock_current_order)
-        mock_order.execution_complete.assert_called()
+        mock_order.executable.assert_called()
 
     def test_process_betdaq_current_order_matched(self):
         mock_order = mock.Mock(

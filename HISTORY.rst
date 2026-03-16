@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.13.5 (2026-03-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Betdaq correctly async orders using NoReceipt
+- Betdaq fix elapsed_seconds when placing async
+
 2.13.4 (2026-03-16)
 +++++++++++++++++++
 
