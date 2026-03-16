@@ -37,9 +37,8 @@ class BetdaqExecution(BaseExecution):
                     self._order_logger(
                         order, instruction_report, order_package.package_type
                     )
-                    if not instruction_report["return_code"]:
-                        order.executable()  # let process.py pick it up
-                    else:
+                    status = instruction_report["status"]
+                    if instruction_report["return_code"]:
                         logger.error(
                             "execute_place: Order error return code",
                             extra={
@@ -49,7 +48,10 @@ class BetdaqExecution(BaseExecution):
                             },
                         )
                         order.execution_complete()
-            # todo missing order responses?
+                    elif status is None:
+                        pass  # NoReceipt/async request pending processing
+                    else:
+                        order.executable()  # let process.py pick it up
             # todo update transaction counts
         else:
             # reset on error so that they can be picked back up
@@ -58,8 +60,9 @@ class BetdaqExecution(BaseExecution):
                     order.execution_complete()
 
     def place(self, order_package: BaseOrderPackage):
+        receipt = False if order_package.async_ else True
         return order_package.client.betting_client.betting.place_orders(
-            order_list=order_package.place_instructions, receipt=False
+            order_list=order_package.place_instructions, receipt=receipt
         )
 
     def execute_cancel(
@@ -188,7 +191,8 @@ class BetdaqExecution(BaseExecution):
         )
         if package_type == OrderPackageType.PLACE:
             order_id = instruction_report.get("order_id")
-            dt = True if order_id else False
+            status = instruction_report.get("status")
+            dt = True if status else False
             order.responses.placed(instruction_report, dt=dt)
             if order_id:
                 order.bet_id = order_id

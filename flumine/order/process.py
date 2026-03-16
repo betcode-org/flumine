@@ -174,14 +174,14 @@ def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
     old_sequence_number = order.current_order.get("sequence_number")
     # update
     order.update_current_order(current_order)
-    # todo pick up NoReceipt orders
-    # update status
+
+    # pick up NoReceipt orders
     if order.status == OrderStatus.PENDING and order.bet_id:
-        if order.current_order["status"] in ["Unmatched", "Suspended"]:
-            order.executable()
-        else:
-            order.execution_complete()
-    elif (
+        order.responses.placed(dt=True)
+        order.executable()
+
+    # update status
+    if (
         order.status == OrderStatus.UPDATING
         and old_sequence_number != current_order.get("sequence_number")
     ):
