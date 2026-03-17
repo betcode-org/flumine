@@ -17,7 +17,7 @@ and update status.
 Loop through each current order:
     order = Lookup order in market using marketId and orderId
     if order is None (not present locally):
-        create local order using data and make executable #todo!!!
+        create local order using data and make executable
     if order betId != current_order betId:
         Get order using current_order betId due to replace request (new betId)
     if order:
