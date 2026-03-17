@@ -50,7 +50,8 @@ class BetdaqOrderPolling(BaseStream):
             if self.flumine.markets.live_orders:
                 time.sleep(self.streaming_timeout)
             else:
-                time.sleep(SNAP_DELTA)
+                # immediately exits sleep if an order is placed
+                self.flumine.markets.live_orders_event.wait(timeout=SNAP_DELTA)
 
         logger.info(
             f"Stopped BetdaqOrderPolling '{self.stream_id}'",

@@ -17,7 +17,7 @@ and update status.
 Loop through each current order:
     order = Lookup order in market using marketId and orderId
     if order is None (not present locally):
-        create local order using data and make executable #todo!!!
+        create local order using data and make executable
     if order betId != current_order betId:
         Get order using current_order betId due to replace request (new betId)
     if order:
@@ -71,11 +71,6 @@ def process_current_orders(
                     continue
             # process order status
             process_current_order(order, current_order, log_control)
-            # complete order if required
-            if order.complete:
-                market = markets.markets[order.market_id]
-                if order in market.blotter.live_orders:
-                    market.blotter.complete_order(order)
 
 
 def process_current_order(order: BaseOrder, current_order, log_control) -> None:
@@ -162,12 +157,6 @@ def process_betdaq_current_orders(
             continue
         # process order status
         process_betdaq_current_order(order, current_order)
-        # complete order if required
-        if order.complete:
-            for market in markets:
-                if order in market.blotter.live_orders:
-                    market.blotter.complete_order(order)
-                    break
 
 
 def process_betdaq_current_order(order: BaseOrder, current_order) -> None:

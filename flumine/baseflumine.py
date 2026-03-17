@@ -177,6 +177,10 @@ class BaseFlumine:
                         utils.call_strategy_error_handling(
                             strategy.process_market_book, market, market_book
                         )
+        if self.markets.live_orders:
+            self.markets.live_orders_event.set()
+        else:
+            self.markets.live_orders_event.clear()
 
     def _process_sports_data(self, event: events.SportsDataEvent) -> None:
         for sports_data in event.event:
@@ -205,6 +209,10 @@ class BaseFlumine:
                             utils.call_strategy_error_handling(
                                 strategy.process_sports_data, market, sports_data
                             )
+        if self.markets.live_orders:
+            self.markets.live_orders_event.set()
+        else:
+            self.markets.live_orders_event.clear()
 
     def process_order_package(self, order_package) -> None:
         """Execute through client."""
@@ -309,6 +317,12 @@ class BaseFlumine:
                     )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
+                # complete orders if required
+                for order in market.blotter.live_orders:
+                    if order.complete:
+                        if order in market.blotter.live_orders:
+                            market.blotter.complete_order(order)
+                # loop strategies
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     if strategy_orders:
