@@ -49,7 +49,6 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         mock_process_current_order.assert_called_with(
             betfair_order, current_order, mock_log_control
         )
-        self.assertEqual(market.blotter._live_orders, [])
 
     def test_process_current_order(self):
         mock_order = mock.Mock(status=OrderStatus.EXECUTABLE)
@@ -149,7 +148,6 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         mock_process_betdaq_current_order.assert_called_with(
             betdaq_order, current_order
         )
-        self.assertEqual(market.blotter._live_orders, [])
 
     def test_process_betdaq_current_order_pending(self):
         mock_order = mock.Mock(

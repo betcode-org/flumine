@@ -9,6 +9,7 @@ Release History
 **Improvements**
 
 - live_orders threading Event added to Markets
+- complete orders logic executed on each market per update
 
 2.13.5 (2026-03-16)
 +++++++++++++++++++

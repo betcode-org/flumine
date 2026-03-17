@@ -26,6 +26,7 @@ class BetfairExecution(BaseExecution):
                     self._order_logger(
                         order, instruction_report, OrderPackageType.PLACE
                     )
+                    print(instruction_report.__dict__)
                     if instruction_report.status == "SUCCESS":
                         if instruction_report.order_status == "PENDING":
                             pass  # async request pending processing

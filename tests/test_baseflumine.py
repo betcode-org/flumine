@@ -437,6 +437,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market = mock.Mock(closed=False)
         mock_market.blotter.active = True
         mock_market.blotter.strategy_orders.return_value = [mock_order]
+        mock_market.blotter.live_orders = [mock_order]
         self.base_flumine.markets = [mock_market]
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
@@ -456,6 +457,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_call_process_orders_error_handling.assert_called_with(
             mock_strategy, mock_market, [mock_order]
         )
+        mock_market.blotter.complete_order.assert_called_with(mock_order)
 
     @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
     @mock.patch("flumine.baseflumine.process_betdaq_current_orders")
@@ -468,6 +470,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market = mock.Mock(closed=False)
         mock_market.blotter.active = True
         mock_market.blotter.strategy_orders.return_value = [mock_order]
+        mock_market.blotter.live_orders = [mock_order]
         self.base_flumine.markets = [mock_market]
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
@@ -487,6 +490,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_call_process_orders_error_handling.assert_called_with(
             mock_strategy, mock_market, [mock_order]
         )
+        mock_market.blotter.complete_order.assert_called_with(mock_order)
 
     @mock.patch("flumine.baseflumine.process_current_orders")
     def test__process_current_orders_no_event(self, mock_process_current_orders):
@@ -502,6 +506,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market = mock.Mock(closed=False)
         mock_market.blotter.active = True
         mock_market.blotter.strategy_orders.return_value = [mock_order]
+        mock_market.blotter.live_orders = [mock_order]
         self.base_flumine.markets = [mock_market]
         mock_strategy = mock.Mock()
         self.base_flumine.strategies = [mock_strategy]
@@ -522,6 +527,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_call_process_orders_error_handling.assert_called_with(
             mock_strategy, mock_market, [mock_order]
         )
+        mock_market.blotter.complete_order.assert_called_with(mock_order)
 
     def test__process_custom_event(self):
         mock_market = mock.Mock()

@@ -317,6 +317,12 @@ class BaseFlumine:
                     )
         for market in self.markets:
             if market.closed is False and market.blotter.active:
+                # complete orders if required
+                for order in market.blotter.live_orders:
+                    if order.complete:
+                        if order in market.blotter.live_orders:
+                            market.blotter.complete_order(order)
+                # loop strategies
                 for strategy in self.strategies:
                     strategy_orders = market.blotter.strategy_orders(strategy)
                     if strategy_orders:
