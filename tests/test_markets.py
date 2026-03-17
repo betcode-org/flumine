@@ -1,5 +1,6 @@
 import unittest
 import datetime
+import threading
 from unittest import mock
 from collections import defaultdict
 
@@ -15,6 +16,8 @@ class MarketsTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
         self.assertEqual(self.markets.events, {})
+        self.assertIsInstance(self.markets.live_orders_event, threading.Event)
+        self.assertFalse(self.markets.live_orders_event.is_set())
 
     def test_add_market(self):
         mock_market = mock.Mock(event_id="1234")
