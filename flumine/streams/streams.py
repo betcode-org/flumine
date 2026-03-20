@@ -275,7 +275,7 @@ class Streams:
     def add_betdaq_order_polling(
         self,
         client: BaseClient,
-        streaming_timeout: float = 0.50,
+        streaming_timeout: float = 0.25,
     ) -> BetdaqOrderPolling:
         stream_id = self._increment_stream_id()
         stream = BetdaqOrderPolling(
