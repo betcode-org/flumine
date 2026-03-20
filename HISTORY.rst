@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+2.13.7 (2026-03-20)
++++++++++++++++++++
+
+**Improvements**
+
+- betdaq_order_polling reduced to 0.25s
+- BETDAQ warning on missing order from blotter
+
 2.13.6 (2026-03-17)
 +++++++++++++++++++
 

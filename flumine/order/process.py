@@ -154,6 +154,13 @@ def process_betdaq_current_orders(
             if order:
                 break
         else:
+            logger.warning(
+                f"BETDAQ Order {ref} not present in blotter",
+                extra={
+                    "ref": ref,
+                    "current_order": current_order,
+                },
+            )
             continue
         # process order status
         process_betdaq_current_order(order, current_order)
