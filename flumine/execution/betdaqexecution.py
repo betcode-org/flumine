@@ -31,10 +31,10 @@ class BetdaqExecution(BaseExecution):
 
     def __init__(self, flumine, max_workers: int = config.max_execution_workers):
         super().__init__(flumine, max_workers=max_workers)
-        # Multi worker thread pool for cancel
-        self._thread_pool = ThreadPoolExecutor(max_workers=self._max_workers)
         # Single thread pool for place/update
-        self._thread_pool_place = ThreadPoolExecutor(max_workers=1)
+        self._thread_pool_single = ThreadPoolExecutor(max_workers=1)
+        # Multi worker thread pool for cancel
+        self._thread_pool_multi = ThreadPoolExecutor(max_workers=self._max_workers)
 
     def handler(self, order_package: BaseOrderPackage):
         """Handles order_package, capable of place, cancel,
@@ -43,13 +43,13 @@ class BetdaqExecution(BaseExecution):
         http_session = self._get_http_session()
         if order_package.package_type == OrderPackageType.PLACE:
             func = self.execute_place
-            thread_pool = self._thread_pool_place
+            thread_pool = self._thread_pool_multi
         elif order_package.package_type == OrderPackageType.CANCEL:
             func = self.execute_cancel
-            thread_pool = self._thread_pool
+            thread_pool = self._thread_pool_single
         elif order_package.package_type == OrderPackageType.UPDATE:
             func = self.execute_update
-            thread_pool = self._thread_pool_place
+            thread_pool = self._thread_pool_multi
         elif order_package.package_type == OrderPackageType.REPLACE:
             raise NotImplementedError()
         else:
