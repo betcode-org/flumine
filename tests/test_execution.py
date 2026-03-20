@@ -1383,7 +1383,7 @@ class BetdaqExecutionTest(unittest.TestCase):
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.PLACE
         mock_thread_pool = mock.Mock(_threads=())
-        self.execution._thread_pool_multi = mock_thread_pool
+        self.execution._thread_pool_single = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
             mock_execute_place, mock_order_package, mock__get_http_session()
@@ -1397,7 +1397,7 @@ class BetdaqExecutionTest(unittest.TestCase):
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.UPDATE
         mock_thread_pool = mock.Mock(_threads=())
-        self.execution._thread_pool_multi = mock_thread_pool
+        self.execution._thread_pool_single = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
             mock_execute_update, mock_order_package, mock__get_http_session()
@@ -1406,12 +1406,12 @@ class BetdaqExecutionTest(unittest.TestCase):
 
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution._get_http_session")
     @mock.patch("flumine.execution.betdaqexecution.BetdaqExecution.execute_cancel")
-    def test_handler_update(self, mock_execute_cancel, mock__get_http_session):
+    def test_handler_cancel(self, mock_execute_cancel, mock__get_http_session):
         mock_execute_cancel.__name__ = "execute_cancel"
         mock_order_package = mock.Mock(elapsed_seconds=1)
         mock_order_package.package_type = OrderPackageType.CANCEL
         mock_thread_pool = mock.Mock(_threads=())
-        self.execution._thread_pool_single = mock_thread_pool
+        self.execution._thread_pool_multi = mock_thread_pool
         self.execution.handler(mock_order_package)
         mock_thread_pool.submit.assert_called_with(
             mock_execute_cancel, mock_order_package, mock__get_http_session()

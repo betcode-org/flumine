@@ -43,13 +43,13 @@ class BetdaqExecution(BaseExecution):
         http_session = self._get_http_session()
         if order_package.package_type == OrderPackageType.PLACE:
             func = self.execute_place
-            thread_pool = self._thread_pool_multi
+            thread_pool = self._thread_pool_single
         elif order_package.package_type == OrderPackageType.CANCEL:
             func = self.execute_cancel
-            thread_pool = self._thread_pool_single
+            thread_pool = self._thread_pool_multi
         elif order_package.package_type == OrderPackageType.UPDATE:
             func = self.execute_update
-            thread_pool = self._thread_pool_multi
+            thread_pool = self._thread_pool_single
         elif order_package.package_type == OrderPackageType.REPLACE:
             raise NotImplementedError()
         else:
@@ -63,7 +63,6 @@ class BetdaqExecution(BaseExecution):
                 "latency": round(order_package.elapsed_seconds, 4),
                 "order_package": order_package.info,
                 "thread_pool": {
-                    "d": thread_pool,
                     "num_threads": len(thread_pool._threads),
                     "work_queue_size": thread_pool._work_queue.qsize(),
                 },
