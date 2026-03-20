@@ -2,7 +2,9 @@ import logging
 import requests
 from typing import Callable
 from betdaq import BetdaqError
+from concurrent.futures import ThreadPoolExecutor
 
+from .. import config
 from ..clients import VenueType
 from .baseexecution import BaseExecution
 from ..exceptions import OrderExecutionError
@@ -20,9 +22,52 @@ class BetdaqExecution(BaseExecution):
 
     'A Punter can not issue more than one order API (PlaceSingleOrder,
     PlaceGroupOrder or ChangeOrder) at the same time'
+
+    Therefore this class holds two thread pools, one for
+    place/update (single) and one for cancel (multi).
     """
 
     VENUE = VenueType.BETDAQ
+
+    def __init__(self, flumine, max_workers: int = config.max_execution_workers):
+        super().__init__(flumine, max_workers=max_workers)
+        # Single thread pool for place/update
+        self._thread_pool_single = ThreadPoolExecutor(max_workers=1)
+        # Multi worker thread pool for cancel
+        self._thread_pool_multi = ThreadPoolExecutor(max_workers=self._max_workers)
+
+    def handler(self, order_package: BaseOrderPackage):
+        """Handles order_package, capable of place, cancel,
+        replace and update.
+        """
+        http_session = self._get_http_session()
+        if order_package.package_type == OrderPackageType.PLACE:
+            func = self.execute_place
+            thread_pool = self._thread_pool_single
+        elif order_package.package_type == OrderPackageType.CANCEL:
+            func = self.execute_cancel
+            thread_pool = self._thread_pool_multi
+        elif order_package.package_type == OrderPackageType.UPDATE:
+            func = self.execute_update
+            thread_pool = self._thread_pool_single
+        elif order_package.package_type == OrderPackageType.REPLACE:
+            raise NotImplementedError()
+        else:
+            raise NotImplementedError()
+        thread_pool.submit(func, order_package, http_session)
+        logger.info(
+            "Thread pool submit",
+            extra={
+                "trading_function": func.__name__,
+                "session": http_session,
+                "latency": round(order_package.elapsed_seconds, 4),
+                "order_package": order_package.info,
+                "thread_pool": {
+                    "num_threads": len(thread_pool._threads),
+                    "work_queue_size": thread_pool._work_queue.qsize(),
+                },
+            },
+        )
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session

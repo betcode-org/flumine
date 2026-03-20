@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.13.8 (2026-03-20)
++++++++++++++++++++
+
+**Improvements**
+
+- BetdaqExecution updated to have two thread pools (place/update and cancel)
+
 2.13.7 (2026-03-20)
 +++++++++++++++++++
 
