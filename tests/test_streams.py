@@ -1232,7 +1232,7 @@ class TestOrderStream(unittest.TestCase):
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
         self.assertEqual(orderstream.START_DELAY, 2)
-        self.assertEqual(orderstream.SNAP_DELTA, 5)
+        self.assertEqual(orderstream.SNAP_DELTA, 3)
 
     # def test_run(self):
     #     pass
@@ -1335,8 +1335,6 @@ class TestSportsDataStream(unittest.TestCase):
         self.assertEqual(self.stream.sports_data_filter, "test")
         self.assertEqual(self.stream.streaming_timeout, 10)
         self.assertIsNone(self.stream._stream)
-        self.assertEqual(orderstream.START_DELAY, 2)
-        self.assertEqual(orderstream.SNAP_DELTA, 5)
 
     # def test_run(self):
     #     pass

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+2.13.9 (2026-03-23)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- OrderStream correctly snap on timeout (reduced to 3s)
+
 2.13.8 (2026-03-20)
 +++++++++++++++++++
 
