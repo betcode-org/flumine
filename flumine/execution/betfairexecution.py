@@ -27,13 +27,7 @@ class BetfairExecution(BaseExecution):
                         order, instruction_report, OrderPackageType.PLACE
                     )
                     if instruction_report.status == "SUCCESS":
-                        if instruction_report.order_status == "PENDING":
-                            pass  # async request pending processing
-                        elif instruction_report.order_status == "EXPIRED":
-                            # avoids setting FOK orders to executable after process.py set them as complete
-                            order.execution_complete()
-                        else:
-                            order.executable()  # let process.py pick it up
+                        pass  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
                         if (
                             order.current_order.bet_id is None
