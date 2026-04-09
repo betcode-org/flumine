@@ -10,17 +10,48 @@ from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
-    fields=[
-        "EX_ALL_OFFERS",
-        "EX_TRADED",
-        "EX_TRADED_VOL",
-        "EX_LTP",
-        "EX_MARKET_DEF",
-        "SP_TRADED",
-        "SP_PROJECTED",
-    ]
-)
+def create_market_data_filter(
+    fields: List[str] = None,
+    ladder_levels: int = None,
+    ex_best_offers_overrides: dict = None,
+    virtualise: bool = None
+) -> dict:
+    """
+    Create market data filter with optional ex_best_offers_overrides and virtualise parameters.
+    
+    :param fields: List of fields to include in the filter
+    :param ladder_levels: Number of ladder levels
+    :param ex_best_offers_overrides: Dictionary containing rollupLimit and rollupModel
+    :param virtualise: Boolean to enable virtualisation
+    :return: Market data filter dictionary
+    """
+    if fields is None:
+        fields = [
+            "EX_ALL_OFFERS",
+            "EX_TRADED",
+            "EX_TRADED_VOL",
+            "EX_LTP",
+            "EX_MARKET_DEF",
+            "SP_TRADED",
+            "SP_PROJECTED",
+        ]
+    
+    filter_dict = filters.streaming_market_data_filter(
+        fields=fields,
+        ladder_levels=ladder_levels
+    )
+    
+    # Add ex_best_offers_overrides if provided
+    if ex_best_offers_overrides is not None:
+        filter_dict["exBestOffersOverrides"] = ex_best_offers_overrides
+    
+    # Add virtualise if provided
+    if virtualise is not None:
+        filter_dict["virtualise"] = virtualise
+    
+    return filter_dict
+
+DEFAULT_MARKET_DATA_FILTER = create_market_data_filter()
 
 
 class BaseStrategy:

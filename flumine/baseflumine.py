@@ -102,24 +102,60 @@ class BaseFlumine:
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
+        # Check for duplicates by worker name
+        if worker.name in [w.name for w in self._workers]:
+            logger.warning(
+                "Worker with name '%s' already exists, skipping duplicate", 
+                worker.name
+            )
+            return
         logger.info("Adding worker %s", worker.name)
         self._workers.append(worker)
 
     def add_client_control(
         self, client: BaseClient, client_control: Type[BaseControl], **kwargs
     ) -> None:
+        # Check for duplicates by control NAME for this specific client
+        if client_control.NAME in [control.NAME for control in client.trading_controls]:
+            logger.warning(
+                "Client control '%s' already exists for client %s, skipping duplicate", 
+                client_control.NAME, 
+                client
+            )
+            return
         logger.info("Adding client control %s", client_control.NAME)
         client.trading_controls.append(client_control(self, client, **kwargs))
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
+        # Check for duplicates by control NAME
+        if trading_control.NAME in [control.NAME for control in self.trading_controls]:
+            logger.warning(
+                "Trading control '%s' already exists, skipping duplicate", 
+                trading_control.NAME
+            )
+            return
         logger.info("Adding trading control %s", trading_control.NAME)
         self.trading_controls.append(trading_control(self, **kwargs))
 
     def add_market_middleware(self, middleware: Middleware) -> None:
+        # Check for duplicates by middleware equality
+        if middleware in self._market_middleware:
+            logger.warning(
+                "Market middleware '%s' already exists, skipping duplicate", 
+                middleware
+            )
+            return
         logger.info("Adding market middleware %s", middleware)
         self._market_middleware.append(middleware)
 
     def add_logging_control(self, logging_control: LoggingControl) -> None:
+        # Check for duplicates by control NAME
+        if logging_control.NAME in [control.NAME for control in self._logging_controls]:
+            logger.warning(
+                "Logging control '%s' already exists, skipping duplicate", 
+                logging_control.NAME
+            )
+            return
         logger.info("Adding logging control %s", logging_control.NAME)
         self._logging_controls.append(logging_control)
 
@@ -516,21 +552,15 @@ class BaseFlumine:
     def __exit__(self, *args):
         # shutdown framework
         self._process_end_flumine()
-        # shutdown workers
+        logger.info("Shutting down flumine", extra=self.info)
+        self._running = False
+        # stop streams
+        self.streams.stop()
+        # stop workers
         for w in self._workers:
             w.shutdown()
-        # shutdown streams
-        self.streams.stop()
-        # shutdown thread pools
-        self.simulated_execution.shutdown()
-        self.betfair_execution.shutdown()
-        self.betdaq_execution.shutdown()
         # shutdown logging controls
-        self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:
-            if c.is_alive():
-                c.join()
+            c.shutdown()
         # logout
         self.clients.logout()
-        self._running = False
-        logger.info("Exiting flumine", extra=self.info)
