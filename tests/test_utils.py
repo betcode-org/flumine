@@ -37,7 +37,7 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(utils.create_short_uuid())
 
     def test_file_line_count(self):
-        self.assertGreater(utils.file_line_count(__file__), 10)
+        self.assertEqual(utils.file_line_count("tests/resources/PRO-1.170258213"), 22367)
 
     def test_get_file_event_id(self):
         self.assertEqual(
