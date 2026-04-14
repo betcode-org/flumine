@@ -3,6 +3,296 @@
 Release History
 ---------------
 
+2.13.9 (2026-03-23)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- OrderStream correctly snap on timeout (reduced to 3s)
+
+2.13.8 (2026-03-20)
++++++++++++++++++++
+
+**Improvements**
+
+- BetdaqExecution updated to have two thread pools (place/update and cancel)
+
+2.13.7 (2026-03-20)
++++++++++++++++++++
+
+**Improvements**
+
+- betdaq_order_polling reduced to 0.25s
+- BETDAQ warning on missing order from blotter
+
+2.13.6 (2026-03-17)
++++++++++++++++++++
+
+**Improvements**
+
+- live_orders threading Event added to Markets
+- complete orders logic executed on each market per update
+
+2.13.5 (2026-03-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Betdaq correctly async orders using NoReceipt
+- Betdaq fix elapsed_seconds when placing async
+
+2.13.4 (2026-03-16)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.23.2
+
+2.13.3 (2026-03-13)
++++++++++++++++++++
+
+**Improvements**
+
+- Betdaq execution updated to 'PlaceOrdersNoReceipt'
+
+**Libraries**
+
+- betdaq-retail upgraded to 0.3.0
+
+2.13.2 (2026-03-12)
++++++++++++++++++++
+
+**Improvements**
+
+- Execution latency logging improved
+
+2.13.1 (2026-03-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Remove missing order logging on betdaq (too slow)
+
+**Bug Fixes**
+
+- stream passing an empty list due to all markets closed causes a full snap
+
+2.13.0 (2026-03-06)
++++++++++++++++++++
+
+**Improvements**
+
+- *breaking change* ExchangeType -> VenueType
+- clients.get_default now filtered by Venue
+- client.order_stream_cls added to allow custom order stream
+- CurrentOrdersEvent callback added to allow custom processing on orders
+- BetfairOrderPackage is now default
+
+**Bug Fixes**
+
+- bet_id lookup dynamic to correctly handle async place methods
+
+2.12.2 (2026-03-03)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- update betdaq_settled_orders to get latest sequence number during init
+
+2.12.1 (2026-02-26)
++++++++++++++++++++
+
+**Improvements**
+
+- nothing (i yanked by mistake)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.23.1
+
+2.12.0 (2026-02-26)
++++++++++++++++++++
+
+**Improvements**
+
+- *Breaking Change* All datetimes are now timezone-aware as per bflw 2.23.0
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.23.0
+
+2.11.5 (2026-01-26)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- #820 correctly add tzinfo to execution completed orders on restart
+
+2.11.4 (2026-01-08)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.22.1
+
+2.11.3 (2026-01-07)
++++++++++++++++++++
+
+**Improvements**
+
+- betdaq 0.10 min bet size added
+- simulation move lapse to after calculating any matches
+
+**Bug Fixes**
+
+- reset order to executable when a cancel/update or replace fails
+- placed_date add tzinfo so that elapsed seconds can be calculated correctly
+
+2.11.2 (2025-12-19)
++++++++++++++++++++
+
+**Improvements**
+
+- order_stream_conflate_ms added
+
+2.11.1 (2025-12-17)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- 3.14 utc market fix
+- seconds_to_start bug when set to 0 seconds
+- limit order persistence validation (MarketOnClose when market is inplay or no inplay available)
+- correctly update MarketOnClose/LimitOnClose as EXECUTION_COMPLETE once processed
+
+2.11.0 (2025-12-11)
++++++++++++++++++++
+
+**Libraries**
+
+- Add python 3.13 & 3.14
+
+2.10.2 (2025-11-10)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Handle orders placed outside of flumine (2.10 change)
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.22.0
+- betconnect upgraded to 0.3.0
+
+2.10.1 (2025-10-16)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Improved handling of PLACE profit calculations for dead-heat (@derek-cl)
+
+2.10.0 (2025-09-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Dynamic customer strategy ref *Breaking Change*
+
+2.9.2 (2025-09-18)
++++++++++++++++++++
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.21.2
+
+2.9.1 (2025-09-01)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ cleanup stolen from @lunswor
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.21.1
+- betdaq-retail upgraded to 0.2.0
+
+2.9.0 (2025-08-12)
++++++++++++++++++++
+
+**Libraries**
+
+- Remove python 3.8
+- betfairlightweight upgraded to 2.21.0
+- black upgraded to 25.1.0
+
+2.8.3 (2025-05-20)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Prevent SSL Lock on streams on initial start
+
+2.8.2 (2025-04-09)
++++++++++++++++++++
+
+**Improvements**
+
+- Add get_trade(trade_id) method to blotter (@mzaja)
+- Feature/parallel multi event simulation (@mzaja)
+
+**Bug Fixes**
+
+- #702 reject invalid min fill size (@mzaja)
+- #739 reset size remaining on failed order placement (@mzaja)
+
+2.8.1 (2025-04-01)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- BETDAQ update bug
+
+2.8.0 (2025-03-14)
++++++++++++++++++++
+
+**Improvements**
+
+- Add market exposure (@mberk)
+- Trade improvements (pending/rm offset_orders)
+
+2.7.1 (2025-02-19)
++++++++++++++++++++
+
+**Libraries**
+
+- betdaq-retail upgraded to 0.1.1
+
+2.7.0 (2025-02-19)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ Retail client integration (account/execution/order only)
+
+**Libraries**
+
+- betdaq-retail 0.1.0 added as dependency
+
+2.6.10 (2025-02-07)
++++++++++++++++++++
+
+**Improvements**
+
+- Process closed market when filter is empty
+
+2.6.9 (2024-01-10)
++++++++++++++++++++
+
+**Libraries**
+
+- betconnect upgraded to 0.2.2
+
 2.6.8 (2024-11-01)
 +++++++++++++++++++
 

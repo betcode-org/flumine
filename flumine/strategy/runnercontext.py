@@ -18,14 +18,14 @@ class RunnerContext:
 
     def place(self, trade_id) -> None:
         self.invested = True
-        self.datetime_last_placed = datetime.datetime.utcnow()
+        self.datetime_last_placed = datetime.datetime.now(datetime.timezone.utc)
         if trade_id not in self.trades:
             self.trades.append(trade_id)
         if trade_id not in self.live_trades:
             self.live_trades.append(trade_id)
 
     def reset(self, trade_id) -> None:
-        self.datetime_last_reset = datetime.datetime.utcnow()
+        self.datetime_last_reset = datetime.datetime.now(datetime.timezone.utc)
         try:
             self.live_trades.remove(trade_id)
         except ValueError:
@@ -53,12 +53,12 @@ class RunnerContext:
     def placed_elapsed_seconds(self) -> Optional[float]:
         if self.datetime_last_placed:
             return (
-                datetime.datetime.utcnow() - self.datetime_last_placed
+                datetime.datetime.now(datetime.timezone.utc) - self.datetime_last_placed
             ).total_seconds()
 
     @property
     def reset_elapsed_seconds(self) -> Optional[float]:
         if self.datetime_last_reset:
             return (
-                datetime.datetime.utcnow() - self.datetime_last_reset
+                datetime.datetime.now(datetime.timezone.utc) - self.datetime_last_reset
             ).total_seconds()

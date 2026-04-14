@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 RETRY_WAIT = BaseStream.RETRY_WAIT
 START_DELAY = 2
-SNAP_DELTA = 5
+SNAP_DELTA = 3
 
 
 class OrderStream(BaseStream):
@@ -75,11 +75,15 @@ class OrderStream(BaseStream):
                     for m in self.flumine.markets
                     if m.blotter.active and m.status == "OPEN"
                 ]
-                if active_open_markets or (time.time() - last_snap) > SNAP_DELTA:
+                if active_open_markets and (time.time() - last_snap) > SNAP_DELTA:
+                    order_books = self._listener.snap(
+                        market_ids=self.flumine.markets.open_market_ids
+                    )
+                    last_snap = time.time()
+                elif active_open_markets:
                     order_books = []
                 else:
                     continue
-            last_snap = time.time()
             if order_books or self.flumine.markets.live_orders:
                 for order_book in order_books:
                     order_book.client = self.client

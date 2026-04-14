@@ -6,7 +6,7 @@ from typing import Iterator, Optional
 from betfairlightweight.metadata import order_limits
 
 from ..events.events import BaseEvent, EventType, QueueType
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from .. import config
 from .order import BaseOrder, OrderStatus
 
@@ -26,7 +26,7 @@ class BaseOrderPackage(BaseEvent):
 
     EVENT_TYPE = EventType.ORDER_PACKAGE
     QUEUE_TYPE = QueueType.HANDLER
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
@@ -37,6 +37,7 @@ class BaseOrderPackage(BaseEvent):
         bet_delay: int,
         async_: bool = False,
         market_version: int = None,
+        customer_strategy_ref: Optional[str] = None,
     ):
         super(BaseOrderPackage, self).__init__(None)
         self.id = uuid.uuid4()
@@ -46,7 +47,7 @@ class BaseOrderPackage(BaseEvent):
         self.package_type = package_type
         self.async_ = async_
         self._market_version = market_version
-        self.customer_strategy_ref = config.customer_strategy_ref
+        self.customer_strategy_ref = customer_strategy_ref
         self._retry = True
         self._max_retries = 3  # will retry 3 times
         self._retry_count = 0
@@ -72,7 +73,7 @@ class BaseOrderPackage(BaseEvent):
                     order.executable()
 
     def calc_simulated_latency(self) -> float:
-        if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
+        if self.client.execution.VENUE == VenueType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
                 return config.place_latency
             elif self.package_type == OrderPackageType.CANCEL:
@@ -83,7 +84,7 @@ class BaseOrderPackage(BaseEvent):
                 return config.replace_latency
 
     def calc_simulated_latency_delay(self) -> float:
-        if self.client.execution.EXCHANGE == ExchangeType.SIMULATED:
+        if self.client.execution.VENUE == VenueType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
                 return config.place_latency + self.bet_delay
             elif self.package_type == OrderPackageType.CANCEL:
@@ -94,19 +95,19 @@ class BaseOrderPackage(BaseEvent):
                 return config.replace_latency + self.bet_delay
 
     @property
-    def place_instructions(self) -> dict:
+    def place_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def cancel_instructions(self) -> dict:
+    def cancel_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def update_instructions(self) -> dict:
+    def update_instructions(self) -> list:
         raise NotImplementedError
 
     @property
-    def replace_instructions(self) -> dict:
+    def replace_instructions(self) -> list:
         raise NotImplementedError
 
     @classmethod
@@ -144,6 +145,7 @@ class BaseOrderPackage(BaseEvent):
             "retry": self._retry,
             "retry_count": self._retry_count,
             "async": self.async_,
+            "elapsed_seconds": self.elapsed_seconds,
         }
 
     @property
@@ -163,24 +165,22 @@ class BaseOrderPackage(BaseEvent):
 
 
 class BetfairOrderPackage(BaseOrderPackage):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     @property
-    def place_instructions(self):
+    def place_instructions(self) -> list:
         return [order.create_place_instruction() for order in self.orders_pending]
 
     @property
-    def cancel_instructions(self):
-        return [
-            order.create_cancel_instruction() for order in self
-        ]  # todo? if order.size_remaining > 0
+    def cancel_instructions(self) -> list:
+        return [order.create_cancel_instruction() for order in self]
 
     @property
-    def update_instructions(self):
+    def update_instructions(self) -> list:
         return [order.create_update_instruction() for order in self]
 
     @property
-    def replace_instructions(self):
+    def replace_instructions(self) -> list:
         return [
             order.create_replace_instruction()
             for order in self
@@ -197,3 +197,29 @@ class BetfairOrderPackage(BaseOrderPackage):
             return order_limits["updateOrders"]
         elif package_type == OrderPackageType.REPLACE:
             return order_limits["replaceOrders"]
+
+
+class BetdaqOrderPackage(BaseOrderPackage):
+    VENUE = VenueType.BETDAQ
+
+    @property
+    def place_instructions(self) -> list:
+        return [order.create_place_instruction() for order in self]
+
+    @property
+    def cancel_instructions(self) -> list:
+        return [order.create_cancel_instruction() for order in self]
+
+    @property
+    def update_instructions(self) -> list:
+        return [order.create_update_instruction() for order in self]
+
+    @classmethod
+    def order_limit(cls, package_type: OrderPackageType) -> int:
+        # todo confirm all values
+        if package_type == OrderPackageType.PLACE:
+            return 10  # different per call / punter?
+        elif package_type == OrderPackageType.CANCEL:
+            return 10  # unlimited?
+        elif package_type == OrderPackageType.UPDATE:
+            return 50

@@ -34,7 +34,7 @@ class ExampleStrategy(BaseStrategy):
         }
         # get betconnect client
         client = self.clients.get_client(
-            clients.ExchangeType.BETCONNECT, username="liampa"
+            clients.VenueType.BETCONNECT, username="l"
         ).betting_client
         # get active bookmakers
         context["active_bookmakers"] = client.betting.active_bookmakers()
@@ -85,7 +85,7 @@ class ExampleStrategy(BaseStrategy):
 
     def process_market_book(self, market, market_book):
         # betconnect_client = self.clients.get_client(
-        #     clients.ExchangeType.BETCONNECT, username="username"
+        #     clients.VenueType.BETCONNECT, username="username"
         # )
 
         fixture_id = self.context["betconnect"]["active_fixtures_lookup"][

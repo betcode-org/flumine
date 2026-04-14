@@ -4,7 +4,7 @@ from typing import Callable
 from betfairlightweight import BetfairError
 
 from .baseexecution import BaseExecution
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 from ..exceptions import OrderExecutionError
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class BetfairExecution(BaseExecution):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     def execute_place(
         self, order_package: BaseOrderPackage, http_session: requests.Session
@@ -35,6 +35,13 @@ class BetfairExecution(BaseExecution):
                         else:
                             order.executable()  # let process.py pick it up
                     elif instruction_report.status == "FAILURE":
+                        if (
+                            order.current_order.bet_id is None
+                        ):  # Must check this one, not order.bet_id
+                            # If the bet id has not been assigned to the failed order, order stream update
+                            # will never be sent for process.py to pick up. Therefore, the order must be
+                            # invalidated here and now.
+                            order.current_order.size_remaining = 0.0
                         order.execution_complete()
                     elif instruction_report.status == "TIMEOUT":
                         # https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums#BettingEnums-ExecutionReportStatus
@@ -289,6 +296,10 @@ class BetfairExecution(BaseExecution):
                     "elapsed_time": response.elapsed_time,
                     "response": response._data,
                     "order_package": order_package.info,
+                    "thread_pool": {
+                        "num_threads": len(self._thread_pool._threads),
+                        "work_queue_size": self._thread_pool._work_queue.qsize(),
+                    },
                 },
             )
             self._return_http_session(http_session)

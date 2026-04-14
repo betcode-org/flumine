@@ -4,7 +4,7 @@ from betconnect.exceptions import BetConnectException
 from betconnect import resources
 
 from .baseclient import BaseClient
-from .clients import ExchangeType
+from .clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class BetConnectClient(BaseClient):
     BetConnect betting client.
     """
 
-    EXCHANGE = ExchangeType.BETCONNECT
+    VENUE = VenueType.BETCONNECT
 
     def login(self) -> Optional[resources.Login]:
         try:

@@ -4,6 +4,7 @@ from unittest import mock
 from flumine.markets.blotter import Blotter, PENDING_STATUS
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
+from flumine.order.trade import TradeStatus
 
 
 class BlotterTest(unittest.TestCase):
@@ -35,6 +36,32 @@ class BlotterTest(unittest.TestCase):
         mock_order = mock.Mock(selection_id=2, handicap=3, bet_id="123")
         self.blotter["456"] = mock_order
         self.assertEqual(self.blotter.get_order_bet_id("123"), mock_order)
+
+    def test_get_trade(self):
+        """Tests retrieving the trade by trade ID."""
+        trade_id = "abc-789"
+        self.assertIsNone(self.blotter.get_trade(trade_id))
+        mock_trade = mock.Mock(id=trade_id)
+        mock_order = mock.Mock(trade=mock_trade)
+        self.blotter["456"] = mock_order
+        self.assertEqual(self.blotter.get_trade(trade_id), mock_trade)
+
+    def test_strategy_trades(self):
+        mock_trade_one = mock.Mock(status=TradeStatus.PENDING, strategy=1)
+        self.blotter._trades[mock_trade_one] = []
+        mock_trade_two = mock.Mock(status=TradeStatus.LIVE, strategy=1)
+        self.blotter._trades[mock_trade_two] = []
+        mock_trade_three = mock.Mock(status=TradeStatus.LIVE, strategy=2)
+        self.blotter._trades[mock_trade_three] = []
+        self.assertEqual(self.blotter.strategy_trades(0), [])
+        self.assertEqual(
+            self.blotter.strategy_trades(1),
+            [mock_trade_one, mock_trade_two],
+        )
+        self.assertEqual(
+            self.blotter.strategy_trades(1, trade_status=[TradeStatus.LIVE]),
+            [mock_trade_two],
+        )
 
     def test_strategy_orders(self):
         mock_order_one = mock.Mock(
@@ -255,6 +282,24 @@ class BlotterTest(unittest.TestCase):
         self.blotter.process_closed_market(mock_market, mock_market_book)
         self.assertEqual(mock_order.number_of_dead_heat_winners, 1)
 
+    def test_process_closed_market_dead_heat_place(self):
+        mock_market = mock.Mock()
+        mock_market_book = mock.Mock(number_of_winners=3)
+        mock_runner1 = mock.Mock(selection_id=123, handicap=0.0, status="WINNER")
+        mock_runner2 = mock.Mock(selection_id=234, handicap=0.0, status="WINNER")
+        mock_runner3 = mock.Mock(selection_id=345, handicap=0.0, status="WINNER")
+        mock_runner4 = mock.Mock(selection_id=456, handicap=0.0, status="WINNER")
+        mock_market_book.runners = [
+            mock_runner1,
+            mock_runner2,
+            mock_runner3,
+            mock_runner4,
+        ]
+        mock_order = mock.Mock(selection_id=123, handicap=0.0)
+        self.blotter._orders = {"12345": mock_order}
+        self.blotter.process_closed_market(mock_market, mock_market_book)
+        self.assertEqual(mock_order.number_of_dead_heat_winners, 1)
+
     def test_process_closed_market_line_range(self):
         mock_market = mock.Mock(context={"line_range_result": 119})
         mock_market_book = mock.Mock(number_of_winners=1)
@@ -281,7 +326,17 @@ class BlotterTest(unittest.TestCase):
 
     def test_process_cleared_orders(self):
         mock_cleared_orders = mock.Mock()
-        mock_cleared_orders.orders = []
+        mock_order = mock.Mock(customer_order_ref="test")
+        self.blotter._orders = {"test": mock_order}
+        mock_cleared_orders.orders = [mock_order]
+        self.assertEqual(
+            self.blotter.process_cleared_orders(mock_cleared_orders), [mock_order]
+        )
+
+    def test_process_cleared_orders_no_ref(self):
+        mock_cleared_orders = mock.Mock()
+        mock_order = mock.Mock(customer_order_ref=None)
+        mock_cleared_orders.orders = [mock_order]
         self.assertEqual(self.blotter.process_cleared_orders(mock_cleared_orders), [])
 
     def test_selection_exposure(self):
@@ -442,7 +497,7 @@ class BlotterTest(unittest.TestCase):
         """
         Check that get_exposures works if order.order_type.price is None.
         If order.order_type.price is None, the controls will flag the order as a violation
-        and it won't be set to the exchange, so there won't be any exposure and we can ignore it.
+        and it won't be set to the venue, so there won't be any exposure and we can ignore it.
         """
         mock_strategy = mock.Mock()
         mock_trade = mock.Mock(strategy=mock_strategy)
@@ -785,9 +840,10 @@ class BlotterTest(unittest.TestCase):
         self.blotter.complete_order("test")
 
     def test_has_trade(self):
-        self.assertFalse(self.blotter.has_trade("123"))
-        self.blotter._trades["123"].append(1)
-        self.assertTrue(self.blotter.has_trade("123"))
+        mock_trade = mock.Mock()
+        self.assertFalse(self.blotter.has_trade(mock_trade))
+        self.blotter._trades[mock_trade].append(1)
+        self.assertTrue(self.blotter.has_trade(mock_trade))
 
     def test__contains(self):
         self.blotter._orders = {"123": "test"}
@@ -804,7 +860,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(self.blotter._orders, {"123": mock_order})
         self.assertEqual(self.blotter._bet_id_lookup, {"456": mock_order})
         self.assertEqual(self.blotter._live_orders, [mock_order])
-        self.assertEqual(self.blotter._trades, {mock_order.trade.id: [mock_order]})
+        self.assertEqual(self.blotter._trades, {mock_order.trade: [mock_order]})
         self.assertEqual(
             self.blotter._strategy_orders, {mock_order.trade.strategy: [mock_order]}
         )

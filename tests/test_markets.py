@@ -1,5 +1,6 @@
 import unittest
 import datetime
+import threading
 from unittest import mock
 from collections import defaultdict
 
@@ -15,6 +16,8 @@ class MarketsTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
         self.assertEqual(self.markets.events, {})
+        self.assertIsInstance(self.markets.live_orders_event, threading.Event)
+        self.assertFalse(self.markets.live_orders_event.is_set())
 
     def test_add_market(self):
         mock_market = mock.Mock(event_id="1234")
@@ -170,6 +173,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=False,
             client=self.market.flumine.clients.get_default(),
+            customer_strategy_ref=None,
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -182,6 +186,7 @@ class MarketTest(unittest.TestCase):
             id_=self.market._transaction_id,
             async_place_orders=True,
             client=self.market.flumine.clients.get_default(),
+            customer_strategy_ref=None,
         )
         self.assertEqual(transaction, mock_transaction())
 
@@ -189,10 +194,34 @@ class MarketTest(unittest.TestCase):
     def test_place_order(self, mock_transaction):
         mock_transaction.return_value.__enter__.return_value = mock_transaction
         mock_order = mock.Mock()
+        mock_order.trade.strategy = "test"
         self.assertTrue(
-            self.market.place_order(mock_order, 2, False, force=True, client=1)
+            self.market.place_order(
+                mock_order,
+                2,
+                False,
+                force=True,
+                client=1,
+            )
         )
-        mock_transaction.assert_called_with(client=1)
+        mock_transaction.assert_called_with(client=1, customer_strategy_ref="test")
+        mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
+
+    @mock.patch("flumine.markets.market.Market.transaction")
+    def test_place_order_ref(self, mock_transaction):
+        mock_transaction.return_value.__enter__.return_value = mock_transaction
+        mock_order = mock.Mock()
+        self.assertTrue(
+            self.market.place_order(
+                mock_order,
+                2,
+                False,
+                force=True,
+                client=1,
+                customer_strategy_ref="dinger",
+            )
+        )
+        mock_transaction.assert_called_with(client=1, customer_strategy_ref="dinger")
         mock_transaction.place_order.assert_called_with(mock_order, 2, False, True)
 
     @mock.patch("flumine.markets.market.Market.transaction")
@@ -209,7 +238,9 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
         mock_transaction.assert_called_with(client=mock_order.client)
-        mock_transaction.update_order.assert_called_with(mock_order, "test", True)
+        mock_transaction.update_order.assert_called_with(
+            mock_order, "test", 0.0, None, None, None, None, None, None, True
+        )
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_replace_order(self, mock_transaction):
@@ -335,7 +366,9 @@ class MarketTest(unittest.TestCase):
     def test_seconds_to_start(self):
         self.market.market_book = None
         mock_market_catalogue = mock.Mock()
-        mock_market_catalogue.market_start_time = datetime.datetime.utcfromtimestamp(1)
+        mock_market_catalogue.market_start_time = datetime.datetime.fromtimestamp(
+            0, tz=datetime.timezone.utc
+        )
         self.market.market_catalogue = mock_market_catalogue
         self.assertLess(self.market.seconds_to_start, 0)
 
@@ -343,14 +376,14 @@ class MarketTest(unittest.TestCase):
         self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         mock_market_book.market_definition.market_time = (
-            datetime.datetime.utcfromtimestamp(1)
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
         )
         self.market.market_book = mock_market_book
         self.assertLess(self.market.seconds_to_start, 0)
 
     def test_seconds_to_start_market_catalogue(self):
         self.market.market_book.market_definition.market_time = (
-            datetime.datetime.utcfromtimestamp(1)
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
         )
         self.assertLess(self.market.seconds_to_start, 0)
 
@@ -362,7 +395,7 @@ class MarketTest(unittest.TestCase):
     def test_elapsed_seconds_closed(self):
         self.assertIsNone(self.market.elapsed_seconds_closed)
         self.market.closed = True
-        self.market.date_time_closed = datetime.datetime.utcnow()
+        self.market.date_time_closed = datetime.datetime.now(datetime.timezone.utc)
         self.assertGreaterEqual(self.market.elapsed_seconds_closed, 0)
 
     def test_market_start_datetime(self):
@@ -377,7 +410,8 @@ class MarketTest(unittest.TestCase):
         )
         self.market.market_catalogue = None
         self.assertEqual(
-            self.market.market_start_datetime, datetime.datetime.utcfromtimestamp(0)
+            self.market.market_start_datetime,
+            datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc),
         )
 
     @mock.patch(
@@ -387,8 +421,8 @@ class MarketTest(unittest.TestCase):
     )
     def test_market_start_hour_minute(self, mock_market_start_datetime):
         self.assertIsNone(self.market.market_start_hour_minute)
-        mock_market_start_datetime.return_value = datetime.datetime.utcfromtimestamp(
-            12000000000
+        mock_market_start_datetime.return_value = datetime.datetime.fromtimestamp(
+            12000000000, datetime.timezone.utc
         )
         self.assertEqual(self.market.market_start_hour_minute, "2120")
 

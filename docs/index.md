@@ -18,11 +18,11 @@ flūmine
 </p>
 </div>
 
-flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting exchanges. flumine provides efficient handling of data streams, risk management, and execution capabilities.
+flumine is an open-source, event-based trading framework for sports betting, designed to simplify the development and execution of betting strategies on betting venues. flumine provides efficient handling of data streams, risk management, and execution capabilities.
 
 [join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
-Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
+Tested on Python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14.
 
 ## installation
 
@@ -30,7 +30,7 @@ Tested on Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 $ pip install flumine
 ```
 
-flumine requires Python 3.8+
+flumine requires Python 3.9+
 
 ## setup
 
@@ -129,6 +129,8 @@ framework.run()
 flumine relies on these libraries:
 
 * `betfairlightweight` - Betfair API support
+* `betdaq-retail` - BETDAQ API support
+* `betconnect` - BetConnect API support
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging
 * `requests` - HTTP support

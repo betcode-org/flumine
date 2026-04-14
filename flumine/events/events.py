@@ -1,6 +1,8 @@
 import datetime
 from enum import Enum
 
+from flumine.clients import VenueType
+
 
 class EventType(Enum):
     CONFIG = "Config"
@@ -34,15 +36,18 @@ class BaseEvent:
     EVENT_TYPE = None
     QUEUE_TYPE = None
 
-    __slots__ = ["_time_created", "event", "callback"]
+    __slots__ = ["_time_created", "event", "venue", "callback"]
 
-    def __init__(self, event):
-        self._time_created = datetime.datetime.utcnow()
+    def __init__(self, event, venue: VenueType = VenueType.BETFAIR):
+        self._time_created = datetime.datetime.now(datetime.timezone.utc)
         self.event = event
+        self.venue = venue
 
     @property
     def elapsed_seconds(self):
-        return (datetime.datetime.utcnow() - self._time_created).total_seconds()
+        return (
+            datetime.datetime.now(datetime.timezone.utc) - self._time_created
+        ).total_seconds()
 
     def __str__(self):
         return "<{0} [{1}]>".format(self.EVENT_TYPE.name, self.QUEUE_TYPE.name)
@@ -74,6 +79,15 @@ class RawDataEvent(BaseEvent):
 class CurrentOrdersEvent(BaseEvent):
     EVENT_TYPE = EventType.CURRENT_ORDERS
     QUEUE_TYPE = QueueType.HANDLER
+
+    def __init__(
+        self,
+        event,
+        venue: VenueType = VenueType.BETFAIR,
+        callback=None,
+    ):
+        super(CurrentOrdersEvent, self).__init__(event, venue)
+        self.callback = callback
 
 
 class ClearedMarketsEvent(BaseEvent):

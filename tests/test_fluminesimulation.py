@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 
 from flumine import FlumineSimulation
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 from flumine.order.orderpackage import OrderPackageType
 from flumine import config
 from flumine.exceptions import RunError
@@ -14,7 +14,7 @@ from flumine.markets.market import Market
 
 class FlumineSimulationTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
+        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED)
         self.flumine = FlumineSimulation(self.mock_client)
 
     def test_init(self):
@@ -23,7 +23,7 @@ class FlumineSimulationTest(unittest.TestCase):
 
     def test_run_error(self):
         self.flumine.clients._clients.clear()
-        mock_client = mock.Mock(EXCHANGE=ExchangeType.BETFAIR, paper_trade=False)
+        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=False)
         self.flumine.add_client(mock_client)
         with self.assertRaises(RunError):
             self.flumine.run()
@@ -55,12 +55,12 @@ class FlumineSimulationTest(unittest.TestCase):
         mock_events,
         mock__process_end_flumine,
     ):
-        mock_stream_one = mock.Mock(event_processing=True, event_id=123)
+        mock_stream_one = mock.Mock(event_processing=True, event_group="123")
         mock_market_book_one = mock.Mock(publish_time_epoch=321)
         mock_gen_one = mock.Mock(return_value=iter([[mock_market_book_one]]))
         mock_stream_one.create_generator.return_value = mock_gen_one
 
-        mock_stream_two = mock.Mock(event_processing=True, event_id=123)
+        mock_stream_two = mock.Mock(event_processing=True, event_group="123")
         mock_market_book_two = mock.Mock(publish_time_epoch=123)
         mock_gen_two = mock.Mock(return_value=iter([[mock_market_book_two]]))
         mock_stream_two.create_generator.return_value = mock_gen_two

@@ -4,12 +4,12 @@ from typing import Optional
 
 from .baseexecution import BaseExecution
 from .. import config
-from ..clients.clients import ExchangeType
+from ..clients.clients import VenueType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
 
 class SimulatedExecution(BaseExecution):
-    EXCHANGE = ExchangeType.SIMULATED
+    VENUE = VenueType.SIMULATED
 
     def handler(self, order_package: BaseOrderPackage) -> None:
         """Only uses _thread_pool if paper_trade"""

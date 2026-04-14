@@ -2,12 +2,13 @@ import time
 import threading
 import logging
 from typing import Callable, Optional
+from betdaq import BetdaqError
 from betfairlightweight import BetfairError, filters, exceptions
 
 from . import config
 from .events import events
 from .utils import chunks
-from .clients import ExchangeType
+from .clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -100,22 +101,24 @@ def keep_alive(context: dict, flumine) -> None:
     login if keep alive failed
     """
     for client in flumine.clients:
-        if client.EXCHANGE == ExchangeType.BETFAIR:
+        if client.VENUE == VenueType.BETFAIR:
             if client.betting_client.session_token:
                 resp = client.keep_alive()
                 if resp is True or resp.status == "SUCCESS":
                     continue
-        elif client.EXCHANGE == ExchangeType.BETCONNECT:
+        elif client.VENUE == VenueType.BETCONNECT:
             resp = client.keep_alive()
             if resp:
                 continue
+        elif client.VENUE == VenueType.BETDAQ:
+            continue
         # keep-alive failed lets try a login
         client.login()
 
 
 def poll_market_catalogue(context: dict, flumine) -> None:
     # get betfair client
-    client = flumine.clients.get_betfair_default()
+    client = flumine.clients.get_default(VenueType.BETFAIR)
     markets = [
         m.market_id
         for m in list(flumine.markets.markets.values())
@@ -161,7 +164,7 @@ def poll_account_balance(context: dict, flumine) -> None:
         client.update_account_details()
         logger.info("Client update account details", extra=client.info)
         if client.account_funds:
-            flumine.log_control(events.BalanceEvent(client))
+            flumine.log_control(events.BalanceEvent(client, venue=client.VENUE))
 
 
 def poll_market_closure(context: dict, flumine) -> None:
@@ -170,7 +173,7 @@ def poll_market_closure(context: dict, flumine) -> None:
     ]
     for client in flumine.clients:
         if (
-            client.EXCHANGE != ExchangeType.BETFAIR
+            client.VENUE != VenueType.BETFAIR
             or client.paper_trade
             or client.market_recording_mode
         ):
@@ -196,7 +199,11 @@ def _get_cleared_orders(flumine, betting_client, market_id: str) -> bool:
                 bet_status="SETTLED",
                 from_record=from_record,
                 market_ids=[market_id],
-                customer_strategy_refs=[config.customer_strategy_ref],
+                customer_strategy_refs=(
+                    [config.customer_strategy_ref]
+                    if config.customer_strategy_ref
+                    else None
+                ),
             )
         except exceptions.StatusCodeError as e:
             # log as warning to prevent duplicate logs on betfair meltdown
@@ -242,7 +249,9 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         cleared_markets = betting_client.betting.list_cleared_orders(
             bet_status="SETTLED",
             market_ids=[market_id],
-            customer_strategy_refs=[config.customer_strategy_ref],
+            customer_strategy_refs=(
+                [config.customer_strategy_ref] if config.customer_strategy_ref else None
+            ),
             group_by="MARKET",
         )
     except exceptions.StatusCodeError as e:
@@ -266,3 +275,58 @@ def _get_cleared_market(flumine, betting_client, market_id: str) -> bool:
         return True
     else:
         return False
+
+
+def betdaq_settled_orders(context: dict, flumine) -> None:
+    for client in flumine.clients:
+        if client.VENUE == VenueType.BETDAQ:
+            sequence_number = context.get(client, 0)
+            # get initial sequence number
+            if sequence_number == 0:
+                current_orders = client.betting_client.betting.get_orders(
+                    sequence_number
+                )
+                sequence_number = current_orders["maximum_sequence_number"]
+                context[client] = sequence_number
+
+            while True:
+                try:
+                    current_orders = client.betting_client.betting.get_orders_diff(
+                        sequence_number
+                    )
+                except (BetdaqError, Exception):
+                    time.sleep(1)
+                    logger.error("betdaq_settled_orders run error", exc_info=True)
+                    continue
+
+                if not current_orders:
+                    break
+                cleared_orders = [
+                    o
+                    for o in current_orders
+                    if o["status"] in ["Settled", "Cancelled", "Void"]
+                ]
+                if cleared_orders:
+                    flumine.handler_queue.put(
+                        events.ClearedOrdersEvent(
+                            cleared_orders, venue=VenueType.BETDAQ
+                        )
+                    )
+                    flumine.log_control(
+                        events.ClearedOrdersEvent(
+                            cleared_orders, venue=VenueType.BETDAQ
+                        )
+                    )
+                # update SequenceNumber
+                new_sequence_number = max(
+                    sequence_number,
+                    *(
+                        o.get("sequence_number", sequence_number)
+                        for o in current_orders
+                    ),
+                )
+                if new_sequence_number == sequence_number:
+                    break
+
+                sequence_number = new_sequence_number
+                context[client] = new_sequence_number

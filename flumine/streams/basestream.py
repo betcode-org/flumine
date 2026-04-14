@@ -26,6 +26,7 @@ class BaseStream(threading.Thread):
         client=None,
         output_queue: bool = True,
         event_processing: bool = False,
+        event_group: str = None,
         event_id: str = None,
         operation: str = "marketSubscription",
         **listener_kwargs,
@@ -43,6 +44,7 @@ class BaseStream(threading.Thread):
         self._stream = None
         self._output_queue = queue.Queue() if output_queue else None
         self.event_processing = event_processing
+        self.event_group = event_group
         self.event_id = event_id
         self.operation = operation
         self.listener_kwargs = listener_kwargs

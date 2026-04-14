@@ -17,7 +17,7 @@ and update status.
 Loop through each current order:
     order = Lookup order in market using marketId and orderId
     if order is None (not present locally):
-        create local order using data and make executable #todo!!!
+        create local order using data and make executable
     if order betId != current_order betId:
         Get order using current_order betId due to replace request (new betId)
     if order:
@@ -36,6 +36,8 @@ def process_current_orders(
     for current_orders in event.event:
         client = current_orders.client
         for current_order in current_orders.orders:
+            if current_order.customer_order_ref is None:
+                continue
             order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
             order = markets.get_order(
                 market_id=current_order.market_id,
@@ -69,11 +71,6 @@ def process_current_orders(
                     continue
             # process order status
             process_current_order(order, current_order, log_control)
-            # complete order if required
-            if order.complete:
-                market = markets.markets[order.market_id]
-                if order in market.blotter.live_orders:
-                    market.blotter.complete_order(order)
 
 
 def process_current_order(order: BaseOrder, current_order, log_control) -> None:
@@ -83,7 +80,7 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     if order.async_ and order.bet_id is None and current_order.bet_id:
         order.responses.placed()
         order.bet_id = current_order.bet_id
-        log_control(OrderEvent(order))
+        log_control(OrderEvent(order, venue=order.VENUE))
     # update status
     if order.bet_id and order.status == OrderStatus.PENDING:
         if order.current_order.status == "EXECUTABLE":
@@ -141,3 +138,54 @@ def create_order_from_current(
         },
     )
     return order
+
+
+def process_betdaq_current_orders(
+    markets: Markets, strategies: Strategies, event, log_control, add_market
+) -> None:
+    for current_order in event.event:
+        ref = current_order["customer_reference"]
+        # check every market for the order
+        for market in markets:
+            try:
+                order = market.blotter[str(ref)]
+            except KeyError:
+                continue
+            if order:
+                break
+        else:
+            logger.warning(
+                f"BETDAQ Order {ref} not present in blotter",
+                extra={
+                    "ref": ref,
+                    "current_order": current_order,
+                },
+            )
+            continue
+        # process order status
+        process_betdaq_current_order(order, current_order)
+
+
+def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
+    old_sequence_number = order.current_order.get("sequence_number")
+    # update
+    order.update_current_order(current_order)
+
+    # pick up NoReceipt orders
+    if order.status == OrderStatus.PENDING and order.bet_id:
+        order.responses.placed(dt=True)
+        order.executable()
+
+    # update status
+    if (
+        order.status == OrderStatus.UPDATING
+        and old_sequence_number != current_order.get("sequence_number")
+    ):
+        order.order_type.price = current_order["price"]
+        if order.current_order["status"] in ["Unmatched", "Suspended"]:
+            order.executable()
+        else:
+            order.execution_complete()
+    elif order.status == OrderStatus.EXECUTABLE:
+        if order.current_order["status"] in ["Matched", "Cancelled", "Settled", "Void"]:
+            order.execution_complete()

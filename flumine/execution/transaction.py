@@ -1,7 +1,13 @@
 import logging
 from collections import defaultdict
 
-from ..order.orderpackage import OrderPackageType, BetfairOrderPackage
+from .. import config
+from ..clients import VenueType
+from ..order.orderpackage import (
+    OrderPackageType,
+    BetfairOrderPackage,
+    BetdaqOrderPackage,
+)
 from ..events import events
 from ..exceptions import ControlError, OrderError
 from ..utils import chunks, get_market_notes
@@ -12,6 +18,8 @@ logger = logging.getLogger(__name__)
 class Transaction:
     """
     Process place, cancel, update and replace requests.
+
+    Transaction per single client/venue only.
 
     Default behaviour is to execute immediately however
     when it is used as a context manager requests can
@@ -30,7 +38,14 @@ class Transaction:
             t.place_order(order)  # both executed on transaction __exit__
     """
 
-    def __init__(self, market, id_: int, async_place_orders: bool, client):
+    def __init__(
+        self,
+        market,
+        id_: int,
+        async_place_orders: bool,
+        client,
+        customer_strategy_ref=None,
+    ):
         self.market = market
         self._client = client
         self._id = id_  # unique per market only
@@ -40,6 +55,9 @@ class Transaction:
         self._pending_cancel = []  # list of (<Order>, None)
         self._pending_update = []  # list of (<Order>, None)
         self._pending_replace = []  # list of (<Order>, market_version)
+        self.customer_strategy_ref = (
+            config.customer_strategy_ref or customer_strategy_ref
+        )
 
     def place_order(
         self,
@@ -61,7 +79,7 @@ class Transaction:
             market_version,
             self._async_place_orders,
         )
-        if self.market.blotter.has_trade(order.trade.id):
+        if self.market.blotter.has_trade(order.trade):
             new_trade = False
         else:
             new_trade = True
@@ -104,7 +122,19 @@ class Transaction:
         return True
 
     def update_order(
-        self, order, new_persistence_type: str, force: bool = False
+        self,
+        order,
+        # BETFAIR
+        new_persistence_type: str = None,
+        # BETDAQ
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+        force: bool = False,
     ) -> bool:
         if order.client != self._client:
             raise OrderError(
@@ -118,7 +148,20 @@ class Transaction:
         ):
             return False
         # update
-        order.update(new_persistence_type)
+        if order.VENUE in [VenueType.BETFAIR, VenueType.SIMULATED]:
+            order.update(new_persistence_type)
+        elif order.VENUE == VenueType.BETDAQ:
+            order.update(
+                size_delta,
+                new_price,
+                expected_selection_reset_count,
+                expected_withdrawal_sequence_number,
+                cancel_on_in_running,
+                cancel_if_selection_reset,
+                set_to_be_sp_if_unmatched,
+            )
+        else:
+            raise OrderError(f"update_order: Unknown venue '{order.VENUE}'")
         self._pending_update.append((order, None))
         self._pending_orders = True
         return True
@@ -126,6 +169,8 @@ class Transaction:
     def replace_order(
         self, order, new_price: float, market_version: int = None, force: bool = False
     ) -> bool:
+        if order.VENUE not in [VenueType.BETFAIR, VenueType.SIMULATED]:
+            raise OrderError(f"replace_order: Order VENUE cannot be {order.VENUE}")
         if order.client != self._client:
             raise OrderError(
                 "replace_order: Order client '{0}' does not match transaction client '{1}'".format(
@@ -190,6 +235,8 @@ class Transaction:
             for control in self._client.trading_controls:
                 control(order, package_type)
         except ControlError:
+            if package_type != OrderPackageType.PLACE:
+                order.executable()  # reset
             return False
         else:
             return True
@@ -197,23 +244,28 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
+        if self._client.VENUE == VenueType.BETDAQ:
+            package = BetdaqOrderPackage
+        else:
+            package = BetfairOrderPackage
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:
             orders_grouped[o[1]].append(o[0])
         # create packages (chunked by limit)
-        limit = BetfairOrderPackage.order_limit(package_type)
+        limit = package.order_limit(package_type)
         packages = []
         for market_version, package_orders in orders_grouped.items():
             for chunked_orders in chunks(package_orders, limit):
                 packages.append(
-                    BetfairOrderPackage(
+                    package(
                         client=self._client,
                         market_id=self.market.market_id,
                         orders=chunked_orders,
                         package_type=package_type,
                         bet_delay=self.market.market_book.bet_delay,
                         market_version=market_version,
+                        customer_strategy_ref=self.customer_strategy_ref,
                         async_=async_,
                     )
                 )

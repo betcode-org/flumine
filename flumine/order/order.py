@@ -6,10 +6,18 @@ import string
 import collections
 from enum import Enum
 from typing import Union, Optional
+
+import betdaq.filters
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
-from ..clients.clients import ExchangeType
-from .ordertype import LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, OrderTypes
+from ..clients.clients import VenueType
+from .ordertype import (
+    LimitOrder,
+    LimitOnCloseOrder,
+    MarketOnCloseOrder,
+    OrderTypes,
+    BetdaqLimitOrder,
+)
 from .responses import Responses
 from ..exceptions import OrderUpdateError
 from ..simulation.simulatedorder import SimulatedOrder
@@ -26,7 +34,7 @@ VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS = (
 
 
 class OrderStatus(Enum):
-    # Pending exchange processing
+    # Pending venue processing
     PENDING = "Pending"
     CANCELLING = "Cancelling"
     UPDATING = "Updating"
@@ -53,13 +61,15 @@ COMPLETE_STATUS = [
 
 
 class BaseOrder:
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
         trade,
         side: str,
-        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        order_type: Union[
+            LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, BetdaqLimitOrder
+        ],
         handicap: float = 0,
         sep: str = config.order_sep,
         context: dict = None,
@@ -96,8 +106,9 @@ class BaseOrder:
         self.market_version = None  # marketBook.version
         self.async_ = None
 
-        self.date_time_created = datetime.datetime.utcnow()
+        self.date_time_created = datetime.datetime.now(datetime.timezone.utc)
         self.date_time_execution_complete = None
+        self.date_time_status_update = datetime.datetime.now(datetime.timezone.utc)
 
         self.cleared_order = None
 
@@ -108,6 +119,7 @@ class BaseOrder:
     def _update_status(self, status: OrderStatus) -> None:
         self.status_log.append(status)
         self.status = status
+        self.date_time_status_update = datetime.datetime.now(datetime.timezone.utc)
         self.complete = self._is_complete()
         if logger.isEnabledFor(logging.INFO):
             logger.info("Order status update: %s" % self.status.value, extra=self.info)
@@ -123,7 +135,7 @@ class BaseOrder:
 
     def execution_complete(self) -> None:
         self._update_status(OrderStatus.EXECUTION_COMPLETE)
-        self.date_time_execution_complete = datetime.datetime.utcnow()
+        self.date_time_execution_complete = datetime.datetime.now(datetime.timezone.utc)
         self.update_data.clear()
 
     def cancelling(self) -> None:
@@ -236,13 +248,17 @@ class BaseOrder:
     def elapsed_seconds(self) -> Optional[float]:
         date_time_placed = self.responses.date_time_placed
         if date_time_placed:
-            return (datetime.datetime.utcnow() - date_time_placed).total_seconds()
+            return (
+                datetime.datetime.now(datetime.timezone.utc) - date_time_placed
+            ).total_seconds()
         else:
             return
 
     @property
     def elapsed_seconds_created(self) -> float:
-        return (datetime.datetime.utcnow() - self.date_time_created).total_seconds()
+        return (
+            datetime.datetime.now(datetime.timezone.utc) - self.date_time_created
+        ).total_seconds()
 
     @property
     def elapsed_seconds_executable(self) -> Optional[float]:
@@ -250,6 +266,12 @@ class BaseOrder:
             return (
                 self.date_time_execution_complete - self.responses.date_time_placed
             ).total_seconds()
+
+    @property
+    def elapsed_seconds_status_update(self) -> float:
+        return (
+            datetime.datetime.now(datetime.timezone.utc) - self.date_time_status_update
+        ).total_seconds()
 
     @property
     def profit(self) -> float:
@@ -326,7 +348,7 @@ class BaseOrder:
 
 
 class BetfairOrder(BaseOrder):
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     # updates
     def place(self, publish_time: int, market_version: int, async_: bool) -> None:
@@ -491,3 +513,126 @@ class BetfairOrder(BaseOrder):
             return False
         else:
             return c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS
+
+
+class BetdaqOrder(BaseOrder):
+    VENUE = VenueType.BETDAQ
+
+    # updates
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
+        self.publish_time = publish_time
+        self.market_version = market_version
+        self.async_ = async_
+        self.placing()
+
+    def cancel(self, size_reduction: float = None) -> None:
+        if size_reduction:
+            raise OrderUpdateError(
+                "BetdaqOrder does not allow size_reduction (use update())"
+            )
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
+            self.cancelling()
+        else:
+            raise OrderUpdateError(
+                "Only LIMIT orders can be cancelled or partially cancelled once placed"
+            )
+
+    def update(
+        self,
+        size_delta: float = 0.0,
+        new_price: float = None,
+        expected_selection_reset_count: int = None,
+        expected_withdrawal_sequence_number: int = None,
+        cancel_on_in_running: bool = None,
+        cancel_if_selection_reset: bool = None,
+        set_to_be_sp_if_unmatched: bool = None,
+    ) -> None:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
+            self.update_data["BetId"] = self.bet_id
+            self.update_data["DeltaStake"] = size_delta
+            self.update_data["Price"] = new_price or self.order_type.price
+            self.update_data["ExpectedSelectionResetCount"] = (
+                expected_selection_reset_count
+            )
+            self.update_data["ExpectedWithdrawalSequenceNumber"] = (
+                expected_withdrawal_sequence_number
+            )
+            self.update_data["CancelOnInRunning"] = cancel_on_in_running
+            self.update_data["CancelIfSelectionReset"] = cancel_if_selection_reset
+            self.update_data["SetToBeSPIfUnmatched"] = set_to_be_sp_if_unmatched
+            self.updating()
+        else:
+            raise OrderUpdateError("Only LIMIT orders can be updated")
+
+    # instructions
+    def create_place_instruction(self) -> dict:
+        if self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            return self.order_type.place_instruction(self._polarity, int(self.id))
+
+    def create_cancel_instruction(self) -> dict:
+        return self.bet_id
+
+    def create_update_instruction(self) -> dict:
+        return betdaq.filters.update_order(**self.update_data)
+
+    @property
+    def _polarity(self):
+        if self.side == "BACK":
+            return 1
+        else:
+            return 2
+
+    # currentOrder
+    @property
+    def average_price_matched(self) -> float:
+        try:
+            return self.current_order.get("matched_price", 0)
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_matched(self) -> float:
+        try:
+            return self.current_order.get("matched_size", 0)
+        except AttributeError:
+            return 0.0
+
+    @property
+    def size_remaining(self):
+        if self.current_order.get("status") in ["Settled", "Cancelled", "Void"]:
+            return 0.0
+        if "size_remaining" in self.current_order:
+            return self.current_order.get("size_remaining", 0)
+        try:
+            return self.current_order.get("remaining_size", 0)
+        except AttributeError:
+            return self.order_type.size
+
+    @property
+    def size_cancelled(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_lapsed(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_voided(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def current_order(self) -> Union[CurrentOrder, SimulatedOrder, dict]:
+        if self.responses.current_order:
+            return self.responses.current_order
+        elif self.responses.place_response:
+            return self.responses.place_response
+        else:
+            return {}

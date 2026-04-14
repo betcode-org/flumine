@@ -4,7 +4,7 @@ from betfairlightweight import BetfairError, resources
 from betfairlightweight.metadata import currency_parameters
 
 from .baseclient import BaseClient
-from .clients import ExchangeType
+from .clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class BetfairClient(BaseClient):
     Betfair betting client.
     """
 
-    EXCHANGE = ExchangeType.BETFAIR
+    VENUE = VenueType.BETFAIR
 
     def login(self) -> Optional[resources.LoginResource]:
         try:

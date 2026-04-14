@@ -2,7 +2,7 @@ from typing import Optional
 from betfairlightweight.metadata import transaction_limit as betfair_transaction_limit
 
 from ..utils import create_short_uuid
-from .clients import ExchangeType
+from .clients import VenueType
 
 DEFAULT_CAPITAL_BASE = 0
 DEFAULT_COMMISSION_BASE = 0.05
@@ -13,7 +13,7 @@ class BaseClient:
     Abstraction of betting client.
     """
 
-    EXCHANGE = None
+    VENUE = None
 
     def __init__(
         self,
@@ -24,12 +24,14 @@ class BaseClient:
         interactive_login: bool = False,
         username: str = None,
         order_stream: bool = True,
+        order_stream_conflate_ms: int = None,
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
         paper_trade: bool = False,
         market_recording_mode: bool = False,
         simulated_full_match: bool = False,
         execution_cls=None,
+        order_stream_cls=None,
     ):
         if hasattr(betting_client, "lightweight"):
             assert (
@@ -42,6 +44,7 @@ class BaseClient:
         self.commission_base = commission_base  # not implemented
         self.interactive_login = interactive_login
         self.order_stream = order_stream
+        self.order_stream_conflate_ms = order_stream_conflate_ms
         self.best_price_execution = best_price_execution  # simulation only
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
         self.paper_trade = paper_trade  # simulated order placement using live data
@@ -54,7 +57,8 @@ class BaseClient:
         self.account_funds = None
         self.commission_paid = 0
 
-        self._execution_cls = execution_cls
+        self._execution_cls = execution_cls  # custom execution
+        self.order_stream_cls = order_stream_cls  # custom order stream
         self.execution = None  # set during flumine init
         self.trading_controls = []
 
@@ -74,10 +78,12 @@ class BaseClient:
         if self._execution_cls:
             self.execution = self._execution_cls(flumine)
         else:
-            if self.EXCHANGE == ExchangeType.SIMULATED or self.paper_trade:
+            if self.VENUE == VenueType.SIMULATED or self.paper_trade:
                 self.execution = flumine.simulated_execution
-            elif self.EXCHANGE == ExchangeType.BETFAIR:
+            elif self.VENUE == VenueType.BETFAIR:
                 self.execution = flumine.betfair_execution
+            elif self.VENUE == VenueType.BETDAQ:
+                self.execution = flumine.betdaq_execution
 
     def add_transaction(self, count: int, failed: bool = False) -> None:
         for control in self.trading_controls:
@@ -121,12 +127,13 @@ class BaseClient:
     def info(self) -> dict:
         return {
             "username": self.username,
-            "exchange": self.EXCHANGE.value if self.EXCHANGE else None,
+            "venue": self.VENUE.value if self.VENUE else None,
             "betting_client": self.betting_client,
             "current_transaction_count_total": self.current_transaction_count_total,
             "transaction_count_total": self.transaction_count_total,
             "trading_controls": self.trading_controls,
             "order_stream": self.order_stream,
+            "order_stream_conflate_ms": self.order_stream_conflate_ms,
             "best_price_execution": self.best_price_execution,
             "paper_trade": self.paper_trade,
         }

@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Iterator, Optional
 from collections import defaultdict
 
@@ -12,6 +13,7 @@ class Markets:
     def __init__(self):
         self._markets = {}  # marketId: <Market>
         self.events = defaultdict(list)  # eventId: [<Market>, ]
+        self.live_orders_event = threading.Event()
 
     def add_market(self, market_id: str, market: Market) -> None:
         if market_id in self._markets:

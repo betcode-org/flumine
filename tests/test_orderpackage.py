@@ -8,8 +8,9 @@ from flumine.order.orderpackage import (
     EventType,
     QueueType,
     BetfairOrderPackage,
-    ExchangeType,
+    VenueType,
     OrderStatus,
+    BetdaqOrderPackage,
 )
 
 
@@ -26,6 +27,7 @@ class OrderPackageTest(unittest.TestCase):
             self.mock_package_type,
             1,
             market_version=123,
+            customer_strategy_ref="test",
         )
 
     def test_init(self):
@@ -36,7 +38,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.EVENT_TYPE, EventType.ORDER_PACKAGE)
         self.assertEqual(self.order_package.QUEUE_TYPE, QueueType.HANDLER)
         self.assertEqual(self.order_package.bet_delay, 1)
-        self.assertIsNone(self.order_package.EXCHANGE)
+        self.assertIsNone(self.order_package.VENUE)
         self.assertFalse(self.order_package.async_)
         self.assertEqual(self.order_package._market_version, 123)
         self.assertFalse(self.order_package.processed)
@@ -45,6 +47,7 @@ class OrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package._retry_count, 0)
         self.assertIsNone(self.order_package.simulated_latency)
         self.assertIsNone(self.order_package.simulated_latency_plus_delay)
+        self.assertEqual(self.order_package.customer_strategy_ref, "test")
 
     def test_retry(self):
         self.assertTrue(self.order_package.retry())
@@ -77,7 +80,7 @@ class OrderPackageTest(unittest.TestCase):
         config.update_latency = 0.3
         config.replace_latency = 0.4
         self.assertIsNone(self.order_package.calc_simulated_latency())
-        self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
+        self.order_package.client.execution.EXCHANGE = VenueType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_latency(), 0.1)
         self.order_package.package_type = OrderPackageType.CANCEL
@@ -93,7 +96,7 @@ class OrderPackageTest(unittest.TestCase):
         config.update_latency = 0.3
         config.replace_latency = 0.4
         self.assertIsNone(self.order_package.calc_simulated_latency_delay())
-        self.order_package.client.execution.EXCHANGE = ExchangeType.SIMULATED
+        self.order_package.client.execution.VENUE = VenueType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_latency_delay(), 1.1)
         self.order_package.package_type = OrderPackageType.CANCEL
@@ -146,7 +149,11 @@ class OrderPackageTest(unittest.TestCase):
         self.order_package._retry_count = 1
         self.assertEqual(self.order_package.retry_count, 1)
 
-    def test_info(self):
+    @mock.patch(
+        "flumine.order.orderpackage.BaseOrderPackage.elapsed_seconds",
+        new_callable=mock.PropertyMock,
+    )
+    def test_info(self, mock_elapsed_seconds):
         self.assertEqual(
             self.order_package.info,
             {
@@ -162,6 +169,7 @@ class OrderPackageTest(unittest.TestCase):
                 "retry": self.order_package._retry,
                 "retry_count": self.order_package._retry_count,
                 "async": self.order_package.async_,
+                "elapsed_seconds": mock_elapsed_seconds.return_value,
             },
         )
 
@@ -198,7 +206,7 @@ class BetfairOrderPackageTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.order_package.EXCHANGE, ExchangeType.BETFAIR)
+        self.assertEqual(self.order_package.VENUE, VenueType.BETFAIR)
 
     def test_place_instructions(self):
         self.assertEqual(
@@ -229,3 +237,49 @@ class BetfairOrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 60)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 60)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.REPLACE), 60)
+
+
+class BetdaqOrderPackageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_package_type = mock.Mock()
+        self.mock_client = mock.Mock()
+        self.mock_order = mock.Mock()
+        self.mock_order.status = OrderStatus.PENDING
+        self.order_package = BetdaqOrderPackage(
+            self.mock_client,
+            "1.234",
+            [self.mock_order],
+            self.mock_package_type,
+            0,
+        )
+
+    def test_init(self):
+        self.assertEqual(self.order_package.VENUE, VenueType.BETDAQ)
+
+    def test_place_instructions(self):
+        self.assertEqual(
+            self.order_package.place_instructions,
+            [self.mock_order.create_place_instruction()],
+        )
+
+    def test_cancel_instructions(self):
+        self.assertEqual(
+            self.order_package.cancel_instructions,
+            [self.mock_order.create_cancel_instruction()],
+        )
+
+    def test_update_instructions(self):
+        self.assertEqual(
+            self.order_package.update_instructions,
+            [self.mock_order.create_update_instruction()],
+        )
+
+    def test_replace_instructions(self):
+        with self.assertRaises(NotImplementedError):
+            assert self.order_package.replace_instructions
+
+    def test_order_limit(self):
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.PLACE), 10)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 10)
+        self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 50)
+        self.assertIsNone(self.order_package.order_limit(OrderPackageType.REPLACE))

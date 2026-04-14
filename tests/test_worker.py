@@ -4,7 +4,7 @@ from unittest import mock
 from betfairlightweight import BetfairError, exceptions
 
 from flumine import worker
-from flumine.clients import ExchangeType
+from flumine.clients import VenueType
 
 
 class BackgroundWorkerTest(unittest.TestCase):
@@ -63,12 +63,12 @@ class WorkersTest(unittest.TestCase):
 
     def test_keep_alive(self):
         mock_context = mock.Mock()
-        mock_client_simulated = mock.Mock(EXCHANGE=ExchangeType.SIMULATED)
-        mock_client_betfair = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_simulated = mock.Mock(VENUE=VenueType.SIMULATED)
+        mock_client_betfair = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_client_betfair.betting_client.session_token = None
-        mock_client_betfair_st = mock.Mock(EXCHANGE=ExchangeType.BETFAIR)
+        mock_client_betfair_st = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_client_betfair_st.betting_client.session_token = "test"
-        mock_client_betconnect = mock.Mock(EXCHANGE=ExchangeType.BETCONNECT)
+        mock_client_betconnect = mock.Mock(VENUE=VenueType.BETCONNECT)
         mock_client_betconnect.keep_alive.return_value = None
         mock_flumine = mock.Mock(
             clients=[
@@ -92,7 +92,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -131,7 +131,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -163,7 +163,7 @@ class WorkersTest(unittest.TestCase):
         mock_context = mock.Mock()
         mock_flumine = mock.Mock()
         mock_client = mock.Mock()
-        mock_flumine.clients.get_betfair_default.return_value = mock_client
+        mock_flumine.clients.get_default.return_value = mock_client
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
@@ -197,7 +197,9 @@ class WorkersTest(unittest.TestCase):
         mock_flumine = mock.Mock(clients=[mock_client])
         worker.poll_account_balance(mock_context, mock_flumine)
         mock_client.update_account_details.assert_called_with()
-        mock_events.BalanceEvent.assert_called_with(mock_client)
+        mock_events.BalanceEvent.assert_called_with(
+            mock_client, venue=mock_client.VENUE
+        )
         mock_flumine.log_control.assert_called_with(mock_events.BalanceEvent())
 
     @mock.patch("flumine.worker._get_cleared_market")
@@ -209,13 +211,13 @@ class WorkersTest(unittest.TestCase):
             id="123",
             paper_trade=False,
             market_recording_mode=False,
-            EXCHANGE=ExchangeType.BETFAIR,
+            VENUE=VenueType.BETFAIR,
         )
         mock_client_sim = mock.Mock(
             id="456",
             paper_trade=False,
             market_recording_mode=False,
-            EXCHANGE=ExchangeType.SIMULATED,
+            VENUE=VenueType.SIMULATED,
         )
         mock_flumine = mock.Mock(clients=[mock_client, mock_client_sim])
         market_one = mock.Mock(closed=False)
@@ -410,3 +412,36 @@ class WorkersTest(unittest.TestCase):
             group_by="MARKET",
             customer_strategy_refs=[mock_config.customer_strategy_ref],
         )
+
+    @mock.patch("flumine.worker.config")
+    @mock.patch("flumine.worker.events")
+    def test_betdaq_settled_orders(self, mock_events, mock_config):
+        mock_client = mock.Mock(VENUE=VenueType.BETDAQ)
+        mock_client.betting_client.betting.get_orders.return_value = {
+            "orders": [],
+            "maximum_sequence_number": 354301,
+        }
+        mock_client.betting_client.betting.get_orders_diff.return_value = [
+            {"status": "Settled", "sequence_number": 1},
+            {"status": "Cancelled", "sequence_number": 2},
+            {"status": "Void", "sequence_number": 3},
+            {"status": "Unmatched", "sequence_number": 4},
+        ]
+        mock_flumine = mock.Mock(clients=[mock_client])
+        context = {}
+        worker.betdaq_settled_orders(context, mock_flumine)
+        mock_client.betting_client.betting.get_orders_diff.assert_has_calls(
+            [mock.call(354301)]
+        )
+        mock_events.ClearedOrdersEvent.assert_called_with(
+            [
+                {"status": "Settled", "sequence_number": 1},
+                {"status": "Cancelled", "sequence_number": 2},
+                {"status": "Void", "sequence_number": 3},
+            ],
+            venue=VenueType.BETDAQ,
+        )
+        mock_flumine.log_control.assert_called_with(
+            mock_events.ClearedOrdersEvent.return_value
+        )
+        self.assertEqual(context, {mock_client: 354301})

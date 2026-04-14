@@ -31,7 +31,7 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.notes, self.notes)
         self.assertEqual(self.trade.status_log, [])
         self.assertEqual(self.trade.orders, [])
-        self.assertEqual(self.trade.offset_orders, [])
+        self.assertFalse(self.trade.pending_orders)
         self.assertIsNotNone(self.trade.date_time_created)
         self.assertIsNone(self.trade.date_time_complete)
         self.assertIsNone(self.trade.market_notes)
@@ -66,10 +66,10 @@ class TradeTest(unittest.TestCase):
         self.trade.orders.append(mock_order)
         self.assertFalse(self.trade.complete)
 
-    def test_trade_complete_offset(self):
-        self.trade.offset_orders = [mock.Mock(complete=False)]
+    def test_trade_complete_pending(self):
+        self.trade.pending_orders = True
         self.assertFalse(self.trade.complete)
-        self.trade.offset_orders = [mock.Mock(complete=True)]
+        self.trade.pending_orders = False
         self.assertTrue(self.trade.complete)
 
     def test_trade_complete_replace_order(self):
@@ -80,8 +80,8 @@ class TradeTest(unittest.TestCase):
         self.assertFalse(self.trade.complete)
 
     def test_create_order(self):
-        mock_order_type = mock.Mock(EXCHANGE="SYM")
-        mock_order = mock.Mock(EXCHANGE="SYM")
+        mock_order_type = mock.Mock(VENUE="SYM")
+        mock_order = mock.Mock(VENUE="SYM")
         self.trade.create_order(
             "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
         )
@@ -97,13 +97,13 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(self.trade.orders, [mock_order()])
 
     def test_create_order_error(self):
-        mock_order_type = mock.Mock(EXCHANGE="SYM")
-        mock_order = mock.Mock(EXCHANGE="MYS")
+        mock_order_type = mock.Mock(VENUE="SYM")
+        mock_order = mock.Mock(VENUE="MYS")
         with self.assertRaises(OrderError):
             self.trade.create_order("BACK", mock_order_type, order=mock_order)
 
     def test_create_order_replacement(self):
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         mock_order = mock.Mock(sep="-")
         replacement_order = self.trade.create_order_replacement(
             mock_order, 12, 2.00, now
@@ -128,7 +128,12 @@ class TradeTest(unittest.TestCase):
     def test_create_order_from_current_limit(self):
         mock_client = mock.Mock()
         mock_current_order = mock.Mock(
-            order_type="LIMIT", placed_date=12, matched_date=None, cancelled_date=34
+            order_type="LIMIT",
+            placed_date=datetime.datetime.fromtimestamp(12, tz=datetime.timezone.utc),
+            matched_date=None,
+            cancelled_date=datetime.datetime.fromtimestamp(
+                34, tz=datetime.timezone.utc
+            ),
         )
         order = self.trade.create_order_from_current(
             mock_client, mock_current_order, "12345"
@@ -137,8 +142,14 @@ class TradeTest(unittest.TestCase):
         self.assertEqual(order.id, "12345")
         self.assertEqual(order.client, mock_client)
         self.assertEqual(self.trade.orders, [order])
-        self.assertEqual(order.date_time_created, 12)
-        self.assertEqual(order.date_time_execution_complete, 34)
+        self.assertEqual(
+            order.date_time_created,
+            datetime.datetime.fromtimestamp(12, tz=datetime.timezone.utc),
+        )
+        self.assertEqual(
+            order.date_time_execution_complete,
+            datetime.datetime.fromtimestamp(34, tz=datetime.timezone.utc),
+        )
 
     def test_create_order_from_current_limit_on_close(self):
         mock_client = mock.Mock()
@@ -170,6 +181,23 @@ class TradeTest(unittest.TestCase):
                 mock_client, mock_current_order, "12345"
             )
 
+    def test_create_betdaq_order(self):
+        mock_order_type = mock.Mock(VENUE="BETDAQ")
+        mock_order = mock.Mock(VENUE="BETDAQ")
+        self.trade.create_order(
+            "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
+        )
+        mock_order.assert_called_with(
+            trade=self.trade,
+            side="BACK",
+            order_type=mock_order_type,
+            handicap=self.trade.handicap,
+            sep="-",
+            context={1: 2},
+            notes=None,
+        )
+        self.assertEqual(self.trade.orders, [mock_order()])
+
     def test_elapsed_seconds(self):
         mock_order_one = mock.Mock(elapsed_seconds=123)
         mock_order_two = mock.Mock(elapsed_seconds=12)
@@ -189,7 +217,7 @@ class TradeTest(unittest.TestCase):
             {
                 "id": str(self.trade.id),
                 "orders": [],
-                "offset_orders": [],
+                "pending_orders": False,
                 "place_reset_seconds": 12,
                 "reset_seconds": 34,
                 "strategy": str(self.mock_strategy),

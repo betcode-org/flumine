@@ -56,7 +56,7 @@ class MaxTransactionCount(BaseControl):
             )
 
     def _check_hour(self) -> None:
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         next_hour = now + datetime.timedelta(hours=1)
         if self._next_hour is None:
             self._set_next_hour()
@@ -78,7 +78,7 @@ class MaxTransactionCount(BaseControl):
             self._set_next_hour()
 
     def _set_next_hour(self) -> None:
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         self._next_hour = (now + datetime.timedelta(hours=1)).replace(
             minute=0, second=0, microsecond=0
         )

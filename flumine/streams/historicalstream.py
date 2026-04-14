@@ -96,8 +96,10 @@ class FlumineMarketStream(MarketStream):
                 if self._listener.inplay:
                     if not _definition_in_play:
                         active = False
-                elif self._listener.seconds_to_start:
-                    _now = datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+                elif self._listener.seconds_to_start is not None:
+                    _now = datetime.datetime.fromtimestamp(
+                        publish_time / 1e3, tz=datetime.timezone.utc
+                    )
                     _market_time = BaseResource.strip_datetime(_definition_market_time)
                     seconds_to_start = (_market_time - _now).total_seconds()
                     if seconds_to_start > self._listener.seconds_to_start:
@@ -158,7 +160,9 @@ class FlumineRaceStream(RaceStream):
                 # filter after start time
                 diff = (
                     race_cache.start_time
-                    - datetime.datetime.utcfromtimestamp(publish_time / 1e3)
+                    - datetime.datetime.fromtimestamp(
+                        publish_time / 1e3, tz=datetime.timezone.utc
+                    )
                 ).total_seconds()
                 # handle US races starting early by checking the update
                 if diff <= 0 or (

@@ -9,7 +9,8 @@ from .datastream import DataStream
 from .historicalstream import HistoricalStream
 from .orderstream import OrderStream
 from .simulatedorderstream import SimulatedOrderStream
-from ..clients import ExchangeType, BaseClient
+from .betdaqorderpolling import BetdaqOrderPolling
+from ..clients import VenueType, BaseClient
 from ..utils import get_file_md
 from betfairlightweight.resources.streamingresources import MarketDefinition
 
@@ -28,6 +29,7 @@ class Streams:
             market_types = strategy.market_filter.get("market_types")
             country_codes = strategy.market_filter.get("country_codes")
             event_processing = strategy.market_filter.get("event_processing", False)
+            event_groups = strategy.market_filter.get("event_groups", {})
             events = strategy.market_filter.get("events")
             listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
             if markets and events:
@@ -66,6 +68,7 @@ class Streams:
                             market,
                             market_definition,
                             event_processing,
+                            event_groups,
                             **listener_kwargs,
                         )
                         strategy.streams.append(stream)
@@ -77,10 +80,22 @@ class Streams:
 
     def add_client(self, client: BaseClient) -> None:
         if client.order_stream:
-            if client.paper_trade:
-                self.add_simulated_order_stream(client)
-            elif client.EXCHANGE == ExchangeType.BETFAIR:
-                self.add_order_stream(client)
+            if client.order_stream_cls:
+                order_stream = client.order_stream_cls(
+                    flumine=self.flumine,
+                    client=client,
+                    custom=True,
+                )
+                self.add_custom_stream(order_stream)
+            else:
+                if client.paper_trade:
+                    self.add_simulated_order_stream(client)
+                elif client.VENUE == VenueType.BETFAIR:
+                    self.add_order_stream(
+                        client, conflate_ms=client.order_stream_conflate_ms
+                    )
+                elif client.VENUE == VenueType.BETDAQ:
+                    self.add_betdaq_order_polling(client)
 
     """ market data """
 
@@ -164,12 +179,20 @@ class Streams:
         market: str,
         market_definition: Optional[MarketDefinition],
         event_processing: bool,
+        event_groups: dict,
         **listener_kwargs,
     ) -> HistoricalStream:
         for stream in self:
+            # Get the expected event group of a stream considering its event id and group mapping
+            event_group = (
+                event_groups.get(stream.event_id, stream.event_id)
+                if event_processing
+                else None
+            )
             if (
                 stream.market_filter == market
                 and stream.event_processing == event_processing
+                and stream.event_group == event_group
                 and stream.listener_kwargs == listener_kwargs
             ):
                 return stream
@@ -178,6 +201,9 @@ class Streams:
             event_id = getattr(market_definition, "event_id", None)
             if event_processing and event_id is None:
                 logger.warning("EventId not found for market %s" % market)
+            event_group = (
+                event_groups.get(event_id, event_id) if event_processing else None
+            )  # Event ID by default, None if event_processing is False
             logger.info(
                 "Creating new %s (%s) for strategy %s",
                 HistoricalStream.__name__,
@@ -187,6 +213,7 @@ class Streams:
                     "strategy": strategy,
                     "stream_id": stream_id,
                     "market_filter": market,
+                    "event_group": event_group,
                     "event_id": event_id,
                     "event_processing": event_processing,
                 },
@@ -200,6 +227,7 @@ class Streams:
                 conflate_ms=strategy.conflate_ms,
                 output_queue=False,
                 event_processing=event_processing,
+                event_group=event_group,
                 event_id=event_id,
                 **listener_kwargs,
             )
@@ -244,6 +272,21 @@ class Streams:
         self._streams.append(stream)
         return stream
 
+    def add_betdaq_order_polling(
+        self,
+        client: BaseClient,
+        streaming_timeout: float = 0.25,
+    ) -> BetdaqOrderPolling:
+        stream_id = self._increment_stream_id()
+        stream = BetdaqOrderPolling(
+            flumine=self.flumine,
+            stream_id=stream_id,
+            client=client,
+            streaming_timeout=streaming_timeout,
+        )
+        self._streams.append(stream)
+        return stream
+
     """ custom stream """
 
     def add_custom_stream(self, stream):
@@ -259,6 +302,7 @@ class Streams:
                 # wait for successful start
                 while not stream.custom and not stream.stream_running:
                     time.sleep(0.25)
+                time.sleep(0.5)  # prevent an SSL lock
 
     def stop(self) -> None:
         for stream in self:

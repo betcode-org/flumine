@@ -217,6 +217,13 @@ strategy = ExampleStrategy(
 )
 ```
 
+To process multiple events in parallel, provide a mapping for event groups in the format `{event_id: event_group}`. In this example, events with IDs `"123"` and `"456"` are added to execution group `"A"` and will be simulated together.
+```python
+strategy = ExampleStrategy(
+    market_filter={"markets": [..], "event_processing": True, "event_groups": {"123": "A", "456": "A"}}
+)
+```
+
 The `Market` object contains a helper method for accessing other event linked markets:
 
 ```python

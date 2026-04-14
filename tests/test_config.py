@@ -8,7 +8,7 @@ class ConfigTest(unittest.TestCase):
         self.assertFalse(config.simulated)
         self.assertTrue(config.simulated_strategy_isolation)
         self.assertFalse(config.simulation_available_prices)
-        self.assertIsInstance(config.customer_strategy_ref, str)
+        self.assertIsNone(config.customer_strategy_ref)
         self.assertIsInstance(config.process_id, int)
         self.assertIsNone(config.current_time)
         self.assertFalse(config.raise_errors)

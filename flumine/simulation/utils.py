@@ -9,6 +9,10 @@ class NewDateTime(datetime.datetime):
     def utcnow(cls):
         return config.current_time
 
+    @classmethod
+    def now(cls, tz=None):
+        return config.current_time
+
 
 class SimulatedDateTime:
     def __init__(self):
@@ -18,7 +22,7 @@ class SimulatedDateTime:
         config.current_time = pt
 
     def reset_real_datetime(self):
-        config.current_time = self._real_datetime.utcnow()
+        config.current_time = self._real_datetime.now(datetime.timezone.utc)
 
     @contextmanager
     def real_time(self):
@@ -29,7 +33,7 @@ class SimulatedDateTime:
             datetime.datetime = NewDateTime
 
     def __enter__(self):
-        config.current_time = datetime.datetime.utcnow()
+        config.current_time = datetime.datetime.now(datetime.timezone.utc)
         self._real_datetime = datetime.datetime
         datetime.datetime = NewDateTime
         return datetime.datetime
