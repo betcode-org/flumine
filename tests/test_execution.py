@@ -6,7 +6,6 @@ from unittest.mock import call
 from betdaq import BetdaqError
 from betfairlightweight import BetfairError
 
-from flumine import config
 from flumine.clients.clients import VenueType
 from flumine.exceptions import OrderExecutionError
 from flumine.execution.baseexecution import (
@@ -1176,7 +1175,9 @@ class SimulatedExecutionTest(unittest.TestCase):
         )
         mock_order_package.client.paper_trade = True
         self.execution.execute_place(mock_order_package, None)
-        mock_time.sleep.assert_called_with(config.place_latency + 1)
+        mock_time.sleep.assert_called_with(
+            mock_order_package.simulated_latency_plus_delay
+        )
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_cancel(self, mock__order_logger):
@@ -1251,7 +1252,9 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_cancel(mock_order_package, None)
-        mock_time.sleep.assert_called_with(config.cancel_latency)
+        mock_time.sleep.assert_called_with(
+            mock_order_package.simulated_latency_plus_delay
+        )
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_update(self, mock__order_logger):
@@ -1312,7 +1315,9 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_update(mock_order_package, None)
-        mock_time.sleep.assert_called_with(config.update_latency)
+        mock_time.sleep.assert_called_with(
+            mock_order_package.simulated_latency_plus_delay
+        )
 
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
@@ -1414,7 +1419,9 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
         mock_order_package.client.paper_trade = True
         self.execution.execute_replace(mock_order_package, None)
-        mock_time.sleep.assert_called_with(config.replace_latency + 1)
+        mock_time.sleep.assert_called_with(
+            mock_order_package.simulated_latency_plus_delay
+        )
 
 
 class BetdaqExecutionTest(unittest.TestCase):

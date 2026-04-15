@@ -3,7 +3,6 @@ import requests
 from typing import Optional
 
 from .baseexecution import BaseExecution
-from .. import config
 from ..clients.clients import VenueType
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
@@ -33,17 +32,18 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(order_package.bet_delay + config.place_latency)  # todo PASSIVE
+            # todo PASSIVE matching
+            time.sleep(order_package.simulated_latency_plus_delay)
         market = self.flumine.markets.markets[order_package.market_id]
+        market_book = market.market_book
 
-        # calc current delay
+        # calc current elapsed seconds
         elapsed_seconds = order_package.elapsed_seconds
         if elapsed_seconds < order_package.simulated_latency_plus_delay:
             # check if PASSIVE execution available
             if (
-                market.market_book.market_definition.bet_delay_models is None
-                or "PASSIVE"
-                not in market.market_book.market_definition.bet_delay_models
+                market_book.market_definition.bet_delay_models is None
+                or "PASSIVE" not in market_book.market_definition.bet_delay_models
             ):
                 return
 
@@ -53,7 +53,7 @@ class SimulatedExecution(BaseExecution):
             with order.trade:
                 self._bet_id += 1
                 simulated_response = order.simulated.place(
-                    order_package, market.market_book, instruction, self._bet_id
+                    order_package, market_book, instruction, self._bet_id
                 )
                 if simulated_response.status == "DELAY":  # PENDING delay
                     self._bet_id -= 1
@@ -72,7 +72,7 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(config.cancel_latency)
+            time.sleep(order_package.simulated_latency_plus_delay)
         market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order in order_package:
@@ -98,7 +98,7 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(config.update_latency)
+            time.sleep(order_package.simulated_latency_plus_delay)
         market = self.flumine.markets.markets[order_package.market_id]
         failed_transaction_count = 0
         for order, instruction in zip(order_package, order_package.update_instructions):
@@ -123,18 +123,19 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:  # todo the cancel happens without a delay!
-            time.sleep(order_package.bet_delay + config.replace_latency)  # todo PASSIVE
+            # todo PASSIVE matching
+            time.sleep(order_package.simulated_latency_plus_delay)
         market = self.flumine.markets.markets[order_package.market_id]
+        market_book = market.market_book
 
         # todo cancel after latency -> check passive models / place execution
-        # calc current delay
+        # calc current elapsed seconds
         elapsed_seconds = order_package.elapsed_seconds
         if elapsed_seconds < order_package.simulated_latency_plus_delay:
             # check if PASSIVE execution available
             if (
-                market.market_book.market_definition.bet_delay_models is None
-                or "PASSIVE"
-                not in market.market_book.market_definition.bet_delay_models
+                market_book.market_definition.bet_delay_models is None
+                or "PASSIVE" not in market_book.market_definition.bet_delay_models
             ):
                 return
 
@@ -145,7 +146,7 @@ class SimulatedExecution(BaseExecution):
             with order.trade:
                 # cancel current order
                 err = False
-                cancel_instruction_report = order.simulated.cancel(market.market_book)
+                cancel_instruction_report = order.simulated.cancel(market_book)
                 if cancel_instruction_report.status == "SUCCESS":
                     order.execution_complete()
                 elif cancel_instruction_report.status == "FAILURE":
@@ -169,7 +170,7 @@ class SimulatedExecution(BaseExecution):
                     order_package.date_time_created,
                 )
                 place_instruction_report = replacement_order.simulated.place(
-                    order_package, market.market_book, instruction, self._bet_id
+                    order_package, market_book, instruction, self._bet_id
                 )
                 if place_instruction_report.status == "SUCCESS":
                     self._order_logger(
