@@ -2,7 +2,6 @@ import logging
 import datetime
 from typing import List, Optional
 from betfairlightweight.resources.bettingresources import MarketBook, RunnerBook
-from docutils.nodes import status
 
 from .utils import (
     SimulatedPlaceResponse,
@@ -125,14 +124,10 @@ class SimulatedOrder:
                     "Simulated betTargetSize placement not implemented"
                 )
             # calc current delay
-            current_bet_delay = order_package.elapsed_seconds
+            elapsed_seconds = order_package.elapsed_seconds
             bet_delay_complete = False
-            if current_bet_delay > order_package.simulated_latency_plus_delay:
+            if elapsed_seconds > order_package.simulated_latency_plus_delay:
                 bet_delay_complete = True
-
-            # todo is this going to be a market level setting?
-            # if order_package.client.passive_bet_delay and bet_delay_complete is False:
-            #     return False
 
             # Validate that min_fill_size <= size for fill or kill orders
             is_fill_or_kill_order = time_in_force == "FILL_OR_KILL"

@@ -45,8 +45,8 @@ class OrderPackageTest(unittest.TestCase):
         self.assertTrue(self.order_package._retry)
         self.assertEqual(self.order_package._max_retries, 3)
         self.assertEqual(self.order_package._retry_count, 0)
-        self.assertIsNone(self.order_package.simulated_latency)
-        self.assertIsNone(self.order_package.simulated_latency_plus_delay)
+        self.assertEqual(self.order_package.simulated_latency, -1)
+        self.assertEqual(self.order_package.simulated_latency_plus_delay, -1)
         self.assertEqual(self.order_package.customer_strategy_ref, "test")
 
     def test_retry(self):
@@ -79,8 +79,8 @@ class OrderPackageTest(unittest.TestCase):
         config.cancel_latency = 0.2
         config.update_latency = 0.3
         config.replace_latency = 0.4
-        self.assertIsNone(self.order_package.calc_simulated_latency())
-        self.order_package.client.execution.EXCHANGE = VenueType.SIMULATED
+        self.assertEqual(self.order_package.calc_simulated_latency(), -1)
+        self.order_package.client.execution.VENUE = VenueType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_latency(), 0.1)
         self.order_package.package_type = OrderPackageType.CANCEL
@@ -95,7 +95,7 @@ class OrderPackageTest(unittest.TestCase):
         config.cancel_latency = 0.2
         config.update_latency = 0.3
         config.replace_latency = 0.4
-        self.assertIsNone(self.order_package.calc_simulated_latency_delay())
+        self.assertEqual(self.order_package.calc_simulated_latency_delay(), -1)
         self.order_package.client.execution.VENUE = VenueType.SIMULATED
         self.order_package.package_type = OrderPackageType.PLACE
         self.assertEqual(self.order_package.calc_simulated_latency_delay(), 1.1)

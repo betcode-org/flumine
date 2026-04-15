@@ -82,6 +82,7 @@ class BaseOrderPackage(BaseEvent):
                 return config.update_latency
             elif self.package_type == OrderPackageType.REPLACE:
                 return config.replace_latency
+        return -1
 
     def calc_simulated_latency_delay(self) -> float:
         if self.client.execution.VENUE == VenueType.SIMULATED:
@@ -93,6 +94,7 @@ class BaseOrderPackage(BaseEvent):
                 return config.update_latency
             elif self.package_type == OrderPackageType.REPLACE:
                 return config.replace_latency + self.bet_delay
+        return -1
 
     @property
     def place_instructions(self) -> list:

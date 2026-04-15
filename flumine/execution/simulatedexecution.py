@@ -33,8 +33,20 @@ class SimulatedExecution(BaseExecution):
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
         if order_package.client.paper_trade:
-            time.sleep(order_package.bet_delay + config.place_latency)
+            time.sleep(order_package.bet_delay + config.place_latency)  # todo PASSIVE
         market = self.flumine.markets.markets[order_package.market_id]
+
+        # calc current delay
+        elapsed_seconds = order_package.elapsed_seconds
+        if elapsed_seconds < order_package.simulated_latency_plus_delay:
+            # check if PASSIVE execution available
+            if (
+                market.market_book.market_definition.bet_delay_models is None
+                or "PASSIVE"
+                not in market.market_book.market_definition.bet_delay_models
+            ):
+                return
+
         for order, instruction in zip(
             order_package.orders_pending, order_package.place_instructions
         ):
@@ -110,11 +122,22 @@ class SimulatedExecution(BaseExecution):
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        if (
-            order_package.client.paper_trade
-        ):  # todo should the cancel happen without a delay?
-            time.sleep(order_package.bet_delay + config.replace_latency)
+        if order_package.client.paper_trade:  # todo the cancel happens without a delay!
+            time.sleep(order_package.bet_delay + config.replace_latency)  # todo PASSIVE
         market = self.flumine.markets.markets[order_package.market_id]
+
+        # todo cancel after latency -> check passive models / place execution
+        # calc current delay
+        elapsed_seconds = order_package.elapsed_seconds
+        if elapsed_seconds < order_package.simulated_latency_plus_delay:
+            # check if PASSIVE execution available
+            if (
+                market.market_book.market_definition.bet_delay_models is None
+                or "PASSIVE"
+                not in market.market_book.market_definition.bet_delay_models
+            ):
+                return
+
         failed_transaction_count = 0
         for order, instruction in zip(
             order_package, order_package.replace_instructions

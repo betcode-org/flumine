@@ -276,7 +276,12 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
     def test_place_limit_fill_or_kill_invalid_min_fill_size(self, mock__get_runner):
         mock_client = mock.Mock(best_price_execution=False)
-        mock_order_package = mock.Mock(client=mock_client, market_version=None)
+        mock_order_package = mock.Mock(
+            client=mock_client,
+            market_version=None,
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_market_book = mock.Mock(status="OPEN")
         instruction = self.mock_betfair_place_instruction_fill_or_kill(
             size=1, min_fill_size=2

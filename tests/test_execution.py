@@ -1075,11 +1075,15 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(
+            market_id="1.23",
+            orders_pending=[mock_order],
+            place_instructions=[1],
+            info={},
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_order_package.client.paper_trade = False
-        mock_order_package.orders_pending = [mock_order]
-        mock_order_package.place_instructions = [1]
-        mock_order_package.info = {}
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "SUCCESS"
         mock_order.simulated.place.return_value = mock_sim_resp
@@ -1103,11 +1107,15 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(
+            market_id="1.23",
+            orders_pending=[mock_order],
+            place_instructions=[1],
+            info={},
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_order_package.client.paper_trade = False
-        mock_order_package.orders_pending = [mock_order]
-        mock_order_package.place_instructions = [1]
-        mock_order_package.info = {}
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "FAILURE"
         mock_order.simulated.place.return_value = mock_sim_resp
@@ -1131,11 +1139,15 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock()
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23")
+        mock_order_package = mock.MagicMock(
+            market_id="1.23",
+            place_instructions=[1],
+            info={},
+            orders_pending=[mock_order],
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_order_package.client.paper_trade = False
-        mock_order_package.orders_pending = [mock_order]
-        mock_order_package.place_instructions = [1]
-        mock_order_package.info = {}
         mock_sim_resp = mock.Mock()
         mock_sim_resp.status = "DELAY"
         mock_order.simulated.place.return_value = mock_sim_resp
@@ -1155,9 +1167,13 @@ class SimulatedExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.simulatedexecution.time")
     def test_execute_place_paper_trade(self, mock_time):
         mock_order_package = mock.MagicMock(
-            market_id="1.23", place_instructions=[], bet_delay=1
+            market_id="1.23",
+            place_instructions=[],
+            bet_delay=1,
+            orders_pending=[],
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
         )
-        mock_order_package.orders_pending = []
         mock_order_package.client.paper_trade = True
         self.execution.execute_place(mock_order_package, None)
         mock_time.sleep.assert_called_with(config.place_latency + 1)
@@ -1301,11 +1317,15 @@ class SimulatedExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
         mock_client = mock.Mock()
-        mock_order = mock.Mock(client=mock_client)
+        mock_order = mock.Mock(market_id="1.234", client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order.market_id = "1.234"
-        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
+        mock_order_package = mock.MagicMock(
+            market_id="1.23",
+            client=mock_client,
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1350,7 +1370,12 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_order = mock.Mock(client=mock_client)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
-        mock_order_package = mock.MagicMock(market_id="1.23", client=mock_client)
+        mock_order_package = mock.MagicMock(
+            market_id="1.23",
+            client=mock_client,
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
+        )
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
@@ -1379,7 +1404,11 @@ class SimulatedExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.simulatedexecution.time")
     def test_execute_replace_paper_trade(self, mock_time):
         mock_order_package = mock.MagicMock(
-            market_id="1.23", replace_instructions=[], bet_delay=1
+            market_id="1.23",
+            replace_instructions=[],
+            bet_delay=1,
+            elapsed_seconds=0.25,
+            simulated_latency_plus_delay=0.2,
         )
         mock_order_package.__len__.return_value = 1
         mock_order_package.__iter__ = mock.Mock(return_value=iter([]))
