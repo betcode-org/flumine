@@ -58,8 +58,8 @@ class Trade:
     def _update_status(self, status: TradeStatus) -> None:
         self.status_log.append(status)
         self.status = status
-        if logger.isEnabledFor(logging.INFO):
-            logger.info("Trade status update: %s" % self.status.value, extra=self.info)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Trade status update: %s" % self.status.value, extra=self.info)
         if self.complete:
             self.complete_trade()
 
@@ -71,6 +71,7 @@ class Trade:
             self.market_id, self.selection_id, self.handicap
         )
         runner_context.reset(self.id)
+        logger.info("Trade completed: %s" % self.status.value, extra=self.info)
 
     @property
     def complete(self) -> bool:

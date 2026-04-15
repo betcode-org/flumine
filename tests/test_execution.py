@@ -17,6 +17,7 @@ from flumine.execution.baseexecution import (
 from flumine.execution.betdaqexecution import BetdaqExecution
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
+from flumine.order.order import OrderStatus
 
 
 class BaseExecutionTest(unittest.TestCase):
@@ -1322,14 +1323,20 @@ class SimulatedExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace(self, mock__order_logger):
         mock_client = mock.Mock()
-        mock_order = mock.Mock(market_id="1.234", client=mock_client)
+        mock_order = mock.Mock(
+            market_id="1.234", client=mock_client, status=OrderStatus.REPLACING
+        )
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.MagicMock(
             market_id="1.23",
             client=mock_client,
+            bet_delay=0,
             elapsed_seconds=0.25,
+            simulated_latency=0.2,
             simulated_latency_plus_delay=0.2,
+            orders_pending=[mock_order],
+            _orders=[mock_order],
         )
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False
@@ -1340,14 +1347,26 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_replacement_order_package.__iter__ = mock.Mock(
             return_value=iter([mock_order])
         )
-        mock_sim_resp = mock.Mock()
-        mock_sim_resp.status = "SUCCESS"
+        mock_sim_resp = mock.Mock(status="SUCCESS")
         mock_order.simulated.cancel.return_value = mock_sim_resp
         mock_replacement_order.simulated.place.return_value = mock_sim_resp
         mock_order.trade.create_order_replacement.return_value = mock_replacement_order
+
+        # test order is cancelled
         self.execution.execute_replace(mock_order_package, None)
+        mock_replacement_order.placing.assert_called()
         mock_order.simulated.cancel.assert_called_with(self.mock_market.market_book)
-        mock_replacement_order.simulated.place.assert_called_with(
+        self.assertEqual(len(mock_order_package._orders), 2)
+        self.assertEqual(len(mock_order_package.orders_pending), 1)
+
+        # now test if it can be replaced
+        r_order = mock_order_package.orders_pending[0]
+        r_order.status = OrderStatus.PENDING
+        r_order.create_place_instruction.return_value = {"newPrice": 2.03}
+        r_order.simulated.place.return_value = mock_sim_resp
+        self.execution.execute_replace(mock_order_package, None)
+
+        r_order.simulated.place.assert_called_with(
             mock_order_package,
             self.mock_market.market_book,
             {"newPrice": 2.03},
@@ -1357,14 +1376,14 @@ class SimulatedExecutionTest(unittest.TestCase):
             [
                 call(mock_order, mock_sim_resp, OrderPackageType.CANCEL),
                 call(
-                    mock_replacement_order,
+                    r_order,
                     mock_sim_resp,
                     mock_order_package.package_type,
                 ),
             ]
         )
         mock_order.execution_complete.assert_called_with()
-        # mock_replacement_order.executable.assert_called_with()
+        r_order.executable.assert_called_with()
         mock_order.trade.__enter__.assert_called_with()
         mock_order.trade.__exit__.assert_called_with(None, None, None)
         mock_order_package.client.add_transaction.assert_called_with(1)
@@ -1372,14 +1391,18 @@ class SimulatedExecutionTest(unittest.TestCase):
     @mock.patch("flumine.execution.simulatedexecution.SimulatedExecution._order_logger")
     def test_execute_replace_failure(self, mock__order_logger):
         mock_client = mock.Mock()
-        mock_order = mock.Mock(client=mock_client)
+        mock_order = mock.Mock(client=mock_client, status=OrderStatus.REPLACING)
         mock_order.trade.__enter__ = mock.Mock()
         mock_order.trade.__exit__ = mock.Mock()
         mock_order_package = mock.MagicMock(
             market_id="1.23",
             client=mock_client,
+            bet_delay=0,
             elapsed_seconds=0.25,
+            simulated_latency=0.2,
             simulated_latency_plus_delay=0.2,
+            orders_pending=[mock_order],
+            _orders=[mock_order],
         )
         mock_order_package.__len__.return_value = 1
         mock_order_package.client.paper_trade = False

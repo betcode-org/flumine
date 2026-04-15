@@ -2,8 +2,10 @@ import time
 import requests
 from typing import Optional
 
+from .. import config
 from .baseexecution import BaseExecution
 from ..clients.clients import VenueType
+from ..order.order import OrderStatus
 from ..order.orderpackage import BaseOrderPackage, OrderPackageType
 
 
@@ -122,71 +124,82 @@ class SimulatedExecution(BaseExecution):
     def execute_replace(
         self, order_package, http_session: Optional[requests.Session]
     ) -> None:
-        if order_package.client.paper_trade:  # todo the cancel happens without a delay!
+        if order_package.client.paper_trade:
+            # todo the cancel happens without a bet delay!
             # todo PASSIVE matching
             time.sleep(order_package.simulated_latency_plus_delay)
         market = self.flumine.markets.markets[order_package.market_id]
         market_book = market.market_book
 
-        # todo cancel after latency -> check passive models / place execution
         # calc current elapsed seconds
         elapsed_seconds = order_package.elapsed_seconds
-        if elapsed_seconds < order_package.simulated_latency_plus_delay:
-            # check if PASSIVE execution available
-            if (
-                market_book.market_definition.bet_delay_models is None
-                or "PASSIVE" not in market_book.market_definition.bet_delay_models
-            ):
-                return
+        if elapsed_seconds < config.cancel_latency:
+            return
 
         failed_transaction_count = 0
-        for order, instruction in zip(
-            order_package, order_package.replace_instructions
-        ):
+        for order in order_package.orders_pending:
             with order.trade:
-                # cancel current order
-                err = False
-                cancel_instruction_report = order.simulated.cancel(market_book)
-                if cancel_instruction_report.status == "SUCCESS":
-                    order.execution_complete()
-                elif cancel_instruction_report.status == "FAILURE":
-                    order.executable()
-                    failed_transaction_count += 1
-                    err = True
-                self._order_logger(
-                    order,
-                    cancel_instruction_report,
-                    OrderPackageType.CANCEL,
-                )
-                if err:
-                    continue
-
-                # place new order
-                self._bet_id += 1
-                replacement_order = order.trade.create_order_replacement(
-                    order,
-                    instruction.get("newPrice"),
-                    cancel_instruction_report.size_cancelled,
-                    order_package.date_time_created,
-                )
-                place_instruction_report = replacement_order.simulated.place(
-                    order_package, market_book, instruction, self._bet_id
-                )
-                if place_instruction_report.status == "SUCCESS":
+                if order.status == OrderStatus.REPLACING:
+                    # we can cancel after the latency (no bet delay)
+                    instruction = order.create_replace_instruction()
+                    # cancel current order
+                    err = False
+                    cancel_instruction_report = order.simulated.cancel(market_book)
+                    if cancel_instruction_report.status == "SUCCESS":
+                        order.execution_complete()
+                    elif cancel_instruction_report.status == "FAILURE":
+                        order.executable()
+                        failed_transaction_count += 1
+                        err = True
                     self._order_logger(
-                        replacement_order,
-                        place_instruction_report,
-                        order_package.package_type,
+                        order,
+                        cancel_instruction_report,
+                        OrderPackageType.CANCEL,
                     )
-                    # add to blotter
-                    market.place_order(
-                        replacement_order, execute=False, client=order.client
-                    )
-                    replacement_order.executable()
-                elif place_instruction_report.status == "FAILURE":
-                    order.executable()
+                    if err:
+                        continue
 
-        # update transaction counts
-        order_package.client.add_transaction(len(order_package))
+                    # create the replacement order
+                    replacement_order = order.trade.create_order_replacement(
+                        order,
+                        instruction.get("newPrice"),
+                        cancel_instruction_report.size_cancelled,
+                        order_package.date_time_created,
+                    )
+                    replacement_order.placing()
+                    order_package._orders.append(replacement_order)
+
+                elif order.status == OrderStatus.PENDING:
+                    # we can re'place' after the bet delay latency or PASSIVE
+                    if elapsed_seconds < config.place_latency + order_package.bet_delay:
+                        # check if PASSIVE execution available
+                        if (
+                            market_book.market_definition.bet_delay_models is None
+                            or "PASSIVE"
+                            not in market_book.market_definition.bet_delay_models
+                        ):
+                            return
+                    instruction = order.create_place_instruction()
+                    self._bet_id += 1
+                    place_instruction_report = order.simulated.place(
+                        order_package, market_book, instruction, self._bet_id
+                    )
+                    if place_instruction_report.status == "DELAY":  # PENDING delay
+                        self._bet_id -= 1
+                        continue
+                    if place_instruction_report.status == "SUCCESS":
+                        self._order_logger(
+                            order,
+                            place_instruction_report,
+                            order_package.package_type,
+                        )
+                        # add to blotter
+                        market.place_order(order, execute=False, client=order.client)
+                        order.executable()
+                    elif place_instruction_report.status == "FAILURE":
+                        order.execution_complete()
+                    # update transaction counts
+                    order_package.client.add_transaction(1)
+
         if failed_transaction_count:
             order_package.client.add_transaction(failed_transaction_count, failed=True)
