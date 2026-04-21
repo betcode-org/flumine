@@ -2,7 +2,6 @@ import time
 import logging
 from typing import Union, Iterator
 
-from ..exceptions import StreamError
 from .betfairmarketstream import BetfairMarketStream
 from .betfairdatastream import BetfairDataStream
 from .betfairhistoricalstream import BetfairHistoricalStream
@@ -10,6 +9,7 @@ from .betfairorderstream import BetfairOrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from .betdaqorderpolling import BetdaqOrderPolling
 from ..clients import VenueType, BaseClient
+from ..exceptions import StreamError
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +57,13 @@ class Streams:
         conflate_ms: int = None,
         streaming_timeout: float = 0.25,
     ) -> BetfairOrderStream:
-        stream_id = self._increment_stream_id()
         stream = BetfairOrderStream(
             flumine=self.flumine,
-            stream_id=stream_id,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
         )
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def add_simulated_order_stream(
         self,
@@ -75,32 +72,26 @@ class Streams:
         streaming_timeout: float = 0.25,
     ) -> SimulatedOrderStream:
         logger.warning("Client %s now paper trading", client.betting_client.username)
-        stream_id = self._increment_stream_id()
         stream = SimulatedOrderStream(
             flumine=self.flumine,
-            stream_id=stream_id,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
             custom=True,
         )
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def add_betdaq_order_polling(
         self,
         client: BaseClient,
         streaming_timeout: float = 0.25,
     ) -> BetdaqOrderPolling:
-        stream_id = self._increment_stream_id()
         stream = BetdaqOrderPolling(
             flumine=self.flumine,
-            stream_id=stream_id,
             client=client,
             streaming_timeout=streaming_timeout,
         )
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def start(self) -> None:
         if not self.flumine.SIMULATED:

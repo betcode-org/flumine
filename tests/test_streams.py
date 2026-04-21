@@ -92,20 +92,35 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_not_called()
 
+    @mock.patch("flumine.streams.streams.BetfairOrderStream")
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_betfair_order_stream(self, mock_add_stream, mock_order_stream_class):
+        conflate_ms = 500
+        streaming_timeout = 0.5
+        mock_client = mock.Mock()
+        self.streams.add_betfair_order_stream(
+            mock_client, conflate_ms, streaming_timeout
+        )
+        mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
+        mock_order_stream_class.assert_called_with(
+            flumine=self.mock_flumine,
+            conflate_ms=conflate_ms,
+            streaming_timeout=streaming_timeout,
+            client=mock_client,
+        )
+
     @mock.patch("flumine.streams.streams.SimulatedOrderStream")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_simulated_order_stream(self, mock_increment, mock_order_stream_class):
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_simulated_order_stream(self, mock_add_stream, mock_order_stream_class):
         conflate_ms = 500
         streaming_timeout = 0.5
         mock_client = mock.Mock()
         self.streams.add_simulated_order_stream(
             mock_client, conflate_ms, streaming_timeout
         )
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
+        mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
         mock_order_stream_class.assert_called_with(
             flumine=self.mock_flumine,
-            stream_id=mock_increment(),
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
@@ -113,25 +128,16 @@ class StreamsTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.streams.streams.BetdaqOrderPolling")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_betdaq_order_polling(self, mock_increment, mock_order_polling_class):
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_betdaq_order_polling(self, mock_add_stream, mock_order_polling_class):
         mock_client = mock.Mock()
         self.streams.add_betdaq_order_polling(mock_client)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
+        mock_add_stream.assert_called_with(mock_order_polling_class.return_value)
         mock_order_polling_class.assert_called_with(
             flumine=self.mock_flumine,
-            stream_id=mock_increment(),
             client=mock_client,
             streaming_timeout=0.25,
         )
-
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream(self, mock_increment):
-        mock_stream = mock.Mock()
-        self.streams.add_stream(mock_stream)
-        mock_increment.assert_called_with()
-        self.assertEqual(self.streams._streams, [mock_stream])
 
     def test_start(self):
         mock_stream = mock.Mock()
