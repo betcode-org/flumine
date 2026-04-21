@@ -11,24 +11,20 @@ This is one of the most powerful options available as the variables are passed d
 #### 600s before scheduled start and no inplay
 
 ```python
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
-    market_filter={
-        "markets": ["/tmp/marketdata/1.170212754"],
-        "listener_kwargs": {"seconds_to_start": 600, "inplay": False},
-    },
+    market_filter="/tmp/marketdata/1.170212754",
+    listener_kwargs={"seconds_to_start": 600, "inplay": False},
 )
 ```
 
 #### inplay only
 
 ```python
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
-    market_filter={
-        "markets": ["/tmp/marketdata/1.170212754"],
-        "listener_kwargs": {"inplay": True},
-    },
+    market_filter="/tmp/marketdata/1.170212754",
+    listener_kwargs={"inplay": True},
 )
 ```
 
@@ -67,7 +63,7 @@ import smart_open
 from concurrent import futures
 from unittest.mock import patch as mock_patch
 from flumine import FlumineSimulation, clients, utils
-from flumine.streams.historicalstream import HistoricalStream
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 from strategies.lowestlayer import LowestLayer
 
 
@@ -77,7 +73,7 @@ def run_process(markets):
     
     streams = []
     for market in markets:
-        stream = HistoricalStream(
+        stream = BetfairHistoricalStream(
             framework,
             market_filter=market,
             output_queue=False,

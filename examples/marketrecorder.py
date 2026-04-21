@@ -5,7 +5,7 @@ from betfairlightweight.filters import streaming_market_filter
 from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients
-from flumine.streams.datastream import DataStream
+from flumine.streams.betfairdatastream import BetfairDataStream
 from strategies.marketrecorder import MarketRecorder
 
 logger = logging.getLogger()
@@ -24,7 +24,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client=client)
 
 # create stream(s) (market data)
-stream = DataStream(
+stream = BetfairDataStream(
     framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],

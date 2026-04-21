@@ -4,7 +4,7 @@ from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, Cric
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
-from ..streams.marketstream import BaseStream
+from ..streams.betfairmarketstream import BaseStream
 from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)

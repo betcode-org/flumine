@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 RETRY_WAIT = BaseStream.RETRY_WAIT
 
 
-class MarketStream(BaseStream):
+class BetfairMarketStream(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(

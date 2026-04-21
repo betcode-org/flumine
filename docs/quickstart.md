@@ -25,14 +25,14 @@ framework = Flumine(client=client)
 The next step is to create the streams (market data) that you want to consume
 
 ```python
-from flumine.streams.marketstream import MarketStream
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 from betfairlightweight.filters import (
     streaming_market_filter, 
     streaming_market_data_filter,
 )
 
 # Create stream(s) (market data)
-stream = MarketStream(
+stream = BetfairMarketStream(
     framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],
@@ -132,7 +132,7 @@ By default the stream class will be a MarketStream which provides a MarketBook p
 
 ```python
 from flumine import BaseStrategy
-from flumine.streams.datastream import DataStream
+from flumine.streams.betfairdatastream import BetfairDataStream
 
 
 class ExampleDataStrategy(BaseStrategy):
@@ -141,7 +141,7 @@ class ExampleDataStrategy(BaseStrategy):
 
 
 # create stream(s) (market data)
-stream = DataStream(
+stream = BetfairDataStream(
     framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],
@@ -159,10 +159,10 @@ flumine.add_strategy(strategy)
 The OrderDataStream class can be used to record order data as per market:
 
 ```python
-from flumine.streams.datastream import OrderDataStream
+from flumine.streams.betfairdatastream import BetfairOrderDataStream
 
 # create stream(s) (order data)
-stream = OrderDataStream(framework)
+stream = BetfairOrderDataStream(framework)
 framework.add_stream(stream)
 
 strategy = ExampleDataStrategy(streams=[stream])
@@ -191,14 +191,14 @@ Flumine can be used to simulate strategies using the following code:
 
 ```python
 from flumine import FlumineSimulation, clients
-from flumine.streams.historicalstream import HistoricalStream
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 
 client = clients.SimulatedClient()
 framework = FlumineSimulation(client=client)
 
 market = "/tmp/marketdata/1.170212754"
 
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
     market_filter=market,
     output_queue=False,
@@ -216,7 +216,7 @@ framework.run()
 Sometimes a subset of the market lifetime is required, this can be optimised by limiting the number of updates to process resulting in faster simulation:
 
 ```python
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
     market_filter=market,
     listener_kwargs={"inplay": False, "seconds_to_start": 600},
@@ -240,7 +240,7 @@ The extra kwargs above will limit processing to preplay in the final 10 minutes.
 It is also possible to process events with multiple markets such as win/place in racing or all football markets as per live by adding the following flag:
 
 ```python
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
     market_filter=market,
     event_processing=True,
@@ -250,7 +250,7 @@ stream = HistoricalStream(
 
 To process multiple events in parallel, provide a mapping for event groups in the format `{event_id: event_group}`. In this example, events with IDs `"123"` and `"456"` are added to execution group `"A"` and will be simulated together.
 ```python
-stream = HistoricalStream(
+stream = BetfairHistoricalStream(
     framework,
     market_filter=market,
     event_processing=True,

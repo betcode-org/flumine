@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 RETRY_WAIT = BaseStream.RETRY_WAIT
 
 
-class SportsDataStream(BaseStream):
+class BetfairSportsDataStream(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         time.sleep(2)  # 2s delay to wait for market streams to start

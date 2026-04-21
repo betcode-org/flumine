@@ -56,9 +56,9 @@ And using the correct stream class:
 
 #### Cricket Recorder
 ```python
-from flumine.streams.datastream import CricketDataStream
+from flumine.streams.betfairdatastream import BetfairCricketDataStream
 
-cricket_data_stream = CricketDataStream(framework)
+cricket_data_stream = BetfairCricketDataStream(framework)
 framework.add_stream(cricket_data_stream)
 
 strategy= MarketRecorder(
@@ -74,9 +74,9 @@ strategy= MarketRecorder(
 
 #### Race Recorder
 ```python
-from flumine.streams.datastream import RaceDataStream
+from flumine.streams.betfairdatastream import BetfairRaceDataStream
 
-race_data_stream = RaceDataStream(framework)
+race_data_stream = BetfairRaceDataStream(framework)
 framework.add_stream(race_data_stream)
 
 strategy= MarketRecorder(

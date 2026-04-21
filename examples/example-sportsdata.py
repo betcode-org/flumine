@@ -5,7 +5,7 @@ from betfairlightweight.filters import streaming_market_filter
 from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients, BaseStrategy
-from flumine.streams.marketstream import MarketStream
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 from flumine.streams.sportsdatastream import SportsDataStream
 
 logger = logging.getLogger()
@@ -31,7 +31,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client)
 
 # create stream(s) (market data)
-market_stream = MarketStream(
+market_stream = BetfairMarketStream(
     framework,
     market_filter=streaming_market_filter(
         event_type_ids=["4"], market_types=["MATCH_ODDS"]

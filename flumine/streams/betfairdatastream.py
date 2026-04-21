@@ -139,7 +139,7 @@ class FlumineCricketStream(FlumineStream):
         return False
 
 
-class DataStream(BaseStream):
+class BetfairDataStream(BaseStream):
     LISTENER = FlumineListener
 
     def __init__(self, *args, **kwargs):
@@ -179,7 +179,7 @@ class DataStream(BaseStream):
         logger.info("Stopped DataStream %s", self.stream_id)
 
 
-class OrderDataStream(DataStream):
+class BetfairOrderDataStream(BetfairDataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -220,7 +220,7 @@ class OrderDataStream(DataStream):
         logger.info("Stopped OrderDataStream %s", self.stream_id)
 
 
-class RaceDataStream(DataStream):
+class BetfairRaceDataStream(BetfairDataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -247,7 +247,7 @@ class RaceDataStream(DataStream):
         logger.info("Stopped RaceDataStream %s", self.stream_id)
 
 
-class CricketDataStream(DataStream):
+class BetfairCricketDataStream(BetfairDataStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(

@@ -4,7 +4,7 @@ from pythonjsonlogger import jsonlogger
 
 from flumine import FlumineSimulation, clients
 from strategies.lowestlayer import LowestLayer
-from flumine.streams.historicalstream import HistoricalStream
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 
 logger = logging.getLogger()
 
@@ -24,7 +24,7 @@ markets = ["tests/resources/PRO-1.170258213"]
 
 streams = []
 for market in markets:
-    stream = HistoricalStream(
+    stream = BetfairHistoricalStream(
         framework,
         market_filter=market,
         output_queue=False,

@@ -6,7 +6,7 @@ from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients, BaseStrategy
 from flumine.worker import BackgroundWorker
-from flumine.streams.marketstream import MarketStream
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 from workers.inplayservice import poll_in_play_service
 
 logger = logging.getLogger()
@@ -46,7 +46,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client=client)
 
 # create stream(s) (market data)
-stream = MarketStream(
+stream = BetfairMarketStream(
     framework,
     market_filter=streaming_market_filter(market_ids=["1.172415939"]),
 )

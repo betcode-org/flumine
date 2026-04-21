@@ -13,7 +13,7 @@ from flumine.controls.tradingcontrols import (
 )
 from flumine.markets.blotter import Blotter
 from flumine.order.order import OrderStatus
-from flumine.streams.orderstream import OrderStream
+from flumine.streams.betfairorderstream import BetfairOrderStream
 
 
 class TestOrderValidation(unittest.TestCase):
@@ -437,7 +437,7 @@ class TestMarketValidation(unittest.TestCase):
 class TestExecutionValidation(unittest.TestCase):
     def setUp(self):
         self.mock_order_stream = mock.Mock(
-            spec=OrderStream, _stream=mock.Mock(_running=True)
+            spec=BetfairOrderStream, _stream=mock.Mock(_running=True)
         )
         self.mock_flumine = mock.Mock(
             SIMULATED=False,

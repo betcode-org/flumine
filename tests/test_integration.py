@@ -5,7 +5,7 @@ from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder, LimitOnCloseOrder
 from flumine.utils import get_price, get_nearest_price
-from flumine.streams.historicalstream import HistoricalStream
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 from examples.middleware.marketcatalogue import MarketCatalogueMiddleware
 
 
@@ -30,14 +30,14 @@ class IntegrationTest(unittest.TestCase):
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
 
-        stream_one = HistoricalStream(
+        stream_one = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/1.197931750",
             event_processing=True,
             output_queue=False,
         )
         framework.add_stream(stream_one)
-        stream_two = HistoricalStream(
+        stream_two = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/1.197931751",
             event_processing=True,
@@ -73,7 +73,7 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        stream = HistoricalStream(
+        stream = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/BASIC-1.132153978",
             output_queue=False,
@@ -95,7 +95,7 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        stream = HistoricalStream(
+        stream = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/BASIC-1.132153978",
             output_queue=False,
@@ -244,7 +244,7 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        stream = HistoricalStream(
+        stream = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/PRO-1.170258213",
             output_queue=False,
@@ -356,7 +356,7 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation()
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
-        stream = HistoricalStream(
+        stream = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/PRO-1.170258213",
             output_queue=False,
@@ -434,21 +434,21 @@ class IntegrationTest(unittest.TestCase):
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
                             market.cancel_order(order)
 
-        stream_one = HistoricalStream(
+        stream_one = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/SELF-1.181223994",
             event_processing=True,
             output_queue=False,
         )
         framework.add_stream(stream_one)
-        stream_two = HistoricalStream(
+        stream_two = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/SELF-1.181223995",
             event_processing=True,
             output_queue=False,
         )
         framework.add_stream(stream_two)
-        stream_three = HistoricalStream(
+        stream_three = BetfairHistoricalStream(
             framework,
             market_filter="tests/resources/PRO-1.170258213",
             event_processing=True,

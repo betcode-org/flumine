@@ -5,7 +5,7 @@ from betfairlightweight.resources.bettingresources import RunnerBook
 
 from ..order.order import OrderStatus, OrderTypes
 from ..utils import wap, call_strategy_error_handling
-from ..streams.historicalstream import (
+from ..streams.betfairhistoricalstream import (
     HistoricListener,
     FlumineHistoricalGeneratorStream,
 )

@@ -8,7 +8,7 @@ from flumine import Flumine, clients, BaseStrategy
 from flumine.order.trade import Trade
 from flumine.order.ordertype import LimitOrder
 from flumine.order.order import OrderStatus
-from flumine.streams.marketstream import MarketStream
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 
 logger = logging.getLogger()
 
@@ -72,7 +72,7 @@ client = clients.BetfairClient(trading)
 framework = Flumine(client=client)
 
 # create stream(s) (market data)
-stream = MarketStream(
+stream = BetfairMarketStream(
     framework,
     market_filter=streaming_market_filter(market_ids=["1.257042402"]),
 )

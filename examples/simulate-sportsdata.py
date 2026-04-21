@@ -7,7 +7,7 @@ from flumine.strategy.strategy import BaseStrategy
 from flumine.markets.middleware import SimulatedSportsDataMiddleware
 from flumine.order.trade import Trade
 from flumine.order.ordertype import LimitOrder
-from flumine.streams.historicalstream import HistoricalStream
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 
 logger = logging.getLogger()
 
@@ -76,7 +76,7 @@ markets = ["tests/resources/1.200806927"]
 
 streams = []
 for market in markets:
-    stream = HistoricalStream(
+    stream = BetfairHistoricalStream(
         framework,
         market_filter=market,
         output_queue=False,

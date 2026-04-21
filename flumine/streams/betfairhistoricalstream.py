@@ -275,7 +275,7 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
                     ]
 
 
-class HistoricalStream(BaseStream):
+class BetfairHistoricalStream(BaseStream):
     LISTENER = HistoricListener
     MAX_LATENCY = None
 

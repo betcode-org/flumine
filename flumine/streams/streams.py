@@ -3,10 +3,10 @@ import logging
 from typing import Union, Iterator
 
 from ..exceptions import StreamError
-from .marketstream import MarketStream
-from .datastream import DataStream
-from .historicalstream import HistoricalStream
-from .orderstream import OrderStream
+from .betfairmarketstream import BetfairMarketStream
+from .betfairdatastream import BetfairDataStream
+from .betfairhistoricalstream import BetfairHistoricalStream
+from .betfairorderstream import BetfairOrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from .betdaqorderpolling import BetdaqOrderPolling
 from ..clients import VenueType, BaseClient
@@ -56,9 +56,9 @@ class Streams:
         client: BaseClient,
         conflate_ms: int = None,
         streaming_timeout: float = 0.25,
-    ) -> OrderStream:
+    ) -> BetfairOrderStream:
         stream_id = self._increment_stream_id()
-        stream = OrderStream(
+        stream = BetfairOrderStream(
             flumine=self.flumine,
             stream_id=stream_id,
             conflate_ms=conflate_ms,
@@ -120,7 +120,11 @@ class Streams:
         self._stream_id += int(1e4)
         return self._stream_id
 
-    def __iter__(self) -> Iterator[Union[MarketStream, DataStream, HistoricalStream]]:
+    def __iter__(
+        self,
+    ) -> Iterator[
+        Union[BetfairMarketStream, BetfairDataStream, BetfairHistoricalStream]
+    ]:
         return iter(self._streams)
 
     def __len__(self) -> int:

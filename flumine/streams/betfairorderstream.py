@@ -15,7 +15,7 @@ START_DELAY = 2
 SNAP_DELTA = 3
 
 
-class OrderStream(BaseStream):
+class BetfairOrderStream(BaseStream):
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
