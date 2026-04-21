@@ -2,10 +2,22 @@ import threading
 import queue
 import logging
 import betfairlightweight
-from betfairlightweight import StreamListener
+from betfairlightweight import StreamListener, filters
 from tenacity import wait_exponential
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
+    fields=[
+        "EX_ALL_OFFERS",
+        "EX_TRADED",
+        "EX_TRADED_VOL",
+        "EX_LTP",
+        "EX_MARKET_DEF",
+        "SP_TRADED",
+        "SP_PROJECTED",
+    ]
+)
 
 
 class BaseStream(threading.Thread):
@@ -35,7 +47,7 @@ class BaseStream(threading.Thread):
         self.flumine = flumine
         self.stream_id = stream_id
         self.market_filter = market_filter
-        self.market_data_filter = market_data_filter
+        self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
         self.sports_data_filter = sports_data_filter
         self.streaming_timeout = streaming_timeout
         self.conflate_ms = conflate_ms

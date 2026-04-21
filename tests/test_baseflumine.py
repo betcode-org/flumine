@@ -80,16 +80,20 @@ class BaseFlumineTest(unittest.TestCase):
         mock_add_market_middleware.assert_not_called()
         mock_add_client_control.assert_called_with(mock_client, MaxTransactionCount)
 
+    def test_add_stream(self):
+        mock_streams = mock.Mock()
+        self.base_flumine.streams = mock_streams
+        mock_stream = mock.Mock()
+        self.base_flumine.add_stream(mock_stream)
+        mock_streams.add_stream.assert_called_with(mock_stream)
+
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
     def test_add_strategy(self, mock_log_control, mock_events):
-        mock_streams = mock.Mock()
-        self.base_flumine.streams = mock_streams
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
         mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
         self.base_flumine.add_strategy(mock_strategy)
-        mock_streams.assert_called_with(mock_strategy)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )

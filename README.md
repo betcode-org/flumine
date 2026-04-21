@@ -54,6 +54,7 @@ Get started...
 
 ```python
 from flumine import Flumine, BaseStrategy
+from flumine.streams.marketstream import MarketStream
 from betfairlightweight.filters import streaming_market_filter
 
 # Define your strategy here
@@ -69,15 +70,20 @@ class ExampleStrategy(BaseStrategy):
 # Initialize the framework
 framework = Flumine()
 
-# Add your strategy to the framework
+# Create stream(s) (market data)
+stream = MarketStream(
+    framework,
+    market_filter=streaming_market_filter(
+        event_type_ids=["7"],
+        country_codes=["GB"],
+        market_types=["WIN"],
+    ),
+)
+framework.add_stream(stream)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
-    ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
-        )
-    )
+    ExampleStrategy(streams=[stream])
 )
 
 # Start the trading framework
@@ -87,10 +93,11 @@ framework.run()
 Example strategy with logic and order execution:
 
 ```python
-from flumine import BaseStrategy
+from flumine import Flumine, BaseStrategy
 from flumine.order.trade import Trade
 from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
+from flumine.streams.marketstream import MarketStream
 from betfairlightweight.filters import streaming_market_filter
 from betfairlightweight.resources import MarketBook
 
@@ -134,15 +141,20 @@ class ExampleStrategy(BaseStrategy):
 # Initialize the framework
 framework = Flumine()
 
-# Add your strategy to the framework
+# Create stream(s) (market data)
+stream = MarketStream(
+    framework,
+    market_filter=streaming_market_filter(
+        event_type_ids=["7"],
+        country_codes=["GB"],
+        market_types=["WIN"],
+    ),
+)
+framework.add_stream(stream)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
-    ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
-        )
-    )
+    ExampleStrategy(streams=[stream])
 )
 
 # Start the trading framework

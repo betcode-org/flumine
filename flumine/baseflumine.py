@@ -95,10 +95,13 @@ class BaseFlumine:
         # register default client controls (processed in order)
         self.add_client_control(client, MaxTransactionCount)
 
+    def add_stream(self, stream) -> None:
+        logger.info("Adding stream %s", stream)
+        self.streams.add_stream(stream)
+
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
-        self.streams(strategy)  # create required streams
-        self.strategies(strategy, self.clients, self)  # store in strategies
+        self.strategies(strategy, self.clients, self)
         self.log_control(events.StrategyEvent(strategy))
 
     def add_worker(self, worker: BackgroundWorker) -> None:
@@ -376,7 +379,7 @@ class BaseFlumine:
             market.blotter.process_closed_market(market, event.event)
 
         for strategy in self.strategies:
-            if stream_id in strategy.stream_ids or strategy.market_filter == {}:
+            if stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
         if recorder is False and self.clients.simulated:
