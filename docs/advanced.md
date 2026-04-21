@@ -74,7 +74,7 @@ class CustomStream(BaseStream):
 
 
 custom_stream = CustomStream(framework, custom=True)
-framework.streams.add_custom_stream(custom_stream)
+framework.streams.add_stream(custom_stream)
 ```
 
 

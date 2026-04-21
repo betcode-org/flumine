@@ -40,23 +40,26 @@ Get started...
 import betfairlightweight
 from flumine import Flumine, clients
 
+# Initialize your client
 trading = betfairlightweight.APIClient("username")
 client = clients.BetfairClient(trading)
 
-framework = Flumine(
-    client=client,
-)
+# Initialize the framework
+framework = Flumine(client=client)
 ```
 
 Example strategy:
 
 ```python
-from flumine import BaseStrategy
+import betfairlightweight
+from betfairlightweight.filters import streaming_market_filter
+from betfairlightweight.resources import MarketBook
+
+from flumine import Flumine, BaseStrategy, clients
 from flumine.order.trade import Trade
 from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
-from betfairlightweight.filters import streaming_market_filter
-from betfairlightweight.resources import MarketBook
+from flumine.streams.marketstream import MarketStream
 
 
 class ExampleStrategy(BaseStrategy):
@@ -67,6 +70,7 @@ class ExampleStrategy(BaseStrategy):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
+        return False
 
     def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook object
@@ -94,15 +98,27 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
-# Add your strategy to the framework
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
+
+# Initialize the framework
+framework = Flumine(client)
+
+# Create stream(s) (market data)
+stream = MarketStream(
+    framework,
+    market_filter=streaming_market_filter(
+        event_type_ids=["7"],
+        country_codes=["GB"],
+        market_types=["WIN"],
+    ),
+)
+framework.add_stream(stream)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
-    ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
-        )
-    )
+    ExampleStrategy(streams=[stream])
 )
 
 # Start the trading framework

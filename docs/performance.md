@@ -11,22 +11,24 @@ This is one of the most powerful options available as the variables are passed d
 #### 600s before scheduled start and no inplay
 
 ```python
-strategy = ExampleStrategy(
+stream = HistoricalStream(
+    framework,
     market_filter={
         "markets": ["/tmp/marketdata/1.170212754"],
         "listener_kwargs": {"seconds_to_start": 600, "inplay": False},
-    }
+    },
 )
 ```
 
 #### inplay only
 
 ```python
-strategy = ExampleStrategy(
+stream = HistoricalStream(
+    framework,
     market_filter={
         "markets": ["/tmp/marketdata/1.170212754"],
         "listener_kwargs": {"inplay": True},
-    }
+    },
 )
 ```
 
@@ -65,14 +67,26 @@ import smart_open
 from concurrent import futures
 from unittest.mock import patch as mock_patch
 from flumine import FlumineSimulation, clients, utils
+from flumine.streams.historicalstream import HistoricalStream
 from strategies.lowestlayer import LowestLayer
 
 
 def run_process(markets):
     client = clients.SimulatedClient()
     framework = FlumineSimulation(client=client)
+    
+    streams = []
+    for market in markets:
+        stream = HistoricalStream(
+            framework,
+            market_filter=market,
+            output_queue=False,
+        )
+        framework.streams.add_stream(stream)
+        streams.append(stream)
+
     strategy = LowestLayer(
-        market_filter={"markets": markets},
+        streams=streams,
         context={"stake": 2},
     )
     with mock_patch("builtins.open", smart_open.open):

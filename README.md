@@ -53,7 +53,8 @@ flumine requires Python 3.9+
 Get started...
 
 ```python
-from flumine import Flumine, BaseStrategy
+import betfairlightweight
+from flumine import Flumine, BaseStrategy, clients
 from flumine.streams.marketstream import MarketStream
 from betfairlightweight.filters import streaming_market_filter
 
@@ -67,8 +68,12 @@ class ExampleStrategy(BaseStrategy):
         # Your strategy logic
         pass
 
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
+
 # Initialize the framework
-framework = Flumine()
+framework = Flumine(client)
 
 # Create stream(s) (market data)
 stream = MarketStream(
@@ -93,7 +98,8 @@ framework.run()
 Example strategy with logic and order execution:
 
 ```python
-from flumine import Flumine, BaseStrategy
+import betfairlightweight
+from flumine import Flumine, BaseStrategy, clients
 from flumine.order.trade import Trade
 from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
@@ -138,8 +144,12 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
+
 # Initialize the framework
-framework = Flumine()
+framework = Flumine(client)
 
 # Create stream(s) (market data)
 stream = MarketStream(
