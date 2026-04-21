@@ -6,6 +6,7 @@ from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients, BaseStrategy
 from flumine.worker import BackgroundWorker
+from flumine.streams.marketstream import MarketStream
 from workers.inplayservice import poll_in_play_service
 
 logger = logging.getLogger()
@@ -44,9 +45,15 @@ client = clients.BetfairClient(trading)
 
 framework = Flumine(client=client)
 
-strategy = ExampleStrategy(
+# create stream(s) (market data)
+stream = MarketStream(
+    framework,
     market_filter=streaming_market_filter(market_ids=["1.172415939"]),
 )
+framework.add_stream(stream)
+
+# create strategy and subscribe to stream(s)
+strategy = ExampleStrategy(name="two", streams=[stream])
 framework.add_strategy(strategy)
 
 framework.add_worker(

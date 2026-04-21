@@ -1,6 +1,7 @@
 import time
 import logging
 import betfairlightweight
+from betfairlightweight.filters import streaming_market_filter
 from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients
@@ -22,14 +23,21 @@ client = clients.BetfairClient(trading)
 
 framework = Flumine(client=client)
 
-strategy = MarketRecorder(
-    name="WIN",
-    market_filter=betfairlightweight.filters.streaming_market_filter(
+# create stream(s) (market data)
+stream = DataStream(
+    framework,
+    market_filter=streaming_market_filter(
         event_type_ids=["7"],
         country_codes=["GB", "IE"],
         market_types=["WIN"],
     ),
-    stream_class=DataStream,
+)
+framework.add_stream(stream)
+
+# create strategy and subscribe to stream(s)
+strategy = MarketRecorder(
+    name="WIN",
+    streams=[stream],
     context={
         "local_dir": "/tmp",
         "force_update": False,
@@ -37,7 +45,6 @@ strategy = MarketRecorder(
         "remove_gz_file": False,
     },
 )
-
 framework.add_strategy(strategy)
 
 framework.run()

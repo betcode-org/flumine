@@ -808,7 +808,20 @@ class TestOrderStream(unittest.TestCase):
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
@@ -831,7 +844,20 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
@@ -863,7 +889,20 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertIsNone(self.stream.streaming_timeout)
         self.assertIsNone(self.stream.conflate_ms)
         self.assertIsNone(self.stream._stream)

@@ -4,6 +4,7 @@ from pythonjsonlogger import jsonlogger
 
 from flumine import FlumineSimulation, clients
 from strategies.lowestlayer import LowestLayer
+from flumine.streams.historicalstream import HistoricalStream
 
 logger = logging.getLogger()
 
@@ -21,8 +22,18 @@ framework = FlumineSimulation(client=client)
 
 markets = ["tests/resources/PRO-1.170258213"]
 
+streams = []
+for market in markets:
+    stream = HistoricalStream(
+        framework,
+        market_filter=market,
+        output_queue=False,
+    )
+    framework.streams.add_stream(stream)
+    streams.append(stream)
+
 strategy = LowestLayer(
-    market_filter={"markets": markets},
+    streams=streams,
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},
