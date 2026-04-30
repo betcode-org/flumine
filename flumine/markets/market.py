@@ -7,6 +7,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 from .. import config
 from .blotter import Blotter
 from ..execution.transaction import Transaction
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class Market:
         market_id: str,
         market_book: MarketBook,
         market_catalogue: MarketCatalogue = None,
+        venue: VenueType = VenueType.BETFAIR,
     ):
         self.flumine = flumine
         self.market_id = market_id
@@ -34,6 +36,7 @@ class Market:
         self.market_book = market_book
         self.market_catalogue = market_catalogue
         self.update_market_catalogue = True
+        self.venue = venue
         self.orders_cleared = []
         self.market_cleared = []
         self.context = {"simulated": {}}  # data store (raceCard / scores etc)
@@ -218,7 +221,7 @@ class Market:
             return self.market_book.market_definition.country_code
 
     @property
-    def venue(self) -> Optional[str]:
+    def event_venue(self) -> Optional[str]:
         if self.market_catalogue:
             return self.market_catalogue.event.venue
         elif self.market_book:
@@ -256,6 +259,7 @@ class Market:
     @property
     def info(self) -> dict:
         return {
+            "venue": self.venue.name,
             "market_id": self.market_id,
             "event_id": self.event_id,
             "event_type_id": self.event_type_id,
@@ -263,7 +267,7 @@ class Market:
             "market_type": self.market_type,
             "market_start_datetime": str(self.market_start_datetime),
             "country_code": self.country_code,
-            "venue": self.venue,
+            "event_venue": self.event_venue,
             "race_type": self.race_type,
             "orders_cleared": self.orders_cleared,
             "market_cleared": self.market_cleared,

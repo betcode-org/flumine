@@ -4,6 +4,7 @@ import threading
 from unittest import mock
 from collections import defaultdict
 
+from flumine.clients import VenueType
 from flumine.markets.markets import Markets
 from flumine.markets.market import Market
 from flumine import config
@@ -128,9 +129,11 @@ class MarketTest(unittest.TestCase):
             "1.234",
             self.mock_market_book,
             self.mock_market_catalogue,
+            venue=VenueType.BETFAIR,
         )
 
     def test_init(self):
+        self.assertEqual(self.market.venue, VenueType.BETFAIR)
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
@@ -454,16 +457,18 @@ class MarketTest(unittest.TestCase):
             self.market.country_code, mock_market_book.market_definition.country_code
         )
 
-    def test_venue_mc(self):
+    def test_event_venue_mc(self):
         mock_market_catalogue = mock.Mock()
         self.market.market_catalogue = mock_market_catalogue
-        self.assertEqual(self.market.venue, mock_market_catalogue.event.venue)
+        self.assertEqual(self.market.event_venue, mock_market_catalogue.event.venue)
 
-    def test_venue_mb(self):
+    def test_event_venue_mb(self):
         self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
-        self.assertEqual(self.market.venue, mock_market_book.market_definition.venue)
+        self.assertEqual(
+            self.market.event_venue, mock_market_book.market_definition.venue
+        )
 
     def test_race_type_mc(self):
         mock_market_catalogue = mock.Mock()
@@ -521,6 +526,7 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.info,
             {
+                "venue": self.market.venue.name,
                 "market_id": self.market.market_id,
                 "event_id": self.market.event_id,
                 "event_type_id": self.market.event_type_id,
@@ -528,7 +534,7 @@ class MarketTest(unittest.TestCase):
                 "market_type": self.market.market_type,
                 "market_start_datetime": str(self.market.market_start_datetime),
                 "country_code": self.market.country_code,
-                "venue": self.market.venue,
+                "event_venue": self.market.event_venue,
                 "race_type": self.market.race_type,
                 "orders_cleared": self.market.orders_cleared,
                 "market_cleared": self.market.market_cleared,

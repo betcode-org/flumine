@@ -13,6 +13,7 @@ from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.streams import betfairorderstream
 from flumine.streams.betfairsportsdatastream import BetfairSportsDataStream
+from flumine.streams.betdaqmarketpolling import BetdaqMarketPolling
 from flumine.exceptions import ListenerError, StreamError
 
 
@@ -973,3 +974,26 @@ class TestBetfairSportsDataStream(unittest.TestCase):
     #
     # def test_handle_output(self):
     #     pass
+
+
+class TestBetdaqMarketPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = BetdaqMarketPolling(
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
