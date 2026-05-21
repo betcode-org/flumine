@@ -104,6 +104,40 @@ class SimulatedOrderTest(unittest.TestCase):
     @mock.patch(
         "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
     )
+    def test_call_book_crossing_fills_stale_piq_back(self, _, mock__get_runner):
+        # BACK at 12, PIQ=100 stale from placement. Book has crossed past us:
+        # tv only at 13, no real liquidity at 12. The order should now fill
+        # against the half-of-tv lay-aggression appetite at the far level.
+        self.simulated._piq = 100
+        self.mock_order_type.size = 5.0
+        mock_market_book = mock.Mock(bsp_reconciled=False, version=1, status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 50}]
+        self.simulated(mock_market_book, (mock_runner, {13: 10}))
+        self.assertEqual(self.simulated.size_matched, 5.0)
+        self.assertEqual(self.simulated._piq, 0)
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
+    def test_call_book_crossing_no_op_when_real_lqty_present(self, _, mock__get_runner):
+        # BACK at 12, PIQ=100. Far-level tv at 13 but real liquidity at 12
+        # is still 100 - the trade at 13 must be opposite-side aggression
+        # that didn't cross us. Order should NOT fill.
+        self.simulated._piq = 100
+        self.mock_order_type.size = 5.0
+        mock_market_book = mock.Mock(bsp_reconciled=False, version=1, status="OPEN")
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 100}]
+        self.simulated(mock_market_book, (mock_runner, {13: 10}))
+        self.assertEqual(self.simulated.size_matched, 0)
+        self.assertEqual(self.simulated._piq, 95.0)
+
+    @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._get_runner")
+    @mock.patch(
+        "flumine.simulation.simulatedorder.SimulatedOrder.take_sp", return_value=True
+    )
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_traded")
     @mock.patch("flumine.simulation.simulatedorder.SimulatedOrder._process_sp")
     def test_call_process_sp(
@@ -1210,6 +1244,70 @@ class SimulatedOrderTest(unittest.TestCase):
         self.simulated._piq = 4.00
         self.assertEqual(self.simulated._calculate_process_traded(1234585, 20.00), 12)
         self.assertEqual(self.simulated.matched, [[1234585, 12, 2.0]])
+        self.assertEqual(self.simulated._piq, 0)
+
+    def test__cap_piq_on_book_crossing_back_no_entry(self):
+        # BACK at 12; tv at 13 (strictly past); no real lqty at 12 -> PIQ -> 0
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 50}]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {13: 10})
+        self.assertEqual(self.simulated._piq, 0)
+
+    def test__cap_piq_on_book_crossing_back_partial(self):
+        # BACK at 12; tv at 13 (past); real lqty at 12 dropped to 30
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [
+            {"price": 12, "size": 30},
+            {"price": 13, "size": 50},
+        ]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {13: 10})
+        self.assertEqual(self.simulated._piq, 30)
+
+    def test__cap_piq_on_book_crossing_back_no_op_opposite_side(self):
+        # BACK at 12; tv at 13 (past); real lqty at 12 unchanged at 100
+        # (the far-level tv is opposite-side aggression that didn't cross us)
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [{"price": 12, "size": 100}]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {13: 10})
+        self.assertEqual(self.simulated._piq, 100)
+
+    def test__cap_piq_on_book_crossing_back_no_crossing(self):
+        # BACK at 12; tv only at 12 or below -> no crossing -> PIQ untouched
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_lay = [{"price": 13, "size": 50}]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {12: 10, 11: 5})
+        self.assertEqual(self.simulated._piq, 100)
+
+    def test__cap_piq_on_book_crossing_lay_no_entry(self):
+        # LAY at 12; tv at 11 (strictly past for LAY); no real lqty at 12
+        self.simulated.order.side = "LAY"
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [{"price": 11, "size": 50}]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {11: 10})
+        self.assertEqual(self.simulated._piq, 0)
+
+    def test__cap_piq_on_book_crossing_lay_partial(self):
+        self.simulated.order.side = "LAY"
+        self.simulated._piq = 100
+        mock_runner = mock.Mock()
+        mock_runner.ex.available_to_back = [
+            {"price": 12, "size": 30},
+            {"price": 11, "size": 50},
+        ]
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {11: 10})
+        self.assertEqual(self.simulated._piq, 30)
+
+    def test__cap_piq_on_book_crossing_piq_zero_short_circuit(self):
+        # Already at front of queue - nothing to do.
+        self.simulated._piq = 0
+        # Mock with no ex attribute would raise if accessed.
+        mock_runner = mock.Mock(spec=[])
+        self.simulated._cap_piq_on_book_crossing(mock_runner, {13: 10})
         self.assertEqual(self.simulated._piq, 0)
 
     def test__process_available_back(self):

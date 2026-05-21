@@ -47,6 +47,16 @@ class SimulatedOrder:
             # todo estimated piq cancellations
             traded = runner_traded[1]
             if traded:
+                # If the book has crossed our resting price (a trade strictly
+                # past our level), cap PIQ to the real liquidity now sitting
+                # at our price. Without this, a stale PIQ from placement keeps
+                # the order from filling when real liquidity at our level was
+                # cancelled or was never there - the aggressor wouldn't have
+                # reached the far level otherwise.
+                # Skip the method call when already at the front of the queue
+                # (the dominant case in real backtests).
+                if self._piq:
+                    self._cap_piq_on_book_crossing(runner_traded[0], traded)
                 self._process_traded(market_book.publish_time_epoch, traded)
 
             if config.simulation_available_prices:
@@ -453,6 +463,32 @@ class SimulatedOrder:
                 self.order.id,
                 runner.selection_id,
             )
+
+    def _cap_piq_on_book_crossing(self, runner: RunnerBook, traded: dict) -> None:
+        # If any traded price in this update is strictly past our resting
+        # price, the book has crossed us. Cap PIQ to the real liquidity now
+        # at our price: the aggressor that reached the far level must have
+        # first cleared (or found empty) the queue at our level, so anything
+        # ahead of us in PIQ should be gone.
+        if self._piq == 0:
+            return
+        price = self.order.order_type.price
+        side = self.side
+        if side == "BACK":
+            if not any(tp > price for tp in traded):
+                return
+            available = runner.ex.available_to_lay
+        else:
+            if not any(tp < price for tp in traded):
+                return
+            available = runner.ex.available_to_back
+        for avail in available:
+            if avail["price"] == price:
+                if avail["size"] < self._piq:
+                    self._piq = avail["size"]
+                return
+        # no entry at our price -> nothing real ahead of us
+        self._piq = 0
 
     def _process_traded(self, publish_time: int, traded: dict) -> None:
         # calculate matched on MarketBook update
