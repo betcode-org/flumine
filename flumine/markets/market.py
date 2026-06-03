@@ -273,3 +273,61 @@ class Market:
             "market_cleared": self.market_cleared,
             "closed": self.closed,
         }
+
+
+class BetdaqMarket(Market):
+    def __call__(self, market_book: dict):
+        self.market_book = market_book
+
+    @property
+    def event_type_id(self) -> str:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def event_id(self) -> str:
+        if self.market_catalogue:
+            return self.market_catalogue["event_id"]
+
+    @property
+    def market_type(self) -> str:
+        market_type = self.market_book["market_type"]
+        if market_type:
+            return market_type.upper()
+
+    @property
+    def market_start_datetime(self):
+        if self.market_book and self.market_book["market_start_time"]:
+            dt = datetime.datetime.strptime(
+                self.market_book["market_start_time"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            ).replace(tzinfo=datetime.timezone.utc)
+            return dt
+        elif self.market_catalogue and self.market_catalogue["market_start_time"]:
+            dt = datetime.datetime.strptime(
+                self.market_catalogue["market_start_time"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            ).replace(tzinfo=datetime.timezone.utc)
+            return dt
+        else:
+            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
+
+    @property
+    def event_name(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def country_code(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def event_venue(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def race_type(self) -> Optional[str]:
+        return None
+
+    @property
+    def status(self) -> Optional[str]:
+        if self.market_book:
+            return self.market_book["status"] or "SETTLED"

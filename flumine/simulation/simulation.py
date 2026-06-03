@@ -121,7 +121,7 @@ class FlumineSimulation(BaseFlumine):
             market = self.markets.markets.get(market_id)
             market_is_new = market is None
             if market_is_new:
-                market = self._add_market(market_id, market_book)
+                market = self._add_market(market_id, market_book, event.venue)
                 self.log_control(events.MarketEvent(market))
             elif market.closed:
                 self.markets.add_market(market_id, market)

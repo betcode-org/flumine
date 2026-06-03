@@ -102,10 +102,12 @@ class WorkersTest(unittest.TestCase):
         mock_market_three = mock.Mock(
             market_id="9.101", update_market_catalogue=True, closed=True
         )
-        mock_flumine.markets.markets = {
-            "1.234": mock_market_one,
-            "5.678": mock_market_two,
-            "9.101": mock_market_three,
+        mock_flumine.markets.venue_markets = {
+            VenueType.BETFAIR: {
+                "1.234": mock_market_one,
+                "5.678": mock_market_two,
+                "9.101": mock_market_three,
+            }
         }
 
         worker.poll_market_catalogue(mock_context, mock_flumine)
@@ -135,8 +137,10 @@ class WorkersTest(unittest.TestCase):
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
-        mock_flumine.markets.markets = {
-            "1.234": mock_market_one,
+        mock_flumine.markets.venue_markets = {
+            VenueType.BETFAIR: {
+                "1.234": mock_market_one,
+            }
         }
         mock_client.betting_client.betting.list_market_catalogue.side_effect = (
             exceptions.StatusCodeError("503")
@@ -167,8 +171,10 @@ class WorkersTest(unittest.TestCase):
         mock_market_one = mock.Mock(
             market_id="1.234", update_market_catalogue=True, closed=False
         )
-        mock_flumine.markets.markets = {
-            "1.234": mock_market_one,
+        mock_flumine.markets.venue_markets = {
+            VenueType.BETFAIR: {
+                "1.234": mock_market_one,
+            }
         }
         mock_client.betting_client.betting.list_market_catalogue.side_effect = (
             BetfairError()

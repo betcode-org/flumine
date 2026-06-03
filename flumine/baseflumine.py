@@ -11,7 +11,7 @@ from .events import events
 from .worker import BackgroundWorker
 from .clients import Clients, BaseClient, VenueType
 from .markets.markets import Markets
-from .markets.market import Market
+from .markets.market import Market, BetdaqMarket
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
@@ -135,10 +135,15 @@ class BaseFlumine:
 
     def _process_market_books(self, event: events.MarketBookEvent) -> None:
         for market_book in event.event:
-            market_id = market_book.market_id
+            if isinstance(market_book, dict):
+                market_id = market_book["market_id"]
+                is_dict = True
+            else:
+                market_id = market_book.market_id
+                is_dict = False
 
             # check latency (only if marketBook is from a stream update)
-            if market_book.streaming_snap is False:
+            if not is_dict and market_book.streaming_snap is False:
                 latency = time.time() - (market_book.publish_time_epoch / 1e3)
                 if latency > 2:
                     logger.warning(
@@ -153,12 +158,16 @@ class BaseFlumine:
             market = self.markets.markets.get(market_id)
             market_is_new = market is None
             if market_is_new:
-                market = self._add_market(market_id, market_book)
+                market = self._add_market(market_id, market_book, event.venue)
             elif market.closed:
+                if is_dict:
+                    continue
                 self.markets.add_market(market_id, market)
 
-            if market_book.status == "CLOSED":
-                self.handler_queue.put(events.CloseMarketEvent(market_book))
+            if market.status in ["CLOSED", "SETTLED"]:
+                self.handler_queue.put(
+                    events.CloseMarketEvent(market_book, venue=event.venue)
+                )
                 continue
 
             # process market
@@ -169,7 +178,9 @@ class BaseFlumine:
                 utils.call_middleware_error_handling(middleware, market)
 
             for strategy in self.strategies:
-                if market_book.streaming_unique_id in strategy.stream_ids:
+                if is_dict or (
+                    market_book.streaming_unique_id in strategy.stream_ids
+                ):  # todo
                     if market_is_new:
                         utils.call_strategy_error_handling(
                             strategy.process_new_market, market, market_book
@@ -221,9 +232,16 @@ class BaseFlumine:
         """Execute through client."""
         order_package.client.execution.handler(order_package)
 
-    def _add_market(self, market_id: str, market_book: resources.MarketBook) -> Market:
-        logger.info("Adding: %s to markets", market_id)
-        market = Market(self, market_id, market_book)
+    def _add_market(
+        self, market_id: str, market_book: resources.MarketBook, venue_type: VenueType
+    ) -> Market:
+        logger.info(f"Adding: {market_id} to {venue_type.value} markets")
+        if venue_type == VenueType.BETFAIR:
+            market = Market(self, market_id, market_book, venue=venue_type)
+        elif venue_type == VenueType.BETDAQ:
+            market = BetdaqMarket(self, market_id, market_book, venue=venue_type)
+        else:
+            raise NotImplementedError()
         self.markets.add_market(market_id, market)
         for middleware in self._market_middleware:
             middleware.add_market(market)
@@ -261,7 +279,14 @@ class BaseFlumine:
 
     def _process_market_catalogues(self, event: events.MarketCatalogueEvent) -> None:
         for market_catalogue in event.event:
-            market = self.markets.markets.get(market_catalogue.market_id)
+            if isinstance(market_catalogue, dict):
+                market_id = market_catalogue["market_id"]
+                is_dict = True
+            else:
+                market_id = market_catalogue.market_id
+                is_dict = False
+
+            market = self.markets.markets.get(market_id)
             if market:
                 if market.market_catalogue is None:
                     market.market_catalogue = market_catalogue
@@ -282,9 +307,12 @@ class BaseFlumine:
 
                 for strategy in self.strategies:
                     if (
-                        market.market_book
-                        and market.market_book.streaming_unique_id
-                        in strategy.stream_ids
+                        is_dict
+                        or (
+                            market.market_book
+                            and market.market_book.streaming_unique_id
+                            in strategy.stream_ids
+                        )
                     ) or strategy.market_cached(market.market_id):
                         utils.call_strategy_error_handling(
                             strategy.process_market_catalogue, market, market_catalogue
@@ -355,14 +383,22 @@ class BaseFlumine:
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event
-        if isinstance(market_book, dict):
-            recorder = True
-            market_id = market_book["id"]
-            stream_id = market_book["_stream_id"]
-        else:
+        if event.venue == VenueType.BETFAIR:
+            if isinstance(market_book, dict):
+                recorder = True
+                market_id = market_book["id"]
+                stream_id = market_book["_stream_id"]
+            else:
+                recorder = False
+                market_id = market_book.market_id
+                stream_id = market_book.streaming_unique_id
+        elif event.venue == VenueType.BETDAQ:
             recorder = False
-            market_id = market_book.market_id
-            stream_id = market_book.streaming_unique_id
+            market_id = market_book["market_id"]
+            stream_id = None
+        else:
+            raise NotImplementedError()
+
         market = self.markets.markets.get(market_id)
         if market is None:
             logger.warning(
@@ -379,10 +415,14 @@ class BaseFlumine:
             market.blotter.process_closed_market(market, event.event)
 
         for strategy in self.strategies:
-            if stream_id in strategy.stream_ids:
+            if not stream_id or stream_id in strategy.stream_ids:
                 strategy.process_closed_market(market, event.event)
 
-        if recorder is False and self.clients.simulated:
+        if (
+            event.venue == VenueType.BETFAIR
+            and recorder is False
+            and self.clients.simulated
+        ):
             # simulate ClearedOrdersEvent
             cleared_orders = resources.ClearedOrders(
                 moreAvailable=False, clearedOrders=[]

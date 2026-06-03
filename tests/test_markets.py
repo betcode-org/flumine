@@ -16,14 +16,18 @@ class MarketsTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.venue_markets, {})
         self.assertEqual(self.markets.events, {})
         self.assertIsInstance(self.markets.live_orders_event, threading.Event)
         self.assertFalse(self.markets.live_orders_event.is_set())
 
     def test_add_market(self):
-        mock_market = mock.Mock(event_id="1234")
+        mock_market = mock.Mock(event_id="1234", venue=VenueType.BETFAIR)
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(
+            self.markets.venue_markets, {VenueType.BETFAIR: {"1.1": mock_market}}
+        )
         self.assertEqual(self.markets.events, {"1234": [mock_market]})
 
     def test_add_market_no_event_id(self):

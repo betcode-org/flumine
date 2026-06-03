@@ -40,7 +40,7 @@ class BetdaqMarketPolling(BaseStream):
             self.flumine.handler_queue.put(
                 MarketBookEvent(prices, venue=VenueType.BETDAQ)
             )
-            time.sleep(self.streaming_timeout)
+            time.sleep(self.streaming_timeout or 1)
 
         logger.info(
             f"Stopped BetdaqMarketPolling '{self.stream_id}'",

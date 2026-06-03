@@ -146,7 +146,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=1, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         for call_count in range(1, 5):
             # process_new_market must be called only once, the first time
             with self.subTest(call_count=call_count):
@@ -171,7 +171,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=5, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         self.base_flumine._process_market_books(mock_event)
         mock_strategy.process_new_market.assert_not_called()
         mock_strategy.check_market_book.assert_not_called()
@@ -190,7 +190,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=1, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         process_call_count = 0
         for check_call_count, check_market_book_retval in enumerate(check_pattern, 1):
             self.base_flumine._process_market_books(mock_event)
@@ -281,7 +281,10 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._market_middleware = [mock_middleware]
         mock_market_book = mock.Mock()
         self.assertEqual(
-            self.base_flumine._add_market("1.234", mock_market_book), mock_market()
+            self.base_flumine._add_market(
+                "1.234", mock_market_book, venue_type=VenueType.BETFAIR
+            ),
+            mock_market(),
         )
         self.assertEqual(len(self.base_flumine.markets._markets), 1)
         mock_middleware.add_market.assert_called_with(mock_market())
@@ -574,7 +577,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
         self.base_flumine.markets._markets = {"1.23": mock_market}
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_market_book = mock.Mock(market_id="1.23", streaming_unique_id=2)
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
@@ -596,7 +599,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.strategies = [mock_strategy]
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
         self.base_flumine.markets._markets = {"1.23": mock_market}
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_market_book = {"id": "1.23", "_stream_id": 2}
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
@@ -613,7 +616,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_market = mock.Mock(closed=False, elapsed_seconds_closed=None)
         mock_market.market_book.streaming_unique_id = 2
         self.base_flumine.markets._markets = {"1.23": mock_market}
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_market_book = mock.Mock(market_id="1.45")
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
@@ -647,7 +650,7 @@ class BaseFlumineTest(unittest.TestCase):
         for market in markets:
             self.base_flumine.markets.add_market(market.market_id, market)
         mock_market_book = mock.Mock(market_id="1.23")
-        mock_event = mock.Mock(event=mock_market_book)
+        mock_event = mock.Mock(event=mock_market_book, venue=VenueType.BETFAIR)
         self.base_flumine._process_close_market(mock_event)
 
         self.assertEqual(len(self.base_flumine.markets._markets), 3)
@@ -683,7 +686,7 @@ class BaseFlumineTest(unittest.TestCase):
                 market_id="1.01", closed=False, elapsed_seconds_closed=3601
             ),
         }
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_market_book = mock.Mock(market_id="1.23")
         mock_event.event = mock_market_book
         self.base_flumine._process_close_market(mock_event)
