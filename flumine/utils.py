@@ -19,6 +19,7 @@ from betfairlightweight.resources import (
 )
 
 from . import config
+from .clients import VenueType
 from .exceptions import FlumineException
 
 logger = logging.getLogger(__name__)
@@ -174,6 +175,28 @@ def get_price(data: list, level: int) -> Optional[float]:
 def get_size(data: list, level: int) -> Optional[float]:
     try:
         return data[level]["size"]
+    except KeyError:
+        return
+    except IndexError:
+        return
+    except TypeError:
+        return
+
+
+def get_price_dict(data: list, level: int) -> Optional[float]:
+    try:
+        return data[level][1]
+    except KeyError:
+        return
+    except IndexError:
+        return
+    except TypeError:
+        return
+
+
+def get_size_dict(data: list, level: int) -> Optional[float]:
+    try:
+        return data[level][2]
     except KeyError:
         return
     except IndexError:
@@ -356,7 +379,7 @@ def call_process_raw_data(strategy, clk: str, publish_time: int, datum: dict) ->
 def get_runner_book(
     market_book: MarketBook, selection_id: int, handicap=0
 ) -> Optional[RunnerBook]:
-    """Returns runner book based on selection id."""
+    """Returns runner book based on selection_id."""
     for runner_book in market_book.runners:
         if (
             runner_book.selection_id == selection_id
@@ -365,17 +388,36 @@ def get_runner_book(
             return runner_book
 
 
+def get_runner_dict(market_book: dict, runner_id: int) -> Optional[dict]:
+    """Returns runner dict based on runner_id."""
+    for runner_book in market_book["runners"]:
+        if runner_book["runner_id"] == runner_id:
+            return runner_book
+
+
 def get_market_notes(market, selection_id: int) -> Optional[str]:
     """Returns a string of notes for a runner,
     currently 'back,lay,last_price_traded'
     """
-    runner = get_runner_book(market.market_book, selection_id)
-    if runner:
-        return "%s,%s,%s" % (
-            get_price(runner.ex.available_to_back, 0),
-            get_price(runner.ex.available_to_lay, 0),
-            runner.last_price_traded,
-        )
+    if market.venue == VenueType.BETFAIR:
+        runner = get_runner_book(market.market_book, selection_id)
+        if runner:
+            return "%s,%s,%s" % (
+                get_price(runner.ex.available_to_back, 0),
+                get_price(runner.ex.available_to_lay, 0),
+                runner.last_price_traded,
+            )
+        return ""
+    elif market.venue == VenueType.BETDAQ:
+        runner = get_runner_dict(market.market_book, selection_id)
+        if runner:
+            return "%s,%s,%s" % (
+                get_price_dict(runner["runner_book"]["batb"], 0),
+                get_price_dict(runner["runner_book"]["batl"], 0),
+                runner["runner_last_matched_price"],
+            )
+    else:
+        return ""
 
 
 def get_event_ids(markets: list, event_type_id: str) -> list:

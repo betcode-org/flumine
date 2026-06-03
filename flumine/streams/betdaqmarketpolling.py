@@ -1,3 +1,4 @@
+import datetime
 import time
 import logging
 from betdaq import BetdaqError
@@ -37,6 +38,9 @@ class BetdaqMarketPolling(BaseStream):
                 continue
 
             # todo add streaming_unique_id
+            for price in prices:
+                price["publish_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+
             self.flumine.handler_queue.put(
                 MarketBookEvent(prices, venue=VenueType.BETDAQ)
             )

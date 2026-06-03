@@ -142,6 +142,14 @@ class Market:
             return t.replace_order(order, new_price, market_version, force)
 
     @property
+    def publish_time(self) -> datetime.datetime:
+        return self.market_book.publish_time
+
+    @property
+    def bet_delay(self) -> float:
+        return self.market_book.bet_delay
+
+    @property
     def event(self) -> dict:
         event = defaultdict(list)
         market_start_datetime = self.market_start_datetime
@@ -278,6 +286,16 @@ class Market:
 class BetdaqMarket(Market):
     def __call__(self, market_book: dict):
         self.market_book = market_book
+
+    @property
+    def publish_time(self) -> datetime.datetime:
+        return self.market_book["publish_time"]
+
+    @property
+    def bet_delay(self) -> float:
+        return (
+            self.market_book["in_running_delay"] if self.market_book["in_play"] else 0.0
+        )
 
     @property
     def event_type_id(self) -> str:

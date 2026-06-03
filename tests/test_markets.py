@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from flumine.clients import VenueType
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market
+from flumine.markets.market import Market, BetdaqMarket
 from flumine import config
 
 
@@ -256,6 +256,12 @@ class MarketTest(unittest.TestCase):
         self.assertTrue(self.market.replace_order(mock_order, 2, False, force=True))
         mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
+
+    def test_publish_time(self):
+        self.assertEqual(self.market.publish_time, self.market.market_book.publish_time)
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, self.market.market_book.bet_delay)
 
     def test_event(self):
         self.market.market_catalogue.event.id = 12
@@ -545,3 +551,70 @@ class MarketTest(unittest.TestCase):
                 "closed": self.market.closed,
             },
         )
+
+
+class BetdaqMarketTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.mock_market_book = {
+            "publish_time": 123,
+            "status": "ACTIVE",
+            "market_type": "win",
+            "market_start_time": "2026-06-03 13:30:00.000000",
+            "in_play": False,
+            "in_running_delay": 1,
+        }
+        self.mock_market_catalogue = {"event_id": 12345}
+        self.market = BetdaqMarket(
+            self.mock_flumine,
+            "1.234",
+            self.mock_market_book,
+            self.mock_market_catalogue,
+            venue=VenueType.BETFAIR,
+        )
+
+    def test_call(self):
+        mock_market_book = {}
+        self.market(mock_market_book)
+        self.assertEqual(self.market.market_book, mock_market_book)
+
+    def test_publish_time(self):
+        self.assertEqual(
+            self.market.publish_time, self.market.market_book["publish_time"]
+        )
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, 0.0)
+        self.market.market_book["in_play"] = True
+        self.assertEqual(self.market.bet_delay, 1.0)
+
+    def test_event_type_id(self):
+        self.assertIsNone(self.market.event_type_id)
+
+    def test_event_id(self):
+        self.assertEqual(self.market.event_id, 12345)
+
+    def test_market_type(self):
+        self.assertEqual(self.market.market_type, "WIN")
+
+    def test_market_start_datetime(self):
+        dt = datetime.datetime.strptime(
+            self.market.market_book["market_start_time"],
+            "%Y-%m-%d %H:%M:%S.%f",
+        ).replace(tzinfo=datetime.timezone.utc)
+        self.assertEqual(self.market.market_start_datetime, dt)
+
+    def test_event_name(self):
+        self.assertIsNone(self.market.event_name)
+
+    def test_country_code(self):
+        self.assertIsNone(self.market.country_code)
+
+    def test_event_venue(self):
+        self.assertIsNone(self.market.event_venue)
+
+    def test_race_type(self):
+        self.assertIsNone(self.market.race_type)
+
+    def test_status(self):
+        self.assertEqual(self.market.status, "ACTIVE")
