@@ -3,6 +3,22 @@
 Release History
 ---------------
 
+2.13.11 (2026-05-05)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Revert order streaming timeout to 0.25
+- Correctly handle BETDAQ null order data
+
+2.13.10 (2026-04-27)
++++++++++++++++++++
+
+**Improvements**
+
+- Add order_streaming_timeout to client
+- Handle empty files
+
 2.13.9 (2026-03-23)
 +++++++++++++++++++
 

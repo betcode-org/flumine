@@ -3,7 +3,6 @@ import uuid
 import logging
 import hashlib
 import datetime
-import functools
 import smart_open
 from pathlib import Path
 from typing import Optional, Tuple, Callable, Union
@@ -76,9 +75,7 @@ def create_short_uuid() -> str:
 
 def file_line_count(file_path: str) -> int:
     with smart_open.open(file_path) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
+        return sum(1 for _ in f)
 
 
 def get_file_md(file_dir: Union[str, tuple]) -> Optional[MarketDefinition]:

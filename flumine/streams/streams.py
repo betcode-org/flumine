@@ -31,13 +31,19 @@ class Streams:
                 self.add_stream(order_stream)
             else:
                 if client.paper_trade:
-                    self.add_simulated_order_stream(client)
+                    self.add_simulated_order_stream(
+                        client, streaming_timeout=client.order_streaming_timeout
+                    )
                 elif client.VENUE == VenueType.BETFAIR:
                     self.add_betfair_order_stream(
-                        client, conflate_ms=client.order_stream_conflate_ms
+                        client,
+                        conflate_ms=client.order_stream_conflate_ms,
+                        streaming_timeout=client.order_streaming_timeout,
                     )
                 elif client.VENUE == VenueType.BETDAQ:
-                    self.add_betdaq_order_polling(client)
+                    self.add_betdaq_order_polling(
+                        client, streaming_timeout=client.order_streaming_timeout
+                    )
 
     """ market data """
 

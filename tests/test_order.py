@@ -757,11 +757,23 @@ class BetdaqOrderTest(unittest.TestCase):
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.average_price_matched, 12.3)
 
+    def test_average_price_matched_none(self):
+        self.assertEqual(self.order.average_price_matched, 0)
+        mock_current_order = {"matched_price": None}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.average_price_matched, 0.0)
+
     def test_size_matched(self):
         self.assertEqual(self.order.size_matched, 0)
         mock_current_order = {"matched_size": 12}
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_matched, 12)
+
+    def test_size_matched_none(self):
+        self.assertEqual(self.order.size_matched, 0)
+        mock_current_order = {"matched_size": None}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_matched, 0.0)
 
     def test_size_remaining(self):
         self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
@@ -775,6 +787,15 @@ class BetdaqOrderTest(unittest.TestCase):
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, 43)
         mock_current_order = {"status": "Cancelled"}
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 0.0)
+
+    def test_size_remaining_none(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.size = 0
+        self.mock_order_type.bet_target_size = 0
+        self.assertEqual(self.order.size_remaining, 0)
+        mock_current_order = {"size_remaining": None}
         self.order.responses.current_order = mock_current_order
         self.assertEqual(self.order.size_remaining, 0.0)
 
