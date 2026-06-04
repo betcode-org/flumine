@@ -180,7 +180,7 @@ def poll_market_catalogue(context: dict, flumine) -> None:
 
             if market_catalogues:
                 flumine.handler_queue.put(
-                    events.MarketCatalogueEvent(market_catalogues)
+                    events.MarketCatalogueEvent(market_catalogues, venue=venue)
                 )
 
 

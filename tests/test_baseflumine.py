@@ -379,7 +379,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
 
         mock_market_catalogue = mock.Mock(market_id="1.23")
-        mock_event = mock.Mock(event=[mock_market_catalogue])
+        mock_event = mock.Mock(event=[mock_market_catalogue], venue=VenueType.BETFAIR)
         self.base_flumine._process_market_catalogues(mock_event)
 
         self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)
@@ -416,7 +416,9 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy_3.market_cached.return_value = True
 
         mock_market = mock.Mock(
-            market_catalogue=None, market_id="1.23", market_book=mock.Mock(streaming_unique_id=123)
+            market_catalogue=None,
+            market_id="1.23",
+            market_book=mock.Mock(streaming_unique_id=123),
         )
 
         self.base_flumine.strategies = [
@@ -427,7 +429,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
 
         mock_market_catalogue = mock.Mock(market_id="1.23")
-        mock_event = mock.Mock(event=[mock_market_catalogue])
+        mock_event = mock.Mock(event=[mock_market_catalogue], venue=VenueType.BETFAIR)
         self.base_flumine._process_market_catalogues(mock_event)
 
         self.assertEqual(mock_market.market_catalogue, mock_market_catalogue)

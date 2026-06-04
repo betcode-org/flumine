@@ -146,37 +146,55 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
             add_market=mock_add_market,
         )
         mock_process_betdaq_current_order.assert_called_with(
-            betdaq_order, current_order
+            betdaq_order, current_order, mock_log_control
         )
 
     def test_process_betdaq_current_order_pending(self):
         mock_order = mock.Mock(
-            bet_id=123,
+            bet_id=None,
             status=OrderStatus.PENDING,
             current_order={"status": "Unmatched"},
+            async_=True,
         )
-        mock_current_order = mock.Mock()
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_current_order = {"order_id": 123}
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.executable.assert_called()
+        mock_log_control.assert_called()
+        self.assertEqual(mock_order.bet_id, 123)
 
     def test_process_betdaq_current_order_pending_matched(self):
         mock_order = mock.Mock(
-            bet_id=123, status=OrderStatus.PENDING, current_order={"status": "Matched"}
+            bet_id=None,
+            status=OrderStatus.PENDING,
+            current_order={"status": "Matched"},
+            async_=True,
         )
-        mock_current_order = mock.Mock()
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_current_order = {"order_id": 123}
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.executable.assert_called()
+        mock_log_control.assert_called()
+        self.assertEqual(mock_order.bet_id, 123)
 
     def test_process_betdaq_current_order_matched(self):
         mock_order = mock.Mock(
             status=OrderStatus.EXECUTABLE, current_order={"status": "Matched"}
         )
         mock_current_order = mock.Mock()
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.execution_complete.assert_called()
+        mock_log_control.assert_not_called()
 
     def test_process_betdaq_current_order_update(self):
         mock_order = mock.Mock(
@@ -184,7 +202,10 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
             current_order={"sequence_number": 1, "status": "Unmatched"},
         )
         mock_current_order = {"sequence_number": 2, "price": 999}
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.executable.assert_called()
 
@@ -194,7 +215,10 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
             current_order={"sequence_number": 1, "status": "Matched"},
         )
         mock_current_order = {"sequence_number": 2, "price": 999, "status": "Matched"}
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.update_current_order.assert_called_with(mock_current_order)
         mock_order.executable.assert_not_called()
         mock_order.execution_complete.assert_called()
@@ -204,5 +228,8 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
             status=OrderStatus.UPDATING, current_order={"sequence_number": 1}
         )
         mock_current_order = {"sequence_number": 1}
-        process.process_betdaq_current_order(mock_order, mock_current_order)
+        mock_log_control = mock.Mock()
+        process.process_betdaq_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
         mock_order.executable.assert_not_called()
