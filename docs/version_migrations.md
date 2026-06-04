@@ -86,7 +86,7 @@ stream = BetfairHistoricalStream(
     market_filter="tests/resources/PRO-1.170258213",
     output_queue=False,
 )
-framework.streams.add_stream(stream)
+framework.add_stream(stream)
 
 # Add your strategy to the framework with a stream (this can be a list)
 strategy = LowestLayer(

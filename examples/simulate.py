@@ -29,7 +29,7 @@ for market in markets:
         market_filter=market,
         output_queue=False,
     )
-    framework.streams.add_stream(stream)
+    framework.add_stream(stream)
     streams.append(stream)
 
 strategy = LowestLayer(
