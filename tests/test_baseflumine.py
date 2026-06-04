@@ -325,7 +325,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_event = mock.Mock()
         mock_event.event = (12, "AAA", 12345, [{"id": "1.23"}])
         self.base_flumine._process_raw_data(mock_event)
-        mock__add_market.assert_called_with("1.23", None)
+        mock__add_market.assert_called_with("1.23", None, mock_event.venue)
         mock_call_process_raw_data.assert_called_with(
             mock_strategy, "AAA", 12345, {"id": "1.23"}
         )
@@ -343,7 +343,7 @@ class BaseFlumineTest(unittest.TestCase):
             [{"id": "1.23", "marketDefinition": {"status": "CLOSED"}}],
         )
         self.base_flumine._process_raw_data(mock_event)
-        mock__add_market.assert_called_with("1.23", None)
+        mock__add_market.assert_called_with("1.23", None, mock_event.venue)
         mock_queue.put.assert_called_with(mock_events.CloseMarketEvent())
         self.assertEqual(mock_event.event[3][0]["_stream_id"], mock_event.event[0])
         self.assertTrue(mock__add_market.return_value.update_market_catalogue)
@@ -416,7 +416,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy_3.market_cached.return_value = True
 
         mock_market = mock.Mock(
-            market_catalogue=None, market_id="1.23", market_book=None
+            market_catalogue=None, market_id="1.23", market_book=mock.Mock(streaming_unique_id=123)
         )
 
         self.base_flumine.strategies = [

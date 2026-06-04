@@ -5,6 +5,7 @@ from betfairlightweight import StreamListener, filters, BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
 
 from .basestream import BaseStream
+from ..clients import VenueType
 from ..events.events import RawDataEvent
 from .. import config
 
@@ -32,7 +33,7 @@ class FlumineListener(StreamListener):
 
 class FlumineStream(BFBaseStream):
     def on_process(self, caches: list, publish_time: Optional[int] = None) -> None:
-        output = RawDataEvent(caches)
+        output = RawDataEvent(caches, venue=VenueType.BETFAIR)
         self.output_queue.put(output)
 
     def __str__(self):

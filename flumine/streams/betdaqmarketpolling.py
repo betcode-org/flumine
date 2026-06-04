@@ -37,9 +37,9 @@ class BetdaqMarketPolling(BaseStream):
                 time.sleep(SNAP_DELTA)
                 continue
 
-            # todo add streaming_unique_id
             for price in prices:
                 price["publish_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
+                price["streaming_unique_id"] = self.stream_id
 
             self.flumine.handler_queue.put(
                 MarketBookEvent(prices, venue=VenueType.BETDAQ)

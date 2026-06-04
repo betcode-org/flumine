@@ -137,9 +137,11 @@ class BaseFlumine:
         for market_book in event.event:
             if isinstance(market_book, dict):
                 market_id = market_book["market_id"]
+                streaming_unique_id = market_book["streaming_unique_id"]
                 is_dict = True
             else:
                 market_id = market_book.market_id
+                streaming_unique_id = market_book.streaming_unique_id
                 is_dict = False
 
             # check latency (only if marketBook is from a stream update)
@@ -178,9 +180,7 @@ class BaseFlumine:
                 utils.call_middleware_error_handling(middleware, market)
 
             for strategy in self.strategies:
-                if is_dict or (
-                    market_book.streaming_unique_id in strategy.stream_ids
-                ):  # todo
+                if streaming_unique_id in strategy.stream_ids:
                     if market_is_new:
                         utils.call_strategy_error_handling(
                             strategy.process_new_market, market, market_book
@@ -263,7 +263,7 @@ class BaseFlumine:
                 market_id = datum["id"]
                 market = self.markets.markets.get(market_id)
                 if market is None:
-                    market = self._add_market(market_id, None)
+                    market = self._add_market(market_id, None, event.venue)
                 elif market.closed:
                     self.markets.add_market(market_id, market)
 
@@ -281,10 +281,8 @@ class BaseFlumine:
         for market_catalogue in event.event:
             if isinstance(market_catalogue, dict):
                 market_id = market_catalogue["market_id"]
-                is_dict = True
             else:
                 market_id = market_catalogue.market_id
-                is_dict = False
 
             market = self.markets.markets.get(market_id)
             if market:
@@ -305,14 +303,15 @@ class BaseFlumine:
                     )
                 market.update_market_catalogue = False
 
+                if isinstance(market.market_book, dict):
+                    streaming_unique_id = market.market_book["streaming_unique_id"]
+                else:
+                    streaming_unique_id = market.market_book.streaming_unique_id
+
                 for strategy in self.strategies:
                     if (
-                        is_dict
-                        or (
-                            market.market_book
-                            and market.market_book.streaming_unique_id
-                            in strategy.stream_ids
-                        )
+                        market.market_book
+                        and streaming_unique_id in strategy.stream_ids
                     ) or strategy.market_cached(market.market_id):
                         utils.call_strategy_error_handling(
                             strategy.process_market_catalogue, market, market_catalogue

@@ -334,7 +334,7 @@ class TestBetfairDataStream(unittest.TestCase):
         mock_listener = mock.Mock()
         stream = betfairdatastream.FlumineStream(mock_listener, 0)
         stream.on_process([1, 2, 3])
-        raw_data_event.assert_called_with([1, 2, 3])
+        raw_data_event.assert_called_with([1, 2, 3], venue=VenueType.BETFAIR)
         mock_listener.output_queue.put.assert_called_with(raw_data_event.return_value)
 
     @mock.patch("flumine.streams.betfairdatastream.FlumineMarketStream.on_process")
