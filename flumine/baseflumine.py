@@ -237,9 +237,9 @@ class BaseFlumine:
     ) -> Market:
         logger.info(f"Adding: {market_id} to {venue_type.value} markets")
         if venue_type == VenueType.BETFAIR:
-            market = Market(self, market_id, market_book, venue=venue_type)
+            market = Market(self, market_id, market_book)
         elif venue_type == VenueType.BETDAQ:
-            market = BetdaqMarket(self, market_id, market_book, venue=venue_type)
+            market = BetdaqMarket(self, market_id, market_book)
         else:
             raise NotImplementedError()
         self.markets.add_market(market_id, market)

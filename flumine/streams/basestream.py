@@ -5,6 +5,8 @@ import betfairlightweight
 from betfairlightweight import StreamListener, filters
 from tenacity import wait_exponential
 
+from flumine.clients import VenueType
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
@@ -24,6 +26,7 @@ class BaseStream(threading.Thread):
     LISTENER = StreamListener
     MAX_LATENCY = 0.5
     RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=60)
+    VENUE = VenueType.BETFAIR
 
     def __init__(
         self,
@@ -90,7 +93,7 @@ class BaseStream(threading.Thread):
         if self._client:
             return self._client
         else:
-            return self.flumine.clients.get_default()
+            return self.flumine.clients.get_default(self.VENUE)
 
     @property
     def stream_running(self) -> bool:

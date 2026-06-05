@@ -21,7 +21,7 @@ class Markets:
             self._markets[market_id].open_market()
         else:
             self._markets[market_id] = market
-            self.venue_markets[market.venue][market_id] = market
+            self.venue_markets[market.VENUE][market_id] = market
             if market.event_id:
                 self.events[market.event_id].append(market)
 

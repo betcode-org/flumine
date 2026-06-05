@@ -197,6 +197,7 @@ class TestBaseStream(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -905,6 +906,7 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.stream = streams.BetdaqOrderPolling(self.mock_flumine, 123)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
@@ -990,6 +992,7 @@ class TestBetdaqMarketPolling(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})

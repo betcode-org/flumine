@@ -16,6 +16,8 @@ SNAP_DELTA = 2
 
 
 class BetdaqMarketPolling(BaseStream):
+    VENUE = VenueType.BETDAQ
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -41,9 +43,7 @@ class BetdaqMarketPolling(BaseStream):
                 price["publish_time"] = datetime.datetime.now(tz=datetime.timezone.utc)
                 price["streaming_unique_id"] = self.stream_id
 
-            self.flumine.handler_queue.put(
-                MarketBookEvent(prices, venue=VenueType.BETDAQ)
-            )
+            self.flumine.handler_queue.put(MarketBookEvent(prices, venue=self.VENUE))
             time.sleep(self.streaming_timeout or 1)
 
         logger.info(

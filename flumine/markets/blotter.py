@@ -142,7 +142,7 @@ class Blotter:
         return bool(self._live_orders)
 
     def process_closed_market(self, market, market_book) -> None:
-        if market.venue == VenueType.BETFAIR:
+        if market.VENUE == VenueType.BETFAIR:
             number_of_winners = len(
                 [runner for runner in market_book.runners if runner.status == "WINNER"]
             )

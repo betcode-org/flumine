@@ -399,7 +399,7 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
     """Returns a string of notes for a runner,
     currently 'back,lay,last_price_traded'
     """
-    if market.venue == VenueType.BETFAIR:
+    if market.VENUE == VenueType.BETFAIR:
         runner = get_runner_book(market.market_book, selection_id)
         if runner:
             return "%s,%s,%s" % (
@@ -408,7 +408,7 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
                 runner.last_price_traded,
             )
         return ""
-    elif market.venue == VenueType.BETDAQ:
+    elif market.VENUE == VenueType.BETDAQ:
         runner = get_runner_dict(market.market_book, selection_id)
         if runner:
             return "%s,%s,%s" % (

@@ -14,10 +14,6 @@ This means an instance can be setup to execute on either individual venues or mu
 
 ## Breaking Changes
 
-`market.venue` -> `market.event_venue`
-
-`market.venue` now returns the venue of the market (Betfair) and `market.event_venue` will return the venue of the event itself (Ascot)
-
 ### Live
 
 Historically flumine would create streams based on provided market filters however from v3 this has moved to the following design:

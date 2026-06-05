@@ -416,7 +416,7 @@ class UtilsTest(unittest.TestCase):
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock(selection_id=123, handicap=0, last_price_traded=5)
         mock_market_book.runners = [mock_runner]
-        mock_market = mock.Mock(market_book=mock_market_book, venue=VenueType.BETFAIR)
+        mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETFAIR)
         self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
 
     @mock.patch("flumine.utils.get_price_dict", return_value=1.01)
@@ -433,7 +433,7 @@ class UtilsTest(unittest.TestCase):
                 }
             ]
         }
-        mock_market = mock.Mock(market_book=mock_market_book, venue=VenueType.BETDAQ)
+        mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETDAQ)
         self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
 
     def test__get_event_ids(self):

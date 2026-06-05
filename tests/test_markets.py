@@ -22,7 +22,7 @@ class MarketsTest(unittest.TestCase):
         self.assertFalse(self.markets.live_orders_event.is_set())
 
     def test_add_market(self):
-        mock_market = mock.Mock(event_id="1234", venue=VenueType.BETFAIR)
+        mock_market = mock.Mock(event_id="1234", VENUE=VenueType.BETFAIR)
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
         self.assertEqual(
@@ -133,11 +133,10 @@ class MarketTest(unittest.TestCase):
             "1.234",
             self.mock_market_book,
             self.mock_market_catalogue,
-            venue=VenueType.BETFAIR,
         )
 
     def test_init(self):
-        self.assertEqual(self.market.venue, VenueType.BETFAIR)
+        self.assertEqual(self.market.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
@@ -470,15 +469,13 @@ class MarketTest(unittest.TestCase):
     def test_event_venue_mc(self):
         mock_market_catalogue = mock.Mock()
         self.market.market_catalogue = mock_market_catalogue
-        self.assertEqual(self.market.event_venue, mock_market_catalogue.event.venue)
+        self.assertEqual(self.market.venue, mock_market_catalogue.event.venue)
 
     def test_event_venue_mb(self):
         self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
-        self.assertEqual(
-            self.market.event_venue, mock_market_book.market_definition.venue
-        )
+        self.assertEqual(self.market.venue, mock_market_book.market_definition.venue)
 
     def test_race_type_mc(self):
         mock_market_catalogue = mock.Mock()
@@ -536,7 +533,7 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.info,
             {
-                "venue": self.market.venue.name,
+                "market_venue": self.market.VENUE.name,
                 "market_id": self.market.market_id,
                 "event_id": self.market.event_id,
                 "event_type_id": self.market.event_type_id,
@@ -544,7 +541,7 @@ class MarketTest(unittest.TestCase):
                 "market_type": self.market.market_type,
                 "market_start_datetime": str(self.market.market_start_datetime),
                 "country_code": self.market.country_code,
-                "event_venue": self.market.event_venue,
+                "venue": self.market.venue,
                 "race_type": self.market.race_type,
                 "orders_cleared": self.market.orders_cleared,
                 "market_cleared": self.market.market_cleared,
@@ -570,7 +567,6 @@ class BetdaqMarketTest(unittest.TestCase):
             "1.234",
             self.mock_market_book,
             self.mock_market_catalogue,
-            venue=VenueType.BETFAIR,
         )
 
     def test_call(self):
