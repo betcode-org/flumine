@@ -102,6 +102,10 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertFalse(self.strategy.multi_order_trades)
         self.assertEqual(strategy.STRATEGY_NAME_HASH_LENGTH, 13)
 
+    def test_init_error(self):
+        with self.assertRaises(ValueError):
+            strategy.BaseStrategy(stream=1, streams=[1])
+
     def test_add(self):
         mock_flumine = mock.Mock()
         self.strategy.add(mock_flumine)

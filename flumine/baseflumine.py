@@ -101,6 +101,8 @@ class BaseFlumine:
 
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
+        for stream in strategy.streams:
+            self.add_stream(stream)
         self.strategies(strategy, self.clients, self)
         self.log_control(events.StrategyEvent(strategy))
 

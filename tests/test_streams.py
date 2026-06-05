@@ -94,8 +94,7 @@ class StreamsTest(unittest.TestCase):
     def test_add_stream_duplicate(self, mock_increment):
         mock_stream = mock.Mock()
         self.streams._streams = [mock_stream]
-        with self.assertRaises(StreamError):
-            self.streams.add_stream(mock_stream)
+        self.streams.add_stream(mock_stream)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_not_called()
 

@@ -45,15 +45,14 @@ client = clients.BetfairClient(trading)
 
 framework = Flumine(client=client)
 
-# create stream(s) (market data)
-stream = BetfairMarketStream(
-    framework,
-    market_filter=streaming_market_filter(market_ids=["1.172415939"]),
-)
-framework.add_stream(stream)
-
 # create strategy and subscribe to stream(s)
-strategy = ExampleStrategy(name="two", streams=[stream])
+strategy = ExampleStrategy(
+    name="two",
+    stream=BetfairMarketStream(
+        framework,
+        market_filter=streaming_market_filter(market_ids=["1.172415939"]),
+    ),
+)
 framework.add_strategy(strategy)
 
 framework.add_worker(

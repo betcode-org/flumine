@@ -24,6 +24,7 @@ class BaseStrategy:
 
     def __init__(
         self,
+        stream: Union[BaseStream, BetfairHistoricalStream] = None,
         streams: List[Union[BaseStream, BetfairHistoricalStream]] = None,
         name: str = None,
         context: dict = None,
@@ -45,6 +46,10 @@ class BaseStrategy:
         :param max_live_trade_count: max live (with executable orders) trades per runner
         :param multi_order_trades: allow multiple live orders per trade
         """
+        if stream is not None and streams is not None:
+            raise ValueError("Use either stream or streams, not both")
+        # list of streams strategy is subscribed
+        self.streams = [stream] if stream is not None else list(streams or [])
         self._name = name
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
@@ -56,7 +61,6 @@ class BaseStrategy:
         self.multi_order_trades = multi_order_trades
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
-        self.streams = streams or []  # list of streams strategy is subscribed
         self.historic_stream_ids = set()  # faster
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)

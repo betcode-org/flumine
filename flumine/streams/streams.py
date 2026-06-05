@@ -49,9 +49,9 @@ class Streams:
 
     def add_stream(self, stream):
         if stream in self._streams:
-            raise StreamError(f"Stream {stream} already exists")
-        stream_id = self._increment_stream_id()
-        stream.stream_id = stream_id
+            logger.info(f"Stream {stream} already added, reusing", stream)
+            return stream
+        stream.stream_id = self._increment_stream_id()
         self._streams.append(stream)
         return stream
 

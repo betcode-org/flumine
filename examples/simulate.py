@@ -20,16 +20,10 @@ client = clients.SimulatedClient()
 
 framework = FlumineSimulation(client=client)
 
-markets = ["tests/resources/PRO-1.170258213"]
-
-streams = []
-for market in markets:
-    stream = BetfairHistoricalStream(framework, file_path=market)
-    framework.add_stream(stream)
-    streams.append(stream)
+file_path = "tests/resources/PRO-1.170258213"
 
 strategy = LowestLayer(
-    streams=streams,
+    stream=BetfairHistoricalStream(framework, file_path=file_path),
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},

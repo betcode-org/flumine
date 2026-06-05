@@ -76,20 +76,18 @@ client = clients.BetfairClient(trading)
 # Initialize the framework
 framework = Flumine(client)
 
-# Create stream(s) (market data)
-stream = BetfairMarketStream(
-    framework,
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
-    ),
-)
-framework.add_stream(stream)
-
 # Add your strategy to the framework with a stream
 framework.add_strategy(
-    ExampleStrategy(streams=[stream])
+    ExampleStrategy(
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
+        )
+    )
 )
 
 # Start the trading framework
@@ -152,20 +150,18 @@ client = clients.BetfairClient(trading)
 # Initialize the framework
 framework = Flumine(client)
 
-# Create stream(s) (market data)
-stream = BetfairMarketStream(
-    framework,
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
-    ),
-)
-framework.add_stream(stream)
-
 # Add your strategy to the framework with a stream
 framework.add_strategy(
-    ExampleStrategy(streams=[stream])
+    ExampleStrategy(
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
+        )
+    )
 )
 
 # Start the trading framework

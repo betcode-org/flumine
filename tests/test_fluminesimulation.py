@@ -94,7 +94,7 @@ class FlumineSimulationTest(unittest.TestCase):
         mock__process_simulated_orders.assert_called_with(mock_market)
 
     def test__process_market_books_new_market(self):
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         self.flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             market_id="1.23", streaming_unique_id=1, runners=[]
@@ -118,7 +118,7 @@ class FlumineSimulationTest(unittest.TestCase):
         Market book should only be called with objects from the streams
         it is subscribed to.
         """
-        mock_strategy = mock.Mock(stream_ids=[1, 2])
+        mock_strategy = mock.Mock(stream_ids=[1, 2], streams=[mock.Mock()])
         self.flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             market_id="1.123", streaming_unique_id=5, runners=[]
@@ -134,7 +134,7 @@ class FlumineSimulationTest(unittest.TestCase):
         Tests base_flumine._process_market_books() with different return values
         of strategy.check_market_book().
         """
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         check_pattern = (False, True, True, False, True)
         mock_strategy.check_market_book.side_effect = check_pattern
         self.flumine.add_strategy(mock_strategy)

@@ -87,17 +87,22 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.add_stream(mock_stream)
         mock_streams.add_stream.assert_called_with(mock_stream)
 
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_stream")
     @mock.patch("flumine.baseflumine.events")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
-    def test_add_strategy(self, mock_log_control, mock_events):
+    def test_add_strategy(self, mock_log_control, mock_events, mock_add_stream):
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
-        mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
+        mock_stream = mock.Mock()
+        mock_strategy = mock.Mock(
+            market_filter={}, sports_data_filter=[], streams=[mock_stream]
+        )
         self.base_flumine.add_strategy(mock_strategy)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
+        mock_add_stream.assert_called_with(mock_stream)
 
     def test_add_worker(self):
         mock_worker = mock.Mock()
@@ -141,7 +146,7 @@ class BaseFlumineTest(unittest.TestCase):
 
     def test__process_market_books(self):
         self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         self.base_flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=1, runners=[]
@@ -166,7 +171,7 @@ class BaseFlumineTest(unittest.TestCase):
         it is subscribed to.
         """
         self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1, 2])
+        mock_strategy = mock.Mock(stream_ids=[1, 2], streams=[mock.Mock()])
         self.base_flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=5, runners=[]
@@ -183,7 +188,7 @@ class BaseFlumineTest(unittest.TestCase):
         of strategy.check_market_book().
         """
         self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         check_pattern = (False, True, True, False, True)
         mock_strategy.check_market_book.side_effect = check_pattern
         self.base_flumine.add_strategy(mock_strategy)

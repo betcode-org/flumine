@@ -58,11 +58,8 @@ And using the correct stream class:
 ```python
 from flumine.streams.betfairdatastream import BetfairCricketDataStream
 
-cricket_data_stream = BetfairCricketDataStream(framework)
-framework.add_stream(cricket_data_stream)
-
 strategy= MarketRecorder(
-    streams=[cricket_data_stream],
+    stream=BetfairCricketDataStream(framework),
     context={
         "local_dir": "/tmp",
         "force_update": False,
@@ -76,11 +73,8 @@ strategy= MarketRecorder(
 ```python
 from flumine.streams.betfairdatastream import BetfairRaceDataStream
 
-race_data_stream = BetfairRaceDataStream(framework)
-framework.add_stream(race_data_stream)
-
 strategy= MarketRecorder(
-    streams=[race_data_stream],
+    stream=BetfairRaceDataStream(framework),
     context={
         "local_dir": "/tmp",
         "force_update": False,

@@ -32,6 +32,29 @@ client = clients.BetfairClient(trading)
 # Initialize the framework
 framework = Flumine(client)
 
+# Add your strategy to the framework with a stream
+framework.add_strategy(
+    ExampleStrategy(
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
+        )
+    )
+)
+
+# Start the trading framework
+framework.run()
+```
+
+A strategy can therefore subscribe to multiple streams and a stream can be subscribed to multiple strategies, these can also be across VenueTypes.
+
+A single stream with multiple strategies:
+
+```python
 # Create stream(s) (market data)
 stream = BetfairMarketStream(
     framework,
@@ -41,18 +64,40 @@ stream = BetfairMarketStream(
         market_types=["WIN"],
     ),
 )
-framework.add_stream(stream)
 
-# Add your strategy to the framework with a stream
-framework.add_strategy(
-    ExampleStrategy(streams=[stream])
-)
+# create strategy and subscribe to stream(s)
+strategy = ExampleStrategy(name="one", stream=stream)
+framework.add_strategy(strategy)
 
-# Start the trading framework
-framework.run()
+strategy = ExampleStrategy(name="two", stream=stream)
+framework.add_strategy(strategy)
 ```
 
-A strategy can therefore subscribe to multiple streams and a stream can be subscribed to multiple strategies, these can also be across VenueTypes. 
+Multiple streams with a single strategy:
+
+```python
+# Create stream(s) (market data)
+stream_one = BetfairMarketStream(
+    framework,
+    market_filter=streaming_market_filter(
+        event_type_ids=["7"],
+        country_codes=["GB"],
+        market_types=["WIN"],
+    ),
+)
+stream_two = BetfairMarketStream(
+    framework,
+    market_filter=streaming_market_filter(
+        event_type_ids=["1"],
+        country_codes=["GB"],
+        market_types=["MATCH_ODDS"],
+    ),
+)
+
+# create strategy and subscribe to stream(s)
+strategy = ExampleStrategy(name="one", streams=[stream_one, stream_two])
+framework.add_strategy(strategy)
+```
 
 It is also possible to subscribe or unsubscribe after a strategy has been initialised:
 
@@ -77,17 +122,14 @@ client = clients.SimulatedClient()
 # Initialize the framework
 framework = FlumineSimulation(client=client)
 
-# Create stream(s) (historic data)
-stream = BetfairHistoricalStream(
-    framework,
-    file_path="tests/resources/PRO-1.170258213",
-    listener_kwargs={"inplay": True},
-)
-framework.add_stream(stream)
-
 # Add your strategy to the framework with a stream (this can be a list)
+file_path="tests/resources/PRO-1.170258213"
 strategy = LowestLayer(
-    streams=[stream],
+    stream=BetfairHistoricalStream(
+        framework,
+        file_path=file_path,
+        listener_kwargs={"inplay": True}
+    ),
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},

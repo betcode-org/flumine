@@ -127,16 +127,14 @@ betconnect_client = clients.BetConnectClient(
 )
 framework.add_client(betconnect_client)
 
-# create stream(s) (market data)
-stream = BetfairMarketStream(
-    framework,
-    market_filter=streaming_market_filter(market_ids=["1.196548740"]),
-    streaming_timeout=2,
-)
-framework.add_stream(stream)
-
 # create strategy and subscribe to stream(s)
-strategy = ExampleStrategy(streams=[stream])
+strategy = ExampleStrategy(
+    stream=BetfairMarketStream(
+        framework,
+        market_filter=streaming_market_filter(market_ids=["1.196548740"]),
+        streaming_timeout=2,
+    )
+)
 framework.add_strategy(strategy)
 
 framework.run()

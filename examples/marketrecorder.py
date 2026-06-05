@@ -32,12 +32,11 @@ stream = BetfairDataStream(
         market_types=["WIN"],
     ),
 )
-framework.add_stream(stream)
 
 # create strategy and subscribe to stream(s)
 strategy = MarketRecorder(
     name="WIN",
-    streams=[stream],
+    stream=stream,
     context={
         "local_dir": "/tmp",
         "force_update": False,

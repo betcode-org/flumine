@@ -37,14 +37,12 @@ market_stream = BetfairMarketStream(
         event_type_ids=["4"], market_types=["MATCH_ODDS"]
     ),
 )
-framework.add_stream(market_stream)
 
 # create stream(s) (sports data)
 sports_data_stream = BetfairSportsDataStream(
     framework,
     sports_data_filter="cricketSubscription",  # "cricketSubscription" or "raceSubscription"
 )
-framework.add_stream(sports_data_stream)
 
 strategy = ExampleStrategy(streams=[market_stream, sports_data_stream])
 framework.add_strategy(strategy)

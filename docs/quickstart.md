@@ -22,28 +22,6 @@ framework = Flumine(client=client)
 !!! note
     flumine will handle login, logout and keep alive whilst the framework is running using the `keep_alive` worker.
 
-The next step is to create the streams (market data) that you want to consume
-
-```python
-from flumine.streams.betfairmarketstream import BetfairMarketStream
-from betfairlightweight.filters import (
-    streaming_market_filter, 
-    streaming_market_data_filter,
-)
-
-# Create stream(s) (market data)
-stream = BetfairMarketStream(
-    framework,
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
-    ),
-    market_data_filter=streaming_market_data_filter(fields=["EX_ALL_OFFERS"])
-)
-framework.add_stream(stream)
-```
-
 A strategy can now be created by using the BaseStrategy class:
 
 ```python
@@ -65,13 +43,25 @@ class ExampleStrategy(BaseStrategy):
         print(market_book.status)
 ```
 
-This strategy can now be initiated with the stream before being added to the framework:
+This strategy can now be initiated with a stream before being added to the framework:
 
 ```python
-strategy = ExampleStrategy(streams=[stream])
+from flumine.streams.betfairmarketstream import BetfairMarketStream
+from betfairlightweight.filters import (
+    streaming_market_filter, 
+    streaming_market_data_filter,
+)
 
-framework.add_strategy(
-    ExampleStrategy(streams=[stream])
+strategy = ExampleStrategy(
+    stream=BetfairMarketStream(
+        framework,
+        market_filter=streaming_market_filter(
+            event_type_ids=["7"],
+            country_codes=["GB"],
+            market_types=["WIN"],
+        ),
+        market_data_filter=streaming_market_data_filter(fields=["EX_ALL_OFFERS"])
+    )
 )
 
 framework.add_strategy(strategy)
@@ -140,18 +130,16 @@ class ExampleDataStrategy(BaseStrategy):
         print(publish_time, data)
 
 
-# create stream(s) (market data)
-stream = BetfairDataStream(
-    framework,
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"],
-        country_codes=["GB"],
-        market_types=["WIN"],
-    ),
+strategy = ExampleDataStrategy(
+    stream=BetfairDataStream(
+        framework,
+        market_filter=streaming_market_filter(
+            event_type_ids=["7"],
+            country_codes=["GB"],
+            market_types=["WIN"],
+        ),
+    )
 )
-framework.add_stream(stream)
-        
-strategy = ExampleDataStrategy(streams=[stream])
 
 flumine.add_strategy(strategy)
 ```
@@ -162,10 +150,9 @@ The OrderDataStream class can be used to record order data as per market:
 from flumine.streams.betfairdatastream import BetfairOrderDataStream
 
 # create stream(s) (order data)
-stream = BetfairOrderDataStream(framework)
-framework.add_stream(stream)
-
-strategy = ExampleDataStrategy(streams=[stream])
+strategy = ExampleDataStrategy(
+    stream=BetfairOrderDataStream(framework)
+)
 
 flumine.add_strategy(strategy)
 ```
@@ -196,15 +183,14 @@ from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 client = clients.SimulatedClient()
 framework = FlumineSimulation(client=client)
 
-market = "/tmp/marketdata/1.170212754"
+file_path = "/tmp/marketdata/1.170212754"
 
-stream = BetfairHistoricalStream(
-    framework,
-    file_path=market,
+strategy = ExampleStrategy(
+    stream=BetfairHistoricalStream(
+        framework,
+        file_path=file_path,
+    )
 )
-framework.streams.add_stream(stream)
-
-strategy = ExampleStrategy(streams=[stream])
 framework.add_strategy(strategy)
 
 framework.run()
@@ -217,7 +203,7 @@ Sometimes a subset of the market lifetime is required, this can be optimised by 
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    file_path=market,
+    file_path=file_path,
     listener_kwargs={"inplay": False, "seconds_to_start": 600},
 )
 ```
@@ -240,7 +226,7 @@ It is also possible to process events with multiple markets such as win/place in
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    file_path=market,
+    file_path=file_path,
     event_processing=True,
 )
 ```
@@ -249,7 +235,7 @@ To process multiple events in parallel, provide a mapping for event groups in th
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    file_path=market,
+    file_path=file_path,
     event_processing=True,
     event_groups={"123": "A", "456": "A"},
 )
