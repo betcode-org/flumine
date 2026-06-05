@@ -1,5 +1,5 @@
 import logging
-from typing import Iterator, Optional, Union
+from typing import Iterator, Optional, Union, List
 from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
 from .runnercontext import RunnerContext
@@ -24,7 +24,7 @@ class BaseStrategy:
 
     def __init__(
         self,
-        streams: list[BaseStream | BetfairHistoricalStream] = None,
+        streams: List[Union[BaseStream, BetfairHistoricalStream]] = None,
         name: str = None,
         context: dict = None,
         max_selection_exposure: Optional[float] = 100,
