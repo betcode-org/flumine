@@ -9,6 +9,7 @@ This means an instance can be setup to execute on either individual venues or mu
 - BetConnect: Development
 - Polymarket: Roadmap
 - Kalshi: Roadmap
+- BetDEX: Roadmap
 - Smarkets: Roadmap
 - Matchbook: Roadmap
 
