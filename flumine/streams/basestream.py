@@ -5,8 +5,6 @@ import betfairlightweight
 from betfairlightweight import StreamListener, filters
 from tenacity import wait_exponential
 
-from flumine.clients import VenueType
-
 logger = logging.getLogger(__name__)
 
 DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
@@ -40,11 +38,7 @@ class BaseStream(threading.Thread):
         custom: bool = False,
         client=None,
         output_queue: bool = True,
-        event_processing: bool = False,
-        event_group: str = None,
-        event_id: str = None,
         operation: str = "marketSubscription",
-        **listener_kwargs,
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
         self.flumine = flumine
@@ -58,15 +52,10 @@ class BaseStream(threading.Thread):
         self.custom = custom
         self._stream = None
         self._output_queue = queue.Queue() if output_queue else None
-        self.event_processing = event_processing
-        self.event_group = event_group
-        self.event_id = event_id
         self.operation = operation
-        self.listener_kwargs = listener_kwargs
         self._listener = self.LISTENER(
             output_queue=self._output_queue,
             max_latency=self.MAX_LATENCY,
-            **listener_kwargs,
         )
         self._output_thread = threading.Thread(
             name="{0}_output_thread".format(self.name),

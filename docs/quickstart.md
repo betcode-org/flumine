@@ -200,8 +200,7 @@ market = "/tmp/marketdata/1.170212754"
 
 stream = BetfairHistoricalStream(
     framework,
-    market_filter=market,
-    output_queue=False,
+    file_path=market,
 )
 framework.streams.add_stream(stream)
 
@@ -218,9 +217,8 @@ Sometimes a subset of the market lifetime is required, this can be optimised by 
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    market_filter=market,
+    file_path=market,
     listener_kwargs={"inplay": False, "seconds_to_start": 600},
-    output_queue=False,
 )
 ```
 
@@ -242,9 +240,8 @@ It is also possible to process events with multiple markets such as win/place in
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    market_filter=market,
+    file_path=market,
     event_processing=True,
-    output_queue=False,
 )
 ```
 
@@ -252,10 +249,9 @@ To process multiple events in parallel, provide a mapping for event groups in th
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    market_filter=market,
+    file_path=market,
     event_processing=True,
     event_groups={"123": "A", "456": "A"},
-    output_queue=False,
 )
 ```
 

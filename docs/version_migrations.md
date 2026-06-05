@@ -64,7 +64,7 @@ strategy.unsubscribe_from_stream(stream)
 
 ### Simulation
 
-The simulation setup has also changed to match live:
+The simulation setup has also changed to match live as well as renaming `market_filter` to `file_path` and moving `listener_kwargs` to its own variable.
 
 ```python
 import betfairlightweight
@@ -80,8 +80,8 @@ framework = FlumineSimulation(client=client)
 # Create stream(s) (historic data)
 stream = BetfairHistoricalStream(
     framework,
-    market_filter="tests/resources/PRO-1.170258213",
-    output_queue=False,
+    file_path="tests/resources/PRO-1.170258213",
+    listener_kwargs={"inplay": True},
 )
 framework.add_stream(stream)
 

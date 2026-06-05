@@ -6,7 +6,7 @@ from pythonjsonlogger import jsonlogger
 
 from flumine import Flumine, clients, BaseStrategy
 from flumine.streams.betfairmarketstream import BetfairMarketStream
-from flumine.streams.sportsdatastream import SportsDataStream
+from flumine.streams.betfairsportsdatastream import BetfairSportsDataStream
 
 logger = logging.getLogger()
 
@@ -40,7 +40,7 @@ market_stream = BetfairMarketStream(
 framework.add_stream(market_stream)
 
 # create stream(s) (sports data)
-sports_data_stream = SportsDataStream(
+sports_data_stream = BetfairSportsDataStream(
     framework,
     sports_data_filter="cricketSubscription",  # "cricketSubscription" or "raceSubscription"
 )

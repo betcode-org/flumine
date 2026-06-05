@@ -190,10 +190,7 @@ class TestBaseStream(unittest.TestCase):
             "yes",
             client=self.mock_client,
             output_queue=False,
-            event_processing=True,
-            event_id="123",
             operation="test",
-            **{"calculate_market_tv": True},
         )
 
     def test_init(self):
@@ -210,10 +207,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
         self.assertIsNone(self.stream._output_queue)
-        self.assertTrue(self.stream.event_processing)
-        self.assertEqual(self.stream.event_id, "123")
         self.assertEqual(self.stream.operation, "test")
-        self.assertEqual(self.stream.listener_kwargs, {"calculate_market_tv": True})
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
@@ -425,33 +419,26 @@ class TestHistoricalStream(unittest.TestCase):
         self.mock_flumine = mock.Mock()
         self.stream = streams.BetfairHistoricalStream(
             self.mock_flumine,
+            "test",
+            {"inplay": True, "seconds_to_start": 123},
             123,
-            0.01,
-            100,
-            {"test": "me"},
-            {"please": "now"},
-            inplay=True,
-            seconds_to_start=123,
+            False,
+            "123",
+            "456",
         )
 
     def test_init(self):
         self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.file_path, "test")
+        self.assertEqual(
+            self.stream.listener_kwargs, {"inplay": True, "seconds_to_start": 123}
+        )
         self.assertEqual(self.stream.stream_id, 123)
-        self.assertEqual(self.stream.market_filter, {"test": "me"})
-        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
-        self.assertEqual(self.stream.streaming_timeout, 0.01)
-        self.assertEqual(self.stream.conflate_ms, 100)
-        self.assertIsNone(self.stream._stream)
-        self.assertIsNone(self.stream.MAX_LATENCY)
-        self.assertTrue(self.stream._listener.inplay)
-        self.assertEqual(self.stream._listener.seconds_to_start, 123)
-
-    def test_run(self):
-        self.stream.run()
-
-    def test_handle_output(self):
-        self.stream.handle_output()
+        self.assertEqual(self.stream.event_processing, False)
+        self.assertEqual(self.stream.event_group, "123")
+        self.assertEqual(self.stream.event_id, "456")
+        self.assertEqual(self.stream.operation, "marketSubscription")
 
     @mock.patch(
         "flumine.streams.betfairhistoricalstream.FlumineHistoricalGeneratorStream"
@@ -459,7 +446,7 @@ class TestHistoricalStream(unittest.TestCase):
     def test_create_generator(self, mock_generator):
         generator = self.stream.create_generator()
         mock_generator.assert_called_with(
-            file_path={"test": "me"},
+            file_path="test",
             listener=self.stream._listener,
             operation="marketSubscription",
             unique_id=self.stream.stream_id,

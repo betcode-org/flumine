@@ -4,6 +4,7 @@ from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, Cric
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
+from ..streams.betfairhistoricalstream import BetfairHistoricalStream
 from ..streams.betfairmarketstream import BaseStream
 from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
 
@@ -23,7 +24,7 @@ class BaseStrategy:
 
     def __init__(
         self,
-        streams: list[BaseStream] = None,
+        streams: list[BaseStream | BetfairHistoricalStream] = None,
         name: str = None,
         context: dict = None,
         max_selection_exposure: Optional[float] = 100,

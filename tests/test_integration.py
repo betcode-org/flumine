@@ -32,16 +32,14 @@ class IntegrationTest(unittest.TestCase):
 
         stream_one = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/1.197931750",
+            file_path="tests/resources/1.197931750",
             event_processing=True,
-            output_queue=False,
         )
         framework.add_stream(stream_one)
         stream_two = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/1.197931751",
+            file_path="tests/resources/1.197931751",
             event_processing=True,
-            output_queue=False,
         )
         framework.add_stream(stream_two)
 
@@ -75,8 +73,7 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/BASIC-1.132153978",
-            output_queue=False,
+            file_path="tests/resources/BASIC-1.132153978",
         )
         framework.add_stream(stream)
         strategy = Ex(streams=[stream])
@@ -97,8 +94,7 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/BASIC-1.132153978",
-            output_queue=False,
+            file_path="tests/resources/BASIC-1.132153978",
         )
         framework.add_stream(stream)
         strategy = Ex(streams=[stream])
@@ -246,8 +242,7 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/PRO-1.170258213",
-            output_queue=False,
+            file_path="tests/resources/PRO-1.170258213",
         )
         framework.add_stream(stream)
         limit_strategy = LimitOrders(
@@ -358,8 +353,7 @@ class IntegrationTest(unittest.TestCase):
         framework.add_client(client_bpe_off)
         stream = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/PRO-1.170258213",
-            output_queue=False,
+            file_path="tests/resources/PRO-1.170258213",
         )
         framework.add_stream(stream)
         limit_strategy_bpe_on = LimitOrders(
@@ -436,23 +430,20 @@ class IntegrationTest(unittest.TestCase):
 
         stream_one = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/SELF-1.181223994",
+            file_path="tests/resources/SELF-1.181223994",
             event_processing=True,
-            output_queue=False,
         )
         framework.add_stream(stream_one)
         stream_two = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/SELF-1.181223995",
+            file_path="tests/resources/SELF-1.181223995",
             event_processing=True,
-            output_queue=False,
         )
         framework.add_stream(stream_two)
         stream_three = BetfairHistoricalStream(
             framework,
-            market_filter="tests/resources/PRO-1.170258213",
+            file_path="tests/resources/PRO-1.170258213",
             event_processing=True,
-            output_queue=False,
         )
         framework.add_stream(stream_three)
 

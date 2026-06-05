@@ -88,8 +88,8 @@ class FlumineSimulation(BaseFlumine):
                         for stream in streams:
                             logger.info(
                                 "Starting historical market '%s'",
-                                stream.market_filter,
-                                extra={"market": stream.market_filter},
+                                stream.file_path,
+                                extra={"file_path": stream.file_path},
                             )
                             self.simulated_datetime.reset_real_datetime()
                             stream_gen = stream.create_generator()
@@ -99,7 +99,7 @@ class FlumineSimulation(BaseFlumine):
                                 )
                             self.handler_queue.clear()
                             logger.info(
-                                "Completed historical market '%s'", stream.market_filter
+                                "Completed historical market '%s'", stream.file_path
                             )
         logger.info("Simulation complete")  # Call this after self.__exit__
 

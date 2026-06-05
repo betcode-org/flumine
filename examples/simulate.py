@@ -24,11 +24,7 @@ markets = ["tests/resources/PRO-1.170258213"]
 
 streams = []
 for market in markets:
-    stream = BetfairHistoricalStream(
-        framework,
-        market_filter=market,
-        output_queue=False,
-    )
+    stream = BetfairHistoricalStream(framework, file_path=market)
     framework.add_stream(stream)
     streams.append(stream)
 

@@ -13,7 +13,7 @@ This is one of the most powerful options available as the variables are passed d
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    market_filter="/tmp/marketdata/1.170212754",
+    file_path="/tmp/marketdata/1.170212754",
     listener_kwargs={"seconds_to_start": 600, "inplay": False},
 )
 ```
@@ -23,7 +23,7 @@ stream = BetfairHistoricalStream(
 ```python
 stream = BetfairHistoricalStream(
     framework,
-    market_filter="/tmp/marketdata/1.170212754",
+    file_path="/tmp/marketdata/1.170212754",
     listener_kwargs={"inplay": True},
 )
 ```
@@ -73,11 +73,7 @@ def run_process(markets):
     
     streams = []
     for market in markets:
-        stream = BetfairHistoricalStream(
-            framework,
-            market_filter=market,
-            output_queue=False,
-        )
+        stream = BetfairHistoricalStream(framework, file_path=market)
         framework.streams.add_stream(stream)
         streams.append(stream)
 

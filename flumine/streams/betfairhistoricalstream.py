@@ -12,7 +12,6 @@ from betfairlightweight.streaming.cache import (
 from betfairlightweight.resources.baseresource import BaseResource
 from betfairlightweight.compat import json
 
-from .basestream import BaseStream
 from ..exceptions import ListenerError
 from ..utils import create_time
 from ..clients import VenueType
@@ -276,23 +275,45 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
                     ]
 
 
-class BetfairHistoricalStream(BaseStream):
+class BetfairHistoricalStream:
     LISTENER = HistoricListener
     MAX_LATENCY = None
     VENUE = VenueType.BETFAIR
 
-    def run(self) -> None:
-        pass
+    def __init__(
+        self,
+        flumine,
+        file_path: str,
+        listener_kwargs: dict = None,
+        stream_id: int = None,
+        event_processing: bool = False,
+        event_group: str = None,
+        event_id: str = None,
+        operation: str = "marketSubscription",
+    ):
+        self.flumine = flumine
+        self.file_path = file_path
+        self.listener_kwargs = listener_kwargs or {}
+        self.stream_id = stream_id
+        self.event_processing = event_processing
+        self.event_group = event_group
+        self.event_id = event_id
+        self.operation = operation
+        self._listener = self.LISTENER(
+            output_queue=None,
+            max_latency=self.MAX_LATENCY,
+            **self.listener_kwargs,
+        )
 
-    def handle_output(self) -> None:
-        pass
+    def stop(self) -> None:
+        return
 
     def create_generator(self):
         self._listener.update_clk = (
             False  # do not update clk on updates (not required when simulating)
         )
         stream = FlumineHistoricalGeneratorStream(
-            file_path=self.market_filter,
+            file_path=self.file_path,
             listener=self._listener,
             operation=self.operation,
             unique_id=self.stream_id,
