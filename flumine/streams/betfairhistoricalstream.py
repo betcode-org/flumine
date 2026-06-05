@@ -15,6 +15,7 @@ from betfairlightweight.compat import json
 from .basestream import BaseStream
 from ..exceptions import ListenerError
 from ..utils import create_time
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,7 @@ class FlumineHistoricalGeneratorStream(HistoricalGeneratorStream):
 class BetfairHistoricalStream(BaseStream):
     LISTENER = HistoricListener
     MAX_LATENCY = None
+    VENUE = VenueType.BETFAIR
 
     def run(self) -> None:
         pass

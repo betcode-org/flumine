@@ -7,6 +7,7 @@ from tenacity import retry
 from .basestream import BaseStream
 from ..events.events import CurrentOrdersEvent
 from .. import config
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,8 @@ SNAP_DELTA = 3
 
 
 class BetfairOrderStream(BaseStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(

@@ -197,7 +197,7 @@ class TestBaseStream(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
+        self.assertIsNone(self.stream.VENUE)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -254,6 +254,7 @@ class TestBetfairMarketStream(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -277,6 +278,7 @@ class TestBetfairDataStream(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -433,6 +435,7 @@ class TestHistoricalStream(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -825,6 +828,7 @@ class TestBetfairOrderStream(unittest.TestCase):
         self.stream = streams.BetfairOrderStream(self.mock_flumine, 123, 0.01, 100)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
@@ -861,6 +865,7 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.stream = streams.SimulatedOrderStream(self.mock_flumine, 123, 0.01, 100)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
@@ -971,6 +976,7 @@ class TestBetfairSportsDataStream(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.sports_data_filter, "test")

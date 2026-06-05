@@ -3,6 +3,7 @@ import logging
 
 from .basestream import BaseStream
 from ..events.events import CurrentOrdersEvent
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,8 @@ class CurrentOrders:
 
 
 class SimulatedOrderStream(BaseStream):
+    VENUE = VenueType.BETFAIR
+
     def run(self) -> None:
         logger.info(
             "Starting SimulatedOrderStream %s",

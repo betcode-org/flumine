@@ -142,6 +142,7 @@ class FlumineCricketStream(FlumineStream):
 
 class BetfairDataStream(BaseStream):
     LISTENER = FlumineListener
+    VENUE = VenueType.BETFAIR
 
     def __init__(self, *args, **kwargs):
         BaseStream.__init__(self, *args, **kwargs)
@@ -181,6 +182,8 @@ class BetfairDataStream(BaseStream):
 
 
 class BetfairOrderDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -222,6 +225,8 @@ class BetfairOrderDataStream(BetfairDataStream):
 
 
 class BetfairRaceDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -249,6 +254,8 @@ class BetfairRaceDataStream(BetfairDataStream):
 
 
 class BetfairCricketDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
