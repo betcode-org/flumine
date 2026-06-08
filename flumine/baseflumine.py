@@ -308,7 +308,10 @@ class BaseFlumine:
                 market.update_market_catalogue = False
 
                 if event.venue == VenueType.BETFAIR:
-                    streaming_unique_id = market.market_book.streaming_unique_id
+                    if market.market_book:
+                        streaming_unique_id = market.market_book.streaming_unique_id
+                    else:
+                        streaming_unique_id = None
                 elif event.venue == VenueType.BETDAQ:
                     streaming_unique_id = market.market_book["streaming_unique_id"]
                 else:
@@ -316,7 +319,7 @@ class BaseFlumine:
 
                 for strategy in self.strategies:
                     if (
-                        market.market_book
+                        streaming_unique_id
                         and streaming_unique_id in strategy.stream_ids
                     ) or strategy.market_cached(market.market_id):
                         utils.call_strategy_error_handling(
