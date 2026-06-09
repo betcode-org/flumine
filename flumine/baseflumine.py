@@ -168,14 +168,14 @@ class BaseFlumine:
                     continue
                 self.markets.add_market(market_id, market)
 
+            # process market
+            market(market_book)
+
             if market.status in ["CLOSED", "SETTLED"]:
                 self.handler_queue.put(
                     events.CloseMarketEvent(market_book, venue=event.venue)
                 )
                 continue
-
-            # process market
-            market(market_book)
 
             # process middleware
             for middleware in self._market_middleware:
