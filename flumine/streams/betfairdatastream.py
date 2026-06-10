@@ -144,10 +144,6 @@ class BetfairDataStream(BaseStream):
     LISTENER = FlumineListener
     VENUE = VenueType.BETFAIR
 
-    def __init__(self, *args, **kwargs):
-        BaseStream.__init__(self, *args, **kwargs)
-        self._listener = self.LISTENER(output_queue=self.flumine.handler_queue)
-
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -160,6 +156,7 @@ class BetfairDataStream(BaseStream):
                 "conflate_ms": self.conflate_ms,
             },
         )
+        self._listener.output_queue = self.flumine.handler_queue
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )

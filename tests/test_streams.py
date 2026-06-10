@@ -295,15 +295,15 @@ class TestBetfairDataStream(unittest.TestCase):
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
         self.assertEqual(self.stream.LISTENER, betfairdatastream.FlumineListener)
-        self.assertEqual(
-            self.stream._listener.output_queue, self.mock_flumine.handler_queue
-        )
 
     @mock.patch("flumine.streams.betfairmarketstream.BaseStream.betting_client")
     def test_run(self, mock_betting_client):
         self.stream.run()
         mock_betting_client.streaming.create_stream.assert_called_with(
             listener=self.stream._listener, unique_id=123
+        )
+        self.assertEqual(
+            self.stream._listener.output_queue, self.mock_flumine.handler_queue
         )
 
     # def test_handle_output(self):
