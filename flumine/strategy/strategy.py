@@ -65,6 +65,9 @@ class BaseStrategy:
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
 
+    def replace_stream(self, stream, new_stream) -> None:
+        self.streams = [new_stream if s is stream else s for s in self.streams]
+
     def subscribe_to_stream(self, stream):
         self.streams.append(stream)
 

@@ -96,13 +96,23 @@ class BaseFlumine:
         self.add_client_control(client, MaxTransactionCount)
 
     def add_stream(self, stream) -> None:
-        logger.info("Adding stream %s", stream)
+        logger.info(f"Adding {stream}")
         self.streams.add_stream(stream)
 
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
         for stream in strategy.streams:
-            self.add_stream(stream)
+            # check if we can share a stream
+            key = stream.stream_hash
+            if key in self.streams:
+                new_stream = self.streams[key]
+                logger.info(
+                    f"Duplicate stream found, replacing stream {stream} in {strategy}"
+                )
+                strategy.replace_stream(stream, new_stream)
+            else:
+                self.add_stream(stream)
+
         self.strategies(strategy, self.clients, self)
         self.log_control(events.StrategyEvent(strategy))
 

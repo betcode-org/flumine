@@ -187,7 +187,6 @@ file_path = "/tmp/marketdata/1.170212754"
 
 strategy = ExampleStrategy(
     stream=BetfairHistoricalStream(
-        framework,
         file_path=file_path,
     )
 )
@@ -202,7 +201,6 @@ Sometimes a subset of the market lifetime is required, this can be optimised by 
 
 ```python
 stream = BetfairHistoricalStream(
-    framework,
     file_path=file_path,
     listener_kwargs={"inplay": False, "seconds_to_start": 600},
 )
@@ -225,7 +223,6 @@ It is also possible to process events with multiple markets such as win/place in
 
 ```python
 stream = BetfairHistoricalStream(
-    framework,
     file_path=file_path,
     event_processing=True,
 )
@@ -234,7 +231,6 @@ stream = BetfairHistoricalStream(
 To process multiple events in parallel, provide a mapping for event groups in the format `{event_id: event_group}`. In this example, events with IDs `"123"` and `"456"` are added to execution group `"A"` and will be simulated together.
 ```python
 stream = BetfairHistoricalStream(
-    framework,
     file_path=file_path,
     event_processing=True,
     event_groups={"123": "A", "456": "A"},

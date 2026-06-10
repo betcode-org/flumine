@@ -23,7 +23,7 @@ framework = FlumineSimulation(client=client)
 file_path = "tests/resources/PRO-1.170258213"
 
 strategy = LowestLayer(
-    stream=BetfairHistoricalStream(framework, file_path=file_path),
+    stream=BetfairHistoricalStream(file_path=file_path),
     max_order_exposure=1000,
     max_selection_exposure=105,
     context={"stake": 2},

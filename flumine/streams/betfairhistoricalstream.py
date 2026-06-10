@@ -282,7 +282,6 @@ class BetfairHistoricalStream:
 
     def __init__(
         self,
-        flumine,
         file_path: str,
         listener_kwargs: dict = None,
         stream_id: int = None,
@@ -291,7 +290,6 @@ class BetfairHistoricalStream:
         event_id: str = None,
         operation: str = "marketSubscription",
     ):
-        self.flumine = flumine
         self.file_path = file_path
         self.listener_kwargs = listener_kwargs or {}
         self.stream_id = stream_id
@@ -319,3 +317,17 @@ class BetfairHistoricalStream:
             unique_id=self.stream_id,
         )
         return stream.get_generator()
+
+    @property
+    def stream_hash(self):
+        return hash(
+            (
+                self.__class__.__name__,
+                self.file_path,
+                json.dumps(self.listener_kwargs),
+                self.event_processing,
+                self.event_group,
+                self.event_id,
+                self.operation,
+            )
+        )

@@ -117,6 +117,16 @@ class Streams:
         self._stream_id += int(1e4)
         return self._stream_id
 
+    def has_stream(self, key) -> bool:
+        stream_keys = [s.stream_hash for s in self]
+        return key in stream_keys
+
+    __contains__ = has_stream
+
+    def __getitem__(self, key):
+        stream_keys = {s.stream_hash: s for s in self}
+        return stream_keys[key]
+
     def __iter__(
         self,
     ) -> Iterator[

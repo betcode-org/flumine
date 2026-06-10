@@ -106,6 +106,24 @@ class BaseStrategyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             strategy.BaseStrategy(stream=1, streams=[1])
 
+    def test_replace_stream(self):
+        self.strategy.streams = [1, 2, 3]
+        self.strategy.replace_stream(1, 1)
+        self.assertEqual(self.strategy.streams, [1, 2, 3])
+        self.strategy.replace_stream(1, 10)
+        self.assertEqual(self.strategy.streams, [10, 2, 3])
+
+    def test_subscribe_to_stream(self):
+        self.strategy.streams = [1, 2]
+        self.strategy.subscribe_to_stream(3)
+        self.assertEqual(self.strategy.streams, [1, 2, 3])
+
+    def test_unsubscribe_from_stream(self):
+        self.strategy.streams = [1, 2, 3]
+        self.strategy.unsubscribe_from_stream(1)
+        self.strategy.unsubscribe_from_stream(1)
+        self.assertEqual(self.strategy.streams, [2, 3])
+
     def test_add(self):
         mock_flumine = mock.Mock()
         self.strategy.add(mock_flumine)

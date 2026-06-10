@@ -1,5 +1,6 @@
 import threading
 import queue
+import json
 import logging
 import betfairlightweight
 from betfairlightweight import StreamListener, filters
@@ -28,7 +29,7 @@ class BaseStream(threading.Thread):
 
     def __init__(
         self,
-        flumine,
+        flumine=None,
         stream_id: int = None,
         streaming_timeout: float = None,  # snaps listener if no update
         conflate_ms: int = None,
@@ -81,8 +82,10 @@ class BaseStream(threading.Thread):
     def client(self):
         if self._client:
             return self._client
-        else:
+        elif self.flumine:
             return self.flumine.clients.get_default(self.VENUE)
+        else:
+            return None
 
     @property
     def stream_running(self) -> bool:
@@ -90,3 +93,18 @@ class BaseStream(threading.Thread):
             return self._stream.running
         else:
             return False
+
+    @property
+    def stream_hash(self):
+        return hash(
+            (
+                self.__class__.__name__,
+                self.streaming_timeout,
+                self.conflate_ms,
+                json.dumps(self.market_filter, sort_keys=True),
+                json.dumps(self.market_data_filter, sort_keys=True),
+                self.sports_data_filter,
+                self.client.username,
+                self.operation,
+            )
+        )

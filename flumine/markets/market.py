@@ -344,6 +344,10 @@ class BetdaqMarket(Market):
         return None  # todo betdaq catalogue?
 
     @property
+    def venue(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
     def race_type(self) -> Optional[str]:
         return None
 

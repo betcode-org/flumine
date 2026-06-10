@@ -167,6 +167,21 @@ class StreamsTest(unittest.TestCase):
     def test__increment_stream_id(self):
         self.assertEqual(self.streams._increment_stream_id(), 10000)
 
+    def test_has_stream(self):
+        self.streams._streams = [mock.Mock(stream_hash=123)]
+        self.assertTrue(self.streams.has_stream(123))
+        self.assertFalse(self.streams.has_stream(456))
+
+    def test_contains(self):
+        self.streams._streams = [mock.Mock(stream_hash=123)]
+        self.assertTrue(123 in self.streams)
+        self.assertFalse(456 in self.streams)
+
+    def test_get_item(self):
+        mock_stream = mock.Mock(stream_hash=123)
+        self.streams._streams = [mock_stream]
+        self.assertEqual(self.streams[123], mock_stream)
+
     def test_iter(self):
         for i in self.streams:
             assert i
@@ -178,7 +193,7 @@ class StreamsTest(unittest.TestCase):
 class TestBaseStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.mock_client = mock.Mock()
+        self.mock_client = mock.Mock(username="test")
         self.stream = BaseStream(
             self.mock_flumine,
             123,
@@ -415,9 +430,7 @@ class TestBetfairDataStream(unittest.TestCase):
 
 class TestHistoricalStream(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_flumine = mock.Mock()
         self.stream = streams.BetfairHistoricalStream(
-            self.mock_flumine,
             "test",
             {"inplay": True, "seconds_to_start": 123},
             123,
@@ -428,7 +441,6 @@ class TestHistoricalStream(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
-        self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.file_path, "test")
         self.assertEqual(
             self.stream.listener_kwargs, {"inplay": True, "seconds_to_start": 123}
@@ -454,6 +466,9 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertFalse(self.stream._listener.lightweight)
         self.assertFalse(self.stream._listener.update_clk)
         self.assertEqual(generator, mock_generator().get_generator())
+
+    def test_stream_hash(self):
+        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
 
 
 class TestFlumineMarketStream(unittest.TestCase):
@@ -952,6 +967,9 @@ class TestBetdaqOrderPolling(unittest.TestCase):
 
     def test_stream_running(self):
         self.assertTrue(self.stream.stream_running)
+
+    def test_stream_hash(self):
+        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
 
 
 class TestBetfairSportsDataStream(unittest.TestCase):

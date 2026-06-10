@@ -31,13 +31,11 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation(client=client)
 
         stream_one = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/1.197931750",
             event_processing=True,
         )
         framework.add_stream(stream_one)
         stream_two = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/1.197931751",
             event_processing=True,
         )
@@ -72,7 +70,6 @@ class IntegrationTest(unittest.TestCase):
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/BASIC-1.132153978",
         )
         framework.add_stream(stream)
@@ -93,7 +90,6 @@ class IntegrationTest(unittest.TestCase):
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/BASIC-1.132153978",
         )
         framework.add_stream(stream)
@@ -241,7 +237,6 @@ class IntegrationTest(unittest.TestCase):
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
         stream = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/PRO-1.170258213",
         )
         framework.add_stream(stream)
@@ -352,7 +347,6 @@ class IntegrationTest(unittest.TestCase):
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
         stream = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/PRO-1.170258213",
         )
         framework.add_stream(stream)
@@ -429,19 +423,16 @@ class IntegrationTest(unittest.TestCase):
                             market.cancel_order(order)
 
         stream_one = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/SELF-1.181223994",
             event_processing=True,
         )
         framework.add_stream(stream_one)
         stream_two = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/SELF-1.181223995",
             event_processing=True,
         )
         framework.add_stream(stream_two)
         stream_three = BetfairHistoricalStream(
-            framework,
             file_path="tests/resources/PRO-1.170258213",
             event_processing=True,
         )

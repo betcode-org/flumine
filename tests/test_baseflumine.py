@@ -93,7 +93,7 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_strategy(self, mock_log_control, mock_events, mock_add_stream):
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
-        mock_stream = mock.Mock()
+        mock_stream = mock.Mock(stream_hash=123)
         mock_strategy = mock.Mock(
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
@@ -103,6 +103,28 @@ class BaseFlumineTest(unittest.TestCase):
         )
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
         mock_add_stream.assert_called_with(mock_stream)
+
+    @mock.patch("flumine.baseflumine.BaseFlumine.add_stream")
+    @mock.patch("flumine.baseflumine.events")
+    @mock.patch("flumine.baseflumine.BaseFlumine.log_control")
+    def test_add_strategy_dupe_stream(
+        self, mock_log_control, mock_events, mock_add_stream
+    ):
+        mock_strategies = mock.Mock()
+        self.base_flumine.strategies = mock_strategies
+        mock_new_stream = mock.Mock(stream_hash=123)
+        self.base_flumine.streams.add_stream(mock_new_stream)
+        mock_stream = mock.Mock(stream_hash=123)
+        mock_strategy = mock.Mock(
+            market_filter={}, sports_data_filter=[], streams=[mock_stream]
+        )
+        self.base_flumine.add_strategy(mock_strategy)
+        mock_strategies.assert_called_with(
+            mock_strategy, self.base_flumine.clients, self.base_flumine
+        )
+        mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
+        mock_add_stream.assert_not_called()
+        mock_strategy.replace_stream.assert_called_with(mock_stream, mock_new_stream)
 
     def test_add_worker(self):
         mock_worker = mock.Mock()
@@ -145,8 +167,9 @@ class BaseFlumineTest(unittest.TestCase):
         self.assertEqual(len(self.base_flumine._workers), 0)
 
     def test__process_market_books(self):
-        self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
+        self.base_flumine.streams = mock.MagicMock()
+        self.base_flumine.streams.__iter__.return_value = iter([])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock(stream_hash=123)])
         self.base_flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=1, runners=[]
@@ -170,8 +193,11 @@ class BaseFlumineTest(unittest.TestCase):
         Market book should only be called with objects from the streams
         it is subscribed to.
         """
-        self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1, 2], streams=[mock.Mock()])
+        self.base_flumine.streams = mock.MagicMock()
+        self.base_flumine.streams.__iter__.return_value = iter([])
+        mock_strategy = mock.Mock(
+            stream_ids=[1, 2], streams=[mock.Mock(stream_hash=123)]
+        )
         self.base_flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             publish_time_epoch=123, market_id="1.123", streaming_unique_id=5, runners=[]
@@ -187,8 +213,9 @@ class BaseFlumineTest(unittest.TestCase):
         Tests base_flumine._process_market_books() with different return values
         of strategy.check_market_book().
         """
-        self.base_flumine.streams = mock.Mock()
-        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
+        self.base_flumine.streams = mock.MagicMock()
+        self.base_flumine.streams.__iter__.return_value = iter([])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock(stream_hash=123)])
         check_pattern = (False, True, True, False, True)
         mock_strategy.check_market_book.side_effect = check_pattern
         self.base_flumine.add_strategy(mock_strategy)
