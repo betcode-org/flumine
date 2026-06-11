@@ -49,9 +49,22 @@ class Streams:
 
     def add_stream(self, stream):
         if stream in self._streams:
-            logger.info(f"Stream {stream} already added, reusing")
+            logger.info(
+                f"Stream {stream.__class__.__name__} already added, reusing",
+                extra={
+                    "stream_id": stream.stream_id,
+                    "operation": stream.operation,
+                },
+            )
             return stream
         stream.stream_id = self._increment_stream_id()
+        logger.info(
+            f"Adding {stream.__class__.__name__}",
+            extra={
+                "stream_id": stream.stream_id,
+                "operation": stream.operation,
+            },
+        )
         self._streams.append(stream)
         return stream
 
