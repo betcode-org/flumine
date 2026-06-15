@@ -33,6 +33,7 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         market = self._markets[market_id]
         del self._markets[market_id]
+        del self.venue_markets[market.VENUE][market_id]
         event_id = market.event_id
         if event_id in self.events:
             if market in self.events[event_id]:
