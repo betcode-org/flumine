@@ -150,6 +150,11 @@ class Market:
         return self.market_book.bet_delay
 
     @property
+    def market_name(self):
+        if self.market_catalogue:
+            return self.market_catalogue.market_name
+
+    @property
     def event(self) -> dict:
         event = defaultdict(list)
         market_start_datetime = self.market_start_datetime
@@ -178,6 +183,11 @@ class Market:
                 return self.market_book.market_definition.event_id
             else:
                 return ""
+
+    @property
+    def competition_id(self):
+        if self.market_catalogue:
+            return self.market_catalogue.competition.id
 
     @property
     def market_type(self) -> str:
@@ -300,13 +310,21 @@ class BetdaqMarket(Market):
         )
 
     @property
+    def market_name(self):
+        return self.market_book["market_name"]
+
+    @property
     def event_type_id(self) -> str:
-        return None  # todo betdaq catalogue?
+        return None
 
     @property
     def event_id(self) -> str:
         if self.market_catalogue:
             return self.market_catalogue["event_id"]
+
+    @property
+    def competition_id(self):
+        return None
 
     @property
     def market_type(self) -> str:

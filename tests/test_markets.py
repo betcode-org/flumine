@@ -272,6 +272,11 @@ class MarketTest(unittest.TestCase):
     def test_bet_delay(self):
         self.assertEqual(self.market.bet_delay, self.market.market_book.bet_delay)
 
+    def test_market_name(self):
+        self.assertEqual(
+            self.market.market_name, self.market.market_catalogue.market_name
+        )
+
     def test_event(self):
         self.market.market_catalogue.event.id = 12
         self.market.market_catalogue.event_type.id = "7"
@@ -362,6 +367,11 @@ class MarketTest(unittest.TestCase):
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.event_id, mock_market_book.market_definition.event_id
+        )
+
+    def test_competition_id(self):
+        self.assertEqual(
+            self.market.competition_id, self.market.market_catalogue.competition.id
         )
 
     def test_market_type_mc(self):
@@ -570,6 +580,7 @@ class BetdaqMarketTest(unittest.TestCase):
             "market_start_time": "2026-06-03 13:30:00.000000",
             "in_play": False,
             "in_running_delay": 1,
+            "market_name": "Win Market",
         }
         self.mock_market_catalogue = {"event_id": 12345}
         self.market = BetdaqMarket(
@@ -594,11 +605,17 @@ class BetdaqMarketTest(unittest.TestCase):
         self.market.market_book["in_play"] = True
         self.assertEqual(self.market.bet_delay, 1.0)
 
+    def test_market_name(self):
+        self.assertEqual(self.market.market_name, "Win Market")
+
     def test_event_type_id(self):
         self.assertIsNone(self.market.event_type_id)
 
     def test_event_id(self):
         self.assertEqual(self.market.event_id, 12345)
+
+    def test_competition_id(self):
+        self.assertIsNone(self.market.competition_id)
 
     def test_market_type(self):
         self.assertEqual(self.market.market_type, "WIN")
