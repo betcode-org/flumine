@@ -301,6 +301,11 @@ class BaseFlumine:
             if market:
                 if market.market_catalogue is None:
                     market.market_catalogue = market_catalogue
+                    if (
+                        market.event_id
+                        and market not in self.markets.events[market.event_id]
+                    ):
+                        self.markets.events[market.event_id].append(market)
                     self.log_control(events.MarketEvent(market))
                     logger.info(
                         "Created marketCatalogue for %s",

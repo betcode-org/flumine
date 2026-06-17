@@ -1,5 +1,6 @@
 import unittest
 from unittest import mock
+from collections import defaultdict
 
 from flumine.baseflumine import (
     BaseFlumine,
@@ -400,7 +401,7 @@ class BaseFlumineTest(unittest.TestCase):
         mock_strategy_3 = mock.Mock(stream_ids=[5, 6])
         mock_strategy_3.market_cached.return_value = True
 
-        mock_market = mock.Mock(market_catalogue=None, market_id="1.23")
+        mock_market = mock.Mock(market_catalogue=None, market_id="1.23", event_id=123)
         mock_market.market_book.streaming_unique_id = 1
 
         self.base_flumine.strategies = [
@@ -408,7 +409,9 @@ class BaseFlumineTest(unittest.TestCase):
             mock_strategy_2,
             mock_strategy_3,
         ]
-        self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
+        self.base_flumine.markets = mock.Mock(
+            markets={"1.23": mock_market}, events=defaultdict(list)
+        )
 
         mock_market_catalogue = mock.Mock(market_id="1.23")
         mock_event = mock.Mock(event=[mock_market_catalogue], venue=VenueType.BETFAIR)
@@ -451,6 +454,7 @@ class BaseFlumineTest(unittest.TestCase):
             market_catalogue=None,
             market_id="1.23",
             market_book=mock.Mock(streaming_unique_id=123),
+            event_id=123,
         )
 
         self.base_flumine.strategies = [
@@ -458,7 +462,9 @@ class BaseFlumineTest(unittest.TestCase):
             mock_strategy_2,
             mock_strategy_3,
         ]
-        self.base_flumine.markets = mock.Mock(markets={"1.23": mock_market})
+        self.base_flumine.markets = mock.Mock(
+            markets={"1.23": mock_market}, events=defaultdict(list)
+        )
 
         mock_market_catalogue = mock.Mock(market_id="1.23")
         mock_event = mock.Mock(event=[mock_market_catalogue], venue=VenueType.BETFAIR)
