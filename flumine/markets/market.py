@@ -169,14 +169,14 @@ class Market:
 
     @property
     def event_type_id(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event_type:
             return self.market_catalogue.event_type.id
         elif self.market_book:
             return self.market_book.market_definition.event_type_id
 
     @property
     def event_id(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.id
         elif self.market_book:
             if self.market_book.market_definition:
@@ -186,7 +186,7 @@ class Market:
 
     @property
     def competition_id(self):
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.competition:
             return self.market_catalogue.competition.id
 
     @property
@@ -226,21 +226,21 @@ class Market:
 
     @property
     def event_name(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.name
         elif self.market_book:
             return self.market_book.market_definition.event_name
 
     @property
     def country_code(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.country_code
         elif self.market_book:
             return self.market_book.market_definition.country_code
 
     @property
     def venue(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.venue
         elif self.market_book:
             return self.market_book.market_definition.venue
