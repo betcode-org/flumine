@@ -76,17 +76,9 @@ class StrategiesTest(unittest.TestCase):
 
 class BaseStrategyTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_market_filter = mock.Mock()
-        self.mock_market_data_filter = mock.Mock()
-        self.streaming_timeout = 2
-        self.conflate_ms = 100
+        self.mock_stream = mock.Mock(stream_id=12345678)
         self.strategy = strategy.BaseStrategy(
-            market_filter=self.mock_market_filter,
-            market_data_filter=self.mock_market_data_filter,
-            sports_data_filter=["cricketSubscription"],
-            streaming_timeout=self.streaming_timeout,
-            conflate_ms=self.conflate_ms,
-            stream_class=strategy.MarketStream,
+            streams=[self.mock_stream],
             name="test",
             context={"trigger": 0.123},
             max_selection_exposure=1,
@@ -97,12 +89,7 @@ class BaseStrategyTest(unittest.TestCase):
         )
 
     def test_init(self):
-        self.assertEqual(self.strategy.market_filter, self.mock_market_filter)
-        self.assertEqual(self.strategy.market_data_filter, self.mock_market_data_filter)
-        self.assertEqual(self.strategy.sports_data_filter, ["cricketSubscription"])
-        self.assertEqual(self.strategy.streaming_timeout, self.streaming_timeout)
-        self.assertEqual(self.strategy.conflate_ms, self.conflate_ms)
-        self.assertEqual(self.strategy.stream_class, strategy.MarketStream)
+        self.assertEqual(self.strategy.streams, [self.mock_stream])
         self.assertEqual(self.strategy._name, "test")
         self.assertEqual(self.strategy.context, {"trigger": 0.123})
         self.assertEqual(self.strategy.max_selection_exposure, 1)
@@ -110,25 +97,32 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertIsNone(self.strategy.clients)
         self.assertEqual(self.strategy.max_trade_count, 5)
         self.assertEqual(self.strategy.max_live_trade_count, 3)
-        self.assertEqual(self.strategy.streams, [])
         self.assertEqual(self.strategy.historic_stream_ids, set())
         self.assertEqual(self.strategy.name_hash, "a94a8fe5ccb19")
         self.assertFalse(self.strategy.multi_order_trades)
         self.assertEqual(strategy.STRATEGY_NAME_HASH_LENGTH, 13)
-        self.assertEqual(
-            strategy.DEFAULT_MARKET_DATA_FILTER,
-            {
-                "fields": [
-                    "EX_ALL_OFFERS",
-                    "EX_TRADED",
-                    "EX_TRADED_VOL",
-                    "EX_LTP",
-                    "EX_MARKET_DEF",
-                    "SP_TRADED",
-                    "SP_PROJECTED",
-                ]
-            },
-        )
+
+    def test_init_error(self):
+        with self.assertRaises(ValueError):
+            strategy.BaseStrategy(stream=1, streams=[1])
+
+    def test_replace_stream(self):
+        self.strategy.streams = [1, 2, 3]
+        self.strategy.replace_stream(1, 1)
+        self.assertEqual(self.strategy.streams, [1, 2, 3])
+        self.strategy.replace_stream(1, 10)
+        self.assertEqual(self.strategy.streams, [10, 2, 3])
+
+    def test_subscribe_to_stream(self):
+        self.strategy.streams = [1, 2]
+        self.strategy.subscribe_to_stream(3)
+        self.assertEqual(self.strategy.streams, [1, 2, 3])
+
+    def test_unsubscribe_from_stream(self):
+        self.strategy.streams = [1, 2, 3]
+        self.strategy.unsubscribe_from_stream(1)
+        self.strategy.unsubscribe_from_stream(1)
+        self.assertEqual(self.strategy.streams, [2, 3])
 
     def test_add(self):
         mock_flumine = mock.Mock()
@@ -291,13 +285,9 @@ class BaseStrategyTest(unittest.TestCase):
         self.assertEqual(
             self.strategy.info,
             {
-                "conflate_ms": self.conflate_ms,
-                "market_data_filter": self.mock_market_data_filter,
-                "market_filter": self.mock_market_filter,
                 "strategy_name": "test",
                 "name_hash": "a94a8fe5ccb19",
-                "stream_ids": [],
-                "streaming_timeout": self.streaming_timeout,
+                "stream_ids": [12345678],
                 "context": {"trigger": 0.123},
                 "max_live_trade_count": 3,
                 "max_order_exposure": 2,

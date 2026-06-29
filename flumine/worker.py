@@ -117,46 +117,71 @@ def keep_alive(context: dict, flumine) -> None:
 
 
 def poll_market_catalogue(context: dict, flumine) -> None:
-    # get betfair client
-    client = flumine.clients.get_default(VenueType.BETFAIR)
-    markets = [
-        m.market_id
-        for m in list(flumine.markets.markets.values())
-        if m.update_market_catalogue and not m.closed
-    ]
-    for market_ids in chunks(markets, 25):
-        try:
-            market_catalogues = client.betting_client.betting.list_market_catalogue(
-                filter=filters.market_filter(market_ids=market_ids),
-                max_results=25,
-                market_projection=[
-                    "COMPETITION",
-                    "EVENT",
-                    "EVENT_TYPE",
-                    "RUNNER_DESCRIPTION",
-                    "RUNNER_METADATA",
-                    "MARKET_START_TIME",
-                    "MARKET_DESCRIPTION",
-                ],
-            )
-        except exceptions.StatusCodeError as e:
-            # log as warning to prevent duplicate logs on betfair meltdown
-            logger.warning(
-                "poll_market_catalogue StatusCodeError",
-                extra={"trading_function": "list_market_catalogue", "response": e},
-                exc_info=True,
-            )
-            continue
-        except BetfairError as e:
-            logger.error(
-                "poll_market_catalogue error",
-                exc_info=True,
-                extra={"trading_function": "list_market_catalogue", "response": e},
-            )
-            continue
+    # loop venues / markets
+    for venue, markets in flumine.markets.venue_markets.items():
+        client = flumine.clients.get_default(venue)
+        markets = [
+            m.market_id
+            for m in list(markets.values())
+            if m.update_market_catalogue and not m.closed
+        ]
+        for market_ids in chunks(markets, 25):
+            market_catalogues = None
+            if venue == VenueType.BETDAQ:
+                try:
+                    market_catalogues = client.betting_client.marketdata.get_markets(
+                        market_ids
+                    )
+                except (BetdaqError, Exception) as e:
+                    logger.error(
+                        "poll_market_catalogue error",
+                        exc_info=True,
+                        extra={"trading_function": "get_markets", "response": e},
+                    )
+                    continue
+            elif venue == VenueType.BETFAIR:
+                try:
+                    market_catalogues = (
+                        client.betting_client.betting.list_market_catalogue(
+                            filter=filters.market_filter(market_ids=market_ids),
+                            max_results=25,
+                            market_projection=[
+                                "COMPETITION",
+                                "EVENT",
+                                "EVENT_TYPE",
+                                "RUNNER_DESCRIPTION",
+                                "RUNNER_METADATA",
+                                "MARKET_START_TIME",
+                                "MARKET_DESCRIPTION",
+                            ],
+                        )
+                    )
+                except exceptions.StatusCodeError as e:
+                    # log as warning to prevent duplicate logs on betfair meltdown
+                    logger.warning(
+                        "poll_market_catalogue StatusCodeError",
+                        extra={
+                            "trading_function": "list_market_catalogue",
+                            "response": e,
+                        },
+                        exc_info=True,
+                    )
+                    continue
+                except BetfairError as e:
+                    logger.error(
+                        "poll_market_catalogue error",
+                        exc_info=True,
+                        extra={
+                            "trading_function": "list_market_catalogue",
+                            "response": e,
+                        },
+                    )
+                    continue
 
-        if market_catalogues:
-            flumine.handler_queue.put(events.MarketCatalogueEvent(market_catalogues))
+            if market_catalogues:
+                flumine.handler_queue.put(
+                    events.MarketCatalogueEvent(market_catalogues, venue=venue)
+                )
 
 
 def poll_account_balance(context: dict, flumine) -> None:

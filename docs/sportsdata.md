@@ -7,33 +7,31 @@ Flumine is able to connect to the sports-data-stream provided by Betfair for liv
 
 ## Cricket Subscription
 
-A cricket subscription can be added via the `sports_data_filter` on a strategy
+A cricket subscription can be added via the `SportsDataStream`
 
 ```python 
-strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(
-        event_type_ids=["4"], market_types=["MATCH_ODDS"]
-    ),
-    sports_data_filter=["cricketSubscription"],
+sports_data_stream = SportsDataStream(
+    framework,
+    sports_data_filter="cricketSubscription",
 )
+framework.add_stream(sports_data_stream)
 ```
 
 ## Race Subscription
 
-A race subscription can be added via the `sports_data_filter` on a strategy
+A race subscription can be added via the `SportsDataStream`
 
 ```python 
-strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(
-        event_type_ids=["7"], market_types=["WIN"]
-    ),
-    sports_data_filter=["raceSubscription"],
+sports_data_stream = SportsDataStream(
+    framework,
+    sports_data_filter="raceSubscription",
 )
+framework.add_stream(sports_data_stream)
 ```
 
 ## Strategy
 
-Any sports data stream updates will be available in the strategy via the `process_sports_data` function
+Once subscribed any sports data stream updates will be available in the strategy via the `process_sports_data` function
 
 ```python
 class ExampleStrategy(BaseStrategy):
@@ -58,11 +56,10 @@ And using the correct stream class:
 
 #### Cricket Recorder
 ```python
-from flumine.streams.datastream import CricketDataStream
+from flumine.streams.betfairdatastream import BetfairCricketDataStream
 
 strategy= MarketRecorder(
-    market_filter=None,
-    stream_class=CricketDataStream,
+    stream=BetfairCricketDataStream(framework),
     context={
         "local_dir": "/tmp",
         "force_update": False,
@@ -74,11 +71,10 @@ strategy= MarketRecorder(
 
 #### Race Recorder
 ```python
-from flumine.streams.datastream import RaceDataStream
+from flumine.streams.betfairdatastream import BetfairRaceDataStream
 
 strategy= MarketRecorder(
-    market_filter=None,
-    stream_class=RaceDataStream,
+    stream=BetfairRaceDataStream(framework),
     context={
         "local_dir": "/tmp",
         "force_update": False,

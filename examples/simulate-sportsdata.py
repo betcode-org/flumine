@@ -7,6 +7,7 @@ from flumine.strategy.strategy import BaseStrategy
 from flumine.markets.middleware import SimulatedSportsDataMiddleware
 from flumine.order.trade import Trade
 from flumine.order.ordertype import LimitOrder
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 
 logger = logging.getLogger()
 
@@ -73,8 +74,14 @@ framework.add_market_middleware(
 
 markets = ["tests/resources/1.200806927"]
 
+streams = []
+for market in markets:
+    stream = BetfairHistoricalStream(file_path=market)
+    framework.streams.add_stream(stream)
+    streams.append(stream)
+
 strategy = ExampleStrategy(
-    market_filter={"markets": markets, "listener_kwargs": {"inplay": True}},
+    streams=streams,
     context={"wickets": 0},
 )
 framework.add_strategy(strategy)

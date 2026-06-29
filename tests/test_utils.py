@@ -4,6 +4,7 @@ import datetime
 from unittest import mock
 
 from flumine import utils, FlumineException
+from flumine.clients import VenueType
 
 
 class UtilsTest(unittest.TestCase):
@@ -115,6 +116,30 @@ class UtilsTest(unittest.TestCase):
             utils.get_size([{"price": 12, "size": 12}, {"price": 34, "size": 34}], 3)
         )
         self.assertIsNone(utils.get_size([], 3))
+
+    def test_get_price_dict(self):
+        self.assertEqual(
+            utils.get_price_dict([[0, 12, 120], [1, 34, 120]], 0),
+            12,
+        )
+        self.assertEqual(
+            utils.get_price_dict([[0, 12, 120], [1, 34, 120]], 1),
+            34,
+        )
+        self.assertIsNone(utils.get_price_dict([[0, 12, 120], [1, 34, 120]], 3))
+        self.assertIsNone(utils.get_price_dict([], 3))
+
+    def test_get_size_dict(self):
+        self.assertEqual(
+            utils.get_size_dict([[0, 12, 12], [1, 34, 34]], 0),
+            12,
+        )
+        self.assertEqual(
+            utils.get_size_dict([[0, 12, 12], [1, 34, 34]], 1),
+            34,
+        )
+        self.assertIsNone(utils.get_size_dict([[0, 12, 12], [1, 34, 34]], 3))
+        self.assertIsNone(utils.get_size_dict([], 3))
 
     def test_get_sp(self):
         mock_runner = mock.Mock()
@@ -381,12 +406,34 @@ class UtilsTest(unittest.TestCase):
         mock_market_book.runners = [mock_runner]
         self.assertEqual(utils.get_runner_book(mock_market_book, 123), mock_runner)
 
+    def test_get_runner_dict(self):
+        mock_runner = {"runner_id": 123}
+        mock_market_book = {"runners": [mock_runner]}
+        self.assertEqual(utils.get_runner_dict(mock_market_book, 123), mock_runner)
+
     @mock.patch("flumine.utils.get_price", return_value=1.01)
-    def test_get_market_notes(self, mock_get_price):
+    def test_get_market_notes_betfair(self, mock_get_price):
         mock_market_book = mock.Mock()
         mock_runner = mock.Mock(selection_id=123, handicap=0, last_price_traded=5)
         mock_market_book.runners = [mock_runner]
-        mock_market = mock.Mock(market_book=mock_market_book)
+        mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETFAIR)
+        self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
+
+    @mock.patch("flumine.utils.get_price_dict", return_value=1.01)
+    def test_get_market_notes_betdaq(self, mock_get_price_dict):
+        mock_market_book = {
+            "runners": [
+                {
+                    "runner_id": 123,
+                    "runner_book": {
+                        "batb": [[0, 1.01, 12.34]],
+                        "batl": [[0, 1.02, 22.34]],
+                    },
+                    "runner_last_matched_price": 5,
+                }
+            ]
+        }
+        mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETDAQ)
         self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
 
     def test__get_event_ids(self):

@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+3.0.0 (2026-06-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Simplify multi venue support
+- Betdaq Market added
+- Please see version_migrations.md in docs for breaking changes
+
+**Libraries**
+
+- Drop python 3.9 support (EOL)
+- black upgraded to 26.5.1
+
 2.13.11 (2026-05-05)
 +++++++++++++++++++
 

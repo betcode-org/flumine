@@ -163,18 +163,20 @@ def process_betdaq_current_orders(
             )
             continue
         # process order status
-        process_betdaq_current_order(order, current_order)
+        process_betdaq_current_order(order, current_order, log_control)
 
 
-def process_betdaq_current_order(order: BaseOrder, current_order) -> None:
+def process_betdaq_current_order(order: BaseOrder, current_order, log_control) -> None:
     old_sequence_number = order.current_order.get("sequence_number")
     # update
     order.update_current_order(current_order)
 
     # pick up NoReceipt orders
-    if order.status == OrderStatus.PENDING and order.bet_id:
+    if order.async_ and order.bet_id is None and current_order["order_id"]:
         order.responses.placed(dt=True)
+        order.bet_id = current_order["order_id"]
         order.executable()
+        log_control(OrderEvent(order, venue=order.VENUE))
 
     # update status
     if (

@@ -5,13 +5,16 @@ from tenacity import retry
 
 from .basestream import BaseStream
 from ..events.events import MarketBookEvent
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
 RETRY_WAIT = BaseStream.RETRY_WAIT
 
 
-class MarketStream(BaseStream):
+class BetfairMarketStream(BaseStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(

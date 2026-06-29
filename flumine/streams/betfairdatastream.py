@@ -5,6 +5,7 @@ from betfairlightweight import StreamListener, filters, BetfairError
 from betfairlightweight.streaming.stream import BaseStream as BFBaseStream
 
 from .basestream import BaseStream
+from ..clients import VenueType
 from ..events.events import RawDataEvent
 from .. import config
 
@@ -32,7 +33,7 @@ class FlumineListener(StreamListener):
 
 class FlumineStream(BFBaseStream):
     def on_process(self, caches: list, publish_time: Optional[int] = None) -> None:
-        output = RawDataEvent(caches)
+        output = RawDataEvent(caches, venue=VenueType.BETFAIR)
         self.output_queue.put(output)
 
     def __str__(self):
@@ -139,12 +140,9 @@ class FlumineCricketStream(FlumineStream):
         return False
 
 
-class DataStream(BaseStream):
+class BetfairDataStream(BaseStream):
     LISTENER = FlumineListener
-
-    def __init__(self, *args, **kwargs):
-        BaseStream.__init__(self, *args, **kwargs)
-        self._listener = self.LISTENER(output_queue=self.flumine.handler_queue)
+    VENUE = VenueType.BETFAIR
 
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
@@ -158,6 +156,7 @@ class DataStream(BaseStream):
                 "conflate_ms": self.conflate_ms,
             },
         )
+        self._listener.output_queue = self.flumine.handler_queue
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
@@ -179,7 +178,9 @@ class DataStream(BaseStream):
         logger.info("Stopped DataStream %s", self.stream_id)
 
 
-class OrderDataStream(DataStream):
+class BetfairOrderDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -220,7 +221,9 @@ class OrderDataStream(DataStream):
         logger.info("Stopped OrderDataStream %s", self.stream_id)
 
 
-class RaceDataStream(DataStream):
+class BetfairRaceDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -247,7 +250,9 @@ class RaceDataStream(DataStream):
         logger.info("Stopped RaceDataStream %s", self.stream_id)
 
 
-class CricketDataStream(DataStream):
+class BetfairCricketDataStream(BetfairDataStream):
+    VENUE = VenueType.BETFAIR
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(

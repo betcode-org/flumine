@@ -4,8 +4,9 @@ import threading
 from unittest import mock
 from collections import defaultdict
 
+from flumine.clients import VenueType
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market
+from flumine.markets.market import Market, BetdaqMarket
 from flumine import config
 
 
@@ -15,14 +16,18 @@ class MarketsTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.venue_markets, {})
         self.assertEqual(self.markets.events, {})
         self.assertIsInstance(self.markets.live_orders_event, threading.Event)
         self.assertFalse(self.markets.live_orders_event.is_set())
 
     def test_add_market(self):
-        mock_market = mock.Mock(event_id="1234")
+        mock_market = mock.Mock(event_id="1234", VENUE=VenueType.BETFAIR)
         self.markets.add_market("1.1", mock_market)
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(
+            self.markets.venue_markets, {VenueType.BETFAIR: {"1.1": mock_market}}
+        )
         self.assertEqual(self.markets.events, {"1234": [mock_market]})
 
     def test_add_market_no_event_id(self):
@@ -48,25 +53,35 @@ class MarketsTest(unittest.TestCase):
     def test_remove_market(self):
         mock_market = mock.Mock(event_id=1234)
         self.markets._markets = {"1.1": mock_market}
+        self.markets.venue_markets = {mock_market.VENUE: {"1.1": mock_market}}
         self.markets.events = {1234: [mock_market]}
         self.markets.remove_market("1.1")
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.venue_markets, {mock_market.VENUE: {}})
         self.assertEqual(self.markets.events, {1234: []})
 
     def test_remove_market_no_event(self):
         mock_market = mock.Mock(event_id=1234)
         self.markets._markets = {"1.1": mock_market}
+        self.markets.venue_markets = {mock_market.VENUE: {"1.1": mock_market}}
         self.markets.remove_market("1.1")
         self.assertEqual(self.markets._markets, {})
+        self.assertEqual(self.markets.venue_markets, {mock_market.VENUE: {}})
         self.assertEqual(self.markets.events, {})
 
     def test_remove_market_err(self):
-        mock_market = mock.Mock(event_id=1234)
-        mock_market_two = mock.Mock(event_id=1234)
+        mock_market = mock.Mock(event_id=1234, VENUE=1)
+        mock_market_two = mock.Mock(event_id=1234, VENUE=1)
         self.markets._markets = {"1.1": mock_market, "2.2": mock_market_two}
+        self.markets.venue_markets = {
+            mock_market.VENUE: {"1.1": mock_market, "2.2": mock_market_two}
+        }
         self.markets.events = {1234: [mock_market]}
         self.markets.remove_market("2.2")
         self.assertEqual(self.markets._markets, {"1.1": mock_market})
+        self.assertEqual(
+            self.markets.venue_markets, {mock_market.VENUE: {"1.1": mock_market}}
+        )
         self.assertEqual(self.markets.events, {1234: [mock_market]})
 
     def test_get_order(self):
@@ -131,6 +146,7 @@ class MarketTest(unittest.TestCase):
         )
 
     def test_init(self):
+        self.assertEqual(self.market.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.market.flumine, self.mock_flumine)
         self.assertEqual(self.market.market_id, "1.234")
         self.assertFalse(self.market.closed)
@@ -250,6 +266,17 @@ class MarketTest(unittest.TestCase):
         mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
+    def test_publish_time(self):
+        self.assertEqual(self.market.publish_time, self.market.market_book.publish_time)
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, self.market.market_book.bet_delay)
+
+    def test_market_name(self):
+        self.assertEqual(
+            self.market.market_name, self.market.market_catalogue.market_name
+        )
+
     def test_event(self):
         self.market.market_catalogue.event.id = 12
         self.market.market_catalogue.event_type.id = "7"
@@ -340,6 +367,11 @@ class MarketTest(unittest.TestCase):
         self.market.market_book = mock_market_book
         self.assertEqual(
             self.market.event_id, mock_market_book.market_definition.event_id
+        )
+
+    def test_competition_id(self):
+        self.assertEqual(
+            self.market.competition_id, self.market.market_catalogue.competition.id
         )
 
     def test_market_type_mc(self):
@@ -454,12 +486,12 @@ class MarketTest(unittest.TestCase):
             self.market.country_code, mock_market_book.market_definition.country_code
         )
 
-    def test_venue_mc(self):
+    def test_event_venue_mc(self):
         mock_market_catalogue = mock.Mock()
         self.market.market_catalogue = mock_market_catalogue
         self.assertEqual(self.market.venue, mock_market_catalogue.event.venue)
 
-    def test_venue_mb(self):
+    def test_event_venue_mb(self):
         self.market.market_catalogue = None
         mock_market_book = mock.Mock()
         self.market.market_book = mock_market_book
@@ -521,6 +553,7 @@ class MarketTest(unittest.TestCase):
         self.assertEqual(
             self.market.info,
             {
+                "market_venue": self.market.VENUE.name,
                 "market_id": self.market.market_id,
                 "event_id": self.market.event_id,
                 "event_type_id": self.market.event_type_id,
@@ -535,3 +568,76 @@ class MarketTest(unittest.TestCase):
                 "closed": self.market.closed,
             },
         )
+
+
+class BetdaqMarketTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.mock_market_book = {
+            "publish_time": 123,
+            "status": "ACTIVE",
+            "market_type": "win",
+            "market_start_time": "2026-06-03 13:30:00.000000",
+            "in_play": False,
+            "in_running_delay": 1,
+            "market_name": "Win Market",
+        }
+        self.mock_market_catalogue = {"event_id": 12345}
+        self.market = BetdaqMarket(
+            self.mock_flumine,
+            "1.234",
+            self.mock_market_book,
+            self.mock_market_catalogue,
+        )
+
+    def test_call(self):
+        mock_market_book = {}
+        self.market(mock_market_book)
+        self.assertEqual(self.market.market_book, mock_market_book)
+
+    def test_publish_time(self):
+        self.assertEqual(
+            self.market.publish_time, self.market.market_book["publish_time"]
+        )
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, 0.0)
+        self.market.market_book["in_play"] = True
+        self.assertEqual(self.market.bet_delay, 1.0)
+
+    def test_market_name(self):
+        self.assertEqual(self.market.market_name, "Win Market")
+
+    def test_event_type_id(self):
+        self.assertIsNone(self.market.event_type_id)
+
+    def test_event_id(self):
+        self.assertEqual(self.market.event_id, 12345)
+
+    def test_competition_id(self):
+        self.assertIsNone(self.market.competition_id)
+
+    def test_market_type(self):
+        self.assertEqual(self.market.market_type, "WIN")
+
+    def test_market_start_datetime(self):
+        dt = datetime.datetime.strptime(
+            self.market.market_book["market_start_time"],
+            "%Y-%m-%d %H:%M:%S.%f",
+        ).replace(tzinfo=datetime.timezone.utc)
+        self.assertEqual(self.market.market_start_datetime, dt)
+
+    def test_event_name(self):
+        self.assertIsNone(self.market.event_name)
+
+    def test_country_code(self):
+        self.assertIsNone(self.market.country_code)
+
+    def test_event_venue(self):
+        self.assertIsNone(self.market.event_venue)
+
+    def test_race_type(self):
+        self.assertIsNone(self.market.race_type)
+
+    def test_status(self):
+        self.assertEqual(self.market.status, "ACTIVE")

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class Markets:
     def __init__(self):
         self._markets = {}  # marketId: <Market>
+        self.venue_markets = defaultdict(dict)  # venueType: marketId: <Market>
         self.events = defaultdict(list)  # eventId: [<Market>, ]
         self.live_orders_event = threading.Event()
 
@@ -20,6 +21,7 @@ class Markets:
             self._markets[market_id].open_market()
         else:
             self._markets[market_id] = market
+            self.venue_markets[market.VENUE][market_id] = market
             if market.event_id:
                 self.events[market.event_id].append(market)
 
@@ -31,6 +33,7 @@ class Markets:
     def remove_market(self, market_id: str) -> None:
         market = self._markets[market_id]
         del self._markets[market_id]
+        del self.venue_markets[market.VENUE][market_id]
         event_id = market.event_id
         if event_id in self.events:
             if market in self.events[event_id]:

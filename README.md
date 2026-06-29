@@ -28,17 +28,18 @@ flumine is an open-source, event-based trading framework for sports betting, des
 ## venues
 
 - Betfair
+- Betdaq
 - Betconnect (account/execution functionality)
-- Betdaq (account/execution functionality)
-- Smarkets (future)
-- Matchbook (future)
-- Polymarket (future)
-- Kalshi (future)
+- Smarkets (roadmap)
+- Matchbook (roadmap)
+- Polymarket (roadmap)
+- Kalshi (roadmap)
+- BetDEX (roadmap)
 
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
 
-Tested on Python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14.
+Tested on Python 3.10, 3.11, 3.12, 3.13 and 3.14.
 
 ## installation
 
@@ -46,14 +47,16 @@ Tested on Python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14.
 $ pip install flumine
 ```
 
-flumine requires Python 3.9+
+flumine requires Python 3.10+
 
 ## setup
 
 Get started...
 
 ```python
-from flumine import Flumine, BaseStrategy
+import betfairlightweight
+from flumine import Flumine, BaseStrategy, clients
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 from betfairlightweight.filters import streaming_market_filter
 
 # Define your strategy here
@@ -66,16 +69,23 @@ class ExampleStrategy(BaseStrategy):
         # Your strategy logic
         pass
 
-# Initialize the framework
-framework = Flumine()
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
-# Add your strategy to the framework
+# Initialize the framework
+framework = Flumine(client)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
     ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
         )
     )
 )
@@ -87,10 +97,12 @@ framework.run()
 Example strategy with logic and order execution:
 
 ```python
-from flumine import BaseStrategy
+import betfairlightweight
+from flumine import Flumine, BaseStrategy, clients
 from flumine.order.trade import Trade
 from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 from betfairlightweight.filters import streaming_market_filter
 from betfairlightweight.resources import MarketBook
 
@@ -131,16 +143,23 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
-# Initialize the framework
-framework = Flumine()
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
 
-# Add your strategy to the framework
+# Initialize the framework
+framework = Flumine(client)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
     ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
         )
     )
 )

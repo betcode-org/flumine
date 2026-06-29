@@ -7,6 +7,7 @@ from betfairlightweight.resources.bettingresources import MarketBook, MarketCata
 from .. import config
 from .blotter import Blotter
 from ..execution.transaction import Transaction
+from ..clients import VenueType
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,8 @@ class Market:
     allows order placement through the Transaction
     class.
     """
+
+    VENUE = VenueType.BETFAIR
 
     def __init__(
         self,
@@ -139,6 +142,19 @@ class Market:
             return t.replace_order(order, new_price, market_version, force)
 
     @property
+    def publish_time(self) -> datetime.datetime:
+        return self.market_book.publish_time
+
+    @property
+    def bet_delay(self) -> float:
+        return self.market_book.bet_delay
+
+    @property
+    def market_name(self):
+        if self.market_catalogue:
+            return self.market_catalogue.market_name
+
+    @property
     def event(self) -> dict:
         event = defaultdict(list)
         market_start_datetime = self.market_start_datetime
@@ -153,20 +169,25 @@ class Market:
 
     @property
     def event_type_id(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event_type:
             return self.market_catalogue.event_type.id
         elif self.market_book:
             return self.market_book.market_definition.event_type_id
 
     @property
     def event_id(self) -> str:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.id
         elif self.market_book:
             if self.market_book.market_definition:
                 return self.market_book.market_definition.event_id
             else:
                 return ""
+
+    @property
+    def competition_id(self):
+        if self.market_catalogue and self.market_catalogue.competition:
+            return self.market_catalogue.competition.id
 
     @property
     def market_type(self) -> str:
@@ -205,21 +226,21 @@ class Market:
 
     @property
     def event_name(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.name
         elif self.market_book:
             return self.market_book.market_definition.event_name
 
     @property
     def country_code(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.country_code
         elif self.market_book:
             return self.market_book.market_definition.country_code
 
     @property
     def venue(self) -> Optional[str]:
-        if self.market_catalogue:
+        if self.market_catalogue and self.market_catalogue.event:
             return self.market_catalogue.event.venue
         elif self.market_book:
             return self.market_book.market_definition.venue
@@ -256,6 +277,7 @@ class Market:
     @property
     def info(self) -> dict:
         return {
+            "market_venue": self.VENUE.name,
             "market_id": self.market_id,
             "event_id": self.event_id,
             "event_type_id": self.event_type_id,
@@ -269,3 +291,85 @@ class Market:
             "market_cleared": self.market_cleared,
             "closed": self.closed,
         }
+
+
+class BetdaqMarket(Market):
+    VENUE = VenueType.BETDAQ
+
+    def __call__(self, market_book: dict):
+        self.market_book = market_book
+
+    @property
+    def publish_time(self) -> datetime.datetime:
+        return self.market_book["publish_time"]
+
+    @property
+    def bet_delay(self) -> float:
+        return (
+            self.market_book["in_running_delay"] if self.market_book["in_play"] else 0.0
+        )
+
+    @property
+    def market_name(self):
+        return self.market_book["market_name"]
+
+    @property
+    def event_type_id(self) -> str:
+        return None
+
+    @property
+    def event_id(self) -> str:
+        if self.market_catalogue:
+            return self.market_catalogue["event_id"]
+
+    @property
+    def competition_id(self):
+        return None
+
+    @property
+    def market_type(self) -> str:
+        market_type = self.market_book["market_type"]
+        if market_type:
+            return market_type.upper()
+
+    @property
+    def market_start_datetime(self):
+        if self.market_book and self.market_book["market_start_time"]:
+            dt = datetime.datetime.strptime(
+                self.market_book["market_start_time"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            ).replace(tzinfo=datetime.timezone.utc)
+            return dt
+        elif self.market_catalogue and self.market_catalogue["market_start_time"]:
+            dt = datetime.datetime.strptime(
+                self.market_catalogue["market_start_time"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            ).replace(tzinfo=datetime.timezone.utc)
+            return dt
+        else:
+            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
+
+    @property
+    def event_name(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def country_code(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def event_venue(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def venue(self) -> Optional[str]:
+        return None  # todo betdaq catalogue?
+
+    @property
+    def race_type(self) -> Optional[str]:
+        return None
+
+    @property
+    def status(self) -> Optional[str]:
+        if self.market_book:
+            return self.market_book["status"] or "SETTLED"

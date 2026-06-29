@@ -75,7 +75,7 @@ class Transaction:
             return False
         # place
         order.place(
-            self.market.market_book.publish_time,
+            self.market.publish_time,
             market_version,
             self._async_place_orders,
         )
@@ -263,7 +263,7 @@ class Transaction:
                         market_id=self.market.market_id,
                         orders=chunked_orders,
                         package_type=package_type,
-                        bet_delay=self.market.market_book.bet_delay,
+                        bet_delay=self.market.bet_delay,
                         market_version=market_version,
                         customer_strategy_ref=self.customer_strategy_ref,
                         async_=async_,

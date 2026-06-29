@@ -11,6 +11,7 @@ Flumine is capable of using multiple clients, these can be of the same `VenueTyp
 - SMARKETS: `Smarkets`
 - MATCHBOOK: `Matchbook`
 - POLYMARKET: `Polymarket`
+- BETDEX: `BetDEX`
 - KALSHI: `Kalshi`
 
 ## Strategy use

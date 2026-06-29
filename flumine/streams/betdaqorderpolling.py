@@ -15,6 +15,8 @@ SNAP_DELTA = 2
 
 
 class BetdaqOrderPolling(BaseStream):
+    VENUE = VenueType.BETDAQ
+
     @retry(wait=RETRY_WAIT)
     def run(self) -> None:
         logger.info(
@@ -66,7 +68,7 @@ class BetdaqOrderPolling(BaseStream):
     ) -> int:
         if current_orders or self.flumine.markets.live_orders:
             self.flumine.handler_queue.put(
-                CurrentOrdersEvent(current_orders, venue=VenueType.BETDAQ)
+                CurrentOrdersEvent(current_orders, venue=self.VENUE)
             )
             # update SequenceNumber
             for order in current_orders:

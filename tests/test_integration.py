@@ -5,6 +5,7 @@ from flumine.order.trade import Trade
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import LimitOrder, MarketOnCloseOrder, LimitOnCloseOrder
 from flumine.utils import get_price, get_nearest_price
+from flumine.streams.betfairhistoricalstream import BetfairHistoricalStream
 from examples.middleware.marketcatalogue import MarketCatalogueMiddleware
 
 
@@ -28,27 +29,27 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
+
+        stream_one = BetfairHistoricalStream(
+            file_path="tests/resources/1.197931750",
+            event_processing=True,
+        )
+        framework.add_stream(stream_one)
+        stream_two = BetfairHistoricalStream(
+            file_path="tests/resources/1.197931751",
+            event_processing=True,
+        )
+        framework.add_stream(stream_two)
+
         framework.add_market_middleware(
             MarketCatalogueMiddleware("tests/resources/catalogues")
         )
         # Strategies overlap on one market but have different market filters overall.
         # This is deliberate so that streams do not get shared.
-        strategy_1 = UseCatalogues(
-            name="Single market",
-            market_filter={
-                "markets": ["tests/resources/1.197931750"],
-                "event_processing": True,
-            },
-        )
+        strategy_1 = UseCatalogues(name="Single market", streams=[stream_one])
         strategy_2 = UseCatalogues(
             name="Double market",
-            market_filter={
-                "markets": [
-                    "tests/resources/1.197931750",
-                    "tests/resources/1.197931751",
-                ],
-                "event_processing": True,
-            },
+            streams=[stream_one, stream_two],
         )
         framework.add_strategy(strategy_1)
         framework.add_strategy(strategy_2)
@@ -68,11 +69,15 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        strategy = Ex(
-            market_filter={"markets": ["tests/resources/BASIC-1.132153978.gz"]}
+        stream = BetfairHistoricalStream(
+            file_path="tests/resources/BASIC-1.132153978",
         )
+        framework.add_stream(stream)
+        strategy = Ex(streams=[stream])
         framework.add_strategy(strategy)
         framework.run()
+
+        self.assertEqual(len(framework.markets), 1)
 
     def test_simulation_basic(self):
         class Ex(BaseStrategy):
@@ -84,9 +89,15 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
-        strategy = Ex(market_filter={"markets": ["tests/resources/BASIC-1.132153978"]})
+        stream = BetfairHistoricalStream(
+            file_path="tests/resources/BASIC-1.132153978",
+        )
+        framework.add_stream(stream)
+        strategy = Ex(streams=[stream])
         framework.add_strategy(strategy)
         framework.run()
+
+        self.assertEqual(len(framework.markets), 1)
 
     def test_simulation_pro(self):
         class LimitOrders(BaseStrategy):
@@ -225,34 +236,38 @@ class IntegrationTest(unittest.TestCase):
 
         client = clients.SimulatedClient()
         framework = FlumineSimulation(client=client)
+        stream = BetfairHistoricalStream(
+            file_path="tests/resources/PRO-1.170258213",
+        )
+        framework.add_stream(stream)
         limit_strategy = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=1,
         )
         framework.add_strategy(limit_strategy)
         limit_replace_strategy = LimitReplaceOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=1,
         )
         framework.add_strategy(limit_replace_strategy)
         limit_inplay_strategy = LimitOrdersInplay(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_inplay_strategy)
         limit_on_close_strategy = LimitOnCloseOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
         )
         framework.add_strategy(limit_on_close_strategy)
         market_strategy = MarketOnCloseOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
         )
@@ -331,8 +346,12 @@ class IntegrationTest(unittest.TestCase):
         framework = FlumineSimulation()
         framework.add_client(client_bpe_on)
         framework.add_client(client_bpe_off)
+        stream = BetfairHistoricalStream(
+            file_path="tests/resources/PRO-1.170258213",
+        )
+        framework.add_stream(stream)
         limit_strategy_bpe_on = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=100,
@@ -340,7 +359,7 @@ class IntegrationTest(unittest.TestCase):
         )
         framework.add_strategy(limit_strategy_bpe_on)
         limit_strategy_bpe_off = LimitOrders(
-            market_filter={"markets": ["tests/resources/PRO-1.170258213"]},
+            streams=[stream],
             max_order_exposure=1000,
             max_selection_exposure=105,
             max_trade_count=100,
@@ -403,15 +422,24 @@ class IntegrationTest(unittest.TestCase):
                         if order.elapsed_seconds and order.elapsed_seconds > 2:
                             market.cancel_order(order)
 
+        stream_one = BetfairHistoricalStream(
+            file_path="tests/resources/SELF-1.181223994",
+            event_processing=True,
+        )
+        framework.add_stream(stream_one)
+        stream_two = BetfairHistoricalStream(
+            file_path="tests/resources/SELF-1.181223995",
+            event_processing=True,
+        )
+        framework.add_stream(stream_two)
+        stream_three = BetfairHistoricalStream(
+            file_path="tests/resources/PRO-1.170258213",
+            event_processing=True,
+        )
+        framework.add_stream(stream_three)
+
         limit_inplay_strategy = LimitOrdersInplay(
-            market_filter={
-                "markets": [
-                    "tests/resources/SELF-1.181223994",
-                    "tests/resources/SELF-1.181223995",
-                    "tests/resources/PRO-1.170258213",
-                ],
-                "event_processing": True,
-            },
+            streams=[stream_one, stream_two, stream_three],
             max_order_exposure=1000,
             max_selection_exposure=105,
         )

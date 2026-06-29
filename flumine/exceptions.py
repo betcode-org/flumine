@@ -62,3 +62,12 @@ class ClientError(FlumineException):
 
     def __init__(self, message):
         super(ClientError, self).__init__(message)
+
+
+class StreamError(FlumineException):
+    """Exception raised if error
+    in streams`
+    """
+
+    def __init__(self, message):
+        super(StreamError, self).__init__(message)

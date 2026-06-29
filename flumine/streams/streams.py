@@ -1,18 +1,15 @@
 import time
 import logging
-from typing import Optional, Union, Iterator
+from typing import Union, Iterator
 
-from ..strategy.strategy import BaseStrategy
-from .marketstream import MarketStream
-from .sportsdatastream import SportsDataStream
-from .datastream import DataStream
-from .historicalstream import HistoricalStream
-from .orderstream import OrderStream
+from .betfairmarketstream import BetfairMarketStream
+from .betfairdatastream import BetfairDataStream
+from .betfairhistoricalstream import BetfairHistoricalStream
+from .betfairorderstream import BetfairOrderStream
 from .simulatedorderstream import SimulatedOrderStream
 from .betdaqorderpolling import BetdaqOrderPolling
 from ..clients import VenueType, BaseClient
-from ..utils import get_file_md
-from betfairlightweight.resources.streamingresources import MarketDefinition
+from ..exceptions import StreamError
 
 logger = logging.getLogger(__name__)
 
@@ -23,61 +20,6 @@ class Streams:
         self._streams = []
         self._stream_id = 0
 
-    def __call__(self, strategy: BaseStrategy) -> None:
-        if self.flumine.SIMULATED:
-            markets = strategy.market_filter.get("markets")
-            market_types = strategy.market_filter.get("market_types")
-            country_codes = strategy.market_filter.get("country_codes")
-            event_processing = strategy.market_filter.get("event_processing", False)
-            event_groups = strategy.market_filter.get("event_groups", {})
-            events = strategy.market_filter.get("events")
-            listener_kwargs = strategy.market_filter.get("listener_kwargs", {})
-            if markets and events:
-                logger.warning(
-                    "Markets and events found for strategy %s skipping as flumine can only handle one type",
-                    strategy,
-                )
-            elif markets is None and events is None:
-                logger.warning("No markets or events found for strategy %s", strategy)
-            elif markets:
-                # order markets by name as an attempt to process in chronological order
-                markets.sort()
-                for market in markets:
-                    market_definition = get_file_md(market)
-                    market_type = getattr(market_definition, "market_type", None)
-                    country_code = getattr(market_definition, "country_code", None)
-                    if market_types and market_type and market_type not in market_types:
-                        logger.warning(
-                            "Skipping market %s (%s) for strategy %s due to marketType filter",
-                            market,
-                            market_type,
-                            strategy,
-                        )
-                    elif (
-                        country_codes
-                        and country_code
-                        and country_code not in country_codes
-                    ):
-                        logger.warning(
-                            "Skipping market %s (%s) for strategy %s due to countryCode filter"
-                            % (market, country_code, strategy)
-                        )
-                    else:
-                        stream = self.add_historical_stream(
-                            strategy,
-                            market,
-                            market_definition,
-                            event_processing,
-                            event_groups,
-                            **listener_kwargs,
-                        )
-                        strategy.streams.append(stream)
-                        strategy.historic_stream_ids.add(stream.stream_id)
-            elif events:
-                raise NotImplementedError()
-        else:
-            self.add_stream(strategy)
-
     def add_client(self, client: BaseClient) -> None:
         if client.order_stream:
             if client.order_stream_cls:
@@ -86,14 +28,14 @@ class Streams:
                     client=client,
                     custom=True,
                 )
-                self.add_custom_stream(order_stream)
+                self.add_stream(order_stream)
             else:
                 if client.paper_trade:
                     self.add_simulated_order_stream(
                         client, streaming_timeout=client.order_streaming_timeout
                     )
                 elif client.VENUE == VenueType.BETFAIR:
-                    self.add_order_stream(
+                    self.add_betfair_order_stream(
                         client,
                         conflate_ms=client.order_stream_conflate_ms,
                         streaming_timeout=client.order_streaming_timeout,
@@ -105,159 +47,42 @@ class Streams:
 
     """ market data """
 
-    def add_stream(self, strategy: BaseStrategy) -> None:
-        # markets
-        if isinstance(strategy.market_filter, dict) or strategy.market_filter is None:
-            market_filters = [strategy.market_filter]
-        else:
-            market_filters = strategy.market_filter
-        for market_filter in market_filters:
-            for stream in self:  # check if market stream already exists
-                if (
-                    isinstance(stream, strategy.stream_class)
-                    and stream.market_filter == market_filter
-                    and stream.market_data_filter == strategy.market_data_filter
-                    and stream.streaming_timeout == strategy.streaming_timeout
-                    and stream.conflate_ms == strategy.conflate_ms
-                ):
-                    logger.info(
-                        "Using %s (%s) for strategy %s",
-                        strategy.stream_class,
-                        stream.stream_id,
-                        strategy,
-                    )
-                    strategy.streams.append(stream)
-                    break
-            else:  # nope? lets create a new one
-                stream_id = self._increment_stream_id()
-                logger.info(
-                    "Creating new %s (%s) for strategy %s",
-                    strategy.stream_class,
-                    stream_id,
-                    strategy,
-                )
-                stream = strategy.stream_class(
-                    flumine=self.flumine,
-                    stream_id=stream_id,
-                    market_filter=market_filter,
-                    market_data_filter=strategy.market_data_filter,
-                    streaming_timeout=strategy.streaming_timeout,
-                    conflate_ms=strategy.conflate_ms,
-                )
-                self._streams.append(stream)
-                strategy.streams.append(stream)
-        # sports data
-        for subscription in strategy.sports_data_filter:
-            for stream in self:  # check if sports data stream already exists
-                if (
-                    isinstance(stream, SportsDataStream)
-                    and stream.sports_data_filter == subscription
-                    and stream.streaming_timeout == strategy.streaming_timeout
-                ):
-                    logger.info(
-                        "Using %s (%s) for strategy %s",
-                        strategy.stream_class,
-                        stream.stream_id,
-                        strategy,
-                    )
-                    strategy.streams.append(stream)
-                    break
-            else:  # nope? lets create a new one
-                stream_id = self._increment_stream_id()
-                logger.info(
-                    "Creating new %s (%s) for strategy %s",
-                    strategy.stream_class,
-                    stream_id,
-                    strategy,
-                )
-                stream = SportsDataStream(
-                    flumine=self.flumine,
-                    stream_id=stream_id,
-                    sports_data_filter=subscription,
-                    streaming_timeout=strategy.streaming_timeout,
-                )
-                self._streams.append(stream)
-                strategy.streams.append(stream)
-
-    def add_historical_stream(
-        self,
-        strategy: BaseStrategy,
-        market: str,
-        market_definition: Optional[MarketDefinition],
-        event_processing: bool,
-        event_groups: dict,
-        **listener_kwargs,
-    ) -> HistoricalStream:
-        for stream in self:
-            # Get the expected event group of a stream considering its event id and group mapping
-            event_group = (
-                event_groups.get(stream.event_id, stream.event_id)
-                if event_processing
-                else None
-            )
-            if (
-                stream.market_filter == market
-                and stream.event_processing == event_processing
-                and stream.event_group == event_group
-                and stream.listener_kwargs == listener_kwargs
-            ):
-                return stream
-        else:
-            stream_id = self._increment_stream_id()
-            event_id = getattr(market_definition, "event_id", None)
-            if event_processing and event_id is None:
-                logger.warning("EventId not found for market %s" % market)
-            event_group = (
-                event_groups.get(event_id, event_id) if event_processing else None
-            )  # Event ID by default, None if event_processing is False
+    def add_stream(self, stream):
+        if stream in self._streams:
             logger.info(
-                "Creating new %s (%s) for strategy %s",
-                HistoricalStream.__name__,
-                stream_id,
-                strategy,
+                f"Stream {stream.__class__.__name__} already added, reusing",
                 extra={
-                    "strategy": strategy,
-                    "stream_id": stream_id,
-                    "market_filter": market,
-                    "event_group": event_group,
-                    "event_id": event_id,
-                    "event_processing": event_processing,
+                    "stream_id": stream.stream_id,
+                    "operation": stream.operation,
                 },
             )
-            stream = HistoricalStream(
-                flumine=self.flumine,
-                stream_id=stream_id,
-                market_filter=market,
-                market_data_filter=strategy.market_data_filter,
-                streaming_timeout=strategy.streaming_timeout,
-                conflate_ms=strategy.conflate_ms,
-                output_queue=False,
-                event_processing=event_processing,
-                event_group=event_group,
-                event_id=event_id,
-                **listener_kwargs,
-            )
-            self._streams.append(stream)
             return stream
+        stream.stream_id = self._increment_stream_id()
+        logger.info(
+            f"Adding {stream.__class__.__name__}",
+            extra={
+                "stream_id": stream.stream_id,
+                "operation": stream.operation,
+            },
+        )
+        self._streams.append(stream)
+        return stream
 
     """ order data """
 
-    def add_order_stream(
+    def add_betfair_order_stream(
         self,
         client: BaseClient,
         conflate_ms: int = None,
         streaming_timeout: float = 0.25,
-    ) -> OrderStream:
-        stream_id = self._increment_stream_id()
-        stream = OrderStream(
+    ) -> BetfairOrderStream:
+        stream = BetfairOrderStream(
             flumine=self.flumine,
-            stream_id=stream_id,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
         )
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def add_simulated_order_stream(
         self,
@@ -266,39 +91,26 @@ class Streams:
         streaming_timeout: float = 0.25,
     ) -> SimulatedOrderStream:
         logger.warning("Client %s now paper trading", client.betting_client.username)
-        stream_id = self._increment_stream_id()
         stream = SimulatedOrderStream(
             flumine=self.flumine,
-            stream_id=stream_id,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=client,
             custom=True,
         )
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def add_betdaq_order_polling(
         self,
         client: BaseClient,
         streaming_timeout: float = 0.25,
     ) -> BetdaqOrderPolling:
-        stream_id = self._increment_stream_id()
         stream = BetdaqOrderPolling(
             flumine=self.flumine,
-            stream_id=stream_id,
             client=client,
             streaming_timeout=streaming_timeout,
         )
-        self._streams.append(stream)
-        return stream
-
-    """ custom stream """
-
-    def add_custom_stream(self, stream):
-        stream.stream_id = self._increment_stream_id()
-        self._streams.append(stream)
-        return stream
+        return self.add_stream(stream)
 
     def start(self) -> None:
         if not self.flumine.SIMULATED:
@@ -318,7 +130,21 @@ class Streams:
         self._stream_id += int(1e4)
         return self._stream_id
 
-    def __iter__(self) -> Iterator[Union[MarketStream, DataStream, HistoricalStream]]:
+    def has_stream(self, key) -> bool:
+        stream_keys = [s.stream_hash for s in self]
+        return key in stream_keys
+
+    __contains__ = has_stream
+
+    def __getitem__(self, key):
+        stream_keys = {s.stream_hash: s for s in self}
+        return stream_keys[key]
+
+    def __iter__(
+        self,
+    ) -> Iterator[
+        Union[BetfairMarketStream, BetfairDataStream, BetfairHistoricalStream]
+    ]:
         return iter(self._streams)
 
     def __len__(self) -> int:

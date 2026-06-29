@@ -235,12 +235,10 @@ class BetdaqExecution(BaseExecution):
             },
         )
         if package_type == OrderPackageType.PLACE:
-            order_id = instruction_report.get("order_id")
-            status = instruction_report.get("status")
-            dt = True if status else False
+            dt = False if order.async_ and not order.simulated else True
             order.responses.placed(instruction_report, dt=dt)
-            if order_id:
-                order.bet_id = order_id
+            if not order.async_:
+                order.bet_id = instruction_report.get("order_id")
                 self.flumine.log_control(OrderEvent(order, venue=order.VENUE))
         elif package_type == OrderPackageType.CANCEL:
             order.responses.cancelled(instruction_report)

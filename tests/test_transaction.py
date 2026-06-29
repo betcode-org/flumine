@@ -43,7 +43,7 @@ class TransactionTest(unittest.TestCase):
         mock_order.trade.market_notes = None
         self.assertTrue(self.transaction.place_order(mock_order))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time,
+            self.transaction.market.publish_time,
             None,
             False,
         )
@@ -77,7 +77,7 @@ class TransactionTest(unittest.TestCase):
         mock_order = mock.Mock(id="123")
         self.assertTrue(self.transaction.place_order(mock_order, execute=False))
         mock_order.place.assert_called_with(
-            self.transaction.market.market_book.publish_time,
+            self.transaction.market.publish_time,
             None,
             False,
         )
@@ -422,7 +422,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_one, mock_order_two],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=None,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -432,7 +432,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_three, mock_order_four],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=123,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -442,7 +442,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_five],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=123,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -474,7 +474,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_one, mock_order_two],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=None,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -484,7 +484,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_three],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=None,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -516,7 +516,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_one, mock_order_two],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=None,
                     async_=False,
                     customer_strategy_ref="dotty",
@@ -526,7 +526,7 @@ class TransactionTest(unittest.TestCase):
                     market_id=self.transaction.market.market_id,
                     orders=[mock_order_three],
                     package_type=OrderPackageType.PLACE,
-                    bet_delay=self.transaction.market.market_book.bet_delay,
+                    bet_delay=self.transaction.market.bet_delay,
                     market_version=None,
                     async_=False,
                     customer_strategy_ref="dotty",
