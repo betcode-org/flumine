@@ -14,6 +14,7 @@ Release History
 
 **Libraries**
 
+- Drop python 3.9 support (EOL)
 - black upgraded to 26.5.1
 
 2.13.11 (2026-05-05)
