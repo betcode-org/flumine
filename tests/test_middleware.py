@@ -57,7 +57,7 @@ class SimulatedMiddlewareTest(unittest.TestCase):
     @mock.patch("flumine.markets.middleware.SimulatedMiddleware._process_runner")
     def test_call(self, mock__process_runner, mock__process_simulated_orders):
         mock_market = mock.Mock(context={})
-        mock_market_book = mock.Mock()
+        mock_market_book = mock.Mock(status="OPEN")
         mock_runner = mock.Mock(status="ACTIVE")
         mock_market_book.runners = [mock_runner]
         mock_market.market_book = mock_market_book
