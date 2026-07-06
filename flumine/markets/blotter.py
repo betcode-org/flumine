@@ -2,6 +2,7 @@ import logging
 from typing import Iterable, Optional, List, TYPE_CHECKING
 from collections import defaultdict
 
+from ..clients import VenueType
 from ..order.ordertype import OrderTypes
 from ..utils import (
     calculate_unmatched_exposure,
@@ -141,37 +142,40 @@ class Blotter:
         return bool(self._live_orders)
 
     def process_closed_market(self, market, market_book) -> None:
-        number_of_winners = len(
-            [runner for runner in market_book.runners if runner.status == "WINNER"]
-        )
-        for order in self:
-            for runner in market_book.runners:
-                if (order.selection_id, order.handicap) == (
-                    runner.selection_id,
-                    runner.handicap,
-                ):
-                    order.runner_status = runner.status
-                    order.market_type = market_book.market_definition.market_type
-                    order.each_way_divisor = (
-                        market_book.market_definition.each_way_divisor
-                    )
-                    if market_book.number_of_winners == 0:
-                        order.number_of_dead_heat_winners = 1
-                    elif number_of_winners > market_book.number_of_winners == 1:
-                        order.number_of_dead_heat_winners = number_of_winners
-                    else:
-                        order.number_of_dead_heat_winners = 1
-                    if (
-                        order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT
-                        and order.order_type.price_ladder_definition == "LINE_RANGE"
+        if market.VENUE == VenueType.BETFAIR:
+            number_of_winners = len(
+                [runner for runner in market_book.runners if runner.status == "WINNER"]
+            )
+            for order in self:
+                for runner in market_book.runners:
+                    if (order.selection_id, order.handicap) == (
+                        runner.selection_id,
+                        runner.handicap,
                     ):
-                        line_range_result = market.context.get("line_range_result")
-                        if line_range_result:
-                            order.line_range_result = line_range_result
-                        elif order.simulated:
-                            logger.warning(
-                                "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
-                            )
+                        order.runner_status = runner.status
+                        order.market_type = market_book.market_definition.market_type
+                        order.each_way_divisor = (
+                            market_book.market_definition.each_way_divisor
+                        )
+                        if market_book.number_of_winners == 0:
+                            order.number_of_dead_heat_winners = 1
+                        elif number_of_winners > market_book.number_of_winners == 1:
+                            order.number_of_dead_heat_winners = number_of_winners
+                        else:
+                            order.number_of_dead_heat_winners = 1
+                        if (
+                            order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT
+                            and order.order_type.price_ladder_definition == "LINE_RANGE"
+                        ):
+                            line_range_result = market.context.get("line_range_result")
+                            if line_range_result:
+                                order.line_range_result = line_range_result
+                            elif order.simulated:
+                                logger.warning(
+                                    "line_range_result unavailable, for simulation results update the market.context['line_range_result']"
+                                )
+        else:
+            pass
 
     def process_cleared_orders(self, cleared_orders) -> list:
         for cleared_order in cleared_orders.orders:

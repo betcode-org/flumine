@@ -22,7 +22,7 @@ flumine is an open-source, event-based trading framework for sports betting, des
 
 [join betcode slack group (2k+ members!)](https://join.slack.com/t/betcode-org/shared_invite/zt-2uer9n451-w1QOehxDcG_JXqQfjoMvQA)
 
-Tested on Python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14.
+Tested on Python 3.10, 3.11, 3.12, 3.13 and 3.14.
 
 ## installation
 
@@ -30,7 +30,7 @@ Tested on Python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14.
 $ pip install flumine
 ```
 
-flumine requires Python 3.9+
+flumine requires Python 3.10+
 
 ## setup
 
@@ -40,23 +40,26 @@ Get started...
 import betfairlightweight
 from flumine import Flumine, clients
 
+# Initialize your client
 trading = betfairlightweight.APIClient("username")
 client = clients.BetfairClient(trading)
 
-framework = Flumine(
-    client=client,
-)
+# Initialize the framework
+framework = Flumine(client=client)
 ```
 
 Example strategy:
 
 ```python
-from flumine import BaseStrategy
+import betfairlightweight
+from betfairlightweight.filters import streaming_market_filter
+from betfairlightweight.resources import MarketBook
+
+from flumine import Flumine, BaseStrategy, clients
 from flumine.order.trade import Trade
 from flumine.order.order import LimitOrder, OrderStatus
 from flumine.markets.market import Market
-from betfairlightweight.filters import streaming_market_filter
-from betfairlightweight.resources import MarketBook
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 
 
 class ExampleStrategy(BaseStrategy):
@@ -67,6 +70,7 @@ class ExampleStrategy(BaseStrategy):
         # process_market_book only executed if this returns True
         if market_book.status != "CLOSED":
             return True
+        return False
 
     def process_market_book(self, market: Market, market_book: MarketBook) -> None:
         # process marketBook object
@@ -94,13 +98,23 @@ class ExampleStrategy(BaseStrategy):
                     market.replace_order(order, 1.02)  # move
 
 
-# Add your strategy to the framework
+# Initialize your client
+trading = betfairlightweight.APIClient("username")
+client = clients.BetfairClient(trading)
+
+# Initialize the framework
+framework = Flumine(client)
+
+# Add your strategy to the framework with a stream
 framework.add_strategy(
     ExampleStrategy(
-        market_filter=streaming_market_filter(
-            event_type_ids=["7"],
-            country_codes=["GB"],
-            market_types=["WIN"],
+        stream=BetfairMarketStream(
+            framework,
+            market_filter=streaming_market_filter(
+                event_type_ids=["7"],
+                country_codes=["GB"],
+                market_types=["WIN"],
+            ),
         )
     )
 )

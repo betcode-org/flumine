@@ -5,7 +5,7 @@ from ..order.ordertype import OrderTypes
 from ..order.orderpackage import OrderPackageType, BaseOrder
 from . import BaseControl
 from .. import utils, config
-from ..streams.orderstream import OrderStream
+from ..streams.betfairorderstream import BetfairOrderStream
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ class ExecutionValidation(BaseControl):
     def order_stream_connected(self):
         for stream in self.flumine.streams:
             # todo handle multi clients / OrderStream
-            if isinstance(stream, OrderStream):
+            if isinstance(stream, BetfairOrderStream):
                 if stream.stream_running:
                     return True
         return False

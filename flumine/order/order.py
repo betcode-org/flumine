@@ -594,14 +594,14 @@ class BetdaqOrder(BaseOrder):
     @property
     def average_price_matched(self) -> float:
         try:
-            return self.current_order.get("matched_price", 0)
+            return self.current_order.get("matched_price", 0) or 0.0
         except AttributeError:
             return 0.0
 
     @property
     def size_matched(self) -> float:
         try:
-            return self.current_order.get("matched_size", 0)
+            return self.current_order.get("matched_size", 0) or 0.0
         except AttributeError:
             return 0.0
 
@@ -610,9 +610,9 @@ class BetdaqOrder(BaseOrder):
         if self.current_order.get("status") in ["Settled", "Cancelled", "Void"]:
             return 0.0
         if "size_remaining" in self.current_order:
-            return self.current_order.get("size_remaining", 0)
+            return self.current_order.get("size_remaining", 0) or 0.0
         try:
-            return self.current_order.get("remaining_size", 0)
+            return self.current_order.get("remaining_size", 0) or 0.0
         except AttributeError:
             return self.order_type.size
 

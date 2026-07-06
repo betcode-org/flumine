@@ -1,26 +1,14 @@
 import logging
-from typing import Iterator, List, Optional, Type, Union
-from betfairlightweight import filters
+from typing import Iterator, Optional, Union, List
 from betfairlightweight.resources import MarketBook, MarketCatalogue, Race, CricketMatch
 
 from .runnercontext import RunnerContext
 from ..markets.market import Market
-from ..streams.marketstream import BaseStream, MarketStream
+from ..streams.betfairhistoricalstream import BetfairHistoricalStream
+from ..streams.betfairmarketstream import BaseStream
 from ..utils import create_cheap_hash, STRATEGY_NAME_HASH_LENGTH
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_MARKET_DATA_FILTER = filters.streaming_market_data_filter(
-    fields=[
-        "EX_ALL_OFFERS",
-        "EX_TRADED",
-        "EX_TRADED_VOL",
-        "EX_LTP",
-        "EX_MARKET_DEF",
-        "SP_TRADED",
-        "SP_PROJECTED",
-    ]
-)
 
 
 class BaseStrategy:
@@ -36,14 +24,8 @@ class BaseStrategy:
 
     def __init__(
         self,
-        market_filter: Union[dict, list],
-        market_data_filter: dict = None,
-        sports_data_filter: List[
-            str
-        ] = None,  # 'raceSubscription', 'cricketSubscription'
-        streaming_timeout: float = None,
-        conflate_ms: int = None,
-        stream_class: Type[BaseStream] = MarketStream,
+        stream: Union[BaseStream, BetfairHistoricalStream] = None,
+        streams: List[Union[BaseStream, BetfairHistoricalStream]] = None,
         name: str = None,
         context: dict = None,
         max_selection_exposure: Optional[float] = 100,
@@ -54,12 +36,7 @@ class BaseStrategy:
         multi_order_trades: bool = False,
     ):
         """
-        :param market_filter: Streaming market filter dict or list of market filters
-        :param market_data_filter: Streaming market data filter
-        :param sports_data_filter: Streaming sports data filter (e.g. ["raceSubscription"])
-        :param streaming_timeout: Streaming timeout in seconds, will call snap() on cache
-        :param conflate_ms: Streaming conflation
-        :param stream_class: Can be Market or Data (raw)
+        :param streams: List of streams to subscribe to
         :param name: Strategy name (will default to class name)
         :param context: Dictionary holding additional user specific vars
         :param max_selection_exposure: Max exposure per selection
@@ -69,12 +46,10 @@ class BaseStrategy:
         :param max_live_trade_count: max live (with executable orders) trades per runner
         :param multi_order_trades: allow multiple live orders per trade
         """
-        self.market_filter = market_filter
-        self.market_data_filter = market_data_filter or DEFAULT_MARKET_DATA_FILTER
-        self.sports_data_filter = sports_data_filter or []
-        self.streaming_timeout = streaming_timeout
-        self.conflate_ms = conflate_ms
-        self.stream_class = stream_class
+        if stream is not None and streams is not None:
+            raise ValueError("Use either stream or streams, not both")
+        # list of streams strategy is subscribed
+        self.streams = [stream] if stream is not None else list(streams or [])
         self._name = name
         self.context = context or {}
         self.max_selection_exposure = max_selection_exposure
@@ -86,10 +61,21 @@ class BaseStrategy:
         self.multi_order_trades = multi_order_trades
 
         self._invested = {}  # {(marketId, selectionId, handicap): RunnerContext}
-        self.streams = []  # list of streams strategy is subscribed
-        self.historic_stream_ids = set()
+        self.historic_stream_ids = set()  # faster
         # cache
         self.name_hash = create_cheap_hash(self.name, STRATEGY_NAME_HASH_LENGTH)
+
+    def replace_stream(self, stream, new_stream) -> None:
+        self.streams = [new_stream if s is stream else s for s in self.streams]
+
+    def subscribe_to_stream(self, stream):
+        self.streams.append(stream)
+
+    def unsubscribe_from_stream(self, stream):
+        try:
+            self.streams.remove(stream)
+        except ValueError:
+            pass
 
     def add(self, flumine) -> None:
         # called when strategy is added to framework
@@ -245,10 +231,6 @@ class BaseStrategy:
     def info(self) -> dict:
         return {
             "strategy_name": self.name,
-            "market_filter": self.market_filter,
-            "market_data_filter": self.market_data_filter,
-            "streaming_timeout": self.streaming_timeout,
-            "conflate_ms": self.conflate_ms,
             "stream_ids": list(self.stream_ids),
             "max_selection_exposure": self.max_selection_exposure,
             "max_order_exposure": self.max_order_exposure,

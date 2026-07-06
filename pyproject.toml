@@ -7,14 +7,13 @@ name = "flumine"
 description = "Betting trading framework"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Liam Pauling", email = "a@unknown.com" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -38,7 +37,7 @@ speed = [
     "betfairlightweight[speed]==2.23.2"
 ]
 test = [
-    "black==25.1.0",
+    "black==26.5.1",
     "coverage",
     "pre-commit",
     "mkdocs",

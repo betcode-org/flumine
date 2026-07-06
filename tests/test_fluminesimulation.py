@@ -94,12 +94,12 @@ class FlumineSimulationTest(unittest.TestCase):
         mock__process_simulated_orders.assert_called_with(mock_market)
 
     def test__process_market_books_new_market(self):
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         self.flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             market_id="1.23", streaming_unique_id=1, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         for call_count in range(1, 5):
             # process_new_market must be called only once, the first time
             with self.subTest(call_count=call_count):
@@ -118,12 +118,12 @@ class FlumineSimulationTest(unittest.TestCase):
         Market book should only be called with objects from the streams
         it is subscribed to.
         """
-        mock_strategy = mock.Mock(stream_ids=[1, 2])
+        mock_strategy = mock.Mock(stream_ids=[1, 2], streams=[mock.Mock()])
         self.flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             market_id="1.123", streaming_unique_id=5, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         self.flumine._process_market_books(mock_event)
         mock_strategy.process_new_market.assert_not_called()
         mock_strategy.check_market_book.assert_not_called()
@@ -134,14 +134,14 @@ class FlumineSimulationTest(unittest.TestCase):
         Tests base_flumine._process_market_books() with different return values
         of strategy.check_market_book().
         """
-        mock_strategy = mock.Mock(stream_ids=[1])
+        mock_strategy = mock.Mock(stream_ids=[1], streams=[mock.Mock()])
         check_pattern = (False, True, True, False, True)
         mock_strategy.check_market_book.side_effect = check_pattern
         self.flumine.add_strategy(mock_strategy)
         mock_market_book = mock.Mock(
             market_id="1.123", streaming_unique_id=1, runners=[]
         )
-        mock_event = mock.Mock(event=[mock_market_book])
+        mock_event = mock.Mock(event=[mock_market_book], venue=VenueType.BETFAIR)
         process_call_count = 0
         for check_call_count, check_market_book_retval in enumerate(check_pattern, 1):
             self.flumine._process_market_books(mock_event)
@@ -336,7 +336,7 @@ class FlumineSimulationTest(unittest.TestCase):
                 market_id="1.01", closed=False, elapsed_seconds_closed=3601
             ),
         }
-        mock_event = mock.Mock()
+        mock_event = mock.Mock(venue=VenueType.BETFAIR)
         mock_market_book = mock.Mock(market_id="1.23")
         mock_event.event = mock_market_book
         self.flumine._process_close_market(mock_event)

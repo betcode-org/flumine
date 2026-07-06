@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 
+from flumine.clients import VenueType
 from flumine.markets.blotter import Blotter, PENDING_STATUS
 from flumine.order.order import OrderStatus
 from flumine.order.ordertype import MarketOnCloseOrder, LimitOrder, LimitOnCloseOrder
@@ -255,7 +256,7 @@ class BlotterTest(unittest.TestCase):
         self.assertTrue(self.blotter.has_live_orders)
 
     def test_process_closed_market(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_market_book = mock.Mock(number_of_winners=1)
         mock_runner = mock.Mock(selection_id=123, handicap=0.0)
         mock_market_book.runners = [mock_runner]
@@ -272,7 +273,7 @@ class BlotterTest(unittest.TestCase):
         )
 
     def test_process_closed_market_variable_number_of_winners(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_market_book = mock.Mock(number_of_winners=0)
         mock_runner1 = mock.Mock(selection_id=123, handicap=0.0, status="WINNER")
         mock_runner2 = mock.Mock(selection_id=234, handicap=0.0, status="WINNER")
@@ -283,7 +284,7 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(mock_order.number_of_dead_heat_winners, 1)
 
     def test_process_closed_market_dead_heat_place(self):
-        mock_market = mock.Mock()
+        mock_market = mock.Mock(VENUE=VenueType.BETFAIR)
         mock_market_book = mock.Mock(number_of_winners=3)
         mock_runner1 = mock.Mock(selection_id=123, handicap=0.0, status="WINNER")
         mock_runner2 = mock.Mock(selection_id=234, handicap=0.0, status="WINNER")
@@ -301,7 +302,9 @@ class BlotterTest(unittest.TestCase):
         self.assertEqual(mock_order.number_of_dead_heat_winners, 1)
 
     def test_process_closed_market_line_range(self):
-        mock_market = mock.Mock(context={"line_range_result": 119})
+        mock_market = mock.Mock(
+            VENUE=VenueType.BETFAIR, context={"line_range_result": 119}
+        )
         mock_market_book = mock.Mock(number_of_winners=1)
         mock_runner = mock.Mock(selection_id=123, handicap=0.0)
         mock_market_book.runners = [mock_runner]

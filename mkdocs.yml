@@ -35,6 +35,7 @@ nav:
       - Performance: 'performance.md'
       - Architecture: 'architecture.md'
       - Known Issues: 'known_issues.md'
+      - Version Migrations: 'version_migrations.md'
 
 markdown_extensions:
   - admonition

@@ -71,7 +71,7 @@ class Flumine(BaseFlumine):
             for client in self.clients
             if hasattr(client.betting_client, "session_timeout")
         ]
-        ka_interval = min((min(client_timeouts) / 2), 1200)
+        ka_interval = min((min(client_timeouts, default=2400) / 2), 1200)
         self.add_worker(
             worker.BackgroundWorker(
                 self, function=worker.keep_alive, interval=ka_interval

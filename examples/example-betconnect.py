@@ -7,6 +7,7 @@ from pythonjsonlogger import jsonlogger
 from collections import defaultdict
 
 from flumine import Flumine, clients, BaseStrategy, utils
+from flumine.streams.betfairmarketstream import BetfairMarketStream
 
 logger = logging.getLogger()
 
@@ -126,9 +127,13 @@ betconnect_client = clients.BetConnectClient(
 )
 framework.add_client(betconnect_client)
 
+# create strategy and subscribe to stream(s)
 strategy = ExampleStrategy(
-    market_filter=streaming_market_filter(market_ids=["1.196548740"]),
-    streaming_timeout=2,
+    stream=BetfairMarketStream(
+        framework,
+        market_filter=streaming_market_filter(market_ids=["1.196548740"]),
+        streaming_timeout=2,
+    )
 )
 framework.add_strategy(strategy)
 

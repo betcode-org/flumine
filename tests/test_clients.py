@@ -21,7 +21,7 @@ class ClientsTest(unittest.TestCase):
         self.clients = Clients()
 
     def test_venue_type(self):
-        self.assertEqual(len(VenueType), 8)
+        self.assertEqual(len(VenueType), 9)
         assert VenueType
 
     def test_init(self):
@@ -120,6 +120,7 @@ class ClientsTest(unittest.TestCase):
                 VenueType.BETDAQ.value: {},
                 VenueType.KALSHI.value: {},
                 VenueType.POLYMARKET.value: {},
+                VenueType.BETDEX.value: {},
                 VenueType.SMARKETS.value: {},
                 VenueType.MATCHBOOK.value: {},
             },
@@ -153,6 +154,7 @@ class BaseClientTest(unittest.TestCase):
         self.assertEqual(self.base_client.trading_controls, [])
         self.assertTrue(self.base_client.order_stream)
         self.assertIsNone(self.base_client.order_stream_conflate_ms)
+        self.assertEqual(self.base_client.order_streaming_timeout, 0.25)
         self.assertTrue(self.base_client.best_price_execution)
         self.assertTrue(self.base_client.min_bet_validation)
         self.assertFalse(self.base_client.paper_trade)

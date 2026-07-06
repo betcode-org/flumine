@@ -7,7 +7,7 @@ from flumine.clients import VenueType
 class EventType(Enum):
     CONFIG = "Config"
     TERMINATOR = "Terminator"
-    # betfair objects
+    # data objects
     MARKET_CATALOGUE = "MarketCatalogue"
     MARKET_BOOK = "MarketBook"
     SPORTS_DATA = "SportsData"

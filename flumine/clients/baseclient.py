@@ -25,6 +25,7 @@ class BaseClient:
         username: str = None,
         order_stream: bool = True,
         order_stream_conflate_ms: int = None,
+        order_streaming_timeout: float = 0.25,
         best_price_execution: bool = True,
         min_bet_validation: bool = True,
         paper_trade: bool = False,
@@ -45,6 +46,7 @@ class BaseClient:
         self.interactive_login = interactive_login
         self.order_stream = order_stream
         self.order_stream_conflate_ms = order_stream_conflate_ms
+        self.order_streaming_timeout = order_streaming_timeout
         self.best_price_execution = best_price_execution  # simulation only
         self.min_bet_validation = min_bet_validation  # used in OrderValidation control
         self.paper_trade = paper_trade  # simulated order placement using live data
@@ -134,6 +136,7 @@ class BaseClient:
             "trading_controls": self.trading_controls,
             "order_stream": self.order_stream,
             "order_stream_conflate_ms": self.order_stream_conflate_ms,
+            "order_streaming_timeout": self.order_streaming_timeout,
             "best_price_execution": self.best_price_execution,
             "paper_trade": self.paper_trade,
         }

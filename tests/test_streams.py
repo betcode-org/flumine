@@ -1,14 +1,20 @@
 import unittest
 import datetime
 from unittest import mock
-from unittest.mock import call
 
 from flumine.clients import VenueType
-from flumine.streams import streams, datastream, historicalstream, betdaqorderpolling
+from flumine.streams import (
+    streams,
+    betfairdatastream,
+    betfairhistoricalstream,
+    betdaqorderpolling,
+)
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
-from flumine.streams import orderstream
-from flumine.exceptions import ListenerError
+from flumine.streams import betfairorderstream
+from flumine.streams.betfairsportsdatastream import BetfairSportsDataStream
+from flumine.streams.betdaqmarketpolling import BetdaqMarketPolling
+from flumine.exceptions import ListenerError, StreamError
 
 
 class StreamsTest(unittest.TestCase):
@@ -22,152 +28,17 @@ class StreamsTest(unittest.TestCase):
         self.assertEqual(self.streams._streams, [])
         self.assertEqual(self.streams._stream_id, 0)
 
-    @mock.patch("flumine.streams.streams.Streams.add_stream")
-    def test_call(self, mock_add_stream):
-        mock_strategy = mock.Mock(streams=[], raw_data=False)
-        self.streams(mock_strategy)
-        mock_add_stream.assert_called_with(mock_strategy)
-
-    @mock.patch("flumine.streams.streams.Streams.add_stream")
-    def test_call_data_stream(self, mock_add_stream):
-        mock_strategy = mock.Mock(streams=[], stream_class=datastream.DataStream)
-        self.streams(mock_strategy)
-        mock_add_stream.assert_called_with(mock_strategy)
-
-    @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
-    def test_call_simulated_markets(self, mock_add_historical_stream, mock_get_file_md):
-        self.mock_flumine.SIMULATED = True
-        mock_md = mock.Mock()
-        mock_get_file_md.return_value = mock_md
-
-        mock_strategy = mock.Mock(
-            streams=[],
-            historic_stream_ids=set(),
-            market_filter={
-                "markets": ["dubs of the mad skint and british"],
-                "listener_kwargs": {"canary_yellow": True},
-            },
-        )
-        self.streams(mock_strategy)
-
-        mock_add_historical_stream.assert_called_with(
-            mock_strategy,
-            "dubs of the mad skint and british",
-            mock_md,
-            False,
-            {},
-            canary_yellow=True,
-        )
-        self.assertEqual(len(mock_strategy.streams), 1)
-        self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
-        mock_get_file_md.assert_has_calls(
-            [
-                call("dubs of the mad skint and british"),
-            ]
-        )
-
-    @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
-    def test_call_simulated_markets_type(
-        self, mock_add_historical_stream, mock_get_file_md
-    ):
-        self.mock_flumine.SIMULATED = True
-        mock_get_file_md.return_value = mock.Mock(market_type="PLACE")
-        mock_strategy = mock.Mock(
-            streams=[],
-            historic_stream_ids=[],
-            market_filter={
-                "markets": ["dubs of the mad skint and british"],
-                "listener_kwargs": {"canary_yellow": True},
-                "market_types": ["WIN"],
-            },
-        )
-        self.streams(mock_strategy)
-
-        mock_add_historical_stream.assert_not_called()
-        self.assertEqual(len(mock_strategy.streams), 0)
-        self.assertEqual(len(mock_strategy.historic_stream_ids), 0)
-        mock_get_file_md.assert_has_calls(
-            [
-                call("dubs of the mad skint and british"),
-            ]
-        )
-
-    @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
-    def test_call_simulated_country_code(
-        self, mock_add_historical_stream, mock_get_file_md
-    ):
-        self.mock_flumine.SIMULATED = True
-        mock_get_file_md.return_value = mock.Mock(market_type="PLACE")
-        mock_strategy = mock.Mock(
-            streams=[],
-            historic_stream_ids=[],
-            market_filter={
-                "markets": ["dubs of the mad skint and british"],
-                "listener_kwargs": {"canary_yellow": True},
-                "country_codes": ["VERDANSK"],
-            },
-        )
-        self.streams(mock_strategy)
-
-        mock_add_historical_stream.assert_not_called()
-        self.assertEqual(len(mock_strategy.streams), 0)
-        self.assertEqual(len(mock_strategy.historic_stream_ids), 0)
-        mock_get_file_md.assert_has_calls(
-            [
-                call("dubs of the mad skint and british"),
-            ]
-        )
-
-    @mock.patch("flumine.streams.streams.Streams.add_historical_stream")
-    def test_call_simulated_events(self, mock_add_historical_stream):
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock(
-            streams=[],
-            historic_stream_ids=[],
-            market_filter={
-                "events": ["/tmp/joetry"],
-                "listener_kwargs": {"canary_yellow": True},
-            },
-        )
-        with self.assertRaises(NotImplementedError):
-            self.streams(mock_strategy)
-
-        # mock_add_historical_stream.assert_called_with(
-        #     mock_strategy, "dubs of the mad skint and british", canary_yellow=True
-        # )
-        # self.assertEqual(len(mock_strategy.streams), 1)
-        # self.assertEqual(len(mock_strategy.historic_stream_ids), 1)
-
-    def test_call_simulated_markets_events(self):
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock(
-            streams=[],
-            market_filter={
-                "markets": ["dubs of the mad skint and british"],
-                "events": ["joetry"],
-            },
-        )
-        self.streams(mock_strategy)
-        self.assertEqual(len(mock_strategy.streams), 0)
-
-    def test_call_simulated_no_markets_no_events(self):
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock(streams=[], market_filter={})
-        self.streams(mock_strategy)
-        self.assertEqual(len(mock_strategy.streams), 0)
-
-    @mock.patch("flumine.streams.streams.Streams.add_order_stream")
-    def test_add_client_betfair(self, mock_add_order_stream):
+    @mock.patch("flumine.streams.streams.Streams.add_betfair_order_stream")
+    def test_add_client_betfair(self, add_betfair_order_stream):
         mock_client = mock.Mock(
             order_stream=True, paper_trade=False, order_stream_cls=None
         )
         mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_called_with(
-            mock_client, conflate_ms=mock_client.order_stream_conflate_ms
+        add_betfair_order_stream.assert_called_with(
+            mock_client,
+            conflate_ms=mock_client.order_stream_conflate_ms,
+            streaming_timeout=mock_client.order_streaming_timeout,
         )
 
     @mock.patch("flumine.streams.streams.Streams.add_simulated_order_stream")
@@ -177,14 +48,16 @@ class StreamsTest(unittest.TestCase):
         )
         mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
-        mock_add_simulated_order_stream.assert_called_with(mock_client)
+        mock_add_simulated_order_stream.assert_called_with(
+            mock_client, streaming_timeout=mock_client.order_streaming_timeout
+        )
 
-    @mock.patch("flumine.streams.streams.Streams.add_order_stream")
-    def test_add_client_no_order_stream(self, mock_add_order_stream):
+    @mock.patch("flumine.streams.streams.Streams.add_betfair_order_stream")
+    def test_add_client_no_order_stream(self, mock_add_betfair_order_stream):
         mock_client = mock.Mock(order_stream=False, order_stream_cls=None)
         mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_not_called()
+        mock_add_betfair_order_stream.assert_not_called()
 
     @mock.patch("flumine.streams.streams.Streams.add_betdaq_order_polling")
     def test_add_client_betdaq(self, mock_add_order_stream):
@@ -193,10 +66,12 @@ class StreamsTest(unittest.TestCase):
         )
         mock_client.VENUE = streams.VenueType.BETDAQ
         self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_called_with(mock_client)
+        mock_add_order_stream.assert_called_with(
+            mock_client, streaming_timeout=mock_client.order_streaming_timeout
+        )
 
-    @mock.patch("flumine.streams.streams.Streams.add_custom_stream")
-    def test_add_client_custom_order_stream(self, mock_add_custom_stream):
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_client_order_stream(self, mock_add_stream):
         mock_order_stream_cls = mock.Mock()
         mock_client = mock.Mock(
             order_stream=True, paper_trade=False, order_stream_cls=mock_order_stream_cls
@@ -206,321 +81,52 @@ class StreamsTest(unittest.TestCase):
         mock_order_stream_cls.assert_called_with(
             flumine=self.mock_flumine, client=mock_client, custom=True
         )
-        mock_add_custom_stream.assert_called_with(mock_order_stream_cls.return_value)
+        mock_add_stream.assert_called_with(mock_order_stream_cls.return_value)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_new(self, mock_increment):
-        mock_strategy = mock.Mock(market_filter={}, sports_data_filter=[])
-        mock_stream_class = mock.Mock()
-        mock_strategy.stream_class = mock_stream_class
-
-        self.streams.add_stream(mock_strategy)
+    def test_add_stream(self, mock_increment):
+        mock_stream = mock.Mock()
+        self.streams.add_stream(mock_stream)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_called_with()
-        mock_strategy.stream_class.assert_called_with(
-            flumine=self.mock_flumine,
-            stream_id=mock_increment(),
-            market_filter=mock_strategy.market_filter,
-            market_data_filter=mock_strategy.market_data_filter,
-            streaming_timeout=mock_strategy.streaming_timeout,
-            conflate_ms=mock_strategy.conflate_ms,
-        )
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_none(self, mock_increment):
-        mock_strategy = mock.Mock(market_filter=None, sports_data_filter=[])
-        mock_stream_class = mock.Mock()
-        mock_strategy.stream_class = mock_stream_class
-
-        self.streams.add_stream(mock_strategy)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
-        mock_strategy.stream_class.assert_called_with(
-            flumine=self.mock_flumine,
-            stream_id=mock_increment(),
-            market_filter=mock_strategy.market_filter,
-            market_data_filter=mock_strategy.market_data_filter,
-            streaming_timeout=mock_strategy.streaming_timeout,
-            conflate_ms=mock_strategy.conflate_ms,
-        )
-
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_multi(self, mock_increment):
-        mock_strategy = mock.Mock(
-            market_filter=[{1: 2}, {3: 4}],
-            stream_class=streams.MarketStream,
-            sports_data_filter=[],
-        )
-        self.streams.add_stream(mock_strategy)
-        self.assertEqual(len(self.streams), 2)
-        mock_increment.assert_called_with()
-
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_old(self, mock_increment):
-        mock_strategy = mock.Mock(
-            market_data_filter=2,
-            stream_class=streams.MarketStream,
-            streaming_timeout=3,
-            conflate_ms=4,
-            market_filter={},
-            sports_data_filter=[],
-        )
-        stream = mock.Mock(
-            spec=streams.MarketStream,
-            market_filter={},
-            market_data_filter=2,
-            streaming_timeout=3,
-            conflate_ms=4,
-            stream_id=1001,
-        )
-        self.streams._streams = [stream]
-
-        self.streams.add_stream(mock_strategy)
+    def test_add_stream_duplicate(self, mock_increment):
+        mock_stream = mock.Mock()
+        self.streams._streams = [mock_stream]
+        self.streams.add_stream(mock_stream)
         self.assertEqual(len(self.streams), 1)
         mock_increment.assert_not_called()
 
-    @mock.patch(
-        "flumine.streams.streams.SportsDataStream", autospec=streams.SportsDataStream
-    )
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_sports_data(self, mock_increment, sports_data_stream_class):
-        mock_strategy = mock.Mock(
-            market_filter=[],
-            sports_data_filter=["raceSubscription"],
-        )
-        self.streams.add_stream(mock_strategy)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
-        sports_data_stream_class.assert_has_calls(
-            [
-                call(
-                    flumine=self.mock_flumine,
-                    stream_id=mock_increment(),
-                    sports_data_filter="raceSubscription",
-                    streaming_timeout=mock_strategy.streaming_timeout,
-                )
-            ]
-        )
-
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_stream_sports_data_old(self, mock_increment):
-        mock_strategy = mock.Mock(
-            market_filter=[],
-            sports_data_filter=["cricketSubscription"],
-            streaming_timeout=3,
-        )
-        stream = mock.Mock(
-            stream_id=1,
-            spec=streams.SportsDataStream,
-            market_filter={},
-            sports_data_filter="cricketSubscription",
-            streaming_timeout=3,
-        )
-        self.streams._streams = [stream]
-
-        self.streams.add_stream(mock_strategy)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_not_called()
-
-    @mock.patch("flumine.streams.streams.HistoricalStream")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream(self, mock_increment, mock_historical_stream_class):
-        test_args = [
-            # event_processing, event_id, event_group, event_groups
-            # Basic case, no event processing
-            (False, "123", None, {}),
-            # Event groups are ignored since event_processing is False
-            (False, "123", None, {"123": "A"}),
-            # Events groups default to event id if not provided
-            (True, "123", "123", {}),
-            # Event groups are provided
-            (True, "123", "A", {"123": "A"}),
-        ]
-        for stream_count, subtest_args in enumerate(test_args, start=1):
-            with self.subTest():
-                event_processing, event_id, event_group, event_groups = subtest_args
-                mock_historical_stream_class.__name__ = "test"
-                self.mock_flumine.SIMULATED = True
-                mock_strategy = mock.Mock()
-                mock_strategy.market_filter = 1
-                mock_strategy.market_data_filter = 2
-                mock_strategy.streaming_timeout = 3
-                mock_strategy.conflate_ms = 4
-                mock_strategy.stream_class = streams.MarketStream
-
-                self.streams.add_historical_stream(
-                    mock_strategy,
-                    "GANG",
-                    mock.Mock(event_id=event_id),
-                    event_processing=event_processing,
-                    event_groups=event_groups,
-                    inplay=True,
-                )
-                self.assertEqual(len(self.streams), stream_count)
-                mock_increment.assert_called_with()
-                mock_historical_stream_class.assert_called_with(
-                    flumine=self.mock_flumine,
-                    stream_id=mock_increment(),
-                    market_filter="GANG",
-                    market_data_filter=mock_strategy.market_data_filter,
-                    streaming_timeout=mock_strategy.streaming_timeout,
-                    conflate_ms=mock_strategy.conflate_ms,
-                    output_queue=False,
-                    event_processing=event_processing,
-                    event_group=event_group,
-                    event_id=event_id,
-                    inplay=True,
-                )
-
-    def test_add_historical_stream_which_already_exists(self):
-        test_args = [
-            # event_processing, event_id, event_group, event_groups
-            # Basic case, no event processing
-            (False, "123", None, {}),
-            # Event groups are ignored since event_processing is False
-            (False, "123", None, {"123": "A"}),
-            # Events groups default to event id if not provided
-            (True, "123", "123", {}),
-            # Event groups are provided
-            (True, "123", "A", {"123": "A"}),
-        ]
-        for subtest_args in test_args:
-            with self.subTest():
-                event_processing, event_id, event_group, event_groups = subtest_args
-                self.mock_flumine.SIMULATED = True
-                mock_strategy = mock.Mock()
-                mock_stream = mock.Mock(
-                    event_processing=event_processing,
-                    event_id=event_id,
-                    event_group=event_group,
-                    listener_kwargs={},
-                )
-                mock_stream.market_filter = "GANG"
-                self.streams._streams = [mock_stream]
-
-                stream = self.streams.add_historical_stream(
-                    mock_strategy,
-                    "GANG",
-                    mock.Mock(event_id=event_id),
-                    event_processing=event_processing,
-                    event_groups=event_groups,
-                    **{},
-                )
-                self.assertEqual(stream, mock_stream)
-                self.assertEqual(len(self.streams), 1)
-
-    @mock.patch("flumine.streams.streams.HistoricalStream")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream_kwargs(
-        self, mock_increment, mock_historical_stream_class
-    ):
-        mock_historical_stream_class.__name__ = "test"
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(
-            event_processing=False, event_group=None, listener_kwargs={}
-        )
-        mock_stream.market_filter = "GANG"
-        self.streams._streams = [mock_stream]
-        mock_event_id = "12345"
-
-        self.streams.add_historical_stream(
-            mock_strategy,
-            "GANG",
-            mock.Mock(event_id=mock_event_id),
-            event_processing=False,
-            event_groups={},
-            **{"inplay": True},
-        )
-        self.assertEqual(len(self.streams), 2)
-        mock_increment.assert_called_with()
-        mock_historical_stream_class.assert_called_with(
-            flumine=self.mock_flumine,
-            stream_id=mock_increment(),
-            market_filter="GANG",
-            market_data_filter=mock_strategy.market_data_filter,
-            streaming_timeout=mock_strategy.streaming_timeout,
-            conflate_ms=mock_strategy.conflate_ms,
-            output_queue=False,
-            event_processing=False,
-            event_group=None,
-            event_id=mock_event_id,
-            inplay=True,
-        )
-
-    @mock.patch("flumine.streams.streams.HistoricalStream")
-    def test_add_historical_stream_event_processing(self, mock_historical_stream_class):
-        mock_historical_stream_class.__name__ = "test"
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(event_processing=False, event_group=None)
-        mock_stream.market_filter = "GANG"
-        self.streams._streams = [mock_stream]
-        stream = self.streams.add_historical_stream(
-            mock_strategy,
-            "GANG",
-            mock.Mock(),
-            event_processing=True,
-            event_groups={},
-        )
-        self.assertEqual(stream, mock_historical_stream_class())
-        self.assertEqual(len(self.streams), 2)
-
-    @mock.patch("flumine.streams.streams.get_file_md")
-    @mock.patch("flumine.streams.streams.HistoricalStream")
-    def test_add_historical_stream_event_processing_with_grouping(
-        self, mock_historical_stream_class, mock_get_file_md
-    ):
-        event_id = "123"
-        mock_historical_stream_class.__name__ = "test"
-        self.mock_flumine.SIMULATED = True
-        mock_strategy = mock.Mock()
-        mock_stream = mock.Mock(event_processing=True, event_group=event_id)
-        mock_stream.market_filter = "GANG"
-        self.streams._streams = [mock_stream]
-        stream = self.streams.add_historical_stream(
-            mock_strategy,
-            "GANG",
-            mock.Mock(event_id=event_id),
-            event_processing=True,
-            event_groups={event_id: "A"},
-        )
-        self.assertEqual(stream, mock_historical_stream_class())
-        self.assertEqual(len(self.streams), 2)
-
-    @mock.patch("flumine.streams.streams.OrderStream")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_historical_stream_conflate(
-        self, mock_increment, mock_order_stream_class
-    ):
+    @mock.patch("flumine.streams.streams.BetfairOrderStream")
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_betfair_order_stream(self, mock_add_stream, mock_order_stream_class):
         conflate_ms = 500
         streaming_timeout = 0.5
         mock_client = mock.Mock()
-        self.streams.add_order_stream(mock_client, conflate_ms, streaming_timeout)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
+        self.streams.add_betfair_order_stream(
+            mock_client, conflate_ms, streaming_timeout
+        )
+        mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
         mock_order_stream_class.assert_called_with(
             flumine=self.mock_flumine,
-            stream_id=mock_increment(),
-            streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
+            streaming_timeout=streaming_timeout,
             client=mock_client,
         )
 
     @mock.patch("flumine.streams.streams.SimulatedOrderStream")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_simulated_order_stream(self, mock_increment, mock_order_stream_class):
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_simulated_order_stream(self, mock_add_stream, mock_order_stream_class):
         conflate_ms = 500
         streaming_timeout = 0.5
         mock_client = mock.Mock()
         self.streams.add_simulated_order_stream(
             mock_client, conflate_ms, streaming_timeout
         )
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
+        mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
         mock_order_stream_class.assert_called_with(
             flumine=self.mock_flumine,
-            stream_id=mock_increment(),
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
@@ -528,25 +134,16 @@ class StreamsTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.streams.streams.BetdaqOrderPolling")
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_betdaq_order_polling(self, mock_increment, mock_order_polling_class):
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_betdaq_order_polling(self, mock_add_stream, mock_order_polling_class):
         mock_client = mock.Mock()
         self.streams.add_betdaq_order_polling(mock_client)
-        self.assertEqual(len(self.streams), 1)
-        mock_increment.assert_called_with()
+        mock_add_stream.assert_called_with(mock_order_polling_class.return_value)
         mock_order_polling_class.assert_called_with(
             flumine=self.mock_flumine,
-            stream_id=mock_increment(),
             client=mock_client,
             streaming_timeout=0.25,
         )
-
-    @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
-    def test_add_custom_stream(self, mock_increment):
-        mock_stream = mock.Mock()
-        self.streams.add_custom_stream(mock_stream)
-        mock_increment.assert_called_with()
-        self.assertEqual(self.streams._streams, [mock_stream])
 
     def test_start(self):
         mock_stream = mock.Mock()
@@ -570,6 +167,21 @@ class StreamsTest(unittest.TestCase):
     def test__increment_stream_id(self):
         self.assertEqual(self.streams._increment_stream_id(), 10000)
 
+    def test_has_stream(self):
+        self.streams._streams = [mock.Mock(stream_hash=123)]
+        self.assertTrue(self.streams.has_stream(123))
+        self.assertFalse(self.streams.has_stream(456))
+
+    def test_contains(self):
+        self.streams._streams = [mock.Mock(stream_hash=123)]
+        self.assertTrue(123 in self.streams)
+        self.assertFalse(456 in self.streams)
+
+    def test_get_item(self):
+        mock_stream = mock.Mock(stream_hash=123)
+        self.streams._streams = [mock_stream]
+        self.assertEqual(self.streams[123], mock_stream)
+
     def test_iter(self):
         for i in self.streams:
             assert i
@@ -581,7 +193,7 @@ class StreamsTest(unittest.TestCase):
 class TestBaseStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.mock_client = mock.Mock()
+        self.mock_client = mock.Mock(username="test")
         self.stream = BaseStream(
             self.mock_flumine,
             123,
@@ -592,13 +204,11 @@ class TestBaseStream(unittest.TestCase):
             "yes",
             client=self.mock_client,
             output_queue=False,
-            event_processing=True,
-            event_id="123",
             operation="test",
-            **{"calculate_market_tv": True},
         )
 
     def test_init(self):
+        self.assertIsNone(self.stream.VENUE)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -611,10 +221,7 @@ class TestBaseStream(unittest.TestCase):
         self.assertEqual(self.stream._client, self.mock_client)
         self.assertEqual(self.stream.MAX_LATENCY, 0.5)
         self.assertIsNone(self.stream._output_queue)
-        self.assertTrue(self.stream.event_processing)
-        self.assertEqual(self.stream.event_id, "123")
         self.assertEqual(self.stream.operation, "test")
-        self.assertEqual(self.stream.listener_kwargs, {"calculate_market_tv": True})
 
     def test_run(self):
         with self.assertRaises(NotImplementedError):
@@ -647,14 +254,15 @@ class TestBaseStream(unittest.TestCase):
         self.assertTrue(self.stream.stream_running)
 
 
-class TestMarketStream(unittest.TestCase):
+class TestBetfairMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.stream = streams.MarketStream(
+        self.stream = streams.BetfairMarketStream(
             self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -670,14 +278,15 @@ class TestMarketStream(unittest.TestCase):
     #     pass
 
 
-class TestDataStream(unittest.TestCase):
+class TestBetfairDataStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.stream = streams.DataStream(
+        self.stream = streams.BetfairDataStream(
             self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.market_filter, {"test": "me"})
@@ -685,25 +294,25 @@ class TestDataStream(unittest.TestCase):
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
-        self.assertEqual(self.stream.LISTENER, datastream.FlumineListener)
-        self.assertEqual(
-            self.stream._listener.output_queue, self.mock_flumine.handler_queue
-        )
+        self.assertEqual(self.stream.LISTENER, betfairdatastream.FlumineListener)
 
-    @mock.patch("flumine.streams.marketstream.BaseStream.betting_client")
+    @mock.patch("flumine.streams.betfairmarketstream.BaseStream.betting_client")
     def test_run(self, mock_betting_client):
         self.stream.run()
         mock_betting_client.streaming.create_stream.assert_called_with(
             listener=self.stream._listener, unique_id=123
         )
+        self.assertEqual(
+            self.stream._listener.output_queue, self.mock_flumine.handler_queue
+        )
 
     # def test_handle_output(self):
     #     pass
 
-    @mock.patch("flumine.streams.datastream.FlumineCricketStream")
-    @mock.patch("flumine.streams.datastream.FlumineRaceStream")
-    @mock.patch("flumine.streams.datastream.FlumineOrderStream")
-    @mock.patch("flumine.streams.datastream.FlumineMarketStream")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineCricketStream")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineRaceStream")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineOrderStream")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineMarketStream")
     def test_flumine_listener(
         self,
         mock_market_stream,
@@ -711,7 +320,7 @@ class TestDataStream(unittest.TestCase):
         mock_race_stream,
         mock_cricket_stream,
     ):
-        listener = datastream.FlumineListener()
+        listener = betfairdatastream.FlumineListener()
         self.assertEqual(
             listener._add_stream(123, "marketSubscription"), mock_market_stream()
         )
@@ -727,22 +336,22 @@ class TestDataStream(unittest.TestCase):
 
     def test_flumine_stream(self):
         mock_listener = mock.Mock()
-        stream = datastream.FlumineStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineStream(mock_listener, 0)
         self.assertEqual(str(stream), "FlumineStream")
         self.assertEqual(repr(stream), "<FlumineStream [0]>")
 
-    @mock.patch("flumine.streams.datastream.RawDataEvent")
+    @mock.patch("flumine.streams.betfairdatastream.RawDataEvent")
     def test_flumine_stream_on_process(self, raw_data_event):
         mock_listener = mock.Mock()
-        stream = datastream.FlumineStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineStream(mock_listener, 0)
         stream.on_process([1, 2, 3])
-        raw_data_event.assert_called_with([1, 2, 3])
+        raw_data_event.assert_called_with([1, 2, 3], venue=VenueType.BETFAIR)
         mock_listener.output_queue.put.assert_called_with(raw_data_event.return_value)
 
-    @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
-        stream = datastream.FlumineMarketStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineMarketStream(mock_listener, 0)
         stream._clk = "AAA"
         market_books = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
         stream._process(market_books, 123)
@@ -753,10 +362,10 @@ class TestDataStream(unittest.TestCase):
             [mock_listener.stream_unique_id, "AAA", 123, market_books]
         )
 
-    @mock.patch("flumine.streams.datastream.FlumineMarketStream.on_process")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineMarketStream.on_process")
     def test_flumine_market_stream_market_closed(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
-        stream = datastream.FlumineMarketStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineMarketStream(mock_listener, 0)
         stream._caches = {"1.123": object}
         stream._clk = "AAA"
         market_books = [{"id": "1.123", "marketDefinition": {"status": "CLOSED"}}]
@@ -769,10 +378,10 @@ class TestDataStream(unittest.TestCase):
             [mock_listener.stream_unique_id, "AAA", 123, market_books]
         )
 
-    @mock.patch("flumine.streams.datastream.FlumineOrderStream.on_process")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineOrderStream.on_process")
     def test_flumine_order_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
-        stream = datastream.FlumineOrderStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineOrderStream(mock_listener, 0)
         stream._clk = "AAA"
         order_updates = [{"id": "1.123"}, {"id": "1.456"}, {"id": "1.123"}]
         stream._process(order_updates, 123)
@@ -784,10 +393,10 @@ class TestDataStream(unittest.TestCase):
             [mock_listener.stream_unique_id, "AAA", 123, order_updates]
         )
 
-    @mock.patch("flumine.streams.datastream.FlumineRaceStream.on_process")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineRaceStream.on_process")
     def test_flumine_race_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
-        stream = datastream.FlumineRaceStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineRaceStream(mock_listener, 0)
         stream._clk = "AAA"
         race_updates = [{"mid": "1.123"}, {"mid": "1.456"}, {"mid": "1.123"}]
         stream._process(race_updates, 123)
@@ -799,10 +408,10 @@ class TestDataStream(unittest.TestCase):
             [mock_listener.stream_unique_id, "AAA", 123, race_updates]
         )
 
-    @mock.patch("flumine.streams.datastream.FlumineCricketStream.on_process")
+    @mock.patch("flumine.streams.betfairdatastream.FlumineCricketStream.on_process")
     def test_flumine_cricket_stream(self, mock_on_process):
         mock_listener = mock.Mock(stream_unique_id=0)
-        stream = datastream.FlumineCricketStream(mock_listener, 0)
+        stream = betfairdatastream.FlumineCricketStream(mock_listener, 0)
         stream._clk = "AAA"
         race_updates = [
             {"marketId": "1.123"},
@@ -821,41 +430,34 @@ class TestDataStream(unittest.TestCase):
 
 class TestHistoricalStream(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_flumine = mock.Mock()
-        self.stream = streams.HistoricalStream(
-            self.mock_flumine,
+        self.stream = streams.BetfairHistoricalStream(
+            "test",
+            {"inplay": True, "seconds_to_start": 123},
             123,
-            0.01,
-            100,
-            {"test": "me"},
-            {"please": "now"},
-            inplay=True,
-            seconds_to_start=123,
+            False,
+            "123",
+            "456",
         )
 
     def test_init(self):
-        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
+        self.assertEqual(self.stream.file_path, "test")
+        self.assertEqual(
+            self.stream.listener_kwargs, {"inplay": True, "seconds_to_start": 123}
+        )
         self.assertEqual(self.stream.stream_id, 123)
-        self.assertEqual(self.stream.market_filter, {"test": "me"})
-        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
-        self.assertEqual(self.stream.streaming_timeout, 0.01)
-        self.assertEqual(self.stream.conflate_ms, 100)
-        self.assertIsNone(self.stream._stream)
-        self.assertIsNone(self.stream.MAX_LATENCY)
-        self.assertTrue(self.stream._listener.inplay)
-        self.assertEqual(self.stream._listener.seconds_to_start, 123)
+        self.assertEqual(self.stream.event_processing, False)
+        self.assertEqual(self.stream.event_group, "123")
+        self.assertEqual(self.stream.event_id, "456")
+        self.assertEqual(self.stream.operation, "marketSubscription")
 
-    def test_run(self):
-        self.stream.run()
-
-    def test_handle_output(self):
-        self.stream.handle_output()
-
-    @mock.patch("flumine.streams.historicalstream.FlumineHistoricalGeneratorStream")
+    @mock.patch(
+        "flumine.streams.betfairhistoricalstream.FlumineHistoricalGeneratorStream"
+    )
     def test_create_generator(self, mock_generator):
         generator = self.stream.create_generator()
         mock_generator.assert_called_with(
-            file_path={"test": "me"},
+            file_path="test",
             listener=self.stream._listener,
             operation="marketSubscription",
             unique_id=self.stream.stream_id,
@@ -865,17 +467,20 @@ class TestHistoricalStream(unittest.TestCase):
         self.assertFalse(self.stream._listener.update_clk)
         self.assertEqual(generator, mock_generator().get_generator())
 
+    def test_stream_hash(self):
+        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
+
 
 class TestFlumineMarketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.FlumineMarketStream(self.listener, 0)
+        self.stream = betfairhistoricalstream.FlumineMarketStream(self.listener, 0)
 
     def test_init(self):
         self.assertEqual(self.stream._listener, self.listener)
         self.assertEqual(self.stream._lookup, "mc")
 
-    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
     def test__process(self, mock_cache):
         update = [{"id": "1.23", "img": {1: 2}, "marketDefinition": {"runners": []}}]
         self.assertTrue(
@@ -895,7 +500,7 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
-    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
     def test__process_inplay(self, mock_cache):
         self.stream._listener.inplay = True
         update = [
@@ -948,7 +553,7 @@ class TestFlumineMarketStream(unittest.TestCase):
         )
         mock_cache().update_cache.assert_called_with(update[0], 12345, active=True)
 
-    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
     def test__process_seconds_to_start(self, mock_cache):
         self.stream._listener.inplay = None
         self.stream._listener.seconds_to_start = 600
@@ -1015,7 +620,7 @@ class TestFlumineMarketStream(unittest.TestCase):
             update[0], 1497470702112, active=True
         )
 
-    @mock.patch("flumine.streams.historicalstream.MarketBookCache")
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
     def test__process_max_inplay_seconds(self, mock_cache):
         # Set listener attributes
         self.stream._listener.inplay = None
@@ -1099,10 +704,10 @@ class TestFlumineMarketStream(unittest.TestCase):
 class TestFlumineRaceStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.FlumineRaceStream(self.listener, 0)
+        self.stream = betfairhistoricalstream.FlumineRaceStream(self.listener, 0)
 
     @mock.patch(
-        "flumine.streams.historicalstream.create_time",
+        "flumine.streams.betfairhistoricalstream.create_time",
         return_value=datetime.datetime(
             1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
         ),
@@ -1120,7 +725,7 @@ class TestFlumineRaceStream(unittest.TestCase):
         mock_create_time.assert_called_with(11111111111111, "13.10")
 
     @mock.patch(
-        "flumine.streams.historicalstream.create_time",
+        "flumine.streams.betfairhistoricalstream.create_time",
         return_value=datetime.datetime(
             1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
         ),
@@ -1138,7 +743,7 @@ class TestFlumineRaceStream(unittest.TestCase):
         mock_create_time.assert_called_with(1234, "13.10")
 
     @mock.patch(
-        "flumine.streams.historicalstream.create_time",
+        "flumine.streams.betfairhistoricalstream.create_time",
         return_value=datetime.datetime(
             1970, 1, 1, 13, 10, tzinfo=datetime.timezone.utc
         ),
@@ -1159,7 +764,7 @@ class TestFlumineRaceStream(unittest.TestCase):
 class TestFlumineCricketStream(unittest.TestCase):
     def setUp(self) -> None:
         self.listener = mock.Mock()
-        self.stream = historicalstream.FlumineCricketStream(self.listener, 0)
+        self.stream = betfairhistoricalstream.FlumineCricketStream(self.listener, 0)
 
     def test__process(self):
         self.assertTrue(
@@ -1175,7 +780,7 @@ class TestFlumineCricketStream(unittest.TestCase):
 class TestHistoricListener(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.listener = historicalstream.HistoricListener(
+        self.listener = betfairhistoricalstream.HistoricListener(
             inplay=True, seconds_to_start=123
         )
 
@@ -1183,7 +788,7 @@ class TestHistoricListener(unittest.TestCase):
         self.assertTrue(self.listener.inplay)
         self.assertEqual(self.listener.seconds_to_start, 123)
 
-    @mock.patch("flumine.streams.historicalstream.FlumineMarketStream")
+    @mock.patch("flumine.streams.betfairhistoricalstream.FlumineMarketStream")
     def test__add_stream_market(self, mock_stream):
         self.assertEqual(
             self.listener._add_stream(123, "marketSubscription"), mock_stream()
@@ -1193,13 +798,13 @@ class TestHistoricListener(unittest.TestCase):
         with self.assertRaises(ListenerError):
             self.listener._add_stream(123, "orderSubscription")
 
-    @mock.patch("flumine.streams.historicalstream.FlumineRaceStream")
+    @mock.patch("flumine.streams.betfairhistoricalstream.FlumineRaceStream")
     def test__add_stream_race(self, mock_stream):
         self.assertEqual(
             self.listener._add_stream(123, "raceSubscription"), mock_stream()
         )
 
-    @mock.patch("flumine.streams.historicalstream.FlumineCricketStream")
+    @mock.patch("flumine.streams.betfairhistoricalstream.FlumineCricketStream")
     def test__add_stream_cricket(self, mock_stream):
         self.assertEqual(
             self.listener._add_stream(123, "cricketSubscription"), mock_stream()
@@ -1218,21 +823,35 @@ class TestHistoricListener(unittest.TestCase):
         self.assertIsNone(self.listener.on_data("p"))
 
 
-class TestOrderStream(unittest.TestCase):
+class TestBetfairOrderStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.stream = streams.OrderStream(self.mock_flumine, 123, 0.01, 100)
+        self.stream = streams.BetfairOrderStream(self.mock_flumine, 123, 0.01, 100)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
-        self.assertEqual(orderstream.START_DELAY, 2)
-        self.assertEqual(orderstream.SNAP_DELTA, 3)
+        self.assertEqual(betfairorderstream.START_DELAY, 2)
+        self.assertEqual(betfairorderstream.SNAP_DELTA, 3)
 
     # def test_run(self):
     #     pass
@@ -1247,10 +866,24 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.stream = streams.SimulatedOrderStream(self.mock_flumine, 123, 0.01, 100)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertEqual(self.stream.streaming_timeout, 0.01)
         self.assertEqual(self.stream.conflate_ms, 100)
         self.assertIsNone(self.stream._stream)
@@ -1279,10 +912,24 @@ class TestBetdaqOrderPolling(unittest.TestCase):
         self.stream = streams.BetdaqOrderPolling(self.mock_flumine, 123)
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertIsNone(self.stream.market_filter)
-        self.assertIsNone(self.stream.market_data_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
         self.assertIsNone(self.stream.streaming_timeout)
         self.assertIsNone(self.stream.conflate_ms)
         self.assertIsNone(self.stream._stream)
@@ -1321,15 +968,19 @@ class TestBetdaqOrderPolling(unittest.TestCase):
     def test_stream_running(self):
         self.assertTrue(self.stream.stream_running)
 
+    def test_stream_hash(self):
+        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
 
-class TestSportsDataStream(unittest.TestCase):
+
+class TestBetfairSportsDataStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
-        self.stream = streams.SportsDataStream(
+        self.stream = BetfairSportsDataStream(
             self.mock_flumine, 123, sports_data_filter="test", streaming_timeout=10
         )
 
     def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETFAIR)
         self.assertEqual(self.stream.flumine, self.mock_flumine)
         self.assertEqual(self.stream.stream_id, 123)
         self.assertEqual(self.stream.sports_data_filter, "test")
@@ -1341,3 +992,27 @@ class TestSportsDataStream(unittest.TestCase):
     #
     # def test_handle_output(self):
     #     pass
+
+
+class TestBetdaqMarketPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = BetdaqMarketPolling(
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
