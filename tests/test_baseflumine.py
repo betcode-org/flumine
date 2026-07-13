@@ -32,7 +32,9 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
     def test_init_simulated(self, mock_add_market_middleware, mock_SimulatedMiddleware):
         BaseFlumine.SIMULATED = True
-        mock_client = mock.Mock(VENUE=VenueType.SIMULATED, paper_trade=False)
+        mock_client = mock.Mock(
+            VENUE=VenueType.SIMULATED, paper_trade=False, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
         BaseFlumine.SIMULATED = False
@@ -42,7 +44,9 @@ class BaseFlumineTest(unittest.TestCase):
     def test_init_paper_trade(
         self, mock_add_market_middleware, mock_SimulatedMiddleware
     ):
-        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=True)
+        mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=True, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
 
