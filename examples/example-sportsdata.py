@@ -32,7 +32,6 @@ framework = Flumine(client)
 
 # create stream(s) (market data)
 market_stream = BetfairMarketStream(
-    framework,
     market_filter=streaming_market_filter(
         event_type_ids=["4"], market_types=["MATCH_ODDS"]
     ),
@@ -40,7 +39,6 @@ market_stream = BetfairMarketStream(
 
 # create stream(s) (sports data)
 sports_data_stream = BetfairSportsDataStream(
-    framework,
     sports_data_filter="cricketSubscription",  # "cricketSubscription" or "raceSubscription"
 )
 
