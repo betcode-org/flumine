@@ -42,6 +42,11 @@ class BaseStream(threading.Thread):
         operation: str = "marketSubscription",
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
+        if flumine is not None:
+            logger.warning(
+                "Passing flumine to a stream is deprecated as it is done automatically by add_strategy(). "
+                "This argument will be removed in a future release."
+            )
         self.flumine = flumine
         self.stream_id = stream_id
         self.market_filter = market_filter
