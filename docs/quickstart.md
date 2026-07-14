@@ -131,7 +131,7 @@ class ExampleDataStrategy(BaseStrategy):
 
 strategy = ExampleDataStrategy(
     stream=BetfairDataStream(
-                market_filter=streaming_market_filter(
+        market_filter=streaming_market_filter(
             event_type_ids=["7"],
             country_codes=["GB"],
             market_types=["WIN"],
