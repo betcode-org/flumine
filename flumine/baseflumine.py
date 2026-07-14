@@ -6,6 +6,7 @@ from typing import Type
 from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
+from .streams.basestream import BaseStream
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
@@ -101,7 +102,8 @@ class BaseFlumine:
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
         for stream in strategy.streams:
-            stream.flumine = self
+            if isinstance(stream, BaseStream):
+                stream.flumine = self
             # check if we can share a stream
             key = stream.stream_hash
             if key in self.streams:
