@@ -99,6 +99,7 @@ class BaseFlumineTest(unittest.TestCase):
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
@@ -120,6 +121,7 @@ class BaseFlumineTest(unittest.TestCase):
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )

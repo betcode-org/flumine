@@ -101,6 +101,7 @@ class BaseFlumine:
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
         for stream in strategy.streams:
+            stream.flumine = self
             # check if we can share a stream
             key = stream.stream_hash
             if key in self.streams:
