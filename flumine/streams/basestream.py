@@ -3,6 +3,7 @@ import queue
 import json
 import logging
 import betfairlightweight
+import warnings
 from betfairlightweight import StreamListener, filters
 from tenacity import wait_exponential
 
@@ -43,7 +44,7 @@ class BaseStream(threading.Thread):
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
         if flumine is not None:
-            logger.warning(
+            warnings.warn(
                 "Passing flumine to a stream is deprecated as it is done automatically by add_strategy(). "
                 "This argument will be removed in a future release."
             )
