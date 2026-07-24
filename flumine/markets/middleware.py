@@ -67,7 +67,8 @@ class SimulatedMiddleware(Middleware):
                         market.market_id,
                     )
                     self._runner_removals.append(_removal)
-                    runner_removals.append(_removal)
+                    if runner.adjustment_factor:
+                        runner_removals.append(_removal)
 
         for _removal in runner_removals:
             self._process_runner_removal(market, *_removal)
