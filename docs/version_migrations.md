@@ -36,7 +36,6 @@ framework = Flumine(client)
 framework.add_strategy(
     ExampleStrategy(
         stream=BetfairMarketStream(
-            framework,
             market_filter=streaming_market_filter(
                 event_type_ids=["7"],
                 country_codes=["GB"],
@@ -57,7 +56,6 @@ A single stream with multiple strategies:
 ```python
 # Create stream(s) (market data)
 stream = BetfairMarketStream(
-    framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],
         country_codes=["GB"],
@@ -78,7 +76,6 @@ Multiple streams with a single strategy:
 ```python
 # Create stream(s) (market data)
 stream_one = BetfairMarketStream(
-    framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],
         country_codes=["GB"],
@@ -86,7 +83,6 @@ stream_one = BetfairMarketStream(
     ),
 )
 stream_two = BetfairMarketStream(
-    framework,
     market_filter=streaming_market_filter(
         event_type_ids=["1"],
         country_codes=["GB"],
@@ -109,7 +105,7 @@ strategy.unsubscribe_from_stream(stream)
 
 ### Simulation
 
-The simulation setup has also changed to match live as well as removing framework, renaming `market_filter` to `file_path` and moving `listener_kwargs` to its own variable.
+The simulation setup has also changed to match live as well as renaming `market_filter` to `file_path` and moving `listener_kwargs` to its own variable.
 
 ```python
 import betfairlightweight

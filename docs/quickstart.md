@@ -54,7 +54,6 @@ from betfairlightweight.filters import (
 
 strategy = ExampleStrategy(
     stream=BetfairMarketStream(
-        framework,
         market_filter=streaming_market_filter(
             event_type_ids=["7"],
             country_codes=["GB"],
@@ -132,7 +131,6 @@ class ExampleDataStrategy(BaseStrategy):
 
 strategy = ExampleDataStrategy(
     stream=BetfairDataStream(
-        framework,
         market_filter=streaming_market_filter(
             event_type_ids=["7"],
             country_codes=["GB"],

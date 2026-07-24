@@ -3,6 +3,7 @@ import queue
 import json
 import logging
 import betfairlightweight
+import warnings
 from betfairlightweight import StreamListener, filters
 from tenacity import wait_exponential
 
@@ -42,6 +43,11 @@ class BaseStream(threading.Thread):
         operation: str = "marketSubscription",
     ):
         threading.Thread.__init__(self, daemon=True, name=self.__class__.__name__)
+        if flumine is not None:
+            warnings.warn(
+                "Passing flumine to a stream is deprecated as it is done automatically by add_strategy(). "
+                "This argument will be removed in a future release."
+            )
         self.flumine = flumine
         self.stream_id = stream_id
         self.market_filter = market_filter

@@ -11,6 +11,7 @@ from flumine.baseflumine import (
 )
 from flumine.clients import VenueType
 from flumine.exceptions import ClientError
+from flumine.streams.basestream import BaseStream
 
 
 class BaseFlumineTest(unittest.TestCase):
@@ -100,11 +101,12 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_strategy(self, mock_log_control, mock_events, mock_add_stream):
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
-        mock_stream = mock.Mock(stream_hash=123)
+        mock_stream = mock.Mock(stream_hash=123, spec=BaseStream)
         mock_strategy = mock.Mock(
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
@@ -121,17 +123,31 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.strategies = mock_strategies
         mock_new_stream = mock.Mock(stream_hash=123)
         self.base_flumine.streams.add_stream(mock_new_stream)
-        mock_stream = mock.Mock(stream_hash=123)
+        mock_stream = mock.Mock(stream_hash=123, spec=BaseStream)
         mock_strategy = mock.Mock(
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
         mock_add_stream.assert_not_called()
         mock_strategy.replace_stream.assert_called_with(mock_stream, mock_new_stream)
+
+    def test_add_strategy_non_base_stream(self):
+        """Verifies that if a stream is not an instance of BaseStream, flumine is not set on it."""
+        mock_strategies = mock.Mock()
+        self.base_flumine.strategies = mock_strategies
+        mock_stream = mock.Mock(
+            stream_hash=123, operation="", spec=object
+        )  # Not a BaseStream
+        mock_strategy = mock.Mock(
+            market_filter={}, sports_data_filter=[], streams=[mock_stream]
+        )
+        self.base_flumine.add_strategy(mock_strategy)
+        self.assertFalse(hasattr(mock_stream, "flumine"))
 
     def test_add_worker(self):
         mock_worker = mock.Mock()

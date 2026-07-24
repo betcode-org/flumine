@@ -75,7 +75,6 @@ framework = Flumine(client=client)
 strategy = ExampleStrategy(
     name="two",
     stream=BetfairMarketStream(
-        framework,
         market_filter=streaming_market_filter(market_ids=["1.257042402"]),
     ),
 )

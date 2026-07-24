@@ -109,7 +109,6 @@ framework = Flumine(client)
 framework.add_strategy(
     ExampleStrategy(
         stream=BetfairMarketStream(
-            framework,
             market_filter=streaming_market_filter(
                 event_type_ids=["7"],
                 country_codes=["GB"],
