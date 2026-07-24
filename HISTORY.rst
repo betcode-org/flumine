@@ -11,6 +11,10 @@ Release History
 - #759 de duplicate add methods (@mzaja)
 - #851 provide framework reference to streams when adding strategy (@mzaja)
 
+**Bug Fixes**
+
+- #854 confirm runner has an adjustment factor before executing
+
 3.0.0 (2026-06-29)
 +++++++++++++++++++
 
