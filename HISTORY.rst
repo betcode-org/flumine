@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+3.1.0 (2026-07-24)
++++++++++++++++++++
+
+**Improvements**
+
+- #759 de duplicate add methods (@mzaja)
+- #851 provide framework reference to streams when adding strategy (@mzaja)
+
 3.0.0 (2026-06-29)
 +++++++++++++++++++
 
