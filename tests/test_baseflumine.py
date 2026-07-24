@@ -15,7 +15,9 @@ from flumine.exceptions import ClientError
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=False)
+        self.mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=False, trading_controls=[]
+        )
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
@@ -30,7 +32,9 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
     def test_init_simulated(self, mock_add_market_middleware, mock_SimulatedMiddleware):
         BaseFlumine.SIMULATED = True
-        mock_client = mock.Mock(VENUE=VenueType.SIMULATED, paper_trade=False)
+        mock_client = mock.Mock(
+            VENUE=VenueType.SIMULATED, paper_trade=False, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
         BaseFlumine.SIMULATED = False
@@ -40,7 +44,9 @@ class BaseFlumineTest(unittest.TestCase):
     def test_init_paper_trade(
         self, mock_add_market_middleware, mock_SimulatedMiddleware
     ):
-        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=True)
+        mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=True, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
 
@@ -155,6 +161,52 @@ class BaseFlumineTest(unittest.TestCase):
         mock_control = mock.Mock()
         self.base_flumine.add_logging_control(mock_control)
         self.assertEqual(len(self.base_flumine._logging_controls), 1)
+
+    def test_add_methods_are_idempotent(self):
+        """
+        Verifies that adding the same worker, control, or middleware
+        multiple times does not create duplicates in the respective collection.
+        """
+
+        class MockItem:
+            name = ""
+            NAME = ""
+
+            def __init__(self, value):
+                self.value = value
+
+            def __eq__(self, other):
+                return (type(self) == type(other)) and (self.value == other.value)
+
+            def __call__(self, *args, **kwds):
+                # Returns self for mocking a class argument
+                return self
+
+        items = [MockItem(1), MockItem(1), MockItem(2)]
+
+        for collection, method in [
+            (self.base_flumine._workers, self.base_flumine.add_worker),
+            (self.base_flumine.trading_controls, self.base_flumine.add_trading_control),
+            (
+                self.base_flumine._market_middleware,
+                self.base_flumine.add_market_middleware,
+            ),
+            (
+                self.base_flumine._logging_controls,
+                self.base_flumine.add_logging_control,
+            ),
+            (
+                self.mock_client.trading_controls,
+                lambda item: self.base_flumine.add_client_control(
+                    self.mock_client, item
+                ),
+            ),
+        ]:
+            with self.subTest(method=method):
+                initial_count = len(collection)
+                for item in items:
+                    method(item)
+                self.assertEqual(len(collection), initial_count + 2)
 
     def test_log_control(self):
         mock_control = mock.Mock()

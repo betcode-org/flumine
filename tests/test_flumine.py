@@ -8,7 +8,7 @@ from flumine.clients import VenueType, BetdaqClient
 
 class FlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED)
+        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED, trading_controls=[])
         self.flumine = Flumine(self.mock_client)
 
     @mock.patch("flumine.flumine.Flumine._add_default_workers")
