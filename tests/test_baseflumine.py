@@ -11,11 +11,14 @@ from flumine.baseflumine import (
 )
 from flumine.clients import VenueType
 from flumine.exceptions import ClientError
+from flumine.streams.basestream import BaseStream
 
 
 class BaseFlumineTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=False)
+        self.mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=False, trading_controls=[]
+        )
         self.base_flumine = BaseFlumine(self.mock_client)
 
     def test_init(self):
@@ -30,7 +33,9 @@ class BaseFlumineTest(unittest.TestCase):
     @mock.patch("flumine.baseflumine.BaseFlumine.add_market_middleware")
     def test_init_simulated(self, mock_add_market_middleware, mock_SimulatedMiddleware):
         BaseFlumine.SIMULATED = True
-        mock_client = mock.Mock(VENUE=VenueType.SIMULATED, paper_trade=False)
+        mock_client = mock.Mock(
+            VENUE=VenueType.SIMULATED, paper_trade=False, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
         BaseFlumine.SIMULATED = False
@@ -40,7 +45,9 @@ class BaseFlumineTest(unittest.TestCase):
     def test_init_paper_trade(
         self, mock_add_market_middleware, mock_SimulatedMiddleware
     ):
-        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=True)
+        mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=True, trading_controls=[]
+        )
         BaseFlumine(mock_client)
         mock_add_market_middleware.assert_called_with(mock_SimulatedMiddleware())
 
@@ -94,11 +101,12 @@ class BaseFlumineTest(unittest.TestCase):
     def test_add_strategy(self, mock_log_control, mock_events, mock_add_stream):
         mock_strategies = mock.Mock()
         self.base_flumine.strategies = mock_strategies
-        mock_stream = mock.Mock(stream_hash=123)
+        mock_stream = mock.Mock(stream_hash=123, spec=BaseStream)
         mock_strategy = mock.Mock(
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
@@ -115,17 +123,31 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine.strategies = mock_strategies
         mock_new_stream = mock.Mock(stream_hash=123)
         self.base_flumine.streams.add_stream(mock_new_stream)
-        mock_stream = mock.Mock(stream_hash=123)
+        mock_stream = mock.Mock(stream_hash=123, spec=BaseStream)
         mock_strategy = mock.Mock(
             market_filter={}, sports_data_filter=[], streams=[mock_stream]
         )
         self.base_flumine.add_strategy(mock_strategy)
+        self.assertIs(mock_stream.flumine, self.base_flumine)
         mock_strategies.assert_called_with(
             mock_strategy, self.base_flumine.clients, self.base_flumine
         )
         mock_log_control.assert_called_with(mock_events.StrategyEvent(mock_strategy))
         mock_add_stream.assert_not_called()
         mock_strategy.replace_stream.assert_called_with(mock_stream, mock_new_stream)
+
+    def test_add_strategy_non_base_stream(self):
+        """Verifies that if a stream is not an instance of BaseStream, flumine is not set on it."""
+        mock_strategies = mock.Mock()
+        self.base_flumine.strategies = mock_strategies
+        mock_stream = mock.Mock(
+            stream_hash=123, operation="", spec=object
+        )  # Not a BaseStream
+        mock_strategy = mock.Mock(
+            market_filter={}, sports_data_filter=[], streams=[mock_stream]
+        )
+        self.base_flumine.add_strategy(mock_strategy)
+        self.assertFalse(hasattr(mock_stream, "flumine"))
 
     def test_add_worker(self):
         mock_worker = mock.Mock()
@@ -155,6 +177,52 @@ class BaseFlumineTest(unittest.TestCase):
         mock_control = mock.Mock()
         self.base_flumine.add_logging_control(mock_control)
         self.assertEqual(len(self.base_flumine._logging_controls), 1)
+
+    def test_add_methods_are_idempotent(self):
+        """
+        Verifies that adding the same worker, control, or middleware
+        multiple times does not create duplicates in the respective collection.
+        """
+
+        class MockItem:
+            name = ""
+            NAME = ""
+
+            def __init__(self, value):
+                self.value = value
+
+            def __eq__(self, other):
+                return (type(self) == type(other)) and (self.value == other.value)
+
+            def __call__(self, *args, **kwds):
+                # Returns self for mocking a class argument
+                return self
+
+        items = [MockItem(1), MockItem(1), MockItem(2)]
+
+        for collection, method in [
+            (self.base_flumine._workers, self.base_flumine.add_worker),
+            (self.base_flumine.trading_controls, self.base_flumine.add_trading_control),
+            (
+                self.base_flumine._market_middleware,
+                self.base_flumine.add_market_middleware,
+            ),
+            (
+                self.base_flumine._logging_controls,
+                self.base_flumine.add_logging_control,
+            ),
+            (
+                self.mock_client.trading_controls,
+                lambda item: self.base_flumine.add_client_control(
+                    self.mock_client, item
+                ),
+            ),
+        ]:
+            with self.subTest(method=method):
+                initial_count = len(collection)
+                for item in items:
+                    method(item)
+                self.assertEqual(len(collection), initial_count + 2)
 
     def test_log_control(self):
         mock_control = mock.Mock()

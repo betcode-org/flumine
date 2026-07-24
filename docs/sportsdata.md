@@ -11,7 +11,6 @@ A cricket subscription can be added via the `SportsDataStream`
 
 ```python 
 sports_data_stream = SportsDataStream(
-    framework,
     sports_data_filter="cricketSubscription",
 )
 framework.add_stream(sports_data_stream)
@@ -23,7 +22,6 @@ A race subscription can be added via the `SportsDataStream`
 
 ```python 
 sports_data_stream = SportsDataStream(
-    framework,
     sports_data_filter="raceSubscription",
 )
 framework.add_stream(sports_data_stream)

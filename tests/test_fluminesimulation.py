@@ -14,7 +14,7 @@ from flumine.markets.market import Market
 
 class FlumineSimulationTest(unittest.TestCase):
     def setUp(self):
-        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED)
+        self.mock_client = mock.Mock(VENUE=VenueType.SIMULATED, trading_controls=[])
         self.flumine = FlumineSimulation(self.mock_client)
 
     def test_init(self):
@@ -23,7 +23,9 @@ class FlumineSimulationTest(unittest.TestCase):
 
     def test_run_error(self):
         self.flumine.clients._clients.clear()
-        mock_client = mock.Mock(VENUE=VenueType.BETFAIR, paper_trade=False)
+        mock_client = mock.Mock(
+            VENUE=VenueType.BETFAIR, paper_trade=False, trading_controls=[]
+        )
         self.flumine.add_client(mock_client)
         with self.assertRaises(RunError):
             self.flumine.run()

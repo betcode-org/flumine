@@ -12,6 +12,8 @@ Functions:
 - `add_market_middleware` Adds [market middleware](/markets/#middleware) to the framework
 - `add_logging_control` Adds a [logging control](/advanced/#logging-controls) to the framework
 
+With the exception of `add_client` and `add_strategy`, the methods above will de-duplicate the added workers/controls/middleware to ensure that only one of each resource is added to the framework. This is useful when adding strategy-specific resources through `BaseStrategy.add` method, as the shared resources between strategies get reused instead of duplicated. To determine what constitutes a duplicate resource, override its `__eq__` method.
+
 The Flumine class can be adapted by overriding the following functions:
 
 - `_process_market_books()` called on MarketBook event

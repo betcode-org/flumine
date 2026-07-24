@@ -25,7 +25,6 @@ framework = Flumine(client=client)
 
 # create stream(s) (market data)
 stream = BetfairDataStream(
-    framework,
     market_filter=streaming_market_filter(
         event_type_ids=["7"],
         country_codes=["GB", "IE"],

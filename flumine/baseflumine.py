@@ -6,6 +6,7 @@ from typing import Type
 from betfairlightweight import resources
 
 from .strategy.strategy import Strategies, BaseStrategy
+from .streams.basestream import BaseStream
 from .streams.streams import Streams
 from .events import events
 from .worker import BackgroundWorker
@@ -101,6 +102,8 @@ class BaseFlumine:
     def add_strategy(self, strategy: BaseStrategy) -> None:
         logger.info("Adding strategy %s", strategy)
         for stream in strategy.streams:
+            if isinstance(stream, BaseStream):
+                stream.flumine = self
             # check if we can share a stream
             key = stream.stream_hash
             if key in self.streams:
@@ -115,27 +118,38 @@ class BaseFlumine:
         self.strategies(strategy, self.clients, self)
         self.log_control(events.StrategyEvent(strategy))
 
+    @staticmethod
+    def _add_if_unique(container: list, item) -> None:
+        """Adds an item to the container if the item is not already present in it."""
+        if item not in container:
+            container.append(item)
+        else:
+            name = getattr(item, "NAME", getattr(item, "name", item))
+            logger.debug("%s is already present and has not been added again.", name)
+
     def add_worker(self, worker: BackgroundWorker) -> None:
         logger.info("Adding worker %s", worker.name)
-        self._workers.append(worker)
+        self._add_if_unique(self._workers, worker)
 
     def add_client_control(
         self, client: BaseClient, client_control: Type[BaseControl], **kwargs
     ) -> None:
         logger.info("Adding client control %s", client_control.NAME)
-        client.trading_controls.append(client_control(self, client, **kwargs))
+        self._add_if_unique(
+            client.trading_controls, client_control(self, client, **kwargs)
+        )
 
     def add_trading_control(self, trading_control: Type[BaseControl], **kwargs) -> None:
         logger.info("Adding trading control %s", trading_control.NAME)
-        self.trading_controls.append(trading_control(self, **kwargs))
+        self._add_if_unique(self.trading_controls, trading_control(self, **kwargs))
 
     def add_market_middleware(self, middleware: Middleware) -> None:
         logger.info("Adding market middleware %s", middleware)
-        self._market_middleware.append(middleware)
+        self._add_if_unique(self._market_middleware, middleware)
 
     def add_logging_control(self, logging_control: LoggingControl) -> None:
         logger.info("Adding logging control %s", logging_control.NAME)
-        self._logging_controls.append(logging_control)
+        self._add_if_unique(self._logging_controls, logging_control)
 
     def log_control(self, event: events.BaseEvent) -> None:
         for logging_control in self._logging_controls:
