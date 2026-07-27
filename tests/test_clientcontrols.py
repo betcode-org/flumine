@@ -72,6 +72,24 @@ class TestMaxTransactionCount(unittest.TestCase):
         self.trading_control._validate(mock_order, OrderPackageType.PLACE)
         mock_check_hour.assert_called()
 
+    @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._on_error")
+    @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._check_hour")
+    def test_validate_cancel_skips_error(self, mock_check_hour, mock_on_error):
+        self.trading_control.client.transaction_limit = -10
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.CANCEL)
+        mock_check_hour.assert_called()
+        mock_on_error.assert_not_called()
+
+    @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._on_error")
+    @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._check_hour")
+    def test_validate_not_safe(self, mock_check_hour, mock_on_error):
+        self.trading_control.client.transaction_limit = -10
+        mock_order = mock.Mock()
+        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
+        mock_check_hour.assert_called()
+        mock_on_error.assert_called_once()
+
     @mock.patch("flumine.controls.clientcontrols.MaxTransactionCount._set_next_hour")
     def test_check_hour(self, mock_set_next_hour):
         self.trading_control._next_hour = datetime.datetime.now(datetime.timezone.utc)
