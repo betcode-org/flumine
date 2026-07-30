@@ -76,8 +76,8 @@ def process_current_orders(
 def process_current_order(order: BaseOrder, current_order, log_control) -> None:
     # update
     order.update_current_order(current_order)
-    # pickup async orders
-    if order.async_ and order.bet_id is None and current_order.bet_id:
+    # pickup bet_id
+    if order.bet_id is None and current_order.bet_id:
         order.responses.placed()
         order.bet_id = current_order.bet_id
         log_control(OrderEvent(order, venue=order.VENUE))
