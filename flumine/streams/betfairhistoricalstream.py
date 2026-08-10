@@ -31,6 +31,17 @@ class FlumineMarketStream(MarketStream):
     def __init__(self, *args, **kwargs):
         super(FlumineMarketStream, self).__init__(*args, **kwargs)
         self.inplay_publish_times = {}
+        # event_type_ids market filter, markets that do not match are
+        # excluded from processing entirely (simulation equivalent of the
+        # live streaming market_filter)
+        _event_type_ids = getattr(self._listener, "event_type_ids", None)
+        if isinstance(_event_type_ids, (list, tuple)):
+            self.event_type_ids = [
+                str(event_type_id) for event_type_id in _event_type_ids
+            ]
+        else:
+            self.event_type_ids = None
+        self.excluded_market_ids = set()
 
     def _process(self, data: list, publish_time: int) -> bool:
         active = False
@@ -38,6 +49,21 @@ class FlumineMarketStream(MarketStream):
             if "id" not in market_book:
                 continue
             market_id = market_book["id"]
+            # event_type_ids filter
+            if market_id in self.excluded_market_ids:
+                continue
+            if self.event_type_ids is not None and "marketDefinition" in market_book:
+                _event_type_id = str(market_book["marketDefinition"].get("eventTypeId"))
+                if _event_type_id not in self.event_type_ids:
+                    self.excluded_market_ids.add(market_id)
+                    logger.debug(
+                        "[%s: %s]: Market %s excluded by event_type_ids filter (%s)",
+                        self,
+                        self.unique_id,
+                        market_id,
+                        _event_type_id,
+                    )
+                    continue
             full_image = market_book.get("img", False)
             market_book_cache = self._caches.get(market_id)
 
@@ -215,7 +241,7 @@ class FlumineCricketStream(CricketStream):
 class HistoricListener(StreamListener):
     """
     Custom listener to restrict processing by
-    inplay or seconds_to_start.
+    inplay, seconds_to_start or event_type_ids.
     """
 
     def __init__(
@@ -223,12 +249,16 @@ class HistoricListener(StreamListener):
         inplay: Optional[bool] = None,
         seconds_to_start: Optional[float] = None,
         max_inplay_seconds: Optional[float] = None,
+        event_type_ids: Optional[list] = None,
         **kwargs,
     ):
         super(HistoricListener, self).__init__(**kwargs)
         self.inplay = inplay
         self.seconds_to_start = seconds_to_start
         self.max_inplay_seconds = max_inplay_seconds
+        self.event_type_ids = (
+            event_type_ids  # market filter, e.g. ["7"] for horse racing
+        )
 
     def _add_stream(self, unique_id: int, operation: str):
         if operation == "marketSubscription":

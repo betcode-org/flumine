@@ -207,6 +207,7 @@ stream = BetfairHistoricalStream(
 - inplay: Filter inplay flag
 - seconds_to_start: Filter market seconds to start
 - max_inplay_seconds: Filter market on max seconds after market turned inplay
+- event_type_ids: Filter markets by event type id, e.g. `["7"]` for horse racing or `["1"]` for soccer (markets that do not match are excluded from processing entirely)
 - calculate_market_tv: As per bflw listener arg
 - cumulative_runner_tv: As per bflw listener arg
 

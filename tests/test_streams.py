@@ -700,6 +700,99 @@ class TestFlumineMarketStream(unittest.TestCase):
             update_inplay_exceeded_limit[0], 12001, active=False
         )
 
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
+    def test__process_event_type_ids_filter(self, mock_cache):
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = None
+        self.stream._listener.max_inplay_seconds = None
+        self.stream.event_type_ids = ["7"]  # horse racing only
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "eventTypeId": "1",  # soccer, filtered out
+                    "runners": [],
+                },
+            },
+            {
+                "id": "1.24",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "eventTypeId": "7",  # horse racing, processed
+                    "runners": [],
+                },
+            },
+        ]
+        self.assertTrue(self.stream._process(update, 12345))
+        self.assertEqual(list(self.stream._caches.keys()), ["1.24"])
+        self.assertEqual(self.stream.excluded_market_ids, {"1.23"})
+        self.assertEqual(self.stream._updates_processed, 1)
+
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
+    def test__process_event_type_ids_excluded_without_definition(self, mock_cache):
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = None
+        self.stream._listener.max_inplay_seconds = None
+        self.stream.event_type_ids = ["7"]
+        # market excluded on full image
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "eventTypeId": "1",
+                    "runners": [],
+                },
+            }
+        ]
+        self.assertFalse(self.stream._process(update, 12345))
+        self.assertEqual(len(self.stream._caches), 0)
+        # subsequent updates without a marketDefinition remain excluded
+        update = [{"id": "1.23", "tv": 1234}]
+        self.assertFalse(self.stream._process(update, 12346))
+        self.assertEqual(len(self.stream._caches), 0)
+        self.assertEqual(self.stream._updates_processed, 0)
+
+    @mock.patch("flumine.streams.betfairhistoricalstream.MarketBookCache")
+    def test__process_event_type_ids_none(self, mock_cache):
+        # no filter, all markets processed
+        self.stream._listener.inplay = None
+        self.stream._listener.seconds_to_start = None
+        self.stream._listener.max_inplay_seconds = None
+        self.stream.event_type_ids = None
+        update = [
+            {
+                "id": "1.23",
+                "img": {1: 2},
+                "marketDefinition": {
+                    "status": "OPEN",
+                    "inPlay": False,
+                    "eventTypeId": "1",
+                    "runners": [],
+                },
+            }
+        ]
+        self.assertTrue(self.stream._process(update, 12345))
+        self.assertEqual(len(self.stream._caches), 1)
+
+    def test_init_event_type_ids(self):
+        # int ids normalised to strings (Betfair definitions use strings)
+        listener = mock.Mock(event_type_ids=[7, 1])
+        stream = betfairhistoricalstream.FlumineMarketStream(listener, 0)
+        self.assertEqual(stream.event_type_ids, ["7", "1"])
+        # no filter set
+        listener = mock.Mock(event_type_ids=None)
+        stream = betfairhistoricalstream.FlumineMarketStream(listener, 0)
+        self.assertIsNone(stream.event_type_ids)
+        self.assertEqual(stream.excluded_market_ids, set())
+
 
 class TestFlumineRaceStream(unittest.TestCase):
     def setUp(self) -> None:
@@ -787,6 +880,12 @@ class TestHistoricListener(unittest.TestCase):
     def test_init(self):
         self.assertTrue(self.listener.inplay)
         self.assertEqual(self.listener.seconds_to_start, 123)
+        self.assertIsNone(self.listener.max_inplay_seconds)
+        self.assertIsNone(self.listener.event_type_ids)
+
+    def test_init_event_type_ids(self):
+        listener = betfairhistoricalstream.HistoricListener(event_type_ids=["7"])
+        self.assertEqual(listener.event_type_ids, ["7"])
 
     @mock.patch("flumine.streams.betfairhistoricalstream.FlumineMarketStream")
     def test__add_stream_market(self, mock_stream):
