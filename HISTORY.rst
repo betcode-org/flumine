@@ -8,6 +8,7 @@ Release History
 
 **Improvements**
 
+- Dynamic passive matching added to simualtion engine
 - #777 Add event_type_ids market filter for simulation (@niallsemple)
 
 **Bug Fixes**
