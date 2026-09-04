@@ -8,7 +8,12 @@ Release History
 
 **Improvements**
 
--
+- #777 Add event_type_ids market filter for simulation (@niallsemple)
+
+**Bug Fixes**
+
+- Missing output_queue in order/race/cricket stream
+- Prevent infinite loop on cancel (@lunswor)
 
 **Libraries**
 
