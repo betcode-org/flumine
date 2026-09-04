@@ -123,6 +123,12 @@ class SimulatedOrder:
                 raise NotImplementedError(
                     "Simulated betTargetSize placement not implemented"
                 )
+            # calc current delay
+            elapsed_seconds = order_package.elapsed_seconds
+            bet_delay_complete = False
+            if elapsed_seconds > order_package.simulated_latency_plus_delay:
+                bet_delay_complete = True
+
             # Validate that min_fill_size <= size for fill or kill orders
             is_fill_or_kill_order = time_in_force == "FILL_OR_KILL"
             if is_fill_or_kill_order and min_fill_size > size:
@@ -138,6 +144,10 @@ class SimulatedOrder:
                 )
             if self.order.side == "BACK":
                 available_to_back = get_price(runner.ex.available_to_back, 0) or 1.01
+                if bet_delay_complete is False and price <= available_to_back:
+                    # order would be 'aggressive'
+                    return SimulatedPlaceResponse(status="DELAY")
+
                 if (
                     not order_package.client.best_price_execution
                     and available_to_back > price
@@ -184,6 +194,10 @@ class SimulatedOrder:
                 available = runner.ex.available_to_lay
             else:
                 available_to_lay = get_price(runner.ex.available_to_lay, 0) or 1000
+                if bet_delay_complete is False and price >= available_to_lay:
+                    # order would be 'aggressive'
+                    return SimulatedPlaceResponse(status="DELAY")
+
                 if (
                     not order_package.client.best_price_execution
                     and available_to_lay < price

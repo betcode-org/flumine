@@ -151,7 +151,7 @@ class FlumineSimulation(BaseFlumine):
                         )
 
     def process_order_package(self, order_package) -> None:
-        # place in pending list (wait for latency+delay)
+        # place in pending list (wait for latency)
         self.handler_queue.append(order_package)
 
     def _process_simulated_orders(self, market) -> None:
@@ -187,10 +187,11 @@ class FlumineSimulation(BaseFlumine):
         for order_package in self.handler_queue:
             if (
                 order_package.market_id == market_id
-                and order_package.elapsed_seconds > order_package.simulated_delay
+                and order_package.elapsed_seconds > order_package.simulated_latency
             ):
                 order_package.client.execution.handler(order_package)
-                processed.append(order_package)
+                if len(order_package.orders_pending) == 0:
+                    processed.append(order_package)
         for p in processed:
             self.handler_queue.remove(p)
 

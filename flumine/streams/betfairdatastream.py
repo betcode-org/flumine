@@ -193,6 +193,7 @@ class BetfairOrderDataStream(BetfairDataStream):
                 "streaming_timeout": self.streaming_timeout,
             },
         )
+        self._listener.output_queue = self.flumine.handler_queue
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener
         )
@@ -233,6 +234,7 @@ class BetfairRaceDataStream(BetfairDataStream):
                 "stream_id": self.stream_id,
             },
         )
+        self._listener.output_queue = self.flumine.handler_queue
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener, host="sports_data"
         )
@@ -262,6 +264,7 @@ class BetfairCricketDataStream(BetfairDataStream):
                 "stream_id": self.stream_id,
             },
         )
+        self._listener.output_queue = self.flumine.handler_queue
         self._stream = self.betting_client.streaming.create_stream(
             unique_id=self.stream_id, listener=self._listener, host="sports_data"
         )

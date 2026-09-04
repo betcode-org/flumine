@@ -47,7 +47,7 @@ class MaxTransactionCount(BaseControl):
 
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         self._check_hour()
-        if not self.safe:
+        if package_type != OrderPackageType.CANCEL and not self.safe:
             self._on_error(
                 order,
                 "Max Transaction Count has been reached ({0}) for current hour".format(
