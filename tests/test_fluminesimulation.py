@@ -192,11 +192,13 @@ class FlumineSimulationTest(unittest.TestCase):
             elapsed_seconds=5,
             bet_delay=1,
             client=mock_client,
-            simulated_delay=1.2,
+            orders_pending=[],
+            simulated_latency=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_place_pending(self):
         mock_client = mock.Mock()
@@ -206,11 +208,12 @@ class FlumineSimulationTest(unittest.TestCase):
             elapsed_seconds=0.2,
             bet_delay=1,
             client=mock_client,
-            simulated_delay=1.2,
+            simulated_latency=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_not_called()
+        self.assertEqual(self.flumine.handler_queue, [mock_order_package])
 
     def test__check_pending_packages_place_diff_market_id(self):
         mock_client = mock.Mock()
@@ -220,47 +223,68 @@ class FlumineSimulationTest(unittest.TestCase):
             elapsed_seconds=2,
             bet_delay=1,
             client=mock_client,
-            simulated_delay=1.2,
+            simulated_latency=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.24")
         mock_client.execution.handler.assert_not_called()
+        self.assertEqual(self.flumine.handler_queue, [mock_order_package])
 
     def test__check_pending_packages_cancel(self):
         mock_client = mock.Mock()
         mock_order_package = mock.Mock(
-            market_id="1.23", elapsed_seconds=3, client=mock_client, simulated_delay=0.2
+            market_id="1.23",
+            elapsed_seconds=3,
+            client=mock_client,
+            simulated_latency=0.2,
+            orders_pending=[],
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_cancel_pending(self):
         mock_client = mock.Mock()
         mock_order_package = mock.Mock(
-            market_id="1.23", elapsed_seconds=2, client=mock_client, simulated_delay=0.2
+            market_id="1.23",
+            elapsed_seconds=2,
+            client=mock_client,
+            simulated_latency=0.2,
+            orders_pending=[],
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_update(self):
         mock_client = mock.Mock()
         mock_order_package = mock.Mock(
-            market_id="1.23", elapsed_seconds=3, client=mock_client, simulated_delay=0.2
+            market_id="1.23",
+            elapsed_seconds=3,
+            client=mock_client,
+            orders_pending=[],
+            simulated_latency=0.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_update_pending(self):
         mock_client = mock.Mock()
         mock_order_package = mock.Mock(
-            market_id="1.23", elapsed_seconds=2, client=mock_client, simulated_delay=0.2
+            market_id="1.23",
+            elapsed_seconds=2,
+            client=mock_client,
+            orders_pending=[],
+            simulated_latency=0.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_replace(self):
         mock_client = mock.Mock()
@@ -270,11 +294,13 @@ class FlumineSimulationTest(unittest.TestCase):
             elapsed_seconds=5,
             bet_delay=1,
             client=mock_client,
-            simulated_delay=1.2,
+            orders_pending=[],
+            simulated_latency=1.2,
         )
         self.flumine.handler_queue = [mock_order_package]
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     def test__check_pending_packages_replace_pending(self):
         mock_client = mock.Mock()
@@ -284,11 +310,13 @@ class FlumineSimulationTest(unittest.TestCase):
             elapsed_seconds=2,
             bet_delay=1,
             client=mock_client,
-            simulated_delay=1.2,
+            orders_pending=[],
+            simulated_latency=1.2,
         )
         self.flumine.handler_queue.append(mock_order_package)
         self.flumine._check_pending_packages("1.23")
         mock_client.execution.handler.assert_called_with(mock_order_package)
+        self.assertEqual(self.flumine.handler_queue, [])
 
     @mock.patch("flumine.baseflumine.BaseFlumine.info")
     @mock.patch("flumine.baseflumine.BaseFlumine.log_control")

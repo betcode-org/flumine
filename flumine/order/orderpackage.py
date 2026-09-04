@@ -54,7 +54,8 @@ class BaseOrderPackage(BaseEvent):
         # following used for simulated execution
         self.processed = False
         self.bet_delay = bet_delay
-        self.simulated_delay = self.calc_simulated_delay()
+        self.simulated_latency = self.calc_simulated_latency()
+        self.simulated_latency_plus_delay = self.calc_simulated_latency_delay()
 
     def retry(self):
         if self._retry and self._retry_count < self._max_retries:
@@ -71,7 +72,19 @@ class BaseOrderPackage(BaseEvent):
                 else:
                     order.executable()
 
-    def calc_simulated_delay(self) -> float:
+    def calc_simulated_latency(self) -> float:
+        if self.client.execution.VENUE == VenueType.SIMULATED:
+            if self.package_type == OrderPackageType.PLACE:
+                return config.place_latency
+            elif self.package_type == OrderPackageType.CANCEL:
+                return config.cancel_latency
+            elif self.package_type == OrderPackageType.UPDATE:
+                return config.update_latency
+            elif self.package_type == OrderPackageType.REPLACE:
+                return config.replace_latency
+        return -1
+
+    def calc_simulated_latency_delay(self) -> float:
         if self.client.execution.VENUE == VenueType.SIMULATED:
             if self.package_type == OrderPackageType.PLACE:
                 return config.place_latency + self.bet_delay
@@ -81,6 +94,7 @@ class BaseOrderPackage(BaseEvent):
                 return config.update_latency
             elif self.package_type == OrderPackageType.REPLACE:
                 return config.replace_latency + self.bet_delay
+        return -1
 
     @property
     def place_instructions(self) -> list:
@@ -105,6 +119,14 @@ class BaseOrderPackage(BaseEvent):
     @property
     def orders(self) -> list:
         return [o for o in self._orders if o.status != OrderStatus.VIOLATION]
+
+    @property
+    def orders_pending(self) -> list:
+        return [
+            o
+            for o in self._orders
+            if o.status in [OrderStatus.PENDING, OrderStatus.REPLACING]
+        ]
 
     @property
     def retry_count(self) -> int:
@@ -149,7 +171,7 @@ class BetfairOrderPackage(BaseOrderPackage):
 
     @property
     def place_instructions(self) -> list:
-        return [order.create_place_instruction() for order in self]
+        return [order.create_place_instruction() for order in self.orders_pending]
 
     @property
     def cancel_instructions(self) -> list:
