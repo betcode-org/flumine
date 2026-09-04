@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+3.2.0 (2026-09-04)
++++++++++++++++++++
+
+**Improvements**
+
+-
+
+**Libraries**
+
+- betfairlightweight upgraded to 2.24.0
+
 3.1.0 (2026-07-24)
 +++++++++++++++++++
 
