@@ -74,7 +74,7 @@ class SimulatedMiddleware(Middleware):
 
         market.context["simulated"] = market_analytics
         # process simulated orders
-        if market.blotter.active and market.market_book.status == "OPEN":
+        if market.blotter.active:
             self._process_simulated_orders(market, market_analytics)
 
     def remove_market(self, market) -> None:
