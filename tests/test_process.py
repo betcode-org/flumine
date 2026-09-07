@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 from betfairlightweight.resources.bettingresources import PriceSize
 
+from flumine.clients import VenueType
 from flumine.order.order import OrderStatus, OrderTypes, BetdaqOrder
 from flumine import config
 from flumine.markets.market import Market
@@ -104,8 +105,50 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
             current_order=current_order,
             add_market=mock_add_market,
             client=mock_client,
+            venue_type=VenueType.BETFAIR,
         )
         self.assertEqual(market.blotter["123"], new_order)
+        self.assertEqual(new_order.market_id, "market_id")
+        self.assertEqual(new_order.selection_id, "selection_id")
+        self.assertEqual(new_order.handicap, "handicap")
+        self.assertEqual(new_order.order_type.ORDER_TYPE, OrderTypes.LIMIT)
+        self.assertEqual(new_order.order_type.size, 2.0)
+        self.assertEqual(new_order.order_type.price, 10.0)
+        self.assertEqual(new_order.client, mock_client)
+
+    def test_create_order_from_current_new_market(self):
+        market_book = mock.Mock()
+        mock_client = mock.Mock()
+        mock_flumine = mock.Mock()
+        markets = Markets()
+        mock_market = mock.Mock(
+            market_id="market_id", market_book=market_book, blotter={}
+        )
+        mock_add_market = mock.Mock(return_value=mock_market)
+        cheap_hash = create_cheap_hash("strategy_name", 13)
+        strategy = mock.Mock(name_hash=cheap_hash)
+        strategies = Strategies()
+        strategies(strategy=strategy, clients=mock.Mock(), flumine=mock_flumine)
+        current_order = mock.Mock(
+            customer_order_ref=f"{cheap_hash}I123",
+            market_id="market_id",
+            bet_id=None,
+            selection_id="selection_id",
+            handicap="handicap",
+            order_type="LIMIT",
+            price_size=PriceSize(price=10.0, size=2.0),
+            persistence_type="LAPSE",
+        )
+
+        new_order = process.create_order_from_current(
+            markets=markets,
+            strategies=strategies,
+            current_order=current_order,
+            add_market=mock_add_market,
+            client=mock_client,
+            venue_type=VenueType.BETFAIR,
+        )
+        self.assertEqual(mock_market.blotter["123"], new_order)
         self.assertEqual(new_order.market_id, "market_id")
         self.assertEqual(new_order.selection_id, "selection_id")
         self.assertEqual(new_order.handicap, "handicap")

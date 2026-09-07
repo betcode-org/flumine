@@ -55,7 +55,7 @@ def process_current_orders(
                     },
                 )
                 order = create_order_from_current(
-                    markets, strategies, current_order, add_market, client
+                    markets, strategies, current_order, add_market, client, event.venue
                 )
                 if order is None:
                     continue
@@ -93,7 +93,12 @@ def process_current_order(order: BaseOrder, current_order, log_control) -> None:
 
 
 def create_order_from_current(
-    markets: Markets, strategies: Strategies, current_order, add_market, client
+    markets: Markets,
+    strategies: Strategies,
+    current_order,
+    add_market,
+    client,
+    venue_type,
 ) -> Optional[BaseOrder]:
     strategy_name_hash = current_order.customer_order_ref[:STRATEGY_NAME_HASH_LENGTH]
     order_id = current_order.customer_order_ref[STRATEGY_NAME_HASH_LENGTH + 1 :]
@@ -116,7 +121,9 @@ def create_order_from_current(
     market = markets.markets.get(current_order.market_id)
     if market is None:
         # create market
-        market = add_market(current_order.market_id, market_book=None)
+        market = add_market(
+            current_order.market_id, market_book=None, venue_type=venue_type
+        )
     # add trade/order
     trade = Trade(
         market.market_id, current_order.selection_id, current_order.handicap, strategy

@@ -3,6 +3,14 @@
 Release History
 ---------------
 
+3.2.1 (2026-09-07)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Missing venue_type on add_market when restarting
+- Remove flumine pointer
+
 3.2.0 (2026-09-04)
 +++++++++++++++++++
 
