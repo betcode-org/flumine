@@ -80,6 +80,7 @@ class Streams:
             streaming_timeout=streaming_timeout,
             client=client,
         )
+        stream.flumine = self.flumine
         return self.add_stream(stream)
 
     def add_simulated_order_stream(
@@ -95,6 +96,7 @@ class Streams:
             client=client,
             custom=True,
         )
+        stream.flumine = self.flumine
         return self.add_stream(stream)
 
     def add_betdaq_order_polling(
@@ -106,6 +108,7 @@ class Streams:
             client=client,
             streaming_timeout=streaming_timeout,
         )
+        stream.flumine = self.flumine
         return self.add_stream(stream)
 
     def start(self) -> None:

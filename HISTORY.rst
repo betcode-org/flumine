@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+3.2.2 (2026-09-07)
++++++++++++++++++++
+
+**Bug Fixes**
+
+- Fix regression on missing framework on order streams
+
 3.2.1 (2026-09-07)
 +++++++++++++++++++
 
