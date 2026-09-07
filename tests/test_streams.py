@@ -78,9 +78,7 @@ class StreamsTest(unittest.TestCase):
         )
         mock_client.VENUE = streams.VenueType.BETDAQ
         self.streams.add_client(mock_client)
-        mock_order_stream_cls.assert_called_with(
-            flumine=self.mock_flumine, client=mock_client, custom=True
-        )
+        mock_order_stream_cls.assert_called_with(client=mock_client, custom=True)
         mock_add_stream.assert_called_with(mock_order_stream_cls.return_value)
 
     @mock.patch("flumine.streams.streams.Streams._increment_stream_id")
@@ -109,7 +107,6 @@ class StreamsTest(unittest.TestCase):
         )
         mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
         mock_order_stream_class.assert_called_with(
-            flumine=self.mock_flumine,
             conflate_ms=conflate_ms,
             streaming_timeout=streaming_timeout,
             client=mock_client,
@@ -126,7 +123,6 @@ class StreamsTest(unittest.TestCase):
         )
         mock_add_stream.assert_called_with(mock_order_stream_class.return_value)
         mock_order_stream_class.assert_called_with(
-            flumine=self.mock_flumine,
             streaming_timeout=streaming_timeout,
             conflate_ms=conflate_ms,
             client=mock_client,
@@ -140,7 +136,6 @@ class StreamsTest(unittest.TestCase):
         self.streams.add_betdaq_order_polling(mock_client)
         mock_add_stream.assert_called_with(mock_order_polling_class.return_value)
         mock_order_polling_class.assert_called_with(
-            flumine=self.mock_flumine,
             client=mock_client,
             streaming_timeout=0.25,
         )
