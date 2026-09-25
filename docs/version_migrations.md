@@ -12,6 +12,7 @@ This means an instance can be setup to execute on either individual venues or mu
 - BetDEX: Roadmap
 - Smarkets: Roadmap
 - Matchbook: Roadmap
+- Tote: Roadmap
 
 ## Breaking Changes
 

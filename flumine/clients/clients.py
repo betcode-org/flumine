@@ -17,6 +17,7 @@ class VenueType(Enum):
     POLYMARKET = "Polymarket"
     KALSHI = "Kalshi"
     BETDEX = "BetDEX"
+    TOTE = "Tote"
 
 
 class Clients:
