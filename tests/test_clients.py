@@ -21,7 +21,7 @@ class ClientsTest(unittest.TestCase):
         self.clients = Clients()
 
     def test_venue_type(self):
-        self.assertEqual(len(VenueType), 9)
+        self.assertEqual(len(VenueType), 10)
         assert VenueType
 
     def test_init(self):
@@ -123,6 +123,7 @@ class ClientsTest(unittest.TestCase):
                 VenueType.BETDEX.value: {},
                 VenueType.SMARKETS.value: {},
                 VenueType.MATCHBOOK.value: {},
+                VenueType.TOTE.value: {},
             },
         )
 
