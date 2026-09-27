@@ -206,7 +206,14 @@ class BetfairExecution(BaseExecution):
                         market.place_order(
                             replacement_order, execute=False, client=order.client
                         )
-                        replacement_order.executable()
+                        if (
+                            instruction_report.place_instruction_reports.order_status
+                            == "EXECUTION_COMPLETE"
+                        ):
+                            # fully matched on placement, no size remaining
+                            replacement_order.execution_complete()
+                        else:
+                            replacement_order.executable()
                     elif (
                         instruction_report.place_instruction_reports.status == "FAILURE"
                     ):
