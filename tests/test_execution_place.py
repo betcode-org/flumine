@@ -167,8 +167,8 @@ class BetfairExecutionPlaceTest(unittest.TestCase):
         mock__execution_helper.return_value = mock_report
         self.execution.execute_place(mock_order_package, mock_session)
         mock__execution_helper.assert_called_with(
-            mock_place, order_package=mock_order_package, http_session=mock_session
-        ) if False else None
+            mock_place, mock_order_package, mock_session
+        )
         mock__order_logger.assert_called_with(
             mock_order, mock_instruction_report, OrderPackageType.PLACE
         )
