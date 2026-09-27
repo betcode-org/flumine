@@ -1,3 +1,4 @@
+
 import logging
 import requests
 from typing import Callable
@@ -31,6 +32,9 @@ class BetfairExecution(BaseExecution):
                             pass  # async request pending processing
                         elif instruction_report.order_status == "EXPIRED":
                             # avoids setting FOK orders to executable after process.py set them as complete
+                            order.execution_complete()
+                        elif instruction_report.order_status == "EXECUTION_COMPLETE":
+                            # fully matched on placement, no size remaining
                             order.execution_complete()
                         else:
                             order.executable()  # let process.py pick it up
