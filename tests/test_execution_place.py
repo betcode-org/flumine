@@ -125,9 +125,7 @@ class BetfairExecutionPlaceTest(unittest.TestCase):
         mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
         mock_order_package.info = {}
         mock_report = mock.Mock()
-        mock_instruction_report = mock.Mock(
-            status="SUCCESS", order_status="EXECUTABLE"
-        )
+        mock_instruction_report = mock.Mock(status="SUCCESS", order_status="EXECUTABLE")
         mock_report.place_instruction_reports = [mock_instruction_report]
         mock__execution_helper.return_value = mock_report
         self.execution.execute_place(mock_order_package, mock_session)
