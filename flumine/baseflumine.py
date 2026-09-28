@@ -189,8 +189,10 @@ class BaseFlumine:
             market_is_new = market is None
             if market_is_new:
                 market = self._add_market(market_id, market_book, event.venue)
+                if market.venue == VenueType.TOTE:
+                    self.log_control(events.MarketEvent(market))
             elif market.closed:
-                if event.venue == VenueType.BETDAQ:
+                if event.venue != VenueType.BETFAIR:
                     continue
                 self.markets.add_market(market_id, market)
 
