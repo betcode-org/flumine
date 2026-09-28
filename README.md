@@ -30,12 +30,12 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Betfair
 - Betdaq
 - Betconnect (account/execution functionality)
+- Tote (in development)
 - Smarkets (roadmap)
 - Matchbook (roadmap)
 - Polymarket (roadmap)
 - Kalshi (roadmap)
 - BetDEX (roadmap)
-- Tote (roadmap)
 
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")

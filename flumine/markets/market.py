@@ -358,10 +358,6 @@ class BetdaqMarket(Market):
         return None  # todo betdaq catalogue?
 
     @property
-    def event_venue(self) -> Optional[str]:
-        return None  # todo betdaq catalogue?
-
-    @property
     def venue(self) -> Optional[str]:
         return None  # todo betdaq catalogue?
 
@@ -373,3 +369,71 @@ class BetdaqMarket(Market):
     def status(self) -> Optional[str]:
         if self.market_book:
             return self.market_book["status"] or "SETTLED"
+
+
+class ToteMarket(Market):
+    VENUE = VenueType.TOTE
+
+    def __call__(self, market_book: dict):
+        self.market_book = market_book
+
+    @property
+    def publish_time(self) -> datetime.datetime:
+        return self.market_book["publish_time"]
+
+    @property
+    def bet_delay(self) -> float:
+        return 0.0
+
+    @property
+    def market_name(self):
+        return self.market_book["name"]
+
+    @property
+    def event_type_id(self) -> str:
+        return None
+
+    @property
+    def event_id(self) -> str:
+        return 0
+
+    @property
+    def competition_id(self):
+        return None
+
+    @property
+    def market_type(self) -> str:
+        return self.market_book["type"]["betType"]["code"].upper()
+
+    @property
+    def market_start_datetime(self):
+        if self.market_book:
+            _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
+            _scheduled_start_date_time = _event["scheduledStartDateTime"]["iso8601"]
+            return datetime.datetime.fromisoformat(
+                _scheduled_start_date_time.replace("Z", "+00:00")
+            )
+        else:
+            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
+
+    @property
+    def event_name(self) -> Optional[str]:
+        _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
+        return _event["id"]
+
+    @property
+    def country_code(self) -> Optional[str]:
+        return None
+
+    @property
+    def venue(self) -> Optional[str]:
+        _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
+        return _event["venue"]["name"].replace("PARK", "").strip().title()
+
+    @property
+    def race_type(self) -> Optional[str]:
+        return None
+
+    @property
+    def status(self) -> Optional[str]:
+        return self.market_book["type"]["selling"]["status"]

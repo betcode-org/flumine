@@ -11,6 +11,7 @@ from flumine.clients import (
     SimulatedClient,
     BetConnectClient,
     BetdaqClient,
+    ToteClient,
 )
 from flumine.clients import betfairclient
 from flumine import exceptions
@@ -530,3 +531,35 @@ class BetdaqClientTest(unittest.TestCase):
 
     def test_min_bsp_liability(self):
         self.assertIsNone(self.betdaq_client.min_bsp_liability())
+
+
+class ToteClientTest(unittest.TestCase):
+    def setUp(self):
+        self.mock_betting_client = mock.Mock()
+        del self.mock_betting_client.lightweight
+        self.tote_client = ToteClient(self.mock_betting_client)
+
+    def test_login(self):
+        self.tote_client.login()
+
+    def test_keep_alive(self):
+        self.tote_client.keep_alive()
+
+    def test_logout(self):
+        self.tote_client.logout()
+
+    def test_update_account_details(self):
+        self.tote_client.update_account_details()
+        self.assertEqual(
+            self.tote_client.account_funds,
+            self.mock_betting_client.customer.return_value,
+        )
+
+    def test_min_bet_size(self):
+        self.assertEqual(self.tote_client.min_bet_size(), 0.10)
+
+    def test_min_bet_payout(self):
+        self.assertIsNone(self.tote_client.min_bet_payout())
+
+    def test_min_bsp_liability(self):
+        self.assertIsNone(self.tote_client.min_bsp_liability())

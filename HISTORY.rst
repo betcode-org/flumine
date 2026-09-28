@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+3.2.4 (2026-09-28)
++++++++++++++++++++
+
+**Improvements**
+
+- TOTE client/market logic added
+
 3.2.3 (2026-09-25)
 +++++++++++++++++++
 
