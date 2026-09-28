@@ -411,7 +411,9 @@ class ToteMarket(Market):
         if self.market_book:
             _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
             _scheduled_start_date_time = _event["scheduledStartDateTime"]["iso8601"]
-            return datetime.datetime.fromisoformat(_scheduled_start_date_time)
+            return datetime.datetime.fromisoformat(
+                _scheduled_start_date_time.replace("Z", "+00:00")
+            )
         else:
             return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
 
