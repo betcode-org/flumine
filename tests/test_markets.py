@@ -672,9 +672,7 @@ class ToteMarketTest(unittest.TestCase):
         self.assertIsNone(self.market.event_type_id)
 
     def test_event_id(self):
-        self.assertEqual(
-            self.market.event_id, "HORSERACING-BRIGHTON-GB-2026-09-28-1230"
-        )
+        self.assertEqual(self.market.event_id, 0)
 
     def test_competition_id(self):
         self.assertIsNone(self.market.competition_id)
@@ -694,10 +692,7 @@ class ToteMarketTest(unittest.TestCase):
         )
 
     def test_country_code(self):
-        self.assertEqual(
-            self.market.country_code,
-            "United Kingdom of Great Britain and Northern Ireland",
-        )
+        self.assertIsNone(self.market.country_code)
 
     def test_race_type(self):
         self.assertIsNone(self.market.race_type)

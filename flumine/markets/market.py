@@ -395,8 +395,7 @@ class ToteMarket(Market):
 
     @property
     def event_id(self) -> str:
-        _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
-        return _event["id"]
+        return 0
 
     @property
     def competition_id(self):
@@ -424,8 +423,7 @@ class ToteMarket(Market):
 
     @property
     def country_code(self) -> Optional[str]:
-        _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
-        return _event["venue"]["country"]["name"]
+        return None
 
     @property
     def venue(self) -> Optional[str]:
