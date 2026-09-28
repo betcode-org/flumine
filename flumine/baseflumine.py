@@ -12,7 +12,7 @@ from .events import events
 from .worker import BackgroundWorker
 from .clients import Clients, BaseClient, VenueType
 from .markets.markets import Markets
-from .markets.market import Market, BetdaqMarket
+from .markets.market import Market, BetdaqMarket, ToteMarket
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
@@ -166,6 +166,9 @@ class BaseFlumine:
             elif event.venue == VenueType.BETDAQ:
                 market_id = market_book["market_id"]
                 streaming_unique_id = market_book["streaming_unique_id"]
+            elif event.venue == VenueType.TOTE:
+                market_id = market_book["id"]
+                streaming_unique_id = market_book["streaming_unique_id"]
             else:
                 raise NotImplementedError()
 
@@ -265,6 +268,8 @@ class BaseFlumine:
             market = Market(self, market_id, market_book)
         elif venue_type == VenueType.BETDAQ:
             market = BetdaqMarket(self, market_id, market_book)
+        elif venue_type == VenueType.TOTE:
+            market = ToteMarket(self, market_id, market_book)
         else:
             raise NotImplementedError()
         self.markets.add_market(market_id, market)

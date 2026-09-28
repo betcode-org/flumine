@@ -1,3 +1,4 @@
+import json
 import unittest
 import datetime
 import threading
@@ -6,7 +7,7 @@ from collections import defaultdict
 
 from flumine.clients import VenueType
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, BetdaqMarket
+from flumine.markets.market import Market, BetdaqMarket, ToteMarket
 from flumine import config
 
 
@@ -633,11 +634,73 @@ class BetdaqMarketTest(unittest.TestCase):
     def test_country_code(self):
         self.assertIsNone(self.market.country_code)
 
-    def test_event_venue(self):
-        self.assertIsNone(self.market.event_venue)
-
     def test_race_type(self):
         self.assertIsNone(self.market.race_type)
 
     def test_status(self):
         self.assertEqual(self.market.status, "ACTIVE")
+
+
+class ToteMarketTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        with open("tests/resources/bbc663ed-064b-4237-a0ed-0c6e49fdef46.json") as f:
+            self.mock_market_book = json.load(f)
+        self.market = ToteMarket(
+            self.mock_flumine,
+            "bbc663ed-064b-4237-a0ed-0c6e49fdef46",
+            self.mock_market_book,
+        )
+
+    def test_call(self):
+        mock_market_book = {}
+        self.market(mock_market_book)
+        self.assertEqual(self.market.market_book, mock_market_book)
+
+    def test_publish_time(self):
+        self.assertEqual(
+            self.market.publish_time, self.market.market_book["publish_time"]
+        )
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, 0.0)
+
+    def test_market_name(self):
+        self.assertEqual(self.market.market_name, "BRIGHTON RACE 1 - WIN")
+
+    def test_event_type_id(self):
+        self.assertIsNone(self.market.event_type_id)
+
+    def test_event_id(self):
+        self.assertEqual(
+            self.market.event_id, "HORSERACING-BRIGHTON-GB-2026-09-28-1230"
+        )
+
+    def test_competition_id(self):
+        self.assertIsNone(self.market.competition_id)
+
+    def test_market_type(self):
+        self.assertEqual(self.market.market_type, "WIN")
+
+    def test_market_start_datetime(self):
+        self.assertEqual(
+            self.market.market_start_datetime,
+            datetime.datetime(2026, 9, 28, 12, 30, tzinfo=datetime.timezone.utc),
+        )
+
+    def test_event_name(self):
+        self.assertEqual(
+            self.market.event_name, "HORSERACING-BRIGHTON-GB-2026-09-28-1230"
+        )
+
+    def test_country_code(self):
+        self.assertEqual(
+            self.market.country_code,
+            "United Kingdom of Great Britain and Northern Ireland",
+        )
+
+    def test_race_type(self):
+        self.assertIsNone(self.market.race_type)
+
+    def test_status(self):
+        self.assertEqual(self.market.status, "OPEN")

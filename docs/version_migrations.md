@@ -7,6 +7,7 @@ This means an instance can be setup to execute on either individual venues or mu
 - Betfair: Completed
 - BETDAQ: Completed
 - BetConnect: Development
+- Tote: Development
 - Polymarket: Roadmap
 - Kalshi: Roadmap
 - BetDEX: Roadmap
