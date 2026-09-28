@@ -428,7 +428,7 @@ class ToteMarket(Market):
     @property
     def venue(self) -> Optional[str]:
         _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
-        return _event["venue"]["name"]
+        return _event["venue"]["name"].replace("PARK", "").strip().title()
 
     @property
     def race_type(self) -> Optional[str]:

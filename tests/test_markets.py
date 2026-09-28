@@ -634,6 +634,9 @@ class BetdaqMarketTest(unittest.TestCase):
     def test_country_code(self):
         self.assertIsNone(self.market.country_code)
 
+    def test_venue(self):
+        self.assertIsNone(self.market.venue)
+
     def test_race_type(self):
         self.assertIsNone(self.market.race_type)
 
@@ -693,6 +696,9 @@ class ToteMarketTest(unittest.TestCase):
 
     def test_country_code(self):
         self.assertIsNone(self.market.country_code)
+
+    def test_venue(self):
+        self.assertEqual(self.market.venue, "Brighton")
 
     def test_race_type(self):
         self.assertIsNone(self.market.race_type)
