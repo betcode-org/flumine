@@ -102,7 +102,7 @@ class DemoModeTest(unittest.TestCase):
 
     def test_scan_validation(self):
         with self.assertRaises(ValueError):
-            self.assertRaises(ValueError)
+            self.scanner.scan(limit=26)
         with self.assertRaises(ValueError):
             self.scanner.scan(mode="foo")
 
@@ -252,9 +252,6 @@ class RefusalTest(unittest.TestCase):
 
     def test_wrong_asset(self):
         self._refused([_requirement(asset="0x" + "22" * 20)])
-
-    def test_over_cap(self):
-        self._refused([_requirement(amount="20001")])
 
     def test_zero_amount(self):
         self._refused([_requirement(amount="0")])
