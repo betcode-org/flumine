@@ -100,6 +100,15 @@ class DemoModeTest(unittest.TestCase):
         self.assertEqual(len(response["opportunities"]), 1)
         self.session.get.assert_not_called()
 
+    def test_sample_event_shape(self):
+        rows = self.scanner.scan(mode="all")["opportunities"]
+        self.assertTrue(all(row["event"].startswith("SAMPLE") for row in rows))
+        self.assertEqual(rows[0]["kalshi"]["ticker"], "SAMPLE-SENATEXX-26-D")
+        strategy = ArbSignalStrategy(
+            context={"arb_signals": rows, "arb_signals_updated": time.time()}
+        )
+        self.assertEqual(len(strategy.active_signals()), 2)
+
     def test_scan_validation(self):
         with self.assertRaises(ValueError):
             self.scanner.scan(limit=26)
@@ -361,3 +370,37 @@ class ArbSignalStrategyTest(unittest.TestCase):
         self.strategy.process_market_book(self.market, self.market_book)
         self.strategy.process_market_book(self.market, self.market_book)
         self.assertEqual(self.market.context["arb_signals_seen"], {"A <-> B"})
+
+    def test_event_first(self):
+        signal = {
+            "event": "E",
+            "pair": "P",
+            "best_direction": {"net_yield_c": 2.5},
+            "executable": True,
+        }
+        self._signals([signal])
+        self.assertEqual(self.strategy.active_signals(), [signal])
+        self.strategy.process_market_book(self.market, self.market_book)
+        self.assertEqual(self.market.context["arb_signals_seen"], {"E"})
+
+    def test_pair_fallback(self):
+        signal = {
+            "pair": "P",
+            "best_direction": {"net_yield_c": 2.5},
+            "executable": True,
+        }
+        self._signals([signal])
+        self.assertEqual(self.strategy.active_signals(), [signal])
+        self.strategy.process_market_book(self.market, self.market_book)
+        self.assertEqual(self.market.context["arb_signals_seen"], {"P"})
+
+    def test_missing_event_and_pair_skipped(self):
+        self._signals(
+            [
+                {"best_direction": {"net_yield_c": 2.5}, "executable": True},
+                {"event": "", "pair": None, "executable": True},
+            ]
+        )
+        self.assertEqual(self.strategy.active_signals(), [])
+        self.strategy.process_market_book(self.market, self.market_book)
+        self.assertEqual(self.market.context["arb_signals_seen"], set())
