@@ -63,7 +63,10 @@ def stop(context: dict, flumine) -> None:
     # demo only: terminate once the feed has been processed
     for s in flumine.strategies:
         for signal in s.active_signals():
-            logger.info("Active signal", extra={"pair": signal.get("pair")})
+            logger.info(
+                "Active signal",
+                extra={"pair": signal.get("event") or signal.get("pair")},
+            )
     flumine.handler_queue.put(TerminationEvent(flumine))
 
 
