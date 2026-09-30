@@ -23,14 +23,14 @@ class ArbSignalStrategy(BaseStrategy):
     def process_market_book(self, market, market_book):
         seen = market.context.setdefault("arb_signals_seen", set())
         for signal in self.active_signals():
-            key = str(signal.get("pair"))
+            key = _label(signal)
             if key not in seen:
                 seen.add(key)
                 logger.info(
                     "Arb signal active",
                     extra={
                         "market_id": market.market_id,
-                        "pair": signal.get("pair"),
+                        "pair": key,
                         "net_yield_c": _net_yield_c(signal),
                     },
                 )
@@ -44,8 +44,15 @@ class ArbSignalStrategy(BaseStrategy):
         return [
             s
             for s in self.context.get("arb_signals", [])
-            if s.get("executable") is True and _net_yield_c(s) >= min_yield
+            if _label(s)
+            and s.get("executable") is True
+            and _net_yield_c(s) >= min_yield
         ]
+
+
+def _label(signal: dict) -> str:
+    # live feed rows carry "event", older rows "pair", rows with neither are skipped
+    return str(signal.get("event") or signal.get("pair") or "").strip()
 
 
 def _net_yield_c(signal: dict) -> float:
