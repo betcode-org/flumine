@@ -441,6 +441,10 @@ class BaseFlumine:
             recorder = False
             market_id = market_book["market_id"]
             stream_id = None
+        elif event.venue == VenueType.TOTE:
+            recorder = False
+            market_id = market_book["id"]
+            stream_id = market_book["streaming_unique_id"]
         else:
             raise NotImplementedError()
 
