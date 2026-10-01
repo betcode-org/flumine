@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+3.2.6 (2026-10-01)
++++++++++++++++++++
+
+**Improvements**
+
+- market_book_closed property added to handle closure per venue
+
 3.2.5 (2026-09-30)
 +++++++++++++++++++
 

@@ -199,7 +199,7 @@ class BaseFlumine:
             # process market
             market(market_book)
 
-            if market.status in ["CLOSED", "SETTLED"]:
+            if market.market_book_closed:
                 self.handler_queue.put(
                     events.CloseMarketEvent(market_book, venue=event.venue)
                 )

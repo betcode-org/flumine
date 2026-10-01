@@ -142,6 +142,10 @@ class Market:
             return t.replace_order(order, new_price, market_version, force)
 
     @property
+    def market_book_closed(self):
+        return self.status == "CLOSED"
+
+    @property
     def publish_time(self) -> datetime.datetime:
         return self.market_book.publish_time
 
@@ -300,6 +304,10 @@ class BetdaqMarket(Market):
         self.market_book = market_book
 
     @property
+    def market_book_closed(self):
+        return self.status == "SETTLED"
+
+    @property
     def publish_time(self) -> datetime.datetime:
         return self.market_book["publish_time"]
 
@@ -376,6 +384,10 @@ class ToteMarket(Market):
 
     def __call__(self, market_book: dict):
         self.market_book = market_book
+
+    @property
+    def market_book_closed(self):
+        return self.seconds_to_start < 0 and self.status == "CLOSED"
 
     @property
     def publish_time(self) -> datetime.datetime:
