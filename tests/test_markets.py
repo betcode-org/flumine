@@ -267,6 +267,11 @@ class MarketTest(unittest.TestCase):
         mock_transaction.assert_called_with(client=mock_order.client)
         mock_transaction.replace_order.assert_called_with(mock_order, 2, False, True)
 
+    def test_market_book_closed(self):
+        self.assertFalse(self.market.market_book_closed)
+        self.market.market_book.status = "CLOSED"
+        self.assertTrue(self.market.market_book_closed)
+
     def test_publish_time(self):
         self.assertEqual(self.market.publish_time, self.market.market_book.publish_time)
 
@@ -596,6 +601,11 @@ class BetdaqMarketTest(unittest.TestCase):
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
 
+    def test_market_book_closed(self):
+        self.assertFalse(self.market.market_book_closed)
+        self.market.market_book["status"] = "SETTLED"
+        self.assertTrue(self.market.market_book_closed)
+
     def test_publish_time(self):
         self.assertEqual(
             self.market.publish_time, self.market.market_book["publish_time"]
@@ -659,6 +669,11 @@ class ToteMarketTest(unittest.TestCase):
         mock_market_book = {}
         self.market(mock_market_book)
         self.assertEqual(self.market.market_book, mock_market_book)
+
+    def test_market_book_closed(self):
+        self.assertFalse(self.market.market_book_closed)
+        self.market.market_book["type"]["selling"]["status"] = "CLOSED"
+        self.assertTrue(self.market.market_book_closed)
 
     def test_publish_time(self):
         self.assertEqual(
