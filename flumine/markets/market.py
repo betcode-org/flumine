@@ -403,11 +403,13 @@ class ToteMarket(Market):
 
     @property
     def event_type_id(self) -> str:
-        return None
+        return "7"
 
     @property
     def event_id(self) -> str:
-        return 0
+        _event_id = self.market_book["type"]["legs"]["nodes"][0]["event"]["id"]
+        y, m, d, hm = _event_id.rsplit("-", 4)[1:]
+        return str(y + m + d + hm)
 
     @property
     def competition_id(self):
@@ -435,7 +437,8 @@ class ToteMarket(Market):
 
     @property
     def country_code(self) -> Optional[str]:
-        return None
+        _event = self.market_book["type"]["legs"]["nodes"][0]["event"]
+        return _event["venue"]["country"].get("alpha2Code")
 
     @property
     def venue(self) -> Optional[str]:
