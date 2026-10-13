@@ -687,10 +687,10 @@ class ToteMarketTest(unittest.TestCase):
         self.assertEqual(self.market.market_name, "BRIGHTON RACE 1 - WIN")
 
     def test_event_type_id(self):
-        self.assertIsNone(self.market.event_type_id)
+        self.assertEqual(self.market.event_type_id, "7")
 
     def test_event_id(self):
-        self.assertEqual(self.market.event_id, 0)
+        self.assertEqual(self.market.event_id, "202609281230")
 
     def test_competition_id(self):
         self.assertIsNone(self.market.competition_id)
