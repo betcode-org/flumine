@@ -427,8 +427,8 @@ class BaseFlumine:
 
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event
+        recorder = False
         if event.venue == VenueType.BETFAIR:
-            recorder = False
             if isinstance(market_book, dict):
                 recorder = True
                 market_id = market_book["id"]
