@@ -3,12 +3,20 @@
 Release History
 ---------------
 
+3.3.0 (2026-10-16)
++++++++++++++++++++
+
+**Improvements**
+
+- Market closure refactor
+- Tote market improvements
+
 3.2.7 (2026-10-13)
 +++++++++++++++++++
 
 **Improvements**
 
-- TOTE market improvements
+- Tote market improvements
 
 3.2.6 (2026-10-01)
 +++++++++++++++++++
@@ -22,21 +30,21 @@ Release History
 
 **Improvements**
 
-- TOTE market close fix
+- Tote market close fix
 
 3.2.4 (2026-09-28)
 +++++++++++++++++++
 
 **Improvements**
 
-- TOTE client/market logic added
+- Tote client/market logic added
 
 3.2.3 (2026-09-25)
 +++++++++++++++++++
 
 **Improvements**
 
-- TOTE venue added
+- Tote venue added
 
 3.2.2 (2026-09-07)
 +++++++++++++++++++

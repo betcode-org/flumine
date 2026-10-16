@@ -673,6 +673,9 @@ class ToteMarketTest(unittest.TestCase):
     def test_market_book_closed(self):
         self.assertFalse(self.market.market_book_closed)
         self.market.market_book["type"]["selling"]["status"] = "CLOSED"
+        self.market.market_book["type"]["legs"]["nodes"][0]["event"][
+            "status"
+        ] = "FINISHED"
         self.assertTrue(self.market.market_book_closed)
 
     def test_publish_time(self):

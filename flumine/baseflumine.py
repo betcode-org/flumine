@@ -192,9 +192,8 @@ class BaseFlumine:
                 if market.VENUE == VenueType.TOTE:
                     self.log_control(events.MarketEvent(market))
             elif market.closed:
-                if event.venue != VenueType.BETFAIR:
-                    continue
-                self.markets.add_market(market_id, market)
+                if event.venue == VenueType.BETFAIR:
+                    self.markets.add_market(market_id, market)
 
             # process market
             market(market_book)
@@ -429,20 +428,18 @@ class BaseFlumine:
     def _process_close_market(self, event: events.CloseMarketEvent) -> None:
         market_book = event.event
         if event.venue == VenueType.BETFAIR:
+            recorder = False
             if isinstance(market_book, dict):
                 recorder = True
                 market_id = market_book["id"]
                 stream_id = market_book["_stream_id"]
             else:
-                recorder = False
                 market_id = market_book.market_id
                 stream_id = market_book.streaming_unique_id
         elif event.venue == VenueType.BETDAQ:
-            recorder = False
             market_id = market_book["market_id"]
             stream_id = None
         elif event.venue == VenueType.TOTE:
-            recorder = False
             market_id = market_book["id"]
             stream_id = market_book["streaming_unique_id"]
         else:
@@ -456,39 +453,41 @@ class BaseFlumine:
                 extra={"market_id": market_id, **self.info},
             )
             return
+
         # process market
         if market.closed is False:
             market.close_market()
-        if recorder is False:
-            market(market_book)
-            market.blotter.process_closed_market(market, event.event)
 
-        for strategy in self.strategies:
-            if stream_id in strategy.stream_ids:
-                strategy.process_closed_market(market, event.event)
+            if recorder is False:
+                market(market_book)
+                market.blotter.process_closed_market(market, event.event)
 
-        if (
-            event.venue == VenueType.BETFAIR
-            and recorder is False
-            and self.clients.simulated
-        ):
-            # simulate ClearedOrdersEvent
-            cleared_orders = resources.ClearedOrders(
-                moreAvailable=False, clearedOrders=[]
-            )
-            cleared_orders.market_id = market_id
-            self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
-            for client in self.clients:
-                # simulate ClearedMarketsEvent
-                cleared_markets = resources.ClearedOrders(
-                    moreAvailable=False,
-                    clearedOrders=[market.cleared(client)],
+            for strategy in self.strategies:
+                if stream_id in strategy.stream_ids:
+                    strategy.process_closed_market(market, event.event)
+
+            if (
+                event.venue == VenueType.BETFAIR
+                and self.clients.simulated
+                and recorder is False
+            ):
+                # simulate ClearedOrdersEvent
+                cleared_orders = resources.ClearedOrders(
+                    moreAvailable=False, clearedOrders=[]
                 )
-                self._process_cleared_markets(
-                    events.ClearedMarketsEvent(cleared_markets)
-                )
-        self.log_control(event)
-        logger.info("Market closed", extra={"market_id": market_id, **self.info})
+                cleared_orders.market_id = market_id
+                self._process_cleared_orders(events.ClearedOrdersEvent(cleared_orders))
+                for client in self.clients:
+                    # simulate ClearedMarketsEvent
+                    cleared_markets = resources.ClearedOrders(
+                        moreAvailable=False,
+                        clearedOrders=[market.cleared(client)],
+                    )
+                    self._process_cleared_markets(
+                        events.ClearedMarketsEvent(cleared_markets)
+                    )
+
+            self.log_control(event)
 
         # check for markets that have been closed for x seconds and remove
         if not self.clients.simulated:
