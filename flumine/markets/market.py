@@ -387,7 +387,11 @@ class ToteMarket(Market):
 
     @property
     def market_book_closed(self):
-        return self.seconds_to_start < 0 and self.status == "CLOSED"
+        return (
+            self.status == "CLOSED"
+            and self.market_book["type"]["legs"]["nodes"][0]["event"].get("status")
+            == "FINISHED"
+        )
 
     @property
     def publish_time(self) -> datetime.datetime:
@@ -407,9 +411,11 @@ class ToteMarket(Market):
 
     @property
     def event_id(self) -> str:
-        _event_id = self.market_book["type"]["legs"]["nodes"][0]["event"]["id"]
-        y, m, d, hm = _event_id.rsplit("-", 4)[1:]
-        return str(y + m + d + hm)
+        if self.market_book:
+            _event_id = self.market_book["type"]["legs"]["nodes"][0]["event"]["id"]
+            y, m, d, hm = _event_id.rsplit("-", 4)[1:]
+            return str(y + m + d + hm)
+        return ""
 
     @property
     def competition_id(self):
