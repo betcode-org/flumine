@@ -295,6 +295,8 @@ class BaseFlumine:
                 market = self.markets.markets.get(market_id)
                 if market is None:
                     market = self._add_market(market_id, None, event.venue)
+                    if market.VENUE == VenueType.TOTE:
+                        self.log_control(events.MarketEvent(market))
                 elif market.closed:
                     self.markets.add_market(market_id, market)
 

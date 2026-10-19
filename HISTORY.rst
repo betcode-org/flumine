@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+3.3.2 (2026-10-19)
++++++++++++++++++++
+
+**Improvements**
+
+- Add market when processing raw tote data
+
 3.3.1 (2026-10-16)
 +++++++++++++++++++
 
