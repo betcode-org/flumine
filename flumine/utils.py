@@ -39,18 +39,7 @@ CUTOFFS = (
 )
 MIN_PRICE = 1.01
 MAX_PRICE = 1000
-# betdaq
-BETDAQ_CUTOFFS = [
-    (3.0, 100),
-    (4.0, 20),
-    (10.0, 10),
-    (20.0, 2),
-    (50.0, 1),
-    (200.0, 0.5),
-    (1000.0, 0.2),
-]
-BETDAQ_MIN_PRICE = 1.01
-BETDAQ_MAX_PRICE = 1000
+
 MARKET_ID_REGEX = re.compile(r"1.\d{9}")
 EVENT_ID_REGEX = re.compile(r"\d{8}")
 STRATEGY_NAME_HASH_LENGTH = 13
@@ -144,8 +133,6 @@ def make_line_prices(min_unit: float, max_unit: float, interval: float) -> list:
 PRICES = make_prices(MIN_PRICE, CUTOFFS)
 PRICES_FLOAT = [float(price) for price in PRICES]
 FINEST_PRICES = make_prices(MIN_PRICE, ((1000, 100),))
-BETDAQ_PRICES = make_prices(BETDAQ_MIN_PRICE, BETDAQ_CUTOFFS)
-BETDAQ_PRICES_FLOAT = [float(price) for price in BETDAQ_PRICES]
 
 
 def get_nearest_price(price, cutoffs=CUTOFFS):
@@ -408,14 +395,6 @@ def get_market_notes(market, selection_id: int) -> Optional[str]:
                 runner.last_price_traded,
             )
         return ""
-    elif market.VENUE == VenueType.BETDAQ:
-        runner = get_runner_dict(market.market_book, selection_id)
-        if runner:
-            return "%s,%s,%s" % (
-                get_price_dict(runner["runner_book"]["batb"], 0),
-                get_price_dict(runner["runner_book"]["batl"], 0),
-                runner["runner_last_matched_price"],
-            )
     else:
         return ""
 

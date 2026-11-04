@@ -7,12 +7,11 @@ from typing import Union, Type, Optional
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..strategy.strategy import BaseStrategy
-from .order import BetfairOrder, BetdaqOrder
+from .order import BetfairOrder
 from .ordertype import (
     LimitOrder,
     LimitOnCloseOrder,
     MarketOnCloseOrder,
-    BetdaqLimitOrder,
 )
 from ..exceptions import OrderError
 from .. import config
@@ -172,31 +171,6 @@ class Trade:
             or current_order.lapsed_date
         )
         order.date_time_execution_complete = date_time_execution_complete
-        self.orders.append(order)
-        return order
-
-    def create_betdaq_order(
-        self,
-        side: str,
-        order_type: Union[BetdaqLimitOrder],
-        order: Type[BetdaqOrder] = BetdaqOrder,
-        sep: str = config.order_sep,
-        context: dict = None,
-        notes: collections.OrderedDict = None,
-    ) -> BetdaqOrder:
-        if order_type.VENUE != order.VENUE:
-            raise OrderError(
-                "Incorrect order/order_type venue combination for trade.create_order"
-            )
-        order = order(
-            trade=self,
-            side=side,
-            order_type=order_type,
-            handicap=self.handicap,
-            sep=sep,
-            context=context,
-            notes=notes,
-        )
         self.orders.append(order)
         return order
 

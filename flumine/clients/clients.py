@@ -11,7 +11,6 @@ class VenueType(Enum):
     BETFAIR = "Betfair"
     SIMULATED = "Simulated"
     BETCONNECT = "BetConnect"
-    BETDAQ = "BETDAQ"
     SMARKETS = "Smarkets"
     MATCHBOOK = "Matchbook"
     POLYMARKET = "Polymarket"

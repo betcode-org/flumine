@@ -21,8 +21,6 @@ class OrderValidation(BaseControl):
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if order.VENUE == VenueType.BETFAIR:
             self._validate_betfair_order(order)
-        elif order.VENUE == VenueType.BETDAQ:
-            self._validate_betdaq_order(order)
 
     def _validate_betfair_order(self, order):
         if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
@@ -36,14 +34,6 @@ class OrderValidation(BaseControl):
         elif order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE:
             self._validate_betfair_liability(order)
             self._validate_betfair_min_size(order, OrderTypes.MARKET_ON_CLOSE)
-        else:
-            self._on_error(order, "Unknown orderType")
-
-    def _validate_betdaq_order(self, order):
-        if order.order_type.ORDER_TYPE == OrderTypes.LIMIT:
-            self._validate_size(order)
-            self._validate_betdaq_price(order)
-            self._validate_betdaq_min_size(order, OrderTypes.LIMIT)
         else:
             self._on_error(order, "Unknown orderType")
 
@@ -123,23 +113,6 @@ class OrderValidation(BaseControl):
                     ),
                 )
 
-    def _validate_betdaq_price(self, order):
-        if order.order_type.price is None:
-            self._on_error(order, "Order price is None")
-        # check ladder
-        if utils.as_dec(order.order_type.price) not in utils.BETDAQ_PRICES:
-            self._on_error(order, "Order price is not valid for BETDAQ ladder")
-
-    def _validate_betdaq_min_size(self, order, order_type):
-        client = order.client
-        if client.min_bet_validation is False:
-            return  # some accounts do not have min bet restrictions
-        if order.order_type.size < 0.10:
-            self._on_error(
-                order,
-                "Bet size is less than min bet size (0.10) for currency",
-            )
-
 
 class MarketValidation(BaseControl):
     """
@@ -151,7 +124,6 @@ class MarketValidation(BaseControl):
     def _validate(self, order: BaseOrder, package_type: OrderPackageType) -> None:
         if order.VENUE == VenueType.BETFAIR:
             self._validate_betfair_market_status(order)
-        # todo BETDAQ
 
     def _validate_betfair_market_status(self, order):
         market = self.flumine.markets.markets.get(order.market_id)
@@ -239,8 +211,6 @@ class StrategyExposure(BaseControl):
         if package_type in (
             OrderPackageType.PLACE,
             OrderPackageType.REPLACE,
-        ) or (
-            order.VENUE == VenueType.BETDAQ and package_type == OrderPackageType.UPDATE
         ):
             strategy = order.trade.strategy
             market = self.flumine.markets.markets[order.market_id]
