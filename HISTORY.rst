@@ -3,6 +3,21 @@
 Release History
 ---------------
 
+3.4.0 (2026-11-04)
++++++++++++++++++++
+
+**Improvements**
+
+- BETDAQ removed 🪦
+
+**Bug Fixes**
+
+- Tote raw data fix
+
+**Libraries**
+
+- betdaq-retail removed
+
 3.3.2 (2026-10-19)
 +++++++++++++++++++
 
