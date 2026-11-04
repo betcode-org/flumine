@@ -7,14 +7,12 @@ from flumine.streams import (
     streams,
     betfairdatastream,
     betfairhistoricalstream,
-    betdaqorderpolling,
 )
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
 from flumine.streams import betfairorderstream
 from flumine.streams.betfairsportsdatastream import BetfairSportsDataStream
-from flumine.streams.betdaqmarketpolling import BetdaqMarketPolling
-from flumine.exceptions import ListenerError, StreamError
+from flumine.exceptions import ListenerError
 
 
 class StreamsTest(unittest.TestCase):
@@ -59,24 +57,13 @@ class StreamsTest(unittest.TestCase):
         self.streams.add_client(mock_client)
         mock_add_betfair_order_stream.assert_not_called()
 
-    @mock.patch("flumine.streams.streams.Streams.add_betdaq_order_polling")
-    def test_add_client_betdaq(self, mock_add_order_stream):
-        mock_client = mock.Mock(
-            order_stream=True, paper_trade=False, order_stream_cls=None
-        )
-        mock_client.VENUE = streams.VenueType.BETDAQ
-        self.streams.add_client(mock_client)
-        mock_add_order_stream.assert_called_with(
-            mock_client, streaming_timeout=mock_client.order_streaming_timeout
-        )
-
     @mock.patch("flumine.streams.streams.Streams.add_stream")
     def test_add_client_order_stream(self, mock_add_stream):
         mock_order_stream_cls = mock.Mock()
         mock_client = mock.Mock(
             order_stream=True, paper_trade=False, order_stream_cls=mock_order_stream_cls
         )
-        mock_client.VENUE = streams.VenueType.BETDAQ
+        mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
         mock_order_stream_cls.assert_called_with(client=mock_client, custom=True)
         mock_add_stream.assert_called_with(mock_order_stream_cls.return_value)
@@ -127,17 +114,6 @@ class StreamsTest(unittest.TestCase):
             conflate_ms=conflate_ms,
             client=mock_client,
             custom=True,
-        )
-
-    @mock.patch("flumine.streams.streams.BetdaqOrderPolling")
-    @mock.patch("flumine.streams.streams.Streams.add_stream")
-    def test_add_betdaq_order_polling(self, mock_add_stream, mock_order_polling_class):
-        mock_client = mock.Mock()
-        self.streams.add_betdaq_order_polling(mock_client)
-        mock_add_stream.assert_called_with(mock_order_polling_class.return_value)
-        mock_order_polling_class.assert_called_with(
-            client=mock_client,
-            streaming_timeout=0.25,
         )
 
     def test_start(self):
@@ -1000,72 +976,6 @@ class TestSimulatedOrderStream(unittest.TestCase):
         self.assertEqual(self.stream._get_current_orders(), [order_one])
 
 
-class TestBetdaqOrderPolling(unittest.TestCase):
-    def setUp(self) -> None:
-        self.mock_flumine = mock.Mock()
-        self.stream = streams.BetdaqOrderPolling(self.mock_flumine, 123)
-
-    def test_init(self):
-        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
-        self.assertEqual(self.stream.flumine, self.mock_flumine)
-        self.assertEqual(self.stream.stream_id, 123)
-        self.assertIsNone(self.stream.market_filter)
-        self.assertEqual(
-            self.stream.market_data_filter,
-            {
-                "fields": [
-                    "EX_ALL_OFFERS",
-                    "EX_TRADED",
-                    "EX_TRADED_VOL",
-                    "EX_LTP",
-                    "EX_MARKET_DEF",
-                    "SP_TRADED",
-                    "SP_PROJECTED",
-                ]
-            },
-        )
-        self.assertIsNone(self.stream.streaming_timeout)
-        self.assertIsNone(self.stream.conflate_ms)
-        self.assertIsNone(self.stream._stream)
-        self.assertEqual(betdaqorderpolling.START_DELAY, 2)
-        self.assertEqual(betdaqorderpolling.SNAP_DELTA, 2)
-
-    # def test_run(self):
-    #     pass
-
-    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
-    def test__process_current_orders(self, mock_event):
-        current_orders = [{"sequence_number": 1}]
-        sequence_number = 0
-        self.stream.flumine.markets.live_orders = False
-        self.assertEqual(
-            self.stream._process_current_orders(current_orders, sequence_number), 1
-        )
-        mock_event.assert_called_with(current_orders, venue=VenueType.BETDAQ)
-        self.stream.flumine.handler_queue.put.assert_called_with(
-            mock_event.return_value
-        )
-
-    @mock.patch("flumine.streams.betdaqorderpolling.CurrentOrdersEvent")
-    def test__process_current_orders_no_live(self, mock_event):
-        current_orders = []
-        sequence_number = 0
-        self.stream.flumine.markets.live_orders = True
-        self.assertEqual(
-            self.stream._process_current_orders(current_orders, sequence_number), 0
-        )
-        mock_event.assert_called_with(current_orders, venue=VenueType.BETDAQ)
-        self.stream.flumine.handler_queue.put.assert_called_with(
-            mock_event.return_value
-        )
-
-    def test_stream_running(self):
-        self.assertTrue(self.stream.stream_running)
-
-    def test_stream_hash(self):
-        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
-
-
 class TestBetfairSportsDataStream(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_flumine = mock.Mock()
@@ -1086,27 +996,3 @@ class TestBetfairSportsDataStream(unittest.TestCase):
     #
     # def test_handle_output(self):
     #     pass
-
-
-class TestBetdaqMarketPolling(unittest.TestCase):
-    def setUp(self) -> None:
-        self.mock_flumine = mock.Mock()
-        self.stream = BetdaqMarketPolling(
-            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
-        )
-
-    def test_init(self):
-        self.assertEqual(self.stream.VENUE, VenueType.BETDAQ)
-        self.assertEqual(self.stream.flumine, self.mock_flumine)
-        self.assertEqual(self.stream.stream_id, 123)
-        self.assertEqual(self.stream.market_filter, {"test": "me"})
-        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
-        self.assertEqual(self.stream.streaming_timeout, 0.01)
-        self.assertEqual(self.stream.conflate_ms, 100)
-        self.assertIsNone(self.stream._stream)
-
-    # def test_run(self):
-    #     pass
-
-    def test_stream_running(self):
-        self.assertTrue(self.stream.stream_running)

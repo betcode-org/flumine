@@ -10,7 +10,6 @@ from flumine.order.orderpackage import (
     BetfairOrderPackage,
     VenueType,
     OrderStatus,
-    BetdaqOrderPackage,
 )
 
 
@@ -237,49 +236,3 @@ class BetfairOrderPackageTest(unittest.TestCase):
         self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 60)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 60)
         self.assertEqual(self.order_package.order_limit(OrderPackageType.REPLACE), 60)
-
-
-class BetdaqOrderPackageTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.mock_package_type = mock.Mock()
-        self.mock_client = mock.Mock()
-        self.mock_order = mock.Mock()
-        self.mock_order.status = OrderStatus.PENDING
-        self.order_package = BetdaqOrderPackage(
-            self.mock_client,
-            "1.234",
-            [self.mock_order],
-            self.mock_package_type,
-            0,
-        )
-
-    def test_init(self):
-        self.assertEqual(self.order_package.VENUE, VenueType.BETDAQ)
-
-    def test_place_instructions(self):
-        self.assertEqual(
-            self.order_package.place_instructions,
-            [self.mock_order.create_place_instruction()],
-        )
-
-    def test_cancel_instructions(self):
-        self.assertEqual(
-            self.order_package.cancel_instructions,
-            [self.mock_order.create_cancel_instruction()],
-        )
-
-    def test_update_instructions(self):
-        self.assertEqual(
-            self.order_package.update_instructions,
-            [self.mock_order.create_update_instruction()],
-        )
-
-    def test_replace_instructions(self):
-        with self.assertRaises(NotImplementedError):
-            assert self.order_package.replace_instructions
-
-    def test_order_limit(self):
-        self.assertEqual(self.order_package.order_limit(OrderPackageType.PLACE), 10)
-        self.assertEqual(self.order_package.order_limit(OrderPackageType.CANCEL), 10)
-        self.assertEqual(self.order_package.order_limit(OrderPackageType.UPDATE), 50)
-        self.assertIsNone(self.order_package.order_limit(OrderPackageType.REPLACE))

@@ -15,15 +15,10 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(len(utils.CUTOFFS), 10)
         self.assertEqual(utils.MIN_PRICE, 1.01)
         self.assertEqual(utils.MAX_PRICE, 1000)
-        self.assertEqual(len(utils.BETDAQ_CUTOFFS), 7)
-        self.assertEqual(utils.BETDAQ_MIN_PRICE, 1.01)
-        self.assertEqual(utils.BETDAQ_MAX_PRICE, 1000)
         self.assertEqual(utils.STRATEGY_NAME_HASH_LENGTH, 13)
         self.assertEqual(len(utils.PRICES), 350)
         self.assertEqual(len(utils.PRICES), len(utils.PRICES_FLOAT))
         self.assertEqual(len(utils.FINEST_PRICES), 99900)
-        self.assertEqual(len(utils.BETDAQ_PRICES), 565)
-        self.assertEqual(len(utils.BETDAQ_PRICES), len(utils.BETDAQ_PRICES_FLOAT))
 
     def test_detect_file_type(self):
         self.assertEqual(utils.detect_file_type("hello/world"), "UNKNOWN")
@@ -165,18 +160,6 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.price_ticks_away(1000, 5), 1000)
         with self.assertRaises(ValueError):
             utils.price_ticks_away(999, -1)
-
-    def test_price_ticks_away_betdaq(self):
-        prices = utils.BETDAQ_PRICES_FLOAT
-        self.assertEqual(utils.price_ticks_away(1.01, 1, prices), 1.02)
-        self.assertEqual(utils.price_ticks_away(1.01, 5, prices), 1.06)
-        self.assertEqual(utils.price_ticks_away(500, 1, prices), 505)
-        self.assertEqual(utils.price_ticks_away(500, -1, prices), 495)
-        self.assertEqual(utils.price_ticks_away(1.01, -1, prices), 1.01)
-        self.assertEqual(utils.price_ticks_away(1.10, -10, prices), 1.01)
-        self.assertEqual(utils.price_ticks_away(1000, 5, prices), 1000)
-        with self.assertRaises(ValueError):
-            utils.price_ticks_away(999, -1, prices)
 
     def test_calculate_matched_exposure(self):
         self.assertEqual(utils.calculate_matched_exposure([], []), (0.0, 0.0))
@@ -417,23 +400,6 @@ class UtilsTest(unittest.TestCase):
         mock_runner = mock.Mock(selection_id=123, handicap=0, last_price_traded=5)
         mock_market_book.runners = [mock_runner]
         mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETFAIR)
-        self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
-
-    @mock.patch("flumine.utils.get_price_dict", return_value=1.01)
-    def test_get_market_notes_betdaq(self, mock_get_price_dict):
-        mock_market_book = {
-            "runners": [
-                {
-                    "runner_id": 123,
-                    "runner_book": {
-                        "batb": [[0, 1.01, 12.34]],
-                        "batl": [[0, 1.02, 22.34]],
-                    },
-                    "runner_last_matched_price": 5,
-                }
-            ]
-        }
-        mock_market = mock.Mock(market_book=mock_market_book, VENUE=VenueType.BETDAQ)
         self.assertEqual(utils.get_market_notes(mock_market, 123), "1.01,1.01,5")
 
     def test__get_event_ids(self):
