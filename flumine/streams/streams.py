@@ -7,9 +7,7 @@ from .betfairdatastream import BetfairDataStream
 from .betfairhistoricalstream import BetfairHistoricalStream
 from .betfairorderstream import BetfairOrderStream
 from .simulatedorderstream import SimulatedOrderStream
-from .betdaqorderpolling import BetdaqOrderPolling
 from ..clients import VenueType, BaseClient
-from ..exceptions import StreamError
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +36,6 @@ class Streams:
                         client,
                         conflate_ms=client.order_stream_conflate_ms,
                         streaming_timeout=client.order_streaming_timeout,
-                    )
-                elif client.VENUE == VenueType.BETDAQ:
-                    self.add_betdaq_order_polling(
-                        client, streaming_timeout=client.order_streaming_timeout
                     )
 
     """ market data """
@@ -95,18 +89,6 @@ class Streams:
             streaming_timeout=streaming_timeout,
             client=client,
             custom=True,
-        )
-        stream.flumine = self.flumine
-        return self.add_stream(stream)
-
-    def add_betdaq_order_polling(
-        self,
-        client: BaseClient,
-        streaming_timeout: float = 0.25,
-    ) -> BetdaqOrderPolling:
-        stream = BetdaqOrderPolling(
-            client=client,
-            streaming_timeout=streaming_timeout,
         )
         stream.flumine = self.flumine
         return self.add_stream(stream)

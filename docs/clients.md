@@ -7,7 +7,6 @@ Flumine is capable of using multiple clients, these can be of the same `VenueTyp
 - BETFAIR: `BetfairClient`
 - SIMULATED: `SimulatedClient`
 - BETCONNECT: `BetconnectClient`
-- BETDAQ: `BETDAQ`
 - SMARKETS: `Smarkets`
 - MATCHBOOK: `Matchbook`
 - POLYMARKET: `Polymarket`

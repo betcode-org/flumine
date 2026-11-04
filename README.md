@@ -28,7 +28,6 @@ flumine is an open-source, event-based trading framework for sports betting, des
 ## venues
 
 - Betfair
-- Betdaq
 - Betconnect (account/execution functionality)
 - Tote (in development)
 - Smarkets (roadmap)
@@ -36,6 +35,7 @@ flumine is an open-source, event-based trading framework for sports betting, des
 - Polymarket (roadmap)
 - Kalshi (roadmap)
 - BetDEX (roadmap)
+- ~~Betdaq~~ 🪦
 
 
 ![Backtesting Analysis](docs/images/jupyterloggingcontrol-screenshot.png?raw=true "Jupyter Logging Control Screenshot")
@@ -184,7 +184,6 @@ framework.run()
 flumine relies on these libraries:
 
 * `betfairlightweight` - Betfair API support
-* `betdaq-retail` - BETDAQ API support
 * `betconnect` - BetConnect API support
 * `tenacity` - Used for connection retrying (streaming)
 * `python-json-logger` - JSON logging

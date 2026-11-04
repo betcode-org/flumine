@@ -6,7 +6,6 @@ from ..clients import VenueType
 from ..order.orderpackage import (
     OrderPackageType,
     BetfairOrderPackage,
-    BetdaqOrderPackage,
 )
 from ..events import events
 from ..exceptions import ControlError, OrderError
@@ -124,16 +123,7 @@ class Transaction:
     def update_order(
         self,
         order,
-        # BETFAIR
         new_persistence_type: str = None,
-        # BETDAQ
-        size_delta: float = 0.0,
-        new_price: float = None,
-        expected_selection_reset_count: int = None,
-        expected_withdrawal_sequence_number: int = None,
-        cancel_on_in_running: bool = None,
-        cancel_if_selection_reset: bool = None,
-        set_to_be_sp_if_unmatched: bool = None,
         force: bool = False,
     ) -> bool:
         if order.client != self._client:
@@ -150,16 +140,6 @@ class Transaction:
         # update
         if order.VENUE in [VenueType.BETFAIR, VenueType.SIMULATED]:
             order.update(new_persistence_type)
-        elif order.VENUE == VenueType.BETDAQ:
-            order.update(
-                size_delta,
-                new_price,
-                expected_selection_reset_count,
-                expected_withdrawal_sequence_number,
-                cancel_on_in_running,
-                cancel_if_selection_reset,
-                set_to_be_sp_if_unmatched,
-            )
         else:
             raise OrderError(f"update_order: Unknown venue '{order.VENUE}'")
         self._pending_update.append((order, None))
@@ -244,10 +224,7 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
-        if self._client.VENUE == VenueType.BETDAQ:
-            package = BetdaqOrderPackage
-        else:
-            package = BetfairOrderPackage
+        package = BetfairOrderPackage
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:

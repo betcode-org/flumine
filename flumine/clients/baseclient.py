@@ -84,8 +84,6 @@ class BaseClient:
                 self.execution = flumine.simulated_execution
             elif self.VENUE == VenueType.BETFAIR:
                 self.execution = flumine.betfair_execution
-            elif self.VENUE == VenueType.BETDAQ:
-                self.execution = flumine.betdaq_execution
 
     def add_transaction(self, count: int, failed: bool = False) -> None:
         for control in self.trading_controls:

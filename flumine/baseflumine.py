@@ -12,12 +12,11 @@ from .events import events
 from .worker import BackgroundWorker
 from .clients import Clients, BaseClient, VenueType
 from .markets.markets import Markets
-from .markets.market import Market, BetdaqMarket, ToteMarket
+from .markets.market import Market, ToteMarket
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
-from .execution.betdaqexecution import BetdaqExecution
-from .order.process import process_current_orders, process_betdaq_current_orders
+from .order.process import process_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
 from .controls.tradingcontrols import (
     OrderValidation,
@@ -61,7 +60,6 @@ class BaseFlumine:
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
         self.betfair_execution = BetfairExecution(self)
-        self.betdaq_execution = BetdaqExecution(self)
 
         # add client
         if client:
@@ -163,9 +161,6 @@ class BaseFlumine:
             if event.venue == VenueType.BETFAIR:
                 market_id = market_book.market_id
                 streaming_unique_id = market_book.streaming_unique_id
-            elif event.venue == VenueType.BETDAQ:
-                market_id = market_book["market_id"]
-                streaming_unique_id = market_book["streaming_unique_id"]
             elif event.venue == VenueType.TOTE:
                 market_id = market_book["id"]
                 streaming_unique_id = market_book["streaming_unique_id"]
@@ -267,8 +262,6 @@ class BaseFlumine:
         logger.info(f"Adding: {market_id} to {venue_type.value} markets")
         if venue_type == VenueType.BETFAIR:
             market = Market(self, market_id, market_book)
-        elif venue_type == VenueType.BETDAQ:
-            market = BetdaqMarket(self, market_id, market_book)
         elif venue_type == VenueType.TOTE:
             market = ToteMarket(self, market_id, market_book)
         else:
@@ -294,9 +287,11 @@ class BaseFlumine:
                 market_id = datum["id"]
                 market = self.markets.markets.get(market_id)
                 if market is None:
-                    market = self._add_market(market_id, None, event.venue)
-                    if market.VENUE == VenueType.TOTE:
+                    if event.venue == VenueType.TOTE:
+                        market = self._add_market(market_id, datum, event.venue)
                         self.log_control(events.MarketEvent(market))
+                    else:
+                        market = self._add_market(market_id, None, event.venue)
                 elif market.closed:
                     self.markets.add_market(market_id, market)
 
@@ -314,8 +309,6 @@ class BaseFlumine:
         for market_catalogue in event.event:
             if event.venue == VenueType.BETFAIR:
                 market_id = market_catalogue.market_id
-            elif event.venue == VenueType.BETDAQ:
-                market_id = market_catalogue["market_id"]
             else:
                 raise NotImplementedError()
 
@@ -348,8 +341,6 @@ class BaseFlumine:
                         streaming_unique_id = market.market_book.streaming_unique_id
                     else:
                         streaming_unique_id = None
-                elif event.venue == VenueType.BETDAQ:
-                    streaming_unique_id = market.market_book["streaming_unique_id"]
                 else:
                     raise NotImplementedError()
 
@@ -376,14 +367,6 @@ class BaseFlumine:
             else:
                 if event.venue == VenueType.BETFAIR:
                     process_current_orders(
-                        self.markets,
-                        self.strategies,
-                        event,
-                        self.log_control,
-                        self._add_market,
-                    )
-                elif event.venue == VenueType.BETDAQ:
-                    process_betdaq_current_orders(
                         self.markets,
                         self.strategies,
                         event,
@@ -438,9 +421,6 @@ class BaseFlumine:
             else:
                 market_id = market_book.market_id
                 stream_id = market_book.streaming_unique_id
-        elif event.venue == VenueType.BETDAQ:
-            market_id = market_book["market_id"]
-            stream_id = None
         elif event.venue == VenueType.TOTE:
             market_id = market_book["id"]
             stream_id = market_book["streaming_unique_id"]
@@ -518,23 +498,6 @@ class BaseFlumine:
                 return
 
             meta_orders = market.blotter.process_cleared_orders(event.event)
-        elif event.venue == VenueType.BETDAQ:
-            market_id = "betdaq"
-            meta_orders = []
-            for cleared_order in event.event:
-                ref = cleared_order["customer_reference"]
-                # check every market for the order
-                for market in self.markets:
-                    try:
-                        order = market.blotter[str(ref)]
-                    except KeyError:
-                        continue
-                    if order:
-                        order.cleared_order = cleared_order
-                        meta_orders.append(order)
-                        break
-                else:
-                    continue
         else:
             logger.warning("Unknown venue in '_process_cleared_orders'")
             return
@@ -617,7 +580,6 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
-        self.betdaq_execution.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:

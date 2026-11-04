@@ -38,16 +38,6 @@ class TestOrderValidation(unittest.TestCase):
         mock_validate_betfair_order.assert_called_with(mock_order)
 
     @mock.patch(
-        "flumine.controls.tradingcontrols.OrderValidation._validate_betdaq_order"
-    )
-    def test_validate_betdaq(self, mock_validate_betfair_order):
-        mock_order = mock.Mock(VENUE=VenueType.BETDAQ)
-        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        mock_order.order_type.size = 12
-        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
-        mock_validate_betfair_order.assert_called_with(mock_order)
-
-    @mock.patch(
         "flumine.controls.tradingcontrols.OrderValidation._validate_betfair_min_size"
     )
     @mock.patch("flumine.controls.tradingcontrols.OrderValidation._validate_size")
@@ -359,40 +349,6 @@ class TestOrderValidation(unittest.TestCase):
         mock_on_error.assert_called_with(
             order, "Liability is less than min BSP payout (10) for currency"
         )
-
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betdaq_price(self, mock_on_error):
-        order = mock.Mock()
-        order.order_type.price = 2
-        self.trading_control._validate_betdaq_price(order)
-        mock_on_error.assert_not_called()
-
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betdaq_price_error(self, mock_on_error):
-        order = mock.Mock()
-        order.order_type.price = 501
-        self.trading_control._validate_betdaq_price(order)
-        mock_on_error.assert_called_with(
-            order, "Order price is not valid for BETDAQ ladder"
-        )
-
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betdaq_min_size(self, mock_on_error):
-        mock_client = mock.Mock(min_bet_size=2)
-        order = mock.Mock(client=mock_client)
-        order.side = "BACK"
-        order.order_type.size = 2
-        self.trading_control._validate_betdaq_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
-        mock_on_error.assert_not_called()
-
-    @mock.patch("flumine.controls.tradingcontrols.OrderValidation._on_error")
-    def test__validate_betdaq_min_size_error(self, mock_on_error):
-        mock_client = mock.Mock(min_bet_size=2)
-        order = mock.Mock(client=mock_client)
-        order.side = "BACK"
-        order.order_type.size = 0.09
-        self.trading_control._validate_betdaq_min_size(order, OrderTypes.LIMIT_ON_CLOSE)
-        mock_on_error.assert_called()
 
 
 class TestMarketValidation(unittest.TestCase):
@@ -954,22 +910,6 @@ class TestStrategyExposure(unittest.TestCase):
         # Just to be sure, check that the validation fails if we try to validate order1 as a PLACE
         self.trading_control._validate(order1, OrderPackageType.PLACE)
         mock_on_error.assert_called_once()
-
-    @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
-    def test_validate_limit_betdaq(self, mock_on_error):
-        mock_order = mock.Mock(
-            market_id="market_id", lookup=(1, 2, 3), VENUE=VenueType.BETDAQ
-        )
-        mock_order.trade.strategy.max_order_exposure = 10
-        mock_order.trade.strategy.max_selection_exposure = 100
-        mock_order.order_type.ORDER_TYPE = OrderTypes.LIMIT
-        mock_order.side = "BACK"
-        mock_order.order_type.size = 12.0
-        self.trading_control._validate(mock_order, OrderPackageType.PLACE)
-        mock_on_error.assert_called_with(
-            mock_order,
-            "Order exposure (12.0) is greater than strategy.max_order_exposure (10)",
-        )
 
     @mock.patch("flumine.controls.tradingcontrols.StrategyExposure._on_error")
     def test_validate_max_market_exposure(self, mock_on_error):

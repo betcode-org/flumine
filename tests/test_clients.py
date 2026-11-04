@@ -10,7 +10,6 @@ from flumine.clients import (
     BetfairClient,
     SimulatedClient,
     BetConnectClient,
-    BetdaqClient,
     ToteClient,
 )
 from flumine.clients import betfairclient
@@ -22,7 +21,7 @@ class ClientsTest(unittest.TestCase):
         self.clients = Clients()
 
     def test_venue_type(self):
-        self.assertEqual(len(VenueType), 10)
+        self.assertEqual(len(VenueType), 9)
         assert VenueType
 
     def test_init(self):
@@ -118,7 +117,6 @@ class ClientsTest(unittest.TestCase):
                 VenueType.BETFAIR.value: {"james": mock_client.info},
                 VenueType.SIMULATED.value: {},
                 VenueType.BETCONNECT.value: {},
-                VenueType.BETDAQ.value: {},
                 VenueType.KALSHI.value: {},
                 VenueType.POLYMARKET.value: {},
                 VenueType.BETDEX.value: {},
@@ -192,9 +190,6 @@ class BaseClientTest(unittest.TestCase):
         self.base_client.VENUE = VenueType.BETFAIR
         self.base_client.add_execution(mock_flumine)
         self.assertEqual(self.base_client.execution, mock_flumine.betfair_execution)
-        self.base_client.VENUE = VenueType.BETDAQ
-        self.base_client.add_execution(mock_flumine)
-        self.assertEqual(self.base_client.execution, mock_flumine.betdaq_execution)
 
     def test_add_execution_cls(self):
         mock_flumine = mock.Mock()
@@ -499,38 +494,6 @@ class BetConnectClientTest(unittest.TestCase):
         )
         self.assertIsNone(self.betconnect_client._get_account_funds())
         self.mock_betting_client.account.get_balance.assert_called_with()
-
-
-class BetdaqClientTest(unittest.TestCase):
-    def setUp(self):
-        self.mock_betting_client = mock.Mock()
-        del self.mock_betting_client.lightweight
-        self.betdaq_client = BetdaqClient(self.mock_betting_client)
-
-    def test_login(self):
-        self.betdaq_client.login()
-
-    def test_keep_alive(self):
-        self.betdaq_client.keep_alive()
-
-    def test_logout(self):
-        self.betdaq_client.logout()
-
-    def test_update_account_details(self):
-        self.betdaq_client.update_account_details()
-        self.assertEqual(
-            self.betdaq_client.account_funds,
-            self.mock_betting_client.account.get_account_balances.return_value,
-        )
-
-    def test_min_bet_size(self):
-        self.assertEqual(self.betdaq_client.min_bet_size(), 1)
-
-    def test_min_bet_payout(self):
-        self.assertIsNone(self.betdaq_client.min_bet_payout())
-
-    def test_min_bsp_liability(self):
-        self.assertIsNone(self.betdaq_client.min_bsp_liability())
 
 
 class ToteClientTest(unittest.TestCase):

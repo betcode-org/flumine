@@ -109,29 +109,13 @@ class Market:
     def update_order(
         self,
         order,
-        # BETFAIR
         new_persistence_type: str = None,
-        # BETDAQ
-        size_delta: float = 0.0,
-        new_price: float = None,
-        expected_selection_reset_count: int = None,
-        expected_withdrawal_sequence_number: int = None,
-        cancel_on_in_running: bool = None,
-        cancel_if_selection_reset: bool = None,
-        set_to_be_sp_if_unmatched: bool = None,
         force: bool = False,
     ) -> bool:
         with self.transaction(client=order.client) as t:
             return t.update_order(
                 order,
                 new_persistence_type,
-                size_delta,
-                new_price,
-                expected_selection_reset_count,
-                expected_withdrawal_sequence_number,
-                cancel_on_in_running,
-                cancel_if_selection_reset,
-                set_to_be_sp_if_unmatched,
                 force,
             )
 
@@ -295,88 +279,6 @@ class Market:
             "market_cleared": self.market_cleared,
             "closed": self.closed,
         }
-
-
-class BetdaqMarket(Market):
-    VENUE = VenueType.BETDAQ
-
-    def __call__(self, market_book: dict):
-        self.market_book = market_book
-
-    @property
-    def market_book_closed(self):
-        return self.status == "SETTLED"
-
-    @property
-    def publish_time(self) -> datetime.datetime:
-        return self.market_book["publish_time"]
-
-    @property
-    def bet_delay(self) -> float:
-        return (
-            self.market_book["in_running_delay"] if self.market_book["in_play"] else 0.0
-        )
-
-    @property
-    def market_name(self):
-        return self.market_book["market_name"]
-
-    @property
-    def event_type_id(self) -> str:
-        return None
-
-    @property
-    def event_id(self) -> str:
-        if self.market_catalogue:
-            return self.market_catalogue["event_id"]
-
-    @property
-    def competition_id(self):
-        return None
-
-    @property
-    def market_type(self) -> str:
-        market_type = self.market_book["market_type"]
-        if market_type:
-            return market_type.upper()
-
-    @property
-    def market_start_datetime(self):
-        if self.market_book and self.market_book["market_start_time"]:
-            dt = datetime.datetime.strptime(
-                self.market_book["market_start_time"],
-                "%Y-%m-%d %H:%M:%S.%f",
-            ).replace(tzinfo=datetime.timezone.utc)
-            return dt
-        elif self.market_catalogue and self.market_catalogue["market_start_time"]:
-            dt = datetime.datetime.strptime(
-                self.market_catalogue["market_start_time"],
-                "%Y-%m-%d %H:%M:%S.%f",
-            ).replace(tzinfo=datetime.timezone.utc)
-            return dt
-        else:
-            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
-
-    @property
-    def event_name(self) -> Optional[str]:
-        return None  # todo betdaq catalogue?
-
-    @property
-    def country_code(self) -> Optional[str]:
-        return None  # todo betdaq catalogue?
-
-    @property
-    def venue(self) -> Optional[str]:
-        return None  # todo betdaq catalogue?
-
-    @property
-    def race_type(self) -> Optional[str]:
-        return None
-
-    @property
-    def status(self) -> Optional[str]:
-        if self.market_book:
-            return self.market_book["status"] or "SETTLED"
 
 
 class ToteMarket(Market):
