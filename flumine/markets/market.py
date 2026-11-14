@@ -289,11 +289,9 @@ class ToteMarket(Market):
 
     @property
     def market_book_closed(self):
-        return (
-            self.status == "CLOSED"
-            and self.market_book["type"]["legs"]["nodes"][0]["event"].get("status")
-            in ["FINISHED", "CANCELLED"]
-        )
+        return self.status == "CLOSED" and self.market_book["type"]["legs"]["nodes"][0][
+            "event"
+        ].get("status") in ["FINISHED", "CANCELLED"]
 
     @property
     def publish_time(self) -> datetime.datetime:
