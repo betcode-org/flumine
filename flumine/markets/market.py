@@ -292,7 +292,7 @@ class ToteMarket(Market):
         return (
             self.status == "CLOSED"
             and self.market_book["type"]["legs"]["nodes"][0]["event"].get("status")
-            == "FINISHED"
+            in ["FINISHED", "CANCELLED"]
         )
 
     @property
