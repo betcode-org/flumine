@@ -139,9 +139,9 @@ class BaseExecution:
             },
         )
         if package_type == OrderPackageType.PLACE:
-            dt = False if order.async_ and not order.simulated else True
+            dt = True if order.simulated else False
             order.responses.placed(instruction_report, dt=dt)
-            if instruction_report.bet_id:
+            if order.simulated:
                 order.bet_id = instruction_report.bet_id
                 self.flumine.log_control(OrderEvent(order, venue=order.VENUE))
         elif package_type == OrderPackageType.CANCEL:
