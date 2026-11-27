@@ -145,3 +145,56 @@ def create_order_from_current(
         },
     )
     return order
+
+
+def process_matchbook_current_orders(
+    markets: Markets, strategies: Strategies, event, log_control, add_market
+) -> None:
+    for current_order in event.event:
+        order_id = current_order.temp_id
+        order = markets.get_order(
+            market_id=current_order.market_id,
+            order_id=order_id,
+        )
+        if order is None:
+            logger.debug(
+                f"MATCHBOOK Order {order_id} not present in blotter",
+                extra={
+                    "ref": order_id,
+                    "current_order": current_order,
+                },
+            )
+            continue
+
+        # process order status
+        process_matchbook_current_order(order, current_order, log_control)
+
+
+def process_matchbook_current_order(
+    order: BaseOrder, current_order, log_control
+) -> None:
+    # update
+    order.update_current_order(current_order)
+
+    # pick up Delayed orders
+    if order.bet_id is None and current_order.id:
+        order.responses.placed(dt=True)
+        order.bet_id = current_order.id
+        order.executable()
+        log_control(OrderEvent(order, venue=order.VENUE))
+
+    # update status
+    if order.status == OrderStatus.PENDING:
+        if order.current_order.status in ["cancelled", "matched", "flushed"]:
+            order.execution_complete()
+        elif order.current_order.status in ["open", "edited"]:
+            order.executable()
+    elif order.status == OrderStatus.UPDATING:
+        # todo
+        if order.current_order.status in ["cancelled", "matched", "flushed"]:
+            order.execution_complete()
+        elif order.current_order.status in ["open", "edited"]:
+            order.executable()
+    elif order.status == OrderStatus.EXECUTABLE:
+        if order.current_order.status in ["cancelled", "matched", "flushed"]:
+            order.execution_complete()

@@ -8,6 +8,7 @@ from flumine.order.ordertype import (
     LimitOrder,
     LimitOnCloseOrder,
     MarketOnCloseOrder,
+    MatchbookLimitOrder,
 )
 
 
@@ -130,4 +131,34 @@ class MarketOnCloseOrderTest(unittest.TestCase):
     def test_info(self):
         self.assertEqual(
             self.order_type.info, {"liability": 128, "order_type": "Market on close"}
+        )
+
+
+class TestMatchbookLimitOrder(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_line_range_info = mock.Mock()
+        self.order_type = MatchbookLimitOrder(
+            1.01,
+            2,
+            True,
+        )
+
+    def test_init(self):
+        self.assertEqual(self.order_type.VENUE, VenueType.MATCHBOOK)
+        self.assertEqual(self.order_type.ORDER_TYPE, OrderTypes.LIMIT)
+        self.assertEqual(self.order_type.price, 1.01)
+        self.assertEqual(self.order_type.size, 2)
+        self.assertTrue(self.order_type.keep_in_play)
+        self.assertEqual(self.order_type.odds_type, "DECIMAL")
+
+    def test_info(self):
+        self.assertEqual(
+            self.order_type.info,
+            {
+                "order_type": OrderTypes.LIMIT.value,
+                "price": 1.01,
+                "size": 2,
+                "keep_in_play": True,
+                "odds_type": "DECIMAL",
+            },
         )

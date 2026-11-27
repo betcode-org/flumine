@@ -6,6 +6,7 @@ from ..clients import VenueType
 from ..order.orderpackage import (
     OrderPackageType,
     BetfairOrderPackage,
+    MatchbookOrderPackage,
 )
 from ..events import events
 from ..exceptions import ControlError, OrderError
@@ -123,7 +124,11 @@ class Transaction:
     def update_order(
         self,
         order,
+        # BETFAIR
         new_persistence_type: str = None,
+        # MATCHBOOK
+        new_price: float = None,
+        new_size: float = None,
         force: bool = False,
     ) -> bool:
         if order.client != self._client:
@@ -140,6 +145,8 @@ class Transaction:
         # update
         if order.VENUE in [VenueType.BETFAIR, VenueType.SIMULATED]:
             order.update(new_persistence_type)
+        elif order.VENUE == VenueType.MATCHBOOK:
+            order.update(new_price, new_size)
         else:
             raise OrderError(f"update_order: Unknown venue '{order.VENUE}'")
         self._pending_update.append((order, None))
@@ -224,7 +231,10 @@ class Transaction:
     def _create_order_package(
         self, orders: list, package_type: OrderPackageType, async_: bool = False
     ) -> list:
-        package = BetfairOrderPackage
+        if self._client.VENUE == VenueType.MATCHBOOK:
+            package = MatchbookOrderPackage
+        else:
+            package = BetfairOrderPackage
         # group orders by marketVersion
         orders_grouped = defaultdict(list)
         for o in orders:

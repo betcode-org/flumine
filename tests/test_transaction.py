@@ -225,6 +225,24 @@ class TransactionTest(unittest.TestCase):
         "flumine.execution.transaction.Transaction._validate_controls",
         return_value=True,
     )
+    def test_update_order_matchbook(self, mock__validate_controls):
+        mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.MATCHBOOK)
+        self.assertTrue(
+            self.transaction.update_order(
+                mock_order,
+                new_price=2,
+                new_size=3,
+            )
+        )
+        mock_order.update.assert_called_with(2, 3)
+        mock__validate_controls.assert_called_with(mock_order, OrderPackageType.UPDATE)
+        self.transaction._pending_update = [(mock_order, None)]
+        self.assertTrue(self.transaction._pending_orders)
+
+    @mock.patch(
+        "flumine.execution.transaction.Transaction._validate_controls",
+        return_value=True,
+    )
     def test_replace_order(self, mock__validate_controls):
         mock_order = mock.Mock(client=self.mock_client, VENUE=VenueType.BETFAIR)
         self.assertTrue(self.transaction.replace_order(mock_order, 1.01, 321))
@@ -444,6 +462,48 @@ class TransactionTest(unittest.TestCase):
         )
         self.assertEqual(len(packages), 2)
         mock_betfair_order_package.assert_has_calls(
+            [
+                call.order_limit(OrderPackageType.PLACE),
+                call(
+                    client=self.transaction._client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[mock_order_one, mock_order_two],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.bet_delay,
+                    market_version=None,
+                    async_=False,
+                    customer_strategy_ref="dotty",
+                ),
+                call(
+                    client=self.transaction._client,
+                    market_id=self.transaction.market.market_id,
+                    orders=[mock_order_three],
+                    package_type=OrderPackageType.PLACE,
+                    bet_delay=self.transaction.market.bet_delay,
+                    market_version=None,
+                    async_=False,
+                    customer_strategy_ref="dotty",
+                ),
+            ]
+        )
+
+    @mock.patch("flumine.execution.transaction.MatchbookOrderPackage")
+    def test__create_order_package_Matchbook(self, mock_matchbook_order_package):
+        self.transaction._client.VENUE = VenueType.MATCHBOOK
+        mock_matchbook_order_package.order_limit.return_value = 2
+        mock_order_one = mock.Mock(id=1, venue="BETDAQ")
+        mock_order_two = mock.Mock(id=2, venue="BETDAQ")
+        mock_order_three = mock.Mock(id=3, venue="BETDAQ")
+        packages = self.transaction._create_order_package(
+            [
+                (mock_order_one, None),
+                (mock_order_two, None),
+                (mock_order_three, None),
+            ],
+            OrderPackageType.PLACE,
+        )
+        self.assertEqual(len(packages), 2)
+        mock_matchbook_order_package.assert_has_calls(
             [
                 call.order_limit(OrderPackageType.PLACE),
                 call(

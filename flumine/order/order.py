@@ -6,7 +6,7 @@ import string
 import collections
 from enum import Enum
 from typing import Union, Optional
-
+from matchbook.betting.resources import OfferRequest, OfferEditRequest
 from betfairlightweight.resources.bettingresources import CurrentOrder
 
 from ..clients.clients import VenueType
@@ -15,6 +15,7 @@ from .ordertype import (
     LimitOnCloseOrder,
     MarketOnCloseOrder,
     OrderTypes,
+    MatchbookLimitOrder,
 )
 from .responses import Responses
 from ..exceptions import OrderUpdateError
@@ -65,7 +66,9 @@ class BaseOrder:
         self,
         trade,
         side: str,
-        order_type: Union[LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder],
+        order_type: Union[
+            LimitOrder, LimitOnCloseOrder, MarketOnCloseOrder, MatchbookLimitOrder
+        ],
         handicap: float = 0,
         sep: str = config.order_sep,
         context: dict = None,
@@ -509,3 +512,111 @@ class BetfairOrder(BaseOrder):
             return False
         else:
             return c in VALID_BETFAIR_CUSTOMER_ORDER_REF_CHARACTERS
+
+
+class MatchbookOrder(BaseOrder):
+    VENUE = VenueType.MATCHBOOK
+
+    # updates
+    def place(self, publish_time: int, market_version: int, async_: bool) -> None:
+        self.publish_time = publish_time
+        self.market_version = market_version
+        self.async_ = async_
+        self.placing()
+
+    def cancel(self, size_reduction: float = None) -> None:
+        if size_reduction:
+            raise OrderUpdateError(
+                "MatchbookOrder does not allow size_reduction (use update())"
+            )
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        if self.status != OrderStatus.EXECUTABLE:
+            raise OrderUpdateError("Current status: %s" % self.status)
+        self.cancelling()
+
+    def update(self, new_price: float = None, new_size: float = None) -> None:
+        if self.bet_id is None:
+            raise OrderUpdateError("Order does not currently have a betId")
+        elif self.order_type.ORDER_TYPE == OrderTypes.LIMIT:
+            if self.status != OrderStatus.EXECUTABLE:
+                raise OrderUpdateError("Current status: %s" % self.status)
+            self.update_data["new_price"] = new_price
+            self.update_data["new_size"] = new_size
+            self.updating()
+        else:
+            raise OrderUpdateError("Only LIMIT orders can be updated")
+
+    # instructions
+    def create_place_instruction(self) -> dict:
+        return OfferRequest(
+            runner_id=self.selection_id,
+            side=self.side,
+            odds=self.order_type.price,
+            stake=self.order_type.size,
+            keep_in_play=self.order_type.keep_in_play,
+            temp_id=self.id,
+        )
+
+    def create_cancel_instruction(self) -> dict:
+        return self.bet_id
+
+    def create_update_instruction(self) -> dict:
+        current_price = self.order_type.price
+        current_size = self.order_type.size
+        return OfferEditRequest(
+            id=self.bet_id,
+            new_odds=self.update_data.get("new_price") or current_price,
+            new_stake=self.update_data.get("new_size") or current_size,
+            current_odds=current_price,
+            current_stake=current_size,
+        )
+
+    # currentOrder
+    @property
+    def average_price_matched(self) -> float:
+        if not self.current_order:
+            return 0.0
+        bets = self.current_order.matched_bets
+        total = sum(m.stake for m in bets)
+        if not total:
+            return 0.0
+        return round(sum(m.decimal_odds * m.stake for m in bets) / total, 2)
+
+    @property
+    def size_matched(self) -> float:
+        if self.current_order:
+            return self.current_order.stake_matched
+        else:
+            return 0.0
+
+    @property
+    def size_remaining(self):
+        if self.current_order:
+            if self.current_order.status in ["cancelled", "matched", "flushed"]:
+                return 0.0
+            else:
+                return self.current_order.remaining
+        else:
+            return 0.0
+
+    @property
+    def size_cancelled(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_lapsed(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def size_voided(self) -> float:
+        return 0.0  # todo
+
+    @property
+    def current_order(self) -> Union[CurrentOrder, SimulatedOrder, dict]:
+        if self.responses.current_order:
+            return self.responses.current_order
+        elif self.responses.place_response:
+            return self.responses.place_response
+        else:
+            return {}

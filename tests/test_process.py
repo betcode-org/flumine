@@ -6,10 +6,7 @@ from flumine.clients import VenueType
 from flumine.order.order import OrderStatus, OrderTypes
 from flumine.markets.market import Market
 from flumine.markets.markets import Markets
-from flumine.order.order import (
-    BaseOrder,
-    BetfairOrder,
-)
+from flumine.order.order import BaseOrder, BetfairOrder, MatchbookOrder
 from flumine.order import process
 from flumine.strategy.strategy import Strategies
 from flumine.utils import create_cheap_hash
@@ -155,3 +152,86 @@ class ProcessCurrentOrdersTest(unittest.TestCase):
         self.assertEqual(new_order.order_type.size, 2.0)
         self.assertEqual(new_order.order_type.price, 10.0)
         self.assertEqual(new_order.client, mock_client)
+
+    @mock.patch("flumine.order.process.process_matchbook_current_order")
+    def test_process_matchbook_current_orders(
+        self, mock_process_matchbook_current_order
+    ):
+        mock_log_control = mock.Mock()
+        mock_add_market = mock.Mock()
+        market_book = mock.Mock()
+        markets = Markets()
+        market = Market(
+            flumine=mock.Mock(), market_id="market_id", market_book=market_book
+        )
+        markets.add_market("market_id", market)
+        strategies = Strategies()
+        cheap_hash = create_cheap_hash("strategy_name", 13)
+        trade = mock.Mock(market_id="market_id")
+        trade.strategy.name_hash = cheap_hash
+        current_order = mock.Mock(temp_id="123", market_id="market_id", id=456)
+        matchbook_order = MatchbookOrder(
+            trade=trade, side="BACK", order_type=mock.Mock()
+        )
+        matchbook_order.id = "123"
+        matchbook_order.complete = True
+        market.blotter["123"] = matchbook_order
+        event = mock.Mock(event=[current_order])
+
+        process.process_matchbook_current_orders(
+            markets=markets,
+            strategies=strategies,
+            event=event,
+            log_control=mock_log_control,
+            add_market=mock_add_market,
+        )
+        mock_process_matchbook_current_order.assert_called_with(
+            matchbook_order, current_order, mock_log_control
+        )
+
+    def test_process_matchbook_current_order_pending(self):
+        mock_order = mock.Mock(
+            bet_id=None,
+            status=OrderStatus.PENDING,
+            current_order=mock.Mock(status="delayed"),
+            async_=True,
+        )
+        mock_current_order = mock.Mock(temp_id="123", market_id="market_id", id=456)
+        mock_log_control = mock.Mock()
+        process.process_matchbook_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.executable.assert_called()
+        mock_log_control.assert_called()
+        self.assertEqual(mock_order.bet_id, 456)
+
+    def test_process_matchbook_current_order_pending_matched(self):
+        mock_order = mock.Mock(
+            bet_id=None,
+            status=OrderStatus.PENDING,
+            current_order=mock.Mock(status="Matched"),
+            async_=True,
+        )
+        mock_current_order = mock.Mock(temp_id="123", market_id="market_id", id=456)
+        mock_log_control = mock.Mock()
+        process.process_matchbook_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.executable.assert_called()
+        mock_log_control.assert_called()
+        self.assertEqual(mock_order.bet_id, 456)
+
+    def test_process_matchbook_current_order_matched(self):
+        mock_current_order = mock.Mock(status="matched")
+        mock_order = mock.Mock(
+            status=OrderStatus.EXECUTABLE, current_order=mock_current_order
+        )
+        mock_log_control = mock.Mock()
+        process.process_matchbook_current_order(
+            mock_order, mock_current_order, mock_log_control
+        )
+        mock_order.update_current_order.assert_called_with(mock_current_order)
+        mock_order.execution_complete.assert_called()
+        mock_log_control.assert_not_called()

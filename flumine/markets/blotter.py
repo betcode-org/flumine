@@ -255,7 +255,7 @@ class Blotter:
                 continue
             if order.order_type.ORDER_TYPE == ORDER_TYPE_LIMIT:
                 _size_matched = order.size_matched  # cache
-                _order_side = order.side
+                _order_side = order.side.upper()
                 if _size_matched:
                     if order.order_type.price_ladder_definition == "LINE_RANGE":
                         average_price_matched = 2.0
@@ -277,7 +277,7 @@ class Blotter:
                         else:
                             ul.append((order_type_price, _size_remaining))
             elif order.order_type.ORDER_TYPE in ORDER_TYPES_SP:
-                if order.side == "BACK":
+                if order.side.upper() == "BACK":
                     moc_lose_liability -= order.order_type.liability
                 else:
                     moc_win_liability -= order.order_type.liability

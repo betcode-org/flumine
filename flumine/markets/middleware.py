@@ -115,7 +115,7 @@ class SimulatedMiddleware(Middleware):
                     # TODO: "Where an SP lay bet in a win market has a maximum odds limit specified,..."
                     if (
                         order.order_type.ORDER_TYPE == OrderTypes.MARKET_ON_CLOSE
-                    ) and order.side == "LAY":
+                    ) and order.side.upper() == "LAY":
                         if market.market_type == "WIN":
                             runner = [
                                 x
@@ -224,7 +224,7 @@ class SimulatedMiddleware(Middleware):
             [
                 o
                 for o in orders
-                if o.side == "LAY"
+                if o.side.upper() == "LAY"
                 and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
             ],
             key=lambda x: -x.order_type.price,
@@ -233,7 +233,7 @@ class SimulatedMiddleware(Middleware):
             [
                 o
                 for o in orders
-                if o.side == "BACK"
+                if o.side.upper() == "BACK"
                 and o.order_type.ORDER_TYPE != OrderTypes.MARKET_ON_CLOSE
             ],
             key=lambda x: x.order_type.price,

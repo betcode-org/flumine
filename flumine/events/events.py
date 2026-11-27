@@ -65,6 +65,14 @@ class MarketBookEvent(BaseEvent):
     EVENT_TYPE = EventType.MARKET_BOOK
     QUEUE_TYPE = QueueType.HANDLER
 
+    __slots__ = ["streaming_unique_id"]
+
+    def __init__(
+        self, event, venue: VenueType = VenueType.BETFAIR, streaming_unique_id=None
+    ):
+        super().__init__(event, venue)
+        self.streaming_unique_id = streaming_unique_id
+
 
 class SportsDataEvent(BaseEvent):
     EVENT_TYPE = EventType.SPORTS_DATA

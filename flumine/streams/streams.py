@@ -6,6 +6,7 @@ from .betfairmarketstream import BetfairMarketStream
 from .betfairdatastream import BetfairDataStream
 from .betfairhistoricalstream import BetfairHistoricalStream
 from .betfairorderstream import BetfairOrderStream
+from .matchbookorderpolling import MatchbookOrderPolling
 from .simulatedorderstream import SimulatedOrderStream
 from ..clients import VenueType, BaseClient
 
@@ -36,6 +37,10 @@ class Streams:
                         client,
                         conflate_ms=client.order_stream_conflate_ms,
                         streaming_timeout=client.order_streaming_timeout,
+                    )
+                elif client.VENUE == VenueType.MATCHBOOK:
+                    self.add_matchbook_order_polling(
+                        client, streaming_timeout=client.order_streaming_timeout
                     )
 
     """ market data """
@@ -89,6 +94,18 @@ class Streams:
             streaming_timeout=streaming_timeout,
             client=client,
             custom=True,
+        )
+        stream.flumine = self.flumine
+        return self.add_stream(stream)
+
+    def add_matchbook_order_polling(
+        self,
+        client: BaseClient,
+        streaming_timeout: float = 0.25,
+    ) -> MatchbookOrderPolling:
+        stream = MatchbookOrderPolling(
+            client=client,
+            streaming_timeout=streaming_timeout,
         )
         stream.flumine = self.flumine
         return self.add_stream(stream)
