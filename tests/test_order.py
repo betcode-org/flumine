@@ -7,6 +7,7 @@ from unittest import mock
 from flumine.order.order import (
     BaseOrder,
     BetfairOrder,
+    MatchbookOrder,
     VenueType,
     OrderTypes,
     OrderStatus,
@@ -645,3 +646,161 @@ class IsValidCustomerOrderRefTestCase(unittest.TestCase):
     def test_special_characters_False(self):
         for c in list('!"£$%'):
             self.assertFalse(BetfairOrder.is_valid_customer_order_ref_character((c)))
+
+
+class MatchbookOrderTest(unittest.TestCase):
+    def setUp(self) -> None:
+        mock_client = mock.Mock(paper_trade=False)
+        self.mock_trade = mock.Mock(
+            client=mock_client, market_id="1.1", selection_id=123, info={}
+        )
+        self.mock_status = mock.Mock()
+        self.mock_order_type = mock.Mock(info={}, size=2.0, liability=2.0)
+        self.order = MatchbookOrder(self.mock_trade, "BACK", self.mock_order_type)
+
+    def test_init(self):
+        self.assertEqual(self.order.VENUE, VenueType.MATCHBOOK)
+
+    @mock.patch("flumine.order.order.MatchbookOrder.placing")
+    def test_place(self, mock_placing):
+        self.order.place(123, 456, False)
+        self.assertFalse(self.order._simulated)
+        self.assertEqual(self.order.publish_time, 123)
+        self.assertEqual(self.order.market_version, 456)
+        self.assertFalse(self.order.async_)
+        mock_placing.assert_called_with()
+
+    @mock.patch("flumine.order.order.OfferRequest")
+    def test_create_place_instruction(self, mock_offer_request):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.assertEqual(
+            self.order.create_place_instruction(),
+            mock_offer_request.return_value,
+        )
+
+    @mock.patch("flumine.order.order.MatchbookOrder.cancelling")
+    def test_cancel(self, mock_cancelling):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.cancel()
+        mock_cancelling.assert_called_with()
+
+    def test_cancel_size_reduction(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel(12)
+
+    def test_cancel_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
+    def test_cancel_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.cancel()
+
+    def test_create_cancel_instruction(self):
+        self.assertEqual(
+            self.order.create_cancel_instruction(),
+            self.order.bet_id,
+        )
+
+    @mock.patch("flumine.order.order.MatchbookOrder.updating")
+    def test_update(self, mock_updating):
+        self.order.bet_id = 1234
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        self.order.update(
+            new_price=2,
+        )
+        mock_updating.assert_called_with()
+        self.assertEqual(
+            self.order.update_data,
+            {"new_price": 2, "new_size": None},
+        )
+
+    def test_update_no_bet_id(self):
+        self.order.bet_id = None
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.EXECUTABLE
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    def test_update_status(self):
+        self.order.bet_id = 123
+        self.order.order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.order.status = OrderStatus.PENDING
+        with self.assertRaises(OrderUpdateError):
+            self.order.update()
+
+    @mock.patch("flumine.order.order.OfferEditRequest")
+    def test_create_update_instruction(self, mock_offer_request):
+        self.assertEqual(
+            self.order.create_update_instruction(),
+            mock_offer_request.return_value,
+        )
+
+    def test_average_price_matched(self):
+        self.assertEqual(self.order.average_price_matched, 0)
+        mock_current_order = mock.Mock(
+            matched_bets=[mock.Mock(decimal_odds=12.3, stake=2.00)]
+        )
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.average_price_matched, 12.3)
+
+    def test_average_price_matched_none(self):
+        self.assertEqual(self.order.average_price_matched, 0)
+        mock_current_order = mock.Mock(matched_bets=[])
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.average_price_matched, 0.0)
+
+    def test_size_matched(self):
+        self.assertEqual(self.order.size_matched, 0)
+        mock_current_order = mock.Mock(stake_matched=12)
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_matched, 12)
+
+    def test_size_matched_none(self):
+        self.assertEqual(self.order.size_matched, 0)
+        mock_current_order = mock.Mock(stake_matched=0.0)
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_matched, 0.0)
+
+    def test_size_remaining(self):
+        self.mock_order_type.ORDER_TYPE = OrderTypes.LIMIT
+        self.mock_order_type.size = 0
+        self.mock_order_type.bet_target_size = 0
+        self.assertEqual(self.order.size_remaining, 0)
+        mock_current_order = mock.Mock(remaining=34)
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 34)
+        mock_current_order = mock.Mock(remaining=43)
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 43)
+        mock_current_order = mock.Mock(status="cancelled")
+        self.order.responses.current_order = mock_current_order
+        self.assertEqual(self.order.size_remaining, 0.0)
+
+    def test_size_cancelled(self):
+        self.assertEqual(self.order.size_cancelled, 0)
+
+    def test_size_lapsed(self):
+        self.assertEqual(self.order.size_lapsed, 0)
+
+    def test_size_voided(self):
+        self.assertEqual(self.order.size_voided, 0)
+
+    def test_current_order(self):
+        self.assertEqual(self.order.current_order, {})
+        self.order.responses.place_response = {"tee": "way"}
+        self.assertEqual(self.order.current_order, {"tee": "way"})
+        self.order.responses.current_order = {"D": "RIZZ"}
+        self.assertEqual(self.order.current_order, {"D": "RIZZ"})

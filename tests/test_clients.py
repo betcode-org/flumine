@@ -11,6 +11,7 @@ from flumine.clients import (
     SimulatedClient,
     BetConnectClient,
     ToteClient,
+    MatchbookClient,
 )
 from flumine.clients import betfairclient
 from flumine import exceptions
@@ -526,3 +527,51 @@ class ToteClientTest(unittest.TestCase):
 
     def test_min_bsp_liability(self):
         self.assertIsNone(self.tote_client.min_bsp_liability())
+
+
+class MatchbookClientTest(unittest.TestCase):
+    def setUp(self):
+        self.mock_betting_client = mock.Mock()
+        del self.mock_betting_client.lightweight
+        self.matchbook_client = MatchbookClient(self.mock_betting_client)
+
+    def test_login(self):
+        self.matchbook_client.login()
+        self.mock_betting_client.login.assert_called_with()
+
+    def test_keep_alive(self):
+        self.matchbook_client.keep_alive()
+
+    def test_logout(self):
+        self.matchbook_client.logout()
+        self.mock_betting_client.logout.assert_called_with()
+
+    def test_update_account_details(self):
+        self.matchbook_client.update_account_details()
+        self.assertEqual(
+            self.matchbook_client.account_details,
+            self.mock_betting_client.get_account.return_value,
+        )
+        self.assertEqual(
+            self.matchbook_client.account_funds,
+            self.mock_betting_client.get_balance.return_value,
+        )
+
+    def test_min_bet_size(self):
+        self.assertEqual(self.matchbook_client.min_bet_size(), 0.10)
+
+    def test_min_bet_payout(self):
+        self.assertIsNone(self.matchbook_client.min_bet_payout())
+
+    def test_min_bsp_liability(self):
+        self.assertIsNone(self.matchbook_client.min_bsp_liability())
+
+    def test_username(self):
+        self.assertEqual(
+            self.matchbook_client.username,
+            self.matchbook_client.betting_client.conn.username,
+        )
+        self.matchbook_client.betting_client = None
+        self.assertEqual(
+            self.matchbook_client.username, self.matchbook_client._username
+        )

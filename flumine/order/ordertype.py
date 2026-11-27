@@ -119,3 +119,31 @@ class MarketOnCloseOrder(BaseOrderType):
             "order_type": self.ORDER_TYPE.value,
             "liability": self.liability,
         }
+
+
+class MatchbookLimitOrder(BaseOrderType):
+    VENUE = VenueType.MATCHBOOK
+    ORDER_TYPE = OrderTypes.LIMIT
+
+    def __init__(
+        self,
+        price: float,
+        size: float,
+        keep_in_play: bool = False,
+        odds_type: str = "DECIMAL",
+    ):
+        self.price = price
+        self.size = size
+        self.keep_in_play = keep_in_play
+        self.odds_type = odds_type
+        self.price_ladder_definition = None
+
+    @property
+    def info(self):
+        return {
+            "order_type": self.ORDER_TYPE.value,
+            "price": self.price,
+            "size": self.size,
+            "keep_in_play": self.keep_in_play,
+            "odds_type": self.odds_type,
+        }

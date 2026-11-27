@@ -12,11 +12,12 @@ from .events import events
 from .worker import BackgroundWorker
 from .clients import Clients, BaseClient, VenueType
 from .markets.markets import Markets
-from .markets.market import Market, ToteMarket
+from .markets.market import Market, ToteMarket, MatchbookMarket
 from .markets.middleware import Middleware, SimulatedMiddleware
 from .execution.betfairexecution import BetfairExecution
 from .execution.simulatedexecution import SimulatedExecution
-from .order.process import process_current_orders
+from .execution.matchbookexecution import MatchbookExecution
+from .order.process import process_current_orders, process_matchbook_current_orders
 from .controls.clientcontrols import BaseControl, MaxTransactionCount
 from .controls.tradingcontrols import (
     OrderValidation,
@@ -60,6 +61,7 @@ class BaseFlumine:
         # order execution class
         self.simulated_execution = SimulatedExecution(self)
         self.betfair_execution = BetfairExecution(self)
+        self.matchbook_execution = MatchbookExecution(self)
 
         # add client
         if client:
@@ -164,6 +166,9 @@ class BaseFlumine:
             elif event.venue == VenueType.TOTE:
                 market_id = market_book["id"]
                 streaming_unique_id = market_book["streaming_unique_id"]
+            elif event.venue == VenueType.MATCHBOOK:
+                market_id = market_book.id
+                streaming_unique_id = event.streaming_unique_id
             else:
                 raise NotImplementedError()
 
@@ -184,7 +189,7 @@ class BaseFlumine:
             market_is_new = market is None
             if market_is_new:
                 market = self._add_market(market_id, market_book, event.venue)
-                if market.VENUE == VenueType.TOTE:
+                if market.VENUE in [VenueType.TOTE, VenueType.MATCHBOOK]:
                     self.log_control(events.MarketEvent(market))
             elif market.closed:
                 if event.venue == VenueType.BETFAIR:
@@ -264,6 +269,8 @@ class BaseFlumine:
             market = Market(self, market_id, market_book)
         elif venue_type == VenueType.TOTE:
             market = ToteMarket(self, market_id, market_book)
+        elif venue_type == VenueType.MATCHBOOK:
+            market = MatchbookMarket(self, market_id, market_book)
         else:
             raise NotImplementedError()
         self.markets.add_market(market_id, market)
@@ -367,6 +374,14 @@ class BaseFlumine:
             else:
                 if event.venue == VenueType.BETFAIR:
                     process_current_orders(
+                        self.markets,
+                        self.strategies,
+                        event,
+                        self.log_control,
+                        self._add_market,
+                    )
+                elif event.venue == VenueType.MATCHBOOK:
+                    process_matchbook_current_orders(
                         self.markets,
                         self.strategies,
                         event,
@@ -580,6 +595,7 @@ class BaseFlumine:
         # shutdown thread pools
         self.simulated_execution.shutdown()
         self.betfair_execution.shutdown()
+        self.matchbook_execution.shutdown()
         # shutdown logging controls
         self.log_control(events.TerminationEvent(self))
         for c in self._logging_controls:

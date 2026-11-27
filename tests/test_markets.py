@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from flumine.clients import VenueType
 from flumine.markets.markets import Markets
-from flumine.markets.market import Market, ToteMarket
+from flumine.markets.market import Market, ToteMarket, MatchbookMarket
 from flumine import config
 
 
@@ -255,7 +255,9 @@ class MarketTest(unittest.TestCase):
         mock_order = mock.Mock()
         self.assertTrue(self.market.update_order(mock_order, "test", force=True))
         mock_transaction.assert_called_with(client=mock_order.client)
-        mock_transaction.update_order.assert_called_with(mock_order, "test", True)
+        mock_transaction.update_order.assert_called_with(
+            mock_order, "test", None, None, True
+        )
 
     @mock.patch("flumine.markets.market.Market.transaction")
     def test_replace_order(self, mock_transaction):
@@ -643,3 +645,45 @@ class ToteMarketTest(unittest.TestCase):
 
     def test_status(self):
         self.assertEqual(self.market.status, "OPEN")
+
+
+class MatchbookMarketTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.mock_market_book = mock.Mock(id="1.234", event_id=12345, status="open")
+        self.mock_market_book.name = "Win"
+        self.mock_market_catalogue = {"event_id": 12345}
+        self.market = MatchbookMarket(
+            self.mock_flumine,
+            "1.234",
+            self.mock_market_book,
+            self.mock_market_catalogue,
+        )
+
+    def test_call(self):
+        mock_market_book = {}
+        self.market(mock_market_book)
+        self.assertEqual(self.market.market_book, mock_market_book)
+
+    def test_market_book_closed(self):
+        self.assertFalse(self.market.market_book_closed)
+        self.market.market_book.status = "closed"
+        self.assertTrue(self.market.market_book_closed)
+
+    def test_publish_time(self):
+        self.assertIsNone(self.market.publish_time)
+
+    def test_bet_delay(self):
+        self.assertEqual(self.market.bet_delay, 0.0)
+
+    def test_market_name(self):
+        self.assertEqual(self.market.market_name, "Win")
+
+    def test_event_id(self):
+        self.assertEqual(self.market.event_id, 12345)
+
+    def test_market_start_datetime(self):
+        self.assertEqual(self.market.market_start_datetime, self.mock_market_book.start)
+
+    def test_status(self):
+        self.assertEqual(self.market.status, "open")

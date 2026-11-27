@@ -181,6 +181,23 @@ class TradeTest(unittest.TestCase):
                 mock_client, mock_current_order, "12345"
             )
 
+    def test_create_matchbook_order(self):
+        mock_order_type = mock.Mock(VENUE="MATCHBOOK")
+        mock_order = mock.Mock(VENUE="MATCHBOOK")
+        self.trade.create_order(
+            "BACK", mock_order_type, order=mock_order, sep="-", context={1: 2}
+        )
+        mock_order.assert_called_with(
+            trade=self.trade,
+            side="BACK",
+            order_type=mock_order_type,
+            handicap=self.trade.handicap,
+            sep="-",
+            context={1: 2},
+            notes=None,
+        )
+        self.assertEqual(self.trade.orders, [mock_order()])
+
     def test_elapsed_seconds(self):
         mock_order_one = mock.Mock(elapsed_seconds=123)
         mock_order_two = mock.Mock(elapsed_seconds=12)

@@ -15,6 +15,7 @@ from flumine.execution.baseexecution import (
 )
 from flumine.execution.betfairexecution import BetfairExecution
 from flumine.execution.simulatedexecution import SimulatedExecution
+from flumine.execution.matchbookexecution import MatchbookExecution
 from flumine.order.order import OrderStatus
 
 
@@ -1443,3 +1444,479 @@ class SimulatedExecutionTest(unittest.TestCase):
         mock_time.sleep.assert_called_with(
             mock_order_package.simulated_latency_plus_delay
         )
+
+
+class MatchbookExecutionTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.execution = MatchbookExecution(self.mock_flumine)
+
+    def test_init(self):
+        self.assertEqual(self.execution.VENUE, VenueType.MATCHBOOK)
+
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution.execute_place")
+    def test_handler_place(self, mock_execute_place, mock__get_http_session):
+        mock_execute_place.__name__ = "execute_place"
+        mock_order_package = mock.Mock(elapsed_seconds=1)
+        mock_order_package.package_type = OrderPackageType.PLACE
+        mock_thread_pool = mock.Mock(_threads=())
+        self.execution._thread_pool = mock_thread_pool
+        self.execution.handler(mock_order_package)
+        mock_thread_pool.submit.assert_called_with(
+            mock_execute_place, mock_order_package, mock__get_http_session()
+        )
+        mock__get_http_session.assert_called_with()
+
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution.execute_update"
+    )
+    def test_handler_update(self, mock_execute_update, mock__get_http_session):
+        mock_execute_update.__name__ = "execute_update"
+        mock_order_package = mock.Mock(elapsed_seconds=1)
+        mock_order_package.package_type = OrderPackageType.UPDATE
+        mock_thread_pool = mock.Mock(_threads=())
+        self.execution._thread_pool = mock_thread_pool
+        self.execution.handler(mock_order_package)
+        mock_thread_pool.submit.assert_called_with(
+            mock_execute_update, mock_order_package, mock__get_http_session()
+        )
+        mock__get_http_session.assert_called_with()
+
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution.execute_cancel"
+    )
+    def test_handler_cancel(self, mock_execute_cancel, mock__get_http_session):
+        mock_execute_cancel.__name__ = "execute_cancel"
+        mock_order_package = mock.Mock(elapsed_seconds=1)
+        mock_order_package.package_type = OrderPackageType.CANCEL
+        mock_thread_pool = mock.Mock(_threads=())
+        self.execution._thread_pool = mock_thread_pool
+        self.execution.handler(mock_order_package)
+        mock_thread_pool.submit.assert_called_with(
+            mock_execute_cancel, mock_order_package, mock__get_http_session()
+        )
+        mock__get_http_session.assert_called_with()
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_place_success(self, mock___execution_helper, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="open")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.place, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_place_missing_order(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(id="456")
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="open")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.place, mock_order_package
+        )
+        mock_order_two.executable.assert_not_called()
+        mock_order_two.execution_complete.assert_not_called()
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_place_error(self, mock___execution_helper, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="failed")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.place, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_place_no_response(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id="123")
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_place(mock_order_package, mock_session)
+        mock__order_logger.assert_not_called()
+        mock_order.executable.assert_not_called()
+        mock_order.execution_complete.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.place, mock_order_package
+        )
+
+    def test_place(self):
+        mock_order_package = mock.Mock()
+        self.assertEqual(
+            self.execution.place(mock_order_package),
+            mock_order_package.client.betting_client.submit_offers.return_value,
+        )
+        mock_order_package.client.betting_client.submit_offers.assert_called_with(
+            offers=mock_order_package.place_instructions
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_cancel_success(self, mock___execution_helper, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(id=123, temp_id=123, status="failed")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called_with()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.cancel, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_cancel_missing_response(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="failed")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.cancel, mock_order_package
+        )
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_cancel_response_error(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(bet_id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_cancel(mock_order_package, mock_session)
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+        mock_order_two.trade.__enter__.assert_called_with()
+        mock_order_two.trade.__exit__.assert_called_with(None, None, None)
+
+    def test_cancel(self):
+        mock_order_package = mock.Mock()
+        self.assertEqual(
+            self.execution.cancel(mock_order_package),
+            mock_order_package.client.betting_client.cancel_offers.return_value,
+        )
+        mock_order_package.client.betting_client.cancel_offers.assert_called_with(
+            offer_ids=mock_order_package.cancel_instructions
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_update_success(self, mock___execution_helper, mock__order_logger):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="open")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_update(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_not_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.update, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_update_missing_response(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="open")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_update(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_not_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.update, mock_order_package
+        )
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_not_called()
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_update_return_code(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(return_value=iter([mock_order]))
+        mock_order_package.info = {}
+        mock_offer = mock.Mock(temp_id=123, status="failed")
+        mock_offers = mock.Mock(offers=[mock_offer])
+        mock___execution_helper.return_value = mock_offers
+
+        self.execution.execute_update(mock_order_package, mock_session)
+        mock__order_logger.assert_called_with(
+            mock_order, mock_offer, mock_order_package.package_type
+        )
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock___execution_helper.assert_called_with(
+            self.execution.update, mock_order_package
+        )
+
+    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
+    def test_execute_update_response_error(
+        self, mock___execution_helper, mock__order_logger
+    ):
+        mock_session = mock.Mock()
+        mock_order = mock.Mock(bet_id=123)
+        mock_order.trade.__enter__ = mock.Mock()
+        mock_order.trade.__exit__ = mock.Mock()
+        mock_order_two = mock.Mock(bet_id=456)
+        mock_order_two.trade.__enter__ = mock.Mock()
+        mock_order_two.trade.__exit__ = mock.Mock()
+        mock_order_package = mock.MagicMock()
+        mock_order_package.__len__.return_value = 1
+        mock_order_package.__iter__ = mock.Mock(
+            return_value=iter([mock_order, mock_order_two])
+        )
+        mock_order_package.info = {}
+        mock___execution_helper.return_value = None
+
+        self.execution.execute_update(mock_order_package, mock_session)
+        mock_order.execution_complete.assert_not_called()
+        mock_order.executable.assert_called()
+        mock_order.trade.__enter__.assert_called_with()
+        mock_order.trade.__exit__.assert_called_with(None, None, None)
+        mock_order_two.execution_complete.assert_not_called()
+        mock_order_two.executable.assert_called()
+        mock_order_two.trade.__enter__.assert_called_with()
+        mock_order_two.trade.__exit__.assert_called_with(None, None, None)
+
+    def test_update(self):
+        mock_order_package = mock.Mock(update_instructions=[1, 2, 3])
+        self.assertEqual(
+            self.execution.update(mock_order_package),
+            mock_order_package.client.betting_client.edit_offers.return_value,
+        )
+        mock_order_package.client.betting_client.edit_offers.assert_called_with(
+            edits=mock_order_package.update_instructions
+        )
+
+    def test_update_empty(self):
+        mock_order_package = mock.Mock(update_instructions=[], info={})
+        with self.assertRaises(OrderExecutionError):
+            self.execution.update(mock_order_package)
+
+    def test__execution_helper(self):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
+        mock_order_package.info = {}
+        self.execution._execution_helper(mock_trading_function, mock_order_package)
+        mock_trading_function.assert_called_with(mock_order_package)
+
+    def test__execution_helper_error(self):
+        mock_trading_function = mock.Mock()
+        mock_trading_function.__name__ = "test"
+        mock_trading_function.side_effect = ValueError()
+        mock_order_package = mock.Mock(
+            elapsed_seconds=0.001, orders=[mock.Mock(elapsed_seconds_created=1)]
+        )
+        mock_order_package.info = {}
+        mock_order_package.retry.return_value = True
+        self.assertIsNone(
+            self.execution._execution_helper(mock_trading_function, mock_order_package)
+        )
+        mock_trading_function.assert_called_with(mock_order_package)
+
+    @mock.patch("flumine.execution.matchbookexecution.OrderEvent")
+    def test__order_logger_place(self, mock_order_event):
+        mock_order = mock.Mock(async_=False)
+        mock_offer = mock.Mock(status="open", id=123)
+        self.execution._order_logger(mock_order, mock_offer, OrderPackageType.PLACE)
+        self.assertEqual(mock_order.bet_id, 123)
+        mock_order.responses.placed.assert_called_with(mock_offer, dt=True)
+        self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))

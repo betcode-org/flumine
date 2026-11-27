@@ -93,7 +93,7 @@ class OrderValidation(BaseControl):
                 )
         else:  # todo is this correct?
             if (
-                order.side == "BACK"
+                order.side.upper() == "BACK"
                 and order.order_type.liability < client.min_bet_size
             ):
                 self._on_error(
@@ -103,7 +103,7 @@ class OrderValidation(BaseControl):
                     ),
                 )
             elif (
-                order.side == "LAY"
+                order.side.upper() == "LAY"
                 and order.order_type.liability < client.min_bsp_liability
             ):
                 self._on_error(
@@ -227,7 +227,7 @@ class StrategyExposure(BaseControl):
                     else:
                         size = order.order_type.size or order.order_type.bet_target_size
                         price = order.order_type.price
-                        if order.side == "BACK":
+                        if order.side.upper() == "BACK":
                             order_exposure = size
                         else:
                             order_exposure = (price - 1) * size
@@ -265,7 +265,7 @@ class StrategyExposure(BaseControl):
                 at risk of loss, while exposure values are always atleast zero.
                 Exposure refers to the largest potential loss.
                 """
-                if order.side == "BACK":
+                if order.side.upper() == "BACK":
                     current_selection_exposure = -current_exposures[
                         "worst_possible_profit_on_lose"
                     ]

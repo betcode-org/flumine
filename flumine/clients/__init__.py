@@ -4,3 +4,4 @@ from .betfairclient import BetfairClient
 from .simulatedclient import SimulatedClient
 from .betconnectclient import BetConnectClient
 from .toteclient import ToteClient
+from .matchbookclient import MatchbookClient

@@ -109,13 +109,19 @@ class Market:
     def update_order(
         self,
         order,
+        # BETFAIR
         new_persistence_type: str = None,
+        # MATCHBOOK
+        new_price: float = None,
+        new_size: float = None,
         force: bool = False,
     ) -> bool:
         with self.transaction(client=order.client) as t:
             return t.update_order(
                 order,
                 new_persistence_type,
+                new_price,
+                new_size,
                 force,
             )
 
@@ -358,3 +364,47 @@ class ToteMarket(Market):
     @property
     def status(self) -> Optional[str]:
         return self.market_book["type"]["selling"]["status"]
+
+
+class MatchbookMarket(Market):
+    VENUE = VenueType.MATCHBOOK
+
+    def __call__(self, market_book):
+        self.market_book = market_book
+
+    @property
+    def market_book_closed(self):
+        return self.status == "closed"
+
+    @property
+    def publish_time(self) -> datetime.datetime:
+        return None
+
+    @property
+    def bet_delay(self) -> float:
+        return 0.0
+
+    @property
+    def market_name(self):
+        return self.market_book.name
+
+    @property
+    def event_type_id(self) -> str:
+        return ""
+
+    @property
+    def event_id(self) -> str:
+        if self.market_book:
+            return self.market_book.event_id
+        return ""
+
+    @property
+    def market_start_datetime(self):
+        if self.market_book:
+            return self.market_book.start
+        else:
+            return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
+
+    @property
+    def status(self) -> Optional[str]:
+        return self.market_book.status

@@ -611,6 +611,39 @@ class BaseFlumineTest(unittest.TestCase):
         )
         mock_market.blotter.complete_order.assert_called_with(mock_order)
 
+    @mock.patch("flumine.baseflumine.utils.call_process_orders_error_handling")
+    @mock.patch("flumine.baseflumine.process_matchbook_current_orders")
+    def test__process_matchbook_current_orders(
+        self,
+        mock_process_matchbook_current_orders,
+        mock_call_process_orders_error_handling,
+    ):
+        mock_order = mock.Mock(complete=True)
+        mock_market = mock.Mock(closed=False)
+        mock_market.blotter.active = True
+        mock_market.blotter.strategy_orders.return_value = [mock_order]
+        mock_market.blotter.live_orders = [mock_order]
+        self.base_flumine.markets = [mock_market]
+        mock_strategy = mock.Mock()
+        self.base_flumine.strategies = [mock_strategy]
+        mock_current_orders = mock.Mock(orders=[mock_order])
+        mock_event = mock.Mock(
+            event=[mock_current_orders], venue=VenueType.MATCHBOOK, callback=None
+        )
+        self.base_flumine._process_current_orders(mock_event)
+        mock_process_matchbook_current_orders.assert_called_with(
+            self.base_flumine.markets,
+            self.base_flumine.strategies,
+            mock_event,
+            self.base_flumine.log_control,
+            self.base_flumine._add_market,
+        )
+        mock_market.blotter.strategy_orders.assert_called_with(mock_strategy)
+        mock_call_process_orders_error_handling.assert_called_with(
+            mock_strategy, mock_market, [mock_order]
+        )
+        mock_market.blotter.complete_order.assert_called_with(mock_order)
+
     def test__process_custom_event(self):
         mock_market = mock.Mock()
         self.base_flumine.markets = [mock_market]
@@ -838,6 +871,7 @@ class BaseFlumineTest(unittest.TestCase):
         self.base_flumine._logging_controls = [control]
         self.base_flumine.simulated_execution = mock.Mock()
         self.base_flumine.betfair_execution = mock.Mock()
+        self.base_flumine.matchbook_execution = mock.Mock()
         with self.base_flumine:
             self.assertTrue(self.base_flumine._running)
             self.mock_client.login.assert_called_with()
@@ -848,5 +882,6 @@ class BaseFlumineTest(unittest.TestCase):
         self.mock_client.logout.assert_called_with()
         self.base_flumine.simulated_execution.shutdown.assert_called_with()
         self.base_flumine.betfair_execution.shutdown.assert_called_with()
+        self.base_flumine.matchbook_execution.shutdown.assert_called_with()
         control.start.assert_called_with()
         mock_log_control.assert_called_with(mock_events.TerminationEvent(None))

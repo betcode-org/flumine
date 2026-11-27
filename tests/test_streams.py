@@ -7,6 +7,8 @@ from flumine.streams import (
     streams,
     betfairdatastream,
     betfairhistoricalstream,
+    matchbookmarketpolling,
+    matchbookorderpolling,
 )
 from flumine.streams.basestream import BaseStream
 from flumine.streams.simulatedorderstream import CurrentOrders
@@ -47,6 +49,17 @@ class StreamsTest(unittest.TestCase):
         mock_client.VENUE = streams.VenueType.BETFAIR
         self.streams.add_client(mock_client)
         mock_add_simulated_order_stream.assert_called_with(
+            mock_client, streaming_timeout=mock_client.order_streaming_timeout
+        )
+
+    @mock.patch("flumine.streams.streams.Streams.add_matchbook_order_polling")
+    def test_add_client_betdaq(self, mock_add_order_stream):
+        mock_client = mock.Mock(
+            order_stream=True, paper_trade=False, order_stream_cls=None
+        )
+        mock_client.VENUE = streams.VenueType.MATCHBOOK
+        self.streams.add_client(mock_client)
+        mock_add_order_stream.assert_called_with(
             mock_client, streaming_timeout=mock_client.order_streaming_timeout
         )
 
@@ -114,6 +127,17 @@ class StreamsTest(unittest.TestCase):
             conflate_ms=conflate_ms,
             client=mock_client,
             custom=True,
+        )
+
+    @mock.patch("flumine.streams.streams.MatchbookOrderPolling")
+    @mock.patch("flumine.streams.streams.Streams.add_stream")
+    def test_add_betdaq_order_polling(self, mock_add_stream, mock_order_polling_class):
+        mock_client = mock.Mock()
+        self.streams.add_matchbook_order_polling(mock_client)
+        mock_add_stream.assert_called_with(mock_order_polling_class.return_value)
+        mock_order_polling_class.assert_called_with(
+            client=mock_client,
+            streaming_timeout=0.25,
         )
 
     def test_start(self):
@@ -996,3 +1020,87 @@ class TestBetfairSportsDataStream(unittest.TestCase):
     #
     # def test_handle_output(self):
     #     pass
+
+
+class TestMatchbookOrderPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = streams.MatchbookOrderPolling(self.mock_flumine, 123)
+
+    def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.MATCHBOOK)
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertIsNone(self.stream.market_filter)
+        self.assertEqual(
+            self.stream.market_data_filter,
+            {
+                "fields": [
+                    "EX_ALL_OFFERS",
+                    "EX_TRADED",
+                    "EX_TRADED_VOL",
+                    "EX_LTP",
+                    "EX_MARKET_DEF",
+                    "SP_TRADED",
+                    "SP_PROJECTED",
+                ]
+            },
+        )
+        self.assertIsNone(self.stream.streaming_timeout)
+        self.assertIsNone(self.stream.conflate_ms)
+        self.assertIsNone(self.stream._stream)
+        self.assertEqual(matchbookorderpolling.START_DELAY, 2)
+        self.assertEqual(matchbookorderpolling.SNAP_DELTA, 2)
+
+    # def test_run(self):
+    #     pass
+
+    @mock.patch("flumine.streams.matchbookorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders(self, mock_event):
+        current_orders = [{"sequence_number": 1}]
+        self.stream.flumine.markets.live_orders = False
+        self.assertIsNone(self.stream._process_current_orders(current_orders), 1)
+        mock_event.assert_called_with(current_orders, venue=VenueType.MATCHBOOK)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
+
+    @mock.patch("flumine.streams.matchbookorderpolling.CurrentOrdersEvent")
+    def test__process_current_orders_no_live(self, mock_event):
+        current_orders = []
+        self.stream.flumine.markets.live_orders = True
+        self.assertIsNone(self.stream._process_current_orders(current_orders))
+        mock_event.assert_called_with(current_orders, venue=VenueType.MATCHBOOK)
+        self.stream.flumine.handler_queue.put.assert_called_with(
+            mock_event.return_value
+        )
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
+
+    def test_stream_hash(self):
+        self.assertEqual(self.stream.stream_hash, self.stream.stream_hash)
+
+
+class TestMatchbookMarketPolling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.mock_flumine = mock.Mock()
+        self.stream = matchbookmarketpolling.MatchbookMarketPolling(
+            self.mock_flumine, 123, 0.01, 100, {"test": "me"}, {"please": "now"}
+        )
+
+    def test_init(self):
+        self.assertEqual(self.stream.VENUE, VenueType.MATCHBOOK)
+        self.assertEqual(self.stream.flumine, self.mock_flumine)
+        self.assertEqual(self.stream.stream_id, 123)
+        self.assertEqual(self.stream.market_filter, {"test": "me"})
+        self.assertEqual(self.stream.market_data_filter, {"please": "now"})
+        self.assertEqual(self.stream.streaming_timeout, 0.01)
+        self.assertEqual(self.stream.conflate_ms, 100)
+        self.assertIsNone(self.stream._stream)
+
+    # def test_run(self):
+    #     pass
+
+    def test_stream_running(self):
+        self.assertTrue(self.stream.stream_running)
