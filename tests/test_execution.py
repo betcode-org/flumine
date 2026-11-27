@@ -1454,7 +1454,9 @@ class MatchbookExecutionTest(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.execution.VENUE, VenueType.MATCHBOOK)
 
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._get_http_session")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution.execute_place")
     def test_handler_place(self, mock_execute_place, mock__get_http_session):
         mock_execute_place.__name__ = "execute_place"
@@ -1468,8 +1470,12 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
         mock__get_http_session.assert_called_with()
 
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._get_http_session")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution.execute_update")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution.execute_update"
+    )
     def test_handler_update(self, mock_execute_update, mock__get_http_session):
         mock_execute_update.__name__ = "execute_update"
         mock_order_package = mock.Mock(elapsed_seconds=1)
@@ -1482,8 +1488,12 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
         mock__get_http_session.assert_called_with()
 
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._get_http_session")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution.execute_cancel")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._get_http_session"
+    )
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution.execute_cancel"
+    )
     def test_handler_cancel(self, mock_execute_cancel, mock__get_http_session):
         mock_execute_cancel.__name__ = "execute_cancel"
         mock_order_package = mock.Mock(elapsed_seconds=1)
@@ -1497,7 +1507,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         mock__get_http_session.assert_called_with()
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_place_success(self, mock___execution_helper, mock__order_logger):
         mock_session = mock.Mock()
         mock_order = mock.Mock(id="123")
@@ -1523,7 +1535,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_place_missing_order(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1558,7 +1572,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         mock_order_two.execution_complete.assert_not_called()
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_place_error(self, mock___execution_helper, mock__order_logger):
         mock_session = mock.Mock()
         mock_order = mock.Mock(id="123")
@@ -1584,7 +1600,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_place_no_response(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1619,7 +1637,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_cancel_success(self, mock___execution_helper, mock__order_logger):
         mock_session = mock.Mock()
         mock_order = mock.Mock(id=123)
@@ -1645,7 +1665,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_cancel_missing_response(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1680,7 +1702,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         mock_order_two.executable.assert_called()
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_cancel_response_error(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1720,7 +1744,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_update_success(self, mock___execution_helper, mock__order_logger):
         mock_session = mock.Mock()
         mock_order = mock.Mock(id=123)
@@ -1747,7 +1773,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_update_missing_response(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1783,7 +1811,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         mock_order_two.executable.assert_not_called()
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_update_return_code(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1812,7 +1842,9 @@ class MatchbookExecutionTest(unittest.TestCase):
         )
 
     @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._order_logger")
-    @mock.patch("flumine.execution.matchbookexecution.MatchbookExecution._execution_helper")
+    @mock.patch(
+        "flumine.execution.matchbookexecution.MatchbookExecution._execution_helper"
+    )
     def test_execute_update_response_error(
         self, mock___execution_helper, mock__order_logger
     ):
@@ -1884,9 +1916,7 @@ class MatchbookExecutionTest(unittest.TestCase):
     def test__order_logger_place(self, mock_order_event):
         mock_order = mock.Mock(async_=False)
         mock_offer = mock.Mock(status="open", id=123)
-        self.execution._order_logger(
-            mock_order, mock_offer, OrderPackageType.PLACE
-        )
+        self.execution._order_logger(mock_order, mock_offer, OrderPackageType.PLACE)
         self.assertEqual(mock_order.bet_id, 123)
         mock_order.responses.placed.assert_called_with(mock_offer, dt=True)
         self.mock_flumine.log_control.assert_called_with(mock_order_event(mock_order))
